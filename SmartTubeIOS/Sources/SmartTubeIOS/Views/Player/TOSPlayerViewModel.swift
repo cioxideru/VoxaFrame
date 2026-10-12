@@ -80,6 +80,10 @@ final class TOSPlayerViewModel: NSObject {
     var lastTrackingResolveFailureAt: Date?
     /// Non-nil when the player encounters an error that requires falling back.
     var playerError: TOSPlayerError? = nil
+    /// A revision lets repeated requests refresh the native controls' hide timer,
+    /// even when YouTube's own chrome has auto-hidden between surface taps.
+    var surfaceTapRevision = 0
+    var surfaceTapControlsVisible = false
 
     // MARK: - SponsorBlock
 
@@ -323,6 +327,16 @@ final class TOSPlayerViewModel: NSObject {
             in: .page
         )
         contentController.addUserScript(webkitHiderScript)
+
+        #if os(iOS)
+        contentController.addUserScript(
+            WKUserScript(
+                source: TOSPlayerSurfaceTapScript.source,
+                injectionTime: .atDocumentStart,
+                forMainFrameOnly: false,
+                in: .page
+            ))
+        #endif
 
         // Inject state-detection JS into every frame at document-end.
         // The YouTube embed runs inside an <iframe> (see loadEmbed), so

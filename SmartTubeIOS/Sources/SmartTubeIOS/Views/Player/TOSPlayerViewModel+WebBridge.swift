@@ -32,6 +32,11 @@ extension TOSPlayerViewModel {
         }
 
         switch type {
+        case "surfaceTap":
+            guard let visible = json["controlsVisible"] as? Bool else { return }
+            surfaceTapControlsVisible = visible
+            surfaceTapRevision += 1
+
         case "ping":
             tosLog.notice("[ytCallback] JS<->Swift bridge ping received")
             CFNotificationCenterPostNotification(

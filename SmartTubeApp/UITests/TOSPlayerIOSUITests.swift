@@ -544,61 +544,35 @@ final class TOSPlayerIOSUITests: XCTestCase {
             "App must remain running after unlocking")
     }
 
-    /// Regression test for GitHub #111: "Tap on video to move the slider
-    /// stops playback instead of showing and bringing up only the slider".
-    ///
-    /// Root cause: TOSSwipeNavigationOverlay's tap recognizer is attached to
-    /// the window (so it observes touches outside its own hit-testing view)
-    /// with cancelsTouchesInView=false — deliberately, so the PAN gesture
-    /// doesn't steal YouTube's native bottom scrubber drag. The same setting
-    /// applies to the TAP recognizer, so a tap in the video area reaches BOTH
-    /// our showControls() handler AND YouTube's own native tap-to-toggle-play
-    /// handler on the underlying <video> element — confirmed via device log:
-    /// a "tick state: 1 → 2" (playing → paused) lands within ~100-300ms of
-    /// the tap, consistently reproducible with genuine (non-stalled) playback.
-    ///
-    /// Fix (TOSPlayerView.swift onTap): rather than trying to block/cancel the
-    /// touch at the UIKit layer (tried and reverted — disrupted SwiftUI's own
-    /// button touch tracking, breaking the back button and landscape lock
-    /// button), this detects the spurious pause after the fact and undoes it
-    /// — so a brief pause→play flicker is expected and acceptable; what must
-    /// NOT happen is the video staying paused.
+    /// Regression for #111: surface taps must reveal AND dismiss controls without
+    /// any pause/resume recovery. Taps near opposite edges cover the whole surface.
     func testTOSPlayerTapToShowControlsDoesNotStopPlaybackDiagnostic() throws {
-        launchApp()
-        guard let cards = waitForVideoCards() else {
-            throw XCTSkip("No video cards found — network unavailable or home feed empty")
-        }
-        guard let card = firstNonShortCard(from: cards) else {
-            throw XCTSkip("No non-short video card found in first 20 cards")
-        }
-        let playingNote = XCTDarwinNotificationExpectation(notificationName: "com.void.smarttube.tosplayer.playing")
-        guard openTOSPlayer(from: card) != nil else {
-            throw XCTSkip("tosPlayer.stateLabel did not appear — TOS player was not opened")
-        }
-        guard XCTWaiter().wait(for: [playingNote], timeout: 20) == .completed else {
-            throw XCTSkip("playing notification never fired — IFrame embed failed to load")
-        }
-        // Let controls auto-hide first, matching the reported scenario exactly
-        // ("after a few seconds... slider and control elements disappear").
-        Thread.sleep(forTimeInterval: 5)
+        launchApp(extraArguments: ["--uitesting-deeplink-video=dQw4w9WgXcQ"])
+        let backButton = app.buttons["tosPlayer.backButton"]
+        XCTAssertTrue(backButton.waitForExistence(timeout: 30))
+        let stateLabel = app.staticTexts["tosPlayer.stateLabel"]
+        let playing = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label == 'playing'"), object: stateLabel)
+        XCTAssertEqual(XCTWaiter().wait(for: [playing], timeout: 30), .completed)
+        let initiallyHidden = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "hittable == false"), object: backButton)
+        XCTAssertEqual(XCTWaiter().wait(for: [initiallyHidden], timeout: 10), .completed)
 
-        let spuriousPause = XCTDarwinNotificationExpectation(notificationName: "com.void.smarttube.tosplayer.state.2")
-        // Tap mid-screen — well above the native controls bar (bottom ~12%).
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4)).tap()
-
-        let pauseResult = XCTWaiter().wait(for: [spuriousPause], timeout: 2)
-        guard pauseResult == .completed else {
-            // No pause at all — the ideal outcome.
-            return
-        }
-        // A pause happened — TOSPlayerView's recovery logic polls for up to
-        // 1s and should bring playback back. Give it a margin beyond that.
-        let resumedNote = XCTDarwinNotificationExpectation(notificationName: "com.void.smarttube.tosplayer.playing")
-        let resumeResult = XCTWaiter().wait(for: [resumedNote], timeout: 3)
+        let spuriousPause = XCTDarwinNotificationExpectation(
+            notificationName: "com.void.smarttube.tosplayer.state.2")
+        spuriousPause.isInverted = true
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.4)).tap()
+        let revealed = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "hittable == true"), object: backButton)
+        XCTAssertEqual(XCTWaiter().wait(for: [revealed], timeout: 3), .completed)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.4)).tap()
+        let dismissed = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "hittable == false"), object: backButton)
+        XCTAssertEqual(XCTWaiter().wait(for: [dismissed], timeout: 2), .completed)
         XCTAssertEqual(
-            resumeResult, .completed,
-            "Tap caused a spurious pause and playback never resumed — TOSPlayerView's detect-and-undo recovery did not fire"
-        )
+            XCTWaiter().wait(for: [spuriousPause], timeout: 2), .completed,
+            "A surface tap must not pause playback, even briefly")
+        XCTAssertEqual(stateLabel.label, "playing")
     }
 
     /// Regression test for GitHub #51/#78 follow-up: watch history still didn't

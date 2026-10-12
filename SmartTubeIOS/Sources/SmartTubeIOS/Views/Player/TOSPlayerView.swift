@@ -92,8 +92,8 @@ public struct TOSPlayerView: View {
 
     #if os(iOS)
     /// Controls (back button, speed, more) are hidden on initial load and auto-hide
-    /// after `controlsHideDelay` seconds when shown. A tap anywhere on the player
-    /// reveals them; they auto-hide again after the delay.
+    /// after `controlsHideDelay` seconds when shown. Video-surface taps toggle
+    /// them together with the embedded player controls without changing playback.
     @State private var controlsVisible = false
     @State private var controlsHideTask: Task<Void, Never>? = nil
     private let controlsHideDelay: Double = 4
@@ -277,16 +277,6 @@ public struct TOSPlayerView: View {
                     TOSSwipeNavigationOverlay(
                         onSwipeLeft: { vm.playNext() },
                         onSwipeRight: { vm.playPrevious() },
-                        onTap: { _ in
-                            // #111 history: we tried to undo YouTube's tap-to-pause so that
-                            // tapping to reveal controls wouldn't also pause playback. But the
-                            // undo misfired on the user's first *intentional* pause (controls
-                            // were hidden, user tapped to both show controls and pause — our
-                            // code saw controlsWereVisible=false and undid it). Letting
-                            // YouTube's native tap = toggle-play/pause stand is the correct
-                            // behaviour: it matches YouTube's own app and is what users expect.
-                            showControls()
-                        },
                         onVerticalDragChanged: { isLeftHalf, translationY, viewHeight in
                             handleVerticalDrag(
                                 isLeftHalf: isLeftHalf, translationY: translationY, viewHeight: viewHeight)
@@ -399,7 +389,7 @@ public struct TOSPlayerView: View {
                 // Show controls briefly on first appear so the back button is tappable
                 // without the user having to tap the player area first. The 4s auto-hide
                 // in showControls() then fades them out. Subsequent reveals happen via
-                // the TOSSwipeNavigationOverlay tap or on videoId change.
+                // the embedded player's surface-tap message or on videoId change.
                 showControls()
                 UIDevice.current.beginGeneratingDeviceOrientationNotifications()
                 let physicallyLandscape = UIDevice.current.orientation.isLandscape
@@ -491,6 +481,14 @@ public struct TOSPlayerView: View {
                 onFallback()
             }
             #if os(iOS)
+            .onChange(of: vm.surfaceTapRevision) { _, _ in
+                if vm.surfaceTapControlsVisible {
+                    showControls()
+                } else {
+                    controlsHideTask?.cancel()
+                    withAnimation(.easeInOut(duration: 0.2)) { controlsVisible = false }
+                }
+            }
             // Show controls briefly whenever a new video loads via swipe navigation
             // (tosState.vm is replaced by TOSPlayerStateStore.play). Without this the
             // controls stay hidden if the user swiped while they were already hidden.
