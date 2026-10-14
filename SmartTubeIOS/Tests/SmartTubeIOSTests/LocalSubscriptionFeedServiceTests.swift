@@ -5,7 +5,7 @@ import Testing
 
 // MARK: - LocalSubscriptionFeedServiceTests
 
-@Suite("Local Subscription Feed Service")
+@Suite("Local Subscription Feed Service", .serialized)  // RouterURLProtocol.routes is shared
 @MainActor
 struct LocalSubscriptionFeedServiceTests {
 

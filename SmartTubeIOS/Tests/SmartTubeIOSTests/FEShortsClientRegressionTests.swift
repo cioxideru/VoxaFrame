@@ -93,41 +93,8 @@ struct FEShortsClientRegressionTests {
         return InnerTubeAPI(authToken: authToken, session: session)
     }
 
-    // MARK: - fetchShorts
-
-    /// Verifies that fetchShorts sends `clientName: "TVHTML5"` when authenticated.
-    ///
-    /// Before the fix, this was `"WEB"`, causing YouTube to reject the request
-    /// with HTTP 400 because the device-code OAuth token is bound to TVHTML5.
-    @Test("fetchShorts sends TVHTML5 clientName when authenticated")
-    func fetchShortsSendsTVClientWhenAuthenticated() async throws {
-        BodyCapturingURLProtocol.capturedBody = nil
-        let api = makeTestAPI(authToken: "fake-tv-oauth-token")
-
-        // The call will throw (HTTP 400 from BodyCapturingURLProtocol), which is expected.
-        _ = try? await api.fetchShorts()
-
-        let bodyData = try #require(
-            BodyCapturingURLProtocol.capturedBody,
-            "URLProtocol should have captured the POST body"
-        )
-        let json = try #require(
-            try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
-            "Request body must be valid JSON"
-        )
-
-        let context = json["context"] as? [String: Any]
-        let clientDict = context?["client"] as? [String: Any]
-
-        #expect(
-            clientDict?["clientName"] as? String == "TVHTML5",
-            """
-            fetchShorts must use TVHTML5 client when authenticated.
-            Sending a device-code OAuth token with clientName="WEB" returns HTTP 400.
-            Found clientName=\(String(describing: clientDict?["clientName"]))
-            """
-        )
-    }
+    // fetchShorts no longer browses FEshorts (YouTube deprecated it, see InnerTubeAPI+Browse):
+    // it searches "#shorts", so only the continuation path still needs the TV client.
 
     // MARK: - fetchShortsMore
 

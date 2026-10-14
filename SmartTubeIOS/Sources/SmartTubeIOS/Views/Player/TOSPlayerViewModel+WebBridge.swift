@@ -381,4 +381,16 @@ extension TOSPlayerViewModel {
         }
     }
 }
+
+#if os(macOS) && !targetEnvironment(macCatalyst)
+import AppKit
+
+extension NSImage {
+    /// UIImage's `pngData()` for the native macOS build (package tests).
+    fileprivate func pngData() -> Data? {
+        guard let tiff = tiffRepresentation else { return nil }
+        return NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:])
+    }
+}
+#endif
 #endif  // !os(tvOS)

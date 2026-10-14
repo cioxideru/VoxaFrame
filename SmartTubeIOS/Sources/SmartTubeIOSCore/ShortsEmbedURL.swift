@@ -11,9 +11,8 @@ import Foundation
 public enum ShortsEmbedURL {
 
     /// Builds `https://www.youtube.com/embed/{videoId}?...` with the query items
-    /// required for an autoplaying, muted, inline, controls-visible Shorts embed.
-    /// `SwipeGestureOverlay` lets touches pass through to this native chrome so
-    /// YouTube's own play/pause and top-right controls remain reachable.
+    /// required for an autoplaying, muted, inline Shorts embed with YouTube's native
+    /// chrome hidden (`controls=0`); the app draws its own pause indicator on top.
     public static func embedURL(videoId: String, startTime: Double = 0) -> URL {
         var comps = URLComponents(string: "https://www.youtube.com/embed/\(videoId)")!
         comps.queryItems = [

@@ -976,9 +976,12 @@ public struct TOSPlayerView: View {
 #if os(macOS)
 private struct YouTubeWebPlayerView: NSViewRepresentable {
     let webView: WKWebView
+    let onWindowReady: (() -> Void)?
 
     func makeNSView(context: Context) -> WKWebView {
         webView.autoresizingMask = [.width, .height]
+        // Native macOS (package tests only) has no hidden-while-presenting phase to wait out.
+        if let onWindowReady { Task { @MainActor in onWindowReady() } }
         return webView
     }
 

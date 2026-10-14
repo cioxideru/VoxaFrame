@@ -5,11 +5,14 @@ import Testing
 
 // MARK: - Helpers
 
-/// Yields control enough times so internal @MainActor Tasks spawned by
-/// the ViewModel can complete against an immediately-returning mock API.
-private func waitForSubsTasks() async {
-    for _ in 0..<3 { await Task.yield() }
-    try? await Task.sleep(for: .milliseconds(50))
+/// Polls until the ViewModel's internal @MainActor Tasks have produced `condition`
+/// (a fixed delay is too short under `swift test --parallel` load).
+@MainActor
+private func waitForSubsTasks(until condition: @MainActor () -> Bool) async {
+    let deadline = Date().addingTimeInterval(2)
+    while Date() < deadline, !condition() {
+        try? await Task.sleep(for: .milliseconds(10))
+    }
 }
 
 // MARK: - SubscriptionsSortTests
@@ -77,7 +80,7 @@ struct SubscriptionsSortTests {
     /// is jarring mid-scroll (videos jump to a different position). Page 2 may contain
     /// videos that are newer than some of page 1's videos, but they must still land
     /// at the end of the list, not interleaved.
-    @Test func paginatedSubscriptionsAppendNewVideosAtBottomWithoutResort() async {
+    @Test func paginatedSubscriptionsAppendNewVideosAtBottomWithoutResort() async throws {
         let now = Date()
         let vidToday = Video(
             id: "today", title: "Today", channelTitle: "Ch",
@@ -104,9 +107,10 @@ struct SubscriptionsSortTests {
         let vm = BrowseViewModel(api: mock, initialSection: section)
         await vm.updateAuthToken("fake-token")
         vm.loadContent(for: section, refresh: true, source: "test")
-        await waitForSubsTasks()
+        await waitForSubsTasks { vm.videoGroups.first?.videos.count == 2 }
 
-        #expect(vm.videoGroups[0].videos.count == 2, "page 1 should load 2 videos")
+        let page1 = try #require(vm.videoGroups.first, "page 1 should load")
+        #expect(page1.videos.count == 2, "page 1 should load 2 videos")
 
         // Page 2: 2 days ago and 1 day ago — newer than "4d" but must still be appended
         // after it, not interleaved between "today" and "4d".
@@ -117,12 +121,12 @@ struct SubscriptionsSortTests {
         )
 
         // Trigger pagination using the last (oldest) video from page 1.
-        let lastOfPage1 = vm.videoGroups[0].videos.last!
+        let lastOfPage1 = try #require(page1.videos.last)
         vm.loadMoreIfNeeded(lastVideo: lastOfPage1)
-        await waitForSubsTasks()
+        await waitForSubsTasks { vm.videoGroups.first?.videos.count == 4 }
 
-        let merged = vm.videoGroups[0].videos
-        #expect(merged.count == 4, "all 4 videos should be present after merge")
+        let merged = try #require(vm.videoGroups.first).videos
+        try #require(merged.count == 4, "all 4 videos should be present after merge")
         // Page 1's order is preserved, page 2's videos are appended at the bottom
         // in the order the API returned them.
         #expect(merged[0].id == "today")
