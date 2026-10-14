@@ -40,17 +40,11 @@ struct SmartTubeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            let root = RootView()
                 .environment(authService)
                 .environment(browseViewModel)
                 .environment(settingsStore)
                 .environment(\.innerTubeAPI, api)
-                #if ENABLE_DOWNLOADS
-                .environment(cardDownloadService)
-                #endif
-                #if ENABLE_DOWNLOADS
-                .environment(DownloadStore.shared)
-                #endif
                 .onChange(of: authService.accessToken, initial: true) { _, newToken in
                     Task {
                         await api.setAuthToken(newToken)
@@ -65,6 +59,11 @@ struct SmartTubeApp: App {
                     iCloudSyncManager.shared.syncEnabled = settingsStore.settings.iCloudSyncEnabled
                     await iCloudSyncManager.shared.start()
                 }
+            #if ENABLE_DOWNLOADS
+            root.environment(cardDownloadService).environment(DownloadStore.shared)
+            #else
+            root
+            #endif
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
