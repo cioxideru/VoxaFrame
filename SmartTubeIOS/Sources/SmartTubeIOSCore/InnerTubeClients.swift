@@ -60,15 +60,17 @@ package enum InnerTubeClients {
             "com.google.android.apps.youtube.vr.oculus/\(version) (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip"
     }
 
-    /// visionOS client — current yt-dlp's first-choice JS-less client.
-    /// Unlike Android/iOS/WEB, its current upstream policy does not require a GVS
-    /// PO token. It is useful on tvOS because both platforms use Apple media codecs.
+    /// visionOS client — the JS-less client NewPipeExtractor (2026-10) takes all streams
+    /// from. Needs no GVS PO token and returns a plain HLS master, so it is the first
+    /// AVPlayer source on every platform. Identity mirrors NewPipe's ClientsConstants.
     package enum VisionOS {
         package static let name = "VISIONOS"
         package static let nameID = "101"
-        package static let version = "1.02"
+        package static let version = "1.04"
+        package static let deviceModel = "RealityDevice17,1"
+        package static let osVersion = "26.6.0.23O770"
         package static let userAgent =
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15"
+            "com.google.visionos.youtube/1.04(RealityDevice17,1; U; CPU visionOS 26_6_0 like Mac OS X; US)"
         /// Higher HLS tiers are currently VP9/AV1; tvOS AVFoundation needs the
         /// H.264 ladder, which tops out at 1080p for this client.
         package static let maximumHLSHeight = 1080

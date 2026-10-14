@@ -11,8 +11,8 @@ struct VisionOSPlaybackTests {
     func clientIdentity() {
         #expect(InnerTubeClients.VisionOS.name == "VISIONOS")
         #expect(InnerTubeClients.VisionOS.nameID == "101")
-        #expect(InnerTubeClients.VisionOS.version == "1.02")
-        #expect(InnerTubeClients.VisionOS.userAgent.contains("Version/26.0"))
+        #expect(InnerTubeClients.VisionOS.version == "1.04")
+        #expect(InnerTubeClients.VisionOS.userAgent.hasPrefix("com.google.visionos.youtube/1.04("))
         #expect(InnerTubeClients.VisionOS.maximumHLSHeight == 1080)
     }
 

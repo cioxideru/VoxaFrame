@@ -840,7 +840,7 @@ extension PlayerControlsOverlay {
                 .opacity(vm.availableFormats.isEmpty ? 0.4 : 1)
             }
 
-            if vm.availableAudioTracks.count > 1 {
+            if vm.availableAudioTracks.count > 1 || vm.voiceOverTargetLanguage != nil {
                 quickAccessButton(
                     systemImage: "waveform",
                     label: audioTrackLabel,
@@ -874,7 +874,9 @@ extension PlayerControlsOverlay {
     }
 
     private var audioTrackLabel: String {
-        vm.selectedAudioTrack.map { $0.languageCode } ?? "Auto"
+        let track = vm.selectedAudioTrack.map { $0.languageCode } ?? "Auto"
+        guard vm.isVoiceOverActive, let target = vm.voiceOverTargetLanguage else { return track }
+        return "\(track) → \(target) (Yandex)"
     }
 
     private var sleepTimerLabel: String {

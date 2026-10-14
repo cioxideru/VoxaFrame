@@ -22,6 +22,9 @@ public struct SettingsView: View {
     /// seen the tab switch away and back.
     @State private var isUnlocked = false
     @State private var parentalControlsSheetMode: ParentalControlsMode?
+    /// Loaded from the Keychain when the token field appears, not on every view init.
+    @State private var yandexToken = ""
+    @State private var showYandexTokenHelp = false
 
     public init() {}
 
@@ -42,6 +45,12 @@ public struct SettingsView: View {
         Form {
             accountSection
             playerSection
+            #if os(iOS)
+            playerEngineSection
+            #endif
+            if usesAVPlayer {
+                yandexVOTSection
+            }
             generalSection
             uiSection
             sponsorBlockSection
@@ -144,22 +153,6 @@ public struct SettingsView: View {
                 }
             }
             .accessibilityIdentifier("settings.preferredQualityPicker")
-
-            Picker("Preferred Audio Language", selection: $store.settings.preferredAudioLanguage) {
-                Text("System Default").tag(nil as String?)
-                Divider()
-                Text("English").tag("en" as String?)
-                Text("Spanish").tag("es" as String?)
-                Text("French").tag("fr" as String?)
-                Text("German").tag("de" as String?)
-                Text("Japanese").tag("ja" as String?)
-                Text("Korean").tag("ko" as String?)
-                Text("Portuguese (Brazil)").tag("pt-BR" as String?)
-                Text("Chinese (Simplified)").tag("zh-Hans" as String?)
-                Divider()
-                Text("Original Track Only").tag("original" as String?)
-            }
-            .accessibilityIdentifier("settings.preferredAudioLanguageRow")
             #endif
 
             #if os(tvOS)
@@ -422,6 +415,99 @@ public struct SettingsView: View {
         } footer: {
             Text(
                 "Uses YouTube's official embedded player instead of the direct stream pipeline. Quality selection is unavailable. Ads will play. Useful for videos that refuse to play via the standard path."
+            )
+        }
+    }
+    #endif
+
+    // MARK: - Yandex voice-over translation
+
+    /// Audio-track choice and Yandex VOT work with AVPlayer only, so they hide while the IFrame player is on.
+    private var usesAVPlayer: Bool {
+        #if os(iOS)
+        !store.useTOSPlayerOnIOS
+        #elseif os(macOS)
+        !store.settings.useTOSPlayerOnMac
+        #else
+        true
+        #endif
+    }
+
+    private var yandexVOTSection: some View {
+        @Bindable var store = store
+        return Section {
+            Picker("Default Audio Language", selection: $store.settings.preferredAudioLanguage) {
+                Text("Auto (System Default)").tag(nil as String?)
+                Divider()
+                Text("Russian").tag("ru" as String?)
+                Text("English").tag("en" as String?)
+                Text("Kazakh").tag("kk" as String?)
+                Text("Spanish").tag("es" as String?)
+                Text("French").tag("fr" as String?)
+                Text("German").tag("de" as String?)
+                Text("Japanese").tag("ja" as String?)
+                Text("Korean").tag("ko" as String?)
+                Text("Portuguese (Brazil)").tag("pt-BR" as String?)
+                Text("Chinese (Simplified)").tag("zh-Hans" as String?)
+                Divider()
+                Text("Original Track Only").tag("original" as String?)
+            }
+            .accessibilityIdentifier("settings.preferredAudioLanguageRow")
+            Toggle("Yandex Voice-Over Translation", isOn: $store.settings.yandexVOTEnabled)
+                .accessibilityIdentifier("settings.yandexVOTToggle")
+            if store.settings.yandexVOTEnabled {
+                Toggle("Lively Voices", isOn: $store.settings.yandexVOTLivelyVoice)
+                    .accessibilityIdentifier("settings.yandexVOTLivelyVoiceToggle")
+                Toggle("Original Audio in Background", isOn: $store.settings.yandexVOTKeepOriginalAudio)
+                    .accessibilityIdentifier("settings.yandexVOTKeepOriginalAudioToggle")
+            }
+            if store.settings.yandexVOTEnabled, store.settings.yandexVOTLivelyVoice {
+                SecureField("Yandex OAuth Token", text: $yandexToken)
+                    .autocorrectionDisabled()
+                    .onAppear { yandexToken = TokenManager.yandexVOTToken() ?? "" }
+                    .onChange(of: yandexToken) { _, token in
+                        if token != TokenManager.yandexVOTToken() ?? "" { TokenManager.setYandexVOTToken(token) }
+                    }
+                    .accessibilityIdentifier("settings.yandexVOTTokenField")
+                Button("How to Get a Token") { showYandexTokenHelp = true }
+                    .alert("Yandex OAuth Token", isPresented: $showYandexTokenHelp) {
+                        Button("OK", role: .cancel) {}
+                    } message: {
+                        Text(
+                            """
+                            The token is only needed for lively voices.
+
+                            1. Sign in to your Yandex account and open oauth.yandex.ru/client/new.
+                            2. Create an app for "Web services" with the "Access to user's login" permission (login:info) and Redirect URI https://oauth.yandex.ru/verification_code.
+                            3. Open oauth.yandex.ru/authorize?response_type=token&client_id=<your app's ClientID>.
+                            4. Allow access — Yandex shows the token on the page. Paste it here.
+
+                            The token is stored in the Keychain on this device. A Yandex Plus subscription is not required.
+                            """)
+                    }
+            }
+        } header: {
+            Text("Audio Language")
+        } footer: {
+            Text(
+                "The video's original or dubbed track in this language is played instead of the system language. With Yandex translation on, a video without such a track is voice-over translated by Yandex into Russian, English or Kazakh. AVPlayer only (turn off the IFrame Player). A video Yandex hasn't translated before stays paused for a few minutes until the translation is ready. Lively voices: Russian only, needs the token."
+            )
+        }
+    }
+
+    // MARK: - Player engine (iOS)
+
+    #if os(iOS)
+    private var playerEngineSection: some View {
+        @Bindable var store = store
+        return Section {
+            Toggle("IFrame Player (TOS-compliant, shows ads)", isOn: $store.settings.useTOSPlayerOnIOS)
+                .accessibilityIdentifier("settings.useTOSPlayerOnIOSToggle")
+        } header: {
+            Text("Player")
+        } footer: {
+            Text(
+                "On: YouTube's official embedded player. Off: native AVPlayer with quality selection, captions and Picture-in-Picture, but some videos may fail to load. Applies to the next video."
             )
         }
     }

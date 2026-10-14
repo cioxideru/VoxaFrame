@@ -410,49 +410,19 @@ extension PlayerView {
                     Color.clear.frame(width: 70, height: 44)
                 }
                 Divider()
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // "Auto" row — resets to HLS default and clears the saved preference
-                        Button {
-                            vm.selectAudioTrack(nil)
-                            showAudioTrackPicker = false
-                        } label: {
-                            HStack {
-                                Text("Auto")
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                if vm.selectedAudioTrack == nil {
-                                    Image(systemName: AppSymbol.checkmark)
-                                        .foregroundStyle(Color.accentColor)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .padding(.horizontal)
-                            .padding(.vertical, 12)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("player.audioTrackPicker.auto")
-                        #if os(tvOS)
-                        .prefersDefaultFocus(in: audioTrackPickerNamespace)
-                        #endif
-                        Divider()
-                        ForEach(vm.availableAudioTracks) { track in
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            // "Auto" row — resets this video to the HLS default track
                             Button {
-                                vm.selectAudioTrack(track)
+                                vm.selectAudioTrack(nil)
                                 showAudioTrackPicker = false
                             } label: {
                                 HStack {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(track.name)
-                                            .foregroundStyle(.primary)
-                                        if track.isOriginal {
-                                            Text("Original")
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
-                                        }
-                                    }
+                                    Text("Auto")
+                                        .foregroundStyle(.primary)
                                     Spacer()
-                                    if vm.selectedAudioTrack?.id == track.id {
+                                    if vm.selectedAudioTrack == nil {
                                         Image(systemName: AppSymbol.checkmark)
                                             .foregroundStyle(Color.accentColor)
                                     }
@@ -462,15 +432,58 @@ extension PlayerView {
                                 .padding(.vertical, 12)
                             }
                             .buttonStyle(.plain)
-                            .accessibilityIdentifier("player.audioTrackPicker.track.\(track.id)")
+                            .accessibilityIdentifier("player.audioTrackPicker.auto")
+                            #if os(tvOS)
+                            .prefersDefaultFocus(in: audioTrackPickerNamespace)
+                            #endif
                             Divider()
+                            // Original first, then dubs — the list can hold ~25 languages.
+                            ForEach(
+                                vm.availableAudioTracks.filter(\.isOriginal)
+                                    + vm.availableAudioTracks.filter { !$0.isOriginal }
+                            ) { track in
+                                Button {
+                                    vm.selectAudioTrack(track)
+                                    showAudioTrackPicker = false
+                                } label: {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(track.name)
+                                                .foregroundStyle(.primary)
+                                            if track.isOriginal {
+                                                Text("Original")
+                                                    .font(.caption)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        Spacer()
+                                        if vm.selectedAudioTrack?.id == track.id {
+                                            Image(systemName: AppSymbol.checkmark)
+                                                .foregroundStyle(Color.accentColor)
+                                        }
+                                    }
+                                    .contentShape(Rectangle())
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 12)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("player.audioTrackPicker.track.\(track.id)")
+                                .id(track.id)
+                                Divider()
+                            }
                         }
+                    }
+                    .onAppear {
+                        if let selected = vm.selectedAudioTrack?.id { proxy.scrollTo(selected, anchor: .center) }
                     }
                 }
                 .frame(maxHeight: 360)
                 #if os(tvOS)
                 .focused($audioTrackPickerFocused)
                 #endif
+                if let target = vm.voiceOverTargetLanguage {
+                    voiceOverControls(target: target)
+                }
             }
             .frame(maxWidth: moreMenuPortraitWidth)
             .background(.regularMaterial)
@@ -485,6 +498,67 @@ extension PlayerView {
             .padding(.bottom, 8)
         }
         .ignoresSafeArea()
+    }
+
+    // MARK: - Yandex voice-over controls (inside the audio track picker)
+
+    /// Per-video translation into the default audio language from Settings, plus lively voices.
+    @ViewBuilder private func voiceOverControls(target: String) -> some View {
+        Divider()
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle(
+                "Yandex Translation → \(Locale.current.localizedString(forLanguageCode: target) ?? target)",
+                isOn: Binding(
+                    get: { vm.isVoiceOverActive },
+                    set: { vm.setVoiceOverForCurrentVideo($0) }
+                )
+            )
+            .accessibilityIdentifier("player.audioTrackPicker.voiceOverToggle")
+            if target == "ru" {
+                Toggle(
+                    "Lively Voices",
+                    isOn: Binding(
+                        get: { store.settings.yandexVOTLivelyVoice },
+                        set: { isOn in
+                            store.settings.yandexVOTLivelyVoice = isOn
+                            vm.updateSettings(store.settings)
+                            if vm.isVoiceOverActive { vm.restartVoiceOver() }
+                        }
+                    )
+                )
+                .accessibilityIdentifier("player.audioTrackPicker.livelyVoiceToggle")
+            }
+            Toggle(
+                "Original Audio in Background",
+                isOn: Binding(
+                    get: { store.settings.yandexVOTKeepOriginalAudio },
+                    set: { isOn in
+                        store.settings.yandexVOTKeepOriginalAudio = isOn
+                        vm.updateSettings(store.settings)
+                        vm.voiceOver.keepsOriginalAudio = isOn
+                    }
+                )
+            )
+            .accessibilityIdentifier("player.audioTrackPicker.keepOriginalAudioToggle")
+            if let status = voiceOverStatus {
+                Text(status)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+    }
+
+    private var voiceOverStatus: String? {
+        guard vm.voiceOver.videoId == vm.currentVideoId else { return nil }
+        switch vm.voiceOver.state {
+        case .idle: return nil
+        case .waiting: return String(localized: "Yandex is translating the video…")
+        case .playing(let livelyVoice):
+            return livelyVoice
+                ? String(localized: "Playing: lively voice") : String(localized: "Playing: classic voice")
+        case .failed(let message): return message
+        }
     }
 
     // MARK: - Share sheet

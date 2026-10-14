@@ -148,17 +148,14 @@ extension InnerTubeAPI {
 
     /// Fetches player data using current yt-dlp's primary JS-less visionOS client.
     public func fetchPlayerInfoVisionOS(videoId: String) async throws -> PlayerInfo {
-        await seedVisionOSSession(videoId: videoId)
         var clientFields = (visionOSClientContext["client"] as? [String: Any]) ?? [:]
-        if let vd = visitorData { clientFields["visitorData"] = vd }
+        if let vd = await visionOSVisitorDataIfNeeded() { clientFields["visitorData"] = vd }
         var body = makeBody(client: ["client": clientFields])
         body["videoId"] = videoId
+        body["cpn"] = randomInnerTubeNonce(length: 16)
         body["racyCheckOk"] = true
         body["contentCheckOk"] = true
-        body["playbackContext"] = [
-            "contentPlaybackContext": ["html5Preference": "HTML5_PREF_WANTS"]
-        ]
-        let data = try await postVisionOS(body: body)
+        let data = try await postVisionOS(body: body, videoId: videoId)
         return try parsePlayerInfo(from: data, videoId: videoId)
     }
 

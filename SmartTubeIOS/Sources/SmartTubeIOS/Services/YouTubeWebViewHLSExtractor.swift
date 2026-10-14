@@ -759,6 +759,12 @@ final class YouTubeWebViewHLSExtractor: NSObject {
         finish(url: url)
     }
 
+    /// Abandons the in-flight extraction (e.g. VISIONOS HLS is already playing) so the
+    /// hidden WKWebView stops loading YouTube instead of running to its 40 s timeout.
+    func cancelCurrentExtraction() {
+        finish(url: nil)
+    }
+
     private func finish(url: URL?) {
         timeoutTask?.cancel()
         timeoutTask = nil

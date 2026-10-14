@@ -154,6 +154,19 @@ public actor TokenManager {
         }
     }
 
+    // MARK: - Yandex VOT token
+
+    /// Yandex OAuth token for VOT lively voices. Lives in the Keychain, never in AppSettings.
+    public static func yandexVOTToken(keychainService: String = "com.smarttube.auth") -> String? {
+        kcGet(service: keychainService, key: "st_yandex_vot_token")
+    }
+
+    /// Stores (or with `nil` / empty, removes) the Yandex OAuth token.
+    public static func setYandexVOTToken(_ token: String?, keychainService: String = "com.smarttube.auth") {
+        let trimmed = token?.trimmingCharacters(in: .whitespacesAndNewlines)
+        kcSet(service: keychainService, key: "st_yandex_vot_token", value: trimmed?.isEmpty == false ? trimmed : nil)
+    }
+
     // MARK: - Static (nonisolated) Keychain helpers
     // Static methods are nonisolated — safe to call from actor init.
 

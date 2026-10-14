@@ -97,7 +97,9 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
         request.setValue(ua, forHTTPHeaderField: "User-Agent")
         // All googlevideo.com requests (both manifest and segment CDN) need Origin/Referer
         // matching youtube.com so the CDN accepts the cross-origin request.
-        if let host = realURL.host, host.contains("googlevideo.com") {
+        // Exact domain match: `contains` would also accept e.g. googlevideo.com.attacker.example.
+        let isGoogleVideo = realURL.host.map { $0 == "googlevideo.com" || $0.hasSuffix(".googlevideo.com") } ?? false
+        if isGoogleVideo {
             request.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
             request.setValue("https://www.youtube.com/", forHTTPHeaderField: "Referer")
         }
@@ -105,7 +107,7 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
         // WKWebView at proxy creation time (webViewCookies). This includes both youtube.com
         // and googlevideo.com cookies needed for rqh=1-enforced content.
         // Falls back to HTTPCookieStorage.shared when webViewCookies was not provided.
-        if let host = realURL.host, host.contains("googlevideo.com") {
+        if isGoogleVideo {
             let cookies: [HTTPCookie] =
                 webViewCookies.isEmpty
                 ? (HTTPCookieStorage.shared.cookies(for: URL(string: "https://www.youtube.com")!) ?? [])

@@ -95,11 +95,9 @@ extension PlaybackViewModel {
             await probeStreamMethod(method, video: video)
             return
         }
-        #if os(tvOS)
-        // tvOS cannot use the WKWebView/BotGuard recovery available on iOS/macOS.
-        // Current yt-dlp uses VISIONOS as its primary JS-less Apple client. After
-        // seeding a normal YouTube webpage session it returns token-free HLS with
-        // H.264 through 1080p, which AVPlayer handles natively on Apple TV.
+        // VISIONOS is the JS-less client NewPipe takes all streams from: token-free HLS
+        // with H.264 through 1080p that AVPlayer plays natively. Tried first on every
+        // platform — the WKWebView/BotGuard paths below can each wait up to 40 s.
         do {
             let visionInfo = try await api.fetchPlayerInfoVisionOS(videoId: video.id)
             if await tryAllStreams(
@@ -115,7 +113,6 @@ extension PlaybackViewModel {
         } catch {
             playerLog.notice("[VisionOS] player request failed: \(error) — continuing legacy fallbacks")
         }
-        #endif
         #if canImport(WebKit)
         // Phase -1a: Cached WKWebView HLS URL shortcut — skip 5–9 s extraction when the
         // master manifest URL for this video was stored by a prior session or neighbour

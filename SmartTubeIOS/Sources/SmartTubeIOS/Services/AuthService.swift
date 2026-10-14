@@ -153,7 +153,7 @@ public final class AuthService {
                 try await requestDeviceCode(creds: creds)
             }
             authLog.notice(
-                "✅ Got device code. userCode=\(deviceResponse.userCode) expiresIn=\(deviceResponse.expiresIn)s interval=\(deviceResponse.interval)s"
+                "✅ Got device code. expiresIn=\(deviceResponse.expiresIn)s interval=\(deviceResponse.interval)s"
             )
             let expiresAt = Date().addingTimeInterval(TimeInterval(deviceResponse.expiresIn))
             let fallbackURL = URL(string: "https://yt.be/activate") ?? URL(string: "https://youtube.com/activate")!
@@ -237,6 +237,7 @@ public final class AuthService {
         isSignedIn = false
         pendingActivation = nil
         clearKeychain()
+        clearCookies()
     }
 
     /// Clears the in-memory auth session without touching the keychain.
@@ -265,6 +266,11 @@ public final class AuthService {
     public func clearAllForTest() {
         clearSession()
         clearKeychain()
+        clearCookies()
+    }
+
+    /// Wipes the web session (SAPISID etc.) so it doesn't outlive sign-out.
+    private func clearCookies() {
         // Wipe both cookie stores (URLSession's binarycookies + WKWebView's
         // origin index). Without this, the IFrame would still see stale
         // cookies from the previous sign-in.
@@ -280,12 +286,12 @@ public final class AuthService {
         #if canImport(WebKit)
         let dataStore = WKWebsiteDataStore.default()
         dataStore.removeData(ofTypes: [WKWebsiteDataTypeCookies], modifiedSince: Date(timeIntervalSince1970: 0)) {
-            authLog.notice("[clearAllForTest] WKWebsiteDataStore cookies removed")
+            authLog.notice("[clearCookies] WKWebsiteDataStore cookies removed")
         }
-        authLog.notice("[clearAllForTest] cleared in-memory + keychain + HTTPCookieStorage + WKWebsiteDataStore")
+        authLog.notice("[clearCookies] cleared HTTPCookieStorage + WKWebsiteDataStore")
         #else
         authLog.notice(
-            "[clearAllForTest] cleared in-memory + keychain + HTTPCookieStorage (no WebKit on this platform)")
+            "[clearCookies] cleared HTTPCookieStorage (no WebKit on this platform)")
         #endif
     }
 

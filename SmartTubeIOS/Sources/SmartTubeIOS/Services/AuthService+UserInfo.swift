@@ -35,9 +35,6 @@ extension AuthService {
         let (data, response) = try await URLSession.shared.data(for: req)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
         authLog.notice("fetchUserInfo() — HTTP \(statusCode)")
-        if let bodyStr = String(data: data, encoding: .utf8) {
-            authLog.notice("fetchUserInfo() — response: \(String(bodyStr.prefix(600)))")
-        }
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             authLog.error("fetchUserInfo() — JSON parse failed")
             return

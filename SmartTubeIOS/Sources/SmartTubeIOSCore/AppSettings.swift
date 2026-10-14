@@ -136,9 +136,20 @@ public struct AppSettings: Codable {
     }
 
     // MARK: Audio
-    /// BCP 47 language code of the user's preferred audio track (e.g. "es", "fr", "pt-BR").
-    /// `nil` means use the HLS default. Set implicitly when the user picks a track in the player.
+    /// BCP 47 language code of the user's default audio language (e.g. "ru", "es", "pt-BR"),
+    /// `"original"` for the creator's track, `nil` for the HLS / system default. On iOS, when
+    /// the video has neither an original nor a dubbed track in this language and Yandex VOT is
+    /// enabled, the video is voice-over translated into it.
     public var preferredAudioLanguage: String?
+
+    // MARK: Yandex voice-over translation (AVPlayer only)
+    /// Translates videos into `preferredAudioLanguage` with Yandex VOT when no matching track exists.
+    public var yandexVOTEnabled: Bool
+    /// Requests Yandex "lively voices" (needs the Yandex OAuth token, Russian target only).
+    public var yandexVOTLivelyVoice: Bool
+    /// Keeps the original audio quietly under the translation (Yandex returns the voice only,
+    /// without music or effects); off mutes it.
+    public var yandexVOTKeepOriginalAudio: Bool
 
     /// BCP 47 language code of the user's last selected caption track (e.g. "en", "es").
     /// `nil` means captions are off. Set implicitly when the user picks a caption track in the player.
@@ -177,13 +188,11 @@ public struct AppSettings: Codable {
     /// Opt-in experiment — has no effect on tvOS.
     public var useTOSPlayerOnMac: Bool
 
-    // Note: there is no `useTOSPlayerOnIOS` setting. The TOS-compliant player is
-    // always used on iOS (PlayerRouter.open(), gated #if os(iOS)) — see
-    // SettingsStore.useTOSPlayerOnIOS, which is a non-persisted, hardcoded-true
-    // property (overridable only by UI test launch arguments). It has no effect
-    // on macOS or tvOS. Automatically falls back to the AVPlayer pipeline for a
-    // given video if the embed reports a fatal error (TOSPlayerStateStore.markFallback
-    // — see TOSPlayerView.onFallback).
+    /// When `true` (default) on iOS, the IFrame-based TOS-compliant player is used;
+    /// `false` switches to the AVPlayer pipeline. Read via SettingsStore.useTOSPlayerOnIOS
+    /// (PlayerRouter.open(), #if os(iOS)). Even when `true`, a video whose embed reports a
+    /// fatal error falls back to AVPlayer (TOSPlayerStateStore.markFallback).
+    public var useTOSPlayerOnIOS: Bool
 
     // MARK: Schema version
     /// Persisted schema version. Starts at 1 for newly stored settings.
@@ -307,6 +316,9 @@ public struct AppSettings: Codable {
         sponsorBlockExcludedChannels = [:]
         blockedChannels = [:]
         preferredAudioLanguage = nil
+        yandexVOTEnabled = false
+        yandexVOTLivelyVoice = false
+        yandexVOTKeepOriginalAudio = true
         preferredCaptionLanguage = nil
         deArrowEnabled = false
         poTokenServiceURL = nil
@@ -318,6 +330,7 @@ public struct AppSettings: Codable {
         #else
         useTOSPlayerOnMac = false
         #endif
+        useTOSPlayerOnIOS = true
         settingsVersion = 1
     }
 }
@@ -384,6 +397,9 @@ extension AppSettings {
         case sponsorBlockExcludedChannels
         case blockedChannels
         case preferredAudioLanguage
+        case yandexVOTEnabled
+        case yandexVOTLivelyVoice
+        case yandexVOTKeepOriginalAudio
         case preferredCaptionLanguage
         case deArrowEnabled
         case poTokenServiceURL
@@ -391,6 +407,7 @@ extension AppSettings {
         case preferH264
         case iCloudSyncEnabled
         case useTOSPlayerOnMac
+        case useTOSPlayerOnIOS
     }
 
     public init(from decoder: Decoder) throws {
@@ -431,10 +448,14 @@ extension AppSettings {
         accentColor = c.safeDecode(AccentColorChoice.self, forKey: .accentColor, default: d.accentColor)
         let columns = Self.availableGridColumnCounts
         gridColumnsPortrait = min(
-            max(c.safeDecode(Int.self, forKey: .gridColumnsPortrait, default: d.gridColumnsPortrait), columns.lowerBound),
+            max(
+                c.safeDecode(Int.self, forKey: .gridColumnsPortrait, default: d.gridColumnsPortrait), columns.lowerBound
+            ),
             columns.upperBound)
         gridColumnsLandscape = min(
-            max(c.safeDecode(Int.self, forKey: .gridColumnsLandscape, default: d.gridColumnsLandscape), columns.lowerBound),
+            max(
+                c.safeDecode(Int.self, forKey: .gridColumnsLandscape, default: d.gridColumnsLandscape),
+                columns.lowerBound),
             columns.upperBound)
         enabledSections = c.safeDecode(
             [BrowseSection.SectionType].self, forKey: .enabledSections, default: d.enabledSections)
@@ -450,6 +471,10 @@ extension AppSettings {
         blockedChannels = c.safeDecode([String: String].self, forKey: .blockedChannels, default: d.blockedChannels)
         preferredAudioLanguage = c.safeDecode(
             String?.self, forKey: .preferredAudioLanguage, default: d.preferredAudioLanguage)
+        yandexVOTEnabled = c.safeDecode(Bool.self, forKey: .yandexVOTEnabled, default: d.yandexVOTEnabled)
+        yandexVOTLivelyVoice = c.safeDecode(Bool.self, forKey: .yandexVOTLivelyVoice, default: d.yandexVOTLivelyVoice)
+        yandexVOTKeepOriginalAudio = c.safeDecode(
+            Bool.self, forKey: .yandexVOTKeepOriginalAudio, default: d.yandexVOTKeepOriginalAudio)
         preferredCaptionLanguage = c.safeDecode(
             String?.self, forKey: .preferredCaptionLanguage, default: d.preferredCaptionLanguage)
         deArrowEnabled = c.safeDecode(Bool.self, forKey: .deArrowEnabled, default: d.deArrowEnabled)
@@ -458,5 +483,6 @@ extension AppSettings {
         preferH264 = c.safeDecode(Bool.self, forKey: .preferH264, default: d.preferH264)
         iCloudSyncEnabled = c.safeDecode(Bool.self, forKey: .iCloudSyncEnabled, default: d.iCloudSyncEnabled)
         useTOSPlayerOnMac = c.safeDecode(Bool.self, forKey: .useTOSPlayerOnMac, default: d.useTOSPlayerOnMac)
+        useTOSPlayerOnIOS = c.safeDecode(Bool.self, forKey: .useTOSPlayerOnIOS, default: d.useTOSPlayerOnIOS)
     }
 }

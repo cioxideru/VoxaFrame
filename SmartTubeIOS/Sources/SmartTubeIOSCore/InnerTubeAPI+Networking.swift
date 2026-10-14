@@ -8,6 +8,12 @@ import FoundationNetworking
 
 private let tubeLog = Logger(subsystem: appSubsystem, category: "InnerTube")
 
+/// Random `[A-Za-z0-9_-]` string for InnerTube `cpn` / `t` request nonces.
+func randomInnerTubeNonce(length: Int) -> String {
+    let alphabet = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
+    return String((0..<length).map { _ in alphabet.randomElement()! })
+}
+
 /// Extracts the visitor identifier embedded in a YouTube watch page.
 /// YouTube currently emits either the uppercase ytcfg key or lower-camel JSON key.
 func extractYouTubeVisitorData(from html: String) -> String? {
@@ -36,49 +42,23 @@ func extractYouTubeVisitorData(from html: String) -> String? {
 
 extension InnerTubeAPI {
 
-    // MARK: - YouTube webpage session seeding
+    // MARK: - visionOS visitor session
 
-    /// Establishes the same anonymous YouTube session that current yt-dlp creates
-    /// before its JS-less VisionOS player request. The watch-page response seeds
-    /// youtube.com cookies and exposes visitorData required to avoid false
-    /// `LOGIN_REQUIRED` bot-detection responses on otherwise public videos.
-    func seedVisionOSSession(videoId: String) async {
-        var components = URLComponents(string: "https://www.youtube.com/watch")!
-        components.queryItems = [
-            URLQueryItem(name: "v", value: videoId),
-            URLQueryItem(name: "bpctr", value: "9999999999"),
-            URLQueryItem(name: "has_verified", value: "1"),
-        ]
-        guard let url = components.url else { return }
-
-        if let consentCookie = HTTPCookie(properties: [
-            .domain: ".youtube.com",
-            .path: "/",
-            .name: "SOCS",
-            .value: "CAI",
-            .secure: true,
-            .expires: Date(timeIntervalSinceNow: 365 * 24 * 60 * 60),
-        ]) {
-            HTTPCookieStorage.shared.setCookie(consentCookie)
+    /// Returns visitorData issued to the visionOS client itself via `/visitor_id`
+    /// (NewPipe: "we must always pass a valid visitorData to get valid player
+    /// responses"). Cached for the app session; nil on failure so the player request
+    /// still goes out.
+    func visionOSVisitorDataIfNeeded() async -> String? {
+        if let cached = visionOSVisitorData { return cached }
+        guard let url = URL(string: "https://youtubei.googleapis.com/youtubei/v1/visitor_id?prettyPrint=false"),
+            let json = try? await postVisionOSRequest(url: url, body: ["context": visionOSClientContext]),
+            let vd = (json["responseContext"] as? [String: Any])?["visitorData"] as? String
+        else {
+            tubeLog.notice("VisionOS visitor_id request failed — sending player request without visitorData")
+            return nil
         }
-
-        var request = URLRequest(
-            url: url, cachePolicy: .reloadIgnoringLocalCacheData,
-            timeoutInterval: 15)
-        request.setValue(InnerTubeClients.WebSafari.userAgent, forHTTPHeaderField: "User-Agent")
-        request.setValue("en-US,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-        guard let (data, response) = try? await session.data(for: request),
-            let http = response as? HTTPURLResponse,
-            (200..<300).contains(http.statusCode),
-            let html = String(data: data, encoding: .utf8)
-        else { return }
-
-        if let value = extractYouTubeVisitorData(from: html) {
-            visitorData = value
-            tubeLog.notice("VisionOS session seeded (visitorData len=\(value.count, privacy: .public))")
-            return
-        }
-        tubeLog.notice("VisionOS session watch page loaded without visitorData")
+        visionOSVisitorData = vd
+        return vd
     }
 
     // MARK: - signatureTimestamp fetch
@@ -356,37 +336,31 @@ extension InnerTubeAPI {
         return json
     }
 
-    /// visionOS player transport mirrored from current yt-dlp: www.youtube.com,
-    /// public web API key, client 101 headers, and no OAuth/PO token.
-    func postVisionOS(body: [String: Any]) async throws -> [String: Any] {
-        guard
-            var comps = URLComponents(
-                url: baseURL.appendingPathComponent("player"),
-                resolvingAgainstBaseURL: false)
-        else {
+    /// visionOS player transport mirrored from NewPipeExtractor: youtubei.googleapis.com,
+    /// no API key, no Origin, native visionOS UA and `X-Goog-Api-Format-Version: 2`.
+    func postVisionOS(body: [String: Any], videoId: String) async throws -> [String: Any] {
+        guard var comps = URLComponents(string: "https://youtubei.googleapis.com/youtubei/v1/player") else {
             throw APIError.invalidURL("player")
         }
         comps.queryItems = [
-            URLQueryItem(name: "key", value: apiKey),
             URLQueryItem(name: "prettyPrint", value: "false"),
+            URLQueryItem(name: "t", value: randomInnerTubeNonce(length: 12)),
+            URLQueryItem(name: "id", value: videoId),
         ]
         guard let url = comps.url else { throw APIError.invalidURL("player") }
+        return try await postVisionOSRequest(url: url, body: body)
+    }
+
+    func postVisionOSRequest(url: URL, body: [String: Any]) async throws -> [String: Any] {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
         request.setValue(InnerTubeClients.VisionOS.userAgent, forHTTPHeaderField: "User-Agent")
-        request.setValue(InnerTubeClients.VisionOS.nameID, forHTTPHeaderField: "X-YouTube-Client-Name")
-        request.setValue(InnerTubeClients.VisionOS.version, forHTTPHeaderField: "X-YouTube-Client-Version")
-        if let vd = visitorData {
-            request.setValue(vd, forHTTPHeaderField: "X-Goog-Visitor-Id")
-        }
+        request.setValue("2", forHTTPHeaderField: "X-Goog-Api-Format-Version")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await session.data(for: request)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            throw APIError.httpError(statusCode)
-        }
+        guard (200..<300).contains(statusCode) else { throw APIError.httpError(statusCode) }
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw APIError.decodingError("Root JSON is not a dictionary")
         }

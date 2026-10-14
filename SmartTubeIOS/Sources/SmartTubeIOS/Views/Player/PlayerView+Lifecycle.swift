@@ -214,6 +214,34 @@ extension PlayerView {
                     .allowsHitTesting(false)
                 }
 
+                // Yandex voice-over: a compact top-corner badge while the video is held for the translation.
+                if case .waiting(let remaining) = vm.voiceOver.state, !vm.isLoading {
+                    HStack(spacing: 8) {
+                        ProgressView().tint(.white).controlSize(.small)
+                        Text("Yandex translating")
+                        if let remaining, remaining > 0 {
+                            Text("~\(max(1, remaining / 60)) min").foregroundStyle(.white.opacity(0.7))
+                        }
+                        Button {
+                            vm.setVoiceOverForCurrentVideo(false)
+                        } label: {
+                            Image(systemName: AppSymbol.xmarkCircle)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Watch Without Translation")
+                        .accessibilityIdentifier("player.voiceOver.cancelButton")
+                    }
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.black.opacity(0.55), in: Capsule())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    .padding(.top, 56)
+                    .padding(.trailing, 12)
+                    .transition(.opacity)
+                }
+
                 // Hold-to-speed badge — shown while user long-presses to boost to 2×
                 #if os(iOS) || os(tvOS)
                 if vm.isHoldingToSpeed {

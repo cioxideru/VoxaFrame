@@ -29,7 +29,11 @@ Architecture map: docs/architecture.md · Glossary: CONTEXT.md · Decisions: doc
 - Authenticated InnerTube calls use the TVHTML5 client on youtubei.googleapis.com with a Bearer token and no API key; the WEB client rejects Bearer tokens. Never call `/oauth2/v3/userinfo` for account info (the TV OAuth client isn't Data-API-v3-enabled) — use `account/accounts` with the TVHTML5 context instead.
 - The 16 GB build Mac stalls with > 3 parallel simulator clones; `just` hardcodes 3.
 - Playback fallback code (`PlaybackViewModel+Fallback.swift`) is under active decomposition (WS4). Do not add branches there; add a `StreamSource`.
-- `swift test` (and `just test-unit`) currently fails to build: `TOSPlayerView.swift`/`TOSPlayerViewModel+WebBridge.swift` have a native-macOS-only compile break (missing `onWindowReady` param, `NSImage.pngData()` doesn't exist) — pre-existing, tracked in `docs/modernization/workstreams/WS1-entry-point-and-gates.md` Discovered. Fix is WS4/WS5 scope.
+- Package tests run on native macOS: code under `#if !os(tvOS)` must also compile for AppKit (`TOSPlayerView` has an `NSViewRepresentable` branch; `NSImage.pngData()` is a local shim).
+- `swift test --parallel` runs suites concurrently. Tests touching a shared static (`CurrentQueueStore.shared`, a test `URLProtocol`'s routes) must be `.serialized` — nest suites sharing the same global under one serialized parent (e.g. `CurrentQueueStoreSuites`). Poll for the expected state with a deadline instead of a fixed sleep.
+- AVPlayer playback tries the VISIONOS client's HLS first (H.264-filtered master, 1080p cap, visionOS User-Agent); its responses are recognised by `c=VISIONOS` in format URLs (`PlayerInfo.isFromVisionOSClient`).
+- Yandex voice-over (`VoiceOverTranslationController`) plays a voice-only MP3 in a second AVPlayer synced to the video. Hold/resume the video only via `setVideoPlaying` (keeps `isPlaying` in sync for the stall watchdog), and never load that MP3 with precise timing or seek it in a loop: mediaplaybackd times out and gets killed, and every AVPlayer then fails with -11819 until relaunch.
+- The Yandex OAuth token (lively voices) lives in the Keychain via `TokenManager`; never log it or put it in settings JSON.
 
 ## Where things are
 - Playback: docs/architecture.md#playback · Tests how-to: docs/how-to/run-tests.md · Device logs: docs/how-to/device-logs.md

@@ -24,6 +24,9 @@ public actor InnerTubeAPI {
 
     let session: URLSession
     var visitorData: String?
+    /// visitorData issued to the visionOS client by `/visitor_id`. Kept apart from the
+    /// shared `visitorData`: one visitor across several clients raises the bot score.
+    var visionOSVisitorData: String?
     var authToken: String?
     /// SAPISID cookie value from YouTube.com web session (set via OAuthLogin/MergeSession).
     /// Used by postWebCreator to compute SAPISIDHASH for WEB_CREATOR requests on www.youtube.com.
@@ -193,10 +196,12 @@ public actor InnerTubeAPI {
             "clientName": InnerTubeClients.VisionOS.name,
             "clientVersion": InnerTubeClients.VisionOS.version,
             "deviceMake": "Apple",
-            "deviceModel": "RealityDevice17,1",
-            "userAgent": InnerTubeClients.VisionOS.userAgent,
+            "deviceModel": InnerTubeClients.VisionOS.deviceModel,
             "osName": "visionOS",
-            "osVersion": "26.5.23O471",
+            "osVersion": InnerTubeClients.VisionOS.osVersion,
+            "platform": "MOBILE",
+            "hl": "en",
+            "gl": "US",
         ]
     ]
 

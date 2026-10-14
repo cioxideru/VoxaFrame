@@ -28,6 +28,10 @@ public final class PlaybackViewModel {
     let captionsManager: CaptionsManager
     let audioManager: AudioTrackManager
     let qualityManager: PlaybackQualityManager
+    let voiceOver = VoiceOverTranslationController()
+    /// The player's per-video translation toggle: `nil` follows Settings, `true` translates even
+    /// when a matching audio track exists, `false` keeps this video untranslated.
+    var voiceOverOverride: Bool?
 
     // MARK: - State
 
@@ -536,7 +540,10 @@ extension PlaybackViewModel: QualityContext {}
 
 extension PlaybackViewModel: QualityEventHandler {
     func loadAudioTracks(from item: AVPlayerItem) {
-        audioManager.loadAudioTracks(from: item)
+        Task { [weak self] in
+            await self?.audioManager.loadAudioTracks(from: item)
+            self?.applyAudioLanguagePolicy()
+        }
     }
 
     func qualityItemDidBecomeReady(_ item: AVPlayerItem, seekTo time: TimeInterval) {

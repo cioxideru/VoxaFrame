@@ -157,6 +157,8 @@ extension PlaybackViewModel {
         chapters = []
         captionsManager.reset()
         audioManager.reset()
+        voiceOver.stop()
+        voiceOverOverride = nil
         endCards = []
 
         // Push the currently playing video onto the history stack before switching
@@ -627,6 +629,7 @@ extension PlaybackViewModel {
             // If YouTube returns UNPLAYABLE/LOGIN_REQUIRED and the user is signed in,
             // automatically retry with the authenticated TV client before showing an error.
             let info: PlayerInfo
+            var visionOSHLSInfo: PlayerInfo?
             if let cachedInfo = cached.playerInfo {
                 playerLog.notice(
                     "PREFETCH_HIT: playerInfo for \(video.id) — skipping network (hls=\(cachedInfo.hlsURL != nil) dash=\(cachedInfo.dashURL != nil) formats=\(cachedInfo.formats.count))"
@@ -637,6 +640,14 @@ extension PlaybackViewModel {
             {
                 playerLog.notice("PREFETCH_COALESCE: playerInfo for \(video.id) — joined in-flight prefetch task")
                 info = coalescedInfo
+            } else if let visionInfo = try? await api.fetchPlayerInfoVisionOS(videoId: video.id),
+                visionInfo.hlsURL != nil
+            {
+                // VISIONOS first: token-free HLS in one request. The iOS → TV → Android chain
+                // below returns SABR-only / 360p-only responses for most videos and costs ~2 s.
+                info = visionInfo
+                visionOSHLSInfo = visionInfo
+                await VideoPreloadCache.shared.store(playerInfo: info, for: video.id)
             } else {
                 do {
                     info = try await api.fetchPlayerInfo(videoId: video.id)
@@ -803,6 +814,19 @@ extension PlaybackViewModel {
             // trying AndroidVR adaptive (which works for these videos via visitorData).
             // Route through exhaustiveRetry first; it will try all adaptive paths and fall
             // back to muxed 360p as Phase 2 if all adaptive attempts fail.
+            // VISIONOS HLS needs its own policy (H.264-filtered master, 1080p cap, visionOS UA) —
+            // also when the VISIONOS response comes back from VideoPreloadCache on a replay.
+            if let visionOSHLSInfo = visionOSHLSInfo ?? (info.hlsURL != nil && info.isFromVisionOSClient ? info : nil) {
+                if await tryAllStreams(video: video, info: visionOSHLSInfo, label: "VisionOS", skipMuxed: true) {
+                    playerLog.notice("[VisionOS] ✅ native HLS playback from loadAsync")
+                    #if canImport(WebKit)
+                    YouTubeWebViewHLSExtractor.shared.cancelCurrentExtraction()
+                    #endif
+                    return
+                }
+                await exhaustiveRetry(video: video, originalError: nil, playerInfo: info, cached: cached)
+                return
+            }
             if info.hlsURL == nil {
                 playerLog.notice(
                     "⚠️ iOS response: no HLS — routing to exhaustiveRetry for adaptive quality before muxed fallback")
@@ -1188,6 +1212,7 @@ extension PlaybackViewModel {
         // a short window. Saves the ~1.27s exhaustiveRetry race for hot same-video replays.
         // load() calls replaceCurrentItem(nil) when a different video is requested.
         parkedVideoId = currentVideo?.id
+        voiceOver.stop()
         isPlaying = false
         #if canImport(UIKit)
         do {

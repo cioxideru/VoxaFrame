@@ -65,7 +65,7 @@ extension AuthService {
                 try await exchangeDeviceCode(deviceCode: deviceCode, creds: creds)
                 authLog.notice("✅ Token exchanged — fetching user info")
                 try await fetchUserInfo()
-                authLog.notice("✅ Signed in as \(self.accountName ?? "unknown")")
+                authLog.notice("✅ Signed in")
                 // Fetch YouTube.com SAPISID cookie for WEB_CREATOR SAPISIDHASH auth.
                 // Best-effort: runs in background, failure doesn't block sign-in.
                 Task { await self.fetchYouTubeWebCookies() }

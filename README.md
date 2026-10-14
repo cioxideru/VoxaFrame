@@ -29,6 +29,7 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 
 ### Playback
 - Adaptive HLS and DASH streaming — up to 8K via AVPlayer; manual quality picker (144p → 4K)
+- Player engine choice on iOS (Settings → Player): native AVPlayer, fed by the VISIONOS client's HLS (H.264, up to 1080p), or YouTube's official IFrame player
 - DASH adaptive quality switching via `AVMutableComposition` — no black frames, audio preserved on every switch
 - Audio-only playback mode
 - Landscape playback with one-tap orientation lock (iPhone)
@@ -39,7 +40,11 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 - Now Playing metadata on lock screen and Dynamic Island
 
 ### Audio & Captions
-- Multi-track audio selection with a preferred-language setting (original, English, dubbed, and more)
+- Multi-track audio selection with a default audio language independent of the system language (original, English, dubbed, and more)
+- Yandex voice-over translation (AVPlayer only) into the default audio language (Russian, English, Kazakh) for videos without a track in it:
+  - the translation plays over the ducked or muted original audio ("Original Audio in Background")
+  - optional lively voices for Russian, using your Yandex OAuth token stored in the Keychain ("How to Get a Token" in Settings)
+  - per-video on/off toggle in the player's audio picker, even when a dubbed track exists
 - Caption / subtitle track selection — language choice remembered across videos
 
 ### Content & Feeds
