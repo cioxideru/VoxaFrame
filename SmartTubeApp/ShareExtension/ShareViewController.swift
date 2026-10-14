@@ -18,7 +18,7 @@ private let shareLog = Logger(subsystem: "com.void.smarttube.app.shareextension"
 
 final class ShareViewController: UIViewController {
 
-    private static let appGroup             = "group.com.void.smarttube"
+    private static let appGroup             = HomeWidgetStore.appGroup
     private static let pendingKey           = "pendingVideoID"
     private static let pendingWatchLaterKey = "pendingWatchLaterVideoID"
     private static let pendingQueueKey      = "pendingQueueVideoID"

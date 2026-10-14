@@ -49,7 +49,7 @@ public struct HomeWidgetSnapshot: Codable, Equatable, Sendable {
 }
 
 public struct HomeWidgetStore: Sendable {
-    public static let appGroup = "group.com.void.smarttube"
+    public static let appGroup = "group.com.ibaranov.smarttube"
     /// The widget's `kind`, used by the app to ask WidgetKit for a reload.
     public static let widgetKind = "SmartTubeHomeWidget"
     /// Large widget shows a 2×3 grid.

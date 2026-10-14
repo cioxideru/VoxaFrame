@@ -293,8 +293,6 @@
 		};
 		67E6B67C2F9535CD00CD372F /* Smart Tube */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = "Smart Tube";
 			sourceTree = "<group>";
 		};
@@ -727,7 +725,7 @@
 			mainGroup = 10B1F40F599FC1A0781AF6D9;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "SmartTubeIOS" */,
+				644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "../SmartTubeIOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5EF0B6AF2643BF476B25C7C0 /* Products */;
@@ -1030,7 +1028,6 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 24;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = SmartTubeApp/Info.plist;
@@ -1048,7 +1045,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app;
 				PRODUCT_NAME = SmartTube;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -1071,7 +1068,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.tv.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.tv.uitests;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = appletvos;
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
@@ -1093,7 +1090,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.tv.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.tv.uitests;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = appletvos;
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
@@ -1179,7 +1176,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1188,7 +1184,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app.uitests;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -1210,7 +1206,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1231,7 +1226,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app.SafariExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app.SafariExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1255,7 +1250,6 @@
 				CODE_SIGN_ENTITLEMENTS = SafariExtension/SmartTubeSafariExtension.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				INFOPLIST_FILE = SafariExtension/Info.plist;
@@ -1272,7 +1266,7 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app.SafariExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app.SafariExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1318,7 +1312,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=appletvos*]" = "Smart Tube TV";
@@ -1359,7 +1353,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=appletvos*]" = "Smart Tube TV";
@@ -1382,7 +1376,6 @@
 				CODE_SIGN_ENTITLEMENTS = DownloadWidget/SmartTubeDownloadWidget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				INFOPLIST_FILE = DownloadWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1390,7 +1383,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app.downloadwidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app.downloadwidget;
 				PRODUCT_NAME = SmartTubeDownloadWidget;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1408,7 +1401,6 @@
 				CODE_SIGN_ENTITLEMENTS = DownloadWidget/SmartTubeDownloadWidget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				INFOPLIST_FILE = DownloadWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1416,7 +1408,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app.downloadwidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app.downloadwidget;
 				PRODUCT_NAME = SmartTubeDownloadWidget;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1434,7 +1426,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1443,7 +1434,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app.uitests;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -1463,7 +1454,6 @@
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/SmartTubeShareExtension.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1471,7 +1461,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app.shareextension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app.shareextension;
 				PRODUCT_NAME = SmartTubeShareExtension;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1488,7 +1478,6 @@
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/SmartTubeShareExtension.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1496,7 +1485,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app.shareextension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app.shareextension;
 				PRODUCT_NAME = SmartTubeShareExtension;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1519,7 +1508,6 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 24;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 5A4JA438MW;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = SmartTubeApp/Info.plist;
@@ -1537,7 +1525,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.void.smarttube.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app;
 				PRODUCT_NAME = SmartTube;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -1619,7 +1607,7 @@
 				FF8768BF04D8F26434D2CCCD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		1A2B3C4D5E6F1A2B3C4D5E68 /* Build configuration list for PBXNativeTarget "SmartTubeTVUITests" */ = {
 			isa = XCConfigurationList;
@@ -1628,7 +1616,7 @@
 				1A2B3C4D5E6F1A2B3C4D5E67 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		67A5E80D2FB3932400C53D61 /* Build configuration list for PBXNativeTarget "SafariExtension" */ = {
 			isa = XCConfigurationList;
@@ -1637,7 +1625,7 @@
 				67A5E80F2FB3932400C53D61 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		67E6B6852F9535CD00CD372F /* Build configuration list for PBXNativeTarget "Smart Tube" */ = {
 			isa = XCConfigurationList;
@@ -1646,7 +1634,7 @@
 				67E6B6842F9535CD00CD372F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		7D9289AB39EE378EB64C7F41 /* Build configuration list for PBXNativeTarget "SmartTubeDownloadWidget" */ = {
 			isa = XCConfigurationList;
@@ -1664,7 +1652,7 @@
 				B114FDA1A112D6CFA1203000 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		AA01000000000000000000AD /* Build configuration list for PBXNativeTarget "SmartTubeShareExtension" */ = {
 			isa = XCConfigurationList;
@@ -1673,7 +1661,7 @@
 				AA01000000000000000000AC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		AEAB87BD362E4200A8AED20B /* Build configuration list for PBXNativeTarget "SmartTubeUITests" */ = {
 			isa = XCConfigurationList;
@@ -1682,12 +1670,12 @@
 				9EE8D597F302E6F05047F968 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "SmartTubeIOS" */ = {
+		644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "../SmartTubeIOS" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../SmartTubeIOS;
 		};
@@ -1696,17 +1684,17 @@
 /* Begin XCSwiftPackageProductDependency section */
 		4D96747315A9E066D09F1F4E /* SmartTubeIOSCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "SmartTubeIOS" */;
+			package = 644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "../SmartTubeIOS" */;
 			productName = SmartTubeIOSCore;
 		};
 		67E6B6862F9535CD00CD372F /* SmartTubeIOS */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "SmartTubeIOS" */;
+			package = 644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "../SmartTubeIOS" */;
 			productName = SmartTubeIOS;
 		};
 		AA01000000000000000000B1 /* SmartTubeIOSCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "SmartTubeIOS" */;
+			package = 644EA6428F48EF6B886E4B58 /* XCLocalSwiftPackageReference "../SmartTubeIOS" */;
 			productName = SmartTubeIOSCore;
 		};
 		B8401470D9A590E7F3685830 /* SmartTubeIOS */ = {

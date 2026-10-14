@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.void.smarttube</string>
+		<string>group.com.ibaranov.smarttube</string>
 	</array>
 </dict>
 </plist>
