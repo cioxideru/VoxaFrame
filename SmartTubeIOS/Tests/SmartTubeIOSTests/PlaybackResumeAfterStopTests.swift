@@ -19,4 +19,20 @@ struct PlaybackResumeAfterStopTests {
         #expect(vm.isPlaying == false)
         #expect(vm.player.rate == 0)
     }
+
+    @Test("togglePlayPause() on a parked item un-parks it so resume() works again")
+    func togglePlayUnparks() {
+        let vm = PlaybackViewModel()
+        vm.player.replaceCurrentItem(with: AVPlayerItem(url: URL(fileURLWithPath: "/dev/null")))
+        vm.parkedVideoId = "parked-1"
+
+        vm.togglePlayPause()
+        #expect(vm.parkedVideoId == nil)
+        #expect(vm.isPlaying)
+
+        vm.player.pause()
+        vm.isPlaying = false
+        vm.resume()
+        #expect(vm.isPlaying)
+    }
 }

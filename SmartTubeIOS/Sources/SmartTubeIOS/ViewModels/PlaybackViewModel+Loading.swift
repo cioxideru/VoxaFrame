@@ -394,6 +394,7 @@ extension PlaybackViewModel {
         parkedVideoId = currentVideo?.id
         voiceOver.stop()
         isPlaying = false
+        wasPlayingBeforeSuspend = false
         #if canImport(UIKit)
         do {
             try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)

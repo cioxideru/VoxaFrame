@@ -13,6 +13,9 @@ private let playerLog = CrashlyticsLogger(category: "Player")
 extension PlaybackViewModel {
 
     public func togglePlayPause() {
+        // Restarting a parked item (stop() keeps it, fix12) un-stops it without load(),
+        // so resume() must work again afterwards.
+        if videoEnded || !isPlaying { parkedVideoId = nil }
         if videoEnded {
             videoEnded = false
             seek(to: 0)
