@@ -13,7 +13,7 @@ Status: active
 - Dependencies/blockers: finding 1 remains a manual Xcode step tracked by
   [OQ-0012](../../OPEN_QUESTIONS.md#oq-0012--firebase-removal-xcode-project-and-app-store-follow-up);
   finding 7 belongs to the coordinator.
-- Next deliverable: commits for findings 2–6 with explicit validation limits.
+- Next deliverable: coordinator build/test acceptance of the five review-fix commits.
 
 | Checkpoint | Evidence and review result |
 |---|---|
@@ -21,4 +21,11 @@ Status: active
 | 3: Yandex disclosure | Policy now describes the conditional original-audio download/upload; checked against `VoiceOverTranslationController.uploadOriginalAudio`. |
 | 4: file timestamps | Added `NSPrivacyAccessedAPICategoryFileTimestamp` / `C617.1` for app-container cache metadata; checked against [Apple's required reasons](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitype). |
 | 5: native macOS naming | OQ-0012 now names the target and exception setting as native macOS; project settings inspected read-only (`SUPPORTS_MACCATALYST = NO`, macOS plist selection). |
-| 6: design logging | Pending. |
+| 6: design logging | Replaced the Crashlytics instruction with local `os.Logger` guidance and domain/code/host-only error details. |
+
+Implementation for findings 2–6 is delivered. The plan remains active until coordinator acceptance.
+Five logging privacy tests were added but NOT RUN; builds, unit tests and UI tests are NOT RUN.
+Static checks: changed Swift files pass strict swift-format lint; SwiftLint passes with the existing
+baseline (the installed version warns that `unused_private_declaration` is not a valid rule).
+The privacy manifest passes `plutil -lint`; `git diff --check` passes. Commit hooks were disabled
+for these commits to honor the no-build/no-test instruction.
