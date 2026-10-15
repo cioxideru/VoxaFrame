@@ -25,10 +25,13 @@ extension PlaybackViewModel {
             ? String(localized: "Audio-Only Mode", bundle: .module)
             : String(localized: "Video Mode", bundle: .module)
 
+        // A previous on/off swap may still be in flight; only the latest toggle wins.
+        audioOnlySwapTask?.cancel()
+        audioOnlySwapTask = nil
         if isAudioOnlyMode {
             // Overlay shows immediately via isAudioOnlyMode = true.
             // Attempt stream swap in background; failure does NOT revert the overlay.
-            Task { [weak self] in
+            audioOnlySwapTask = Task { [weak self] in
                 guard let self else { return }
                 await self.loadAudioOnlyItemIfEnabled(seekTo: savedTime, liveToggle: true)
             }
@@ -36,14 +39,20 @@ extension PlaybackViewModel {
             // Only reload HLS if we actually swapped to an audio-only stream;
             // otherwise HLS is already playing and no reload is needed.
             if audioOnlyItemActive {
-                audioOnlyItemActive = false
-                Task { [weak self] in
-                    guard let self else { return }
+                audioOnlySwapTask = Task { [weak self] in
+                    guard let self, !Task.isCancelled, !self.isAudioOnlyMode else { return }
+                    self.audioOnlyItemActive = false
                     // Restore the user's quality preference (fixes W6: passing nil dropped the preference).
                     await self.reloadHLSItem(seekTo: savedTime, quality: settings.preferredQuality)
                 }
             }
         }
+    }
+
+    /// `false` once the user turned audio-only off, toggled again or moved to another video
+    /// while a swap was awaiting.
+    private func audioOnlySwapStillWanted(for videoId: String) -> Bool {
+        isAudioOnlyMode && !Task.isCancelled && currentVideo?.id == videoId
     }
 
     /// Entry point called from `loadAsync()` only when `isAudioOnlyMode == true`
@@ -68,8 +77,10 @@ extension PlaybackViewModel {
         // Attempt 1: iOS client URL (already in memory, zero extra network cost).
         if let url = info.bestAdaptiveAudioURL {
             let success = await tryLoadAudioURL(
-                url, userAgent: InnerTubeClients.iOS.userAgent, seekTo: seekTime, liveToggle: liveToggle)
+                url, userAgent: InnerTubeClients.iOS.userAgent, videoId: info.video.id, seekTo: seekTime,
+                liveToggle: liveToggle)
             if success { return }
+            guard audioOnlySwapStillWanted(for: info.video.id) else { return }
             audioOnlyLog.notice("Audio-only: iOS client URL failed, retrying with android_vr")
         }
 
@@ -80,13 +91,14 @@ extension PlaybackViewModel {
     /// Builds an `AVURLAsset` for the given audio URL, checks playability, and replaces
     /// the current player item. Returns `true` on success.
     private func tryLoadAudioURL(
-        _ url: URL, userAgent: String, seekTo seekTime: TimeInterval = 0, liveToggle: Bool = false
+        _ url: URL, userAgent: String, videoId: String, seekTo seekTime: TimeInterval = 0, liveToggle: Bool = false
     ) async -> Bool {
         let opts: [String: Any] = [
             "AVURLAssetHTTPHeaderFieldsKey": ["User-Agent": userAgent]
         ]
         let asset = AVURLAsset(url: url, options: opts)
         guard (try? await asset.load(.isPlayable)) == true else { return false }
+        guard audioOnlySwapStillWanted(for: videoId) else { return false }
 
         let item = AVPlayerItem(asset: asset)
         item.audioTimePitchAlgorithm = .spectral
@@ -158,15 +170,18 @@ extension PlaybackViewModel {
     ) async {
         do {
             let vrInfo = try await api.fetchPlayerInfoAndroidVR(videoId: videoId)
+            guard audioOnlySwapStillWanted(for: videoId) else { return }
             if let url = vrInfo.bestAdaptiveAudioURL {
                 let success = await tryLoadAudioURL(
-                    url, userAgent: InnerTubeClients.AndroidVR.userAgent, seekTo: seekTime, liveToggle: liveToggle)
+                    url, userAgent: InnerTubeClients.AndroidVR.userAgent, videoId: videoId, seekTo: seekTime,
+                    liveToggle: liveToggle)
                 if success { return }
             }
         } catch {
             audioOnlyLog.error("Audio-only: android_vr fetch failed: \(error)")
         }
 
+        guard audioOnlySwapStillWanted(for: videoId) else { return }
         // Both attempts failed.
         audioOnlyItemActive = false
         if liveToggle {

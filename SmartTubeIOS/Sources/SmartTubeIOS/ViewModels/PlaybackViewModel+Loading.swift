@@ -168,6 +168,7 @@ extension PlaybackViewModel {
     }
 
     private func resetPlaybackForLoad(video: Video) {
+        audioOnlySwapTask?.cancel()
         // Report watchtime for the video being replaced before tearing it down.
         // This is the only opportunity when switching via load() directly (e.g. autoplay),
         // since stop()/suspend() are not called in that path.
@@ -295,6 +296,7 @@ extension PlaybackViewModel {
     /// Called when the PlayerView temporarily disappears (e.g. a sheet slides over it).
     /// Use `resume()` to restart playback, or `load(video:)` to switch videos.
     public func suspend() {
+        audioOnlySwapTask?.cancel()
         playerLog.notice(
             "[suspend] suspend() called — currentVideo=\(self.currentVideo?.id ?? "nil") currentTime=\(Int(self.currentTime))s"
         )
@@ -380,6 +382,7 @@ extension PlaybackViewModel {
     // MARK: - Cleanup
 
     public func stop() {
+        audioOnlySwapTask?.cancel()
         playerLog.notice(
             "[stop] stop() called — currentVideo=\(self.currentVideo?.id ?? "nil") currentTime=\(Int(self.currentTime))s isLoading=\(self.isLoading)"
         )

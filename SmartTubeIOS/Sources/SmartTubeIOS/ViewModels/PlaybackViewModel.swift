@@ -202,6 +202,8 @@ public final class PlaybackViewModel {
     /// `true` when an actual audio-only AVPlayerItem (not HLS) is the current item.
     /// Used by `toggleAudioOnlyLive` to decide whether to reload HLS on turn-off.
     var audioOnlyItemActive: Bool = false
+    /// The in-flight audio-only on/off stream swap started by `toggleAudioOnlyLive`.
+    var audioOnlySwapTask: Task<Void, Never>?
 
     // MARK: - Captions (forwarded to CaptionsManager)
     // MARK: - Audio tracks (forwarded to AudioTrackManager)
