@@ -435,8 +435,8 @@ public final class HomeViewModel {
             do {
                 let more = try await api.fetchShortsMore(continuationToken: token)
                 guard isCurrentLoad(generation) else { return false }
-                let existingIDs = Set(shortsVideos.map(\.id))
-                let newVideos = more.videos.filter { !existingIDs.contains($0.id) }
+                var seenIDs = Set(shortsVideos.map(\.id))
+                let newVideos = more.videos.filter { seenIDs.insert($0.id).inserted }
                 shortsVideos.append(contentsOf: newVideos)
                 // Stop a non-advancing source, but keep looking through empty advancing pages.
                 shortsNextPageToken = newVideos.isEmpty && more.nextPageToken == token ? nil : more.nextPageToken
@@ -464,8 +464,8 @@ public final class HomeViewModel {
             let more = await Self.fetchMoreVideos(type: .subscriptions, token: token, api: api)
             guard isCurrentLoad(generation) else { return false }
             sections[idx].isLoadingMore = false
-            let existingIDs = Set(sections[idx].videos.map(\.id))
-            let newVideos = more.0.filter { !existingIDs.contains($0.id) }
+            var seenIDs = Set(sections[idx].videos.map(\.id))
+            let newVideos = more.0.filter { seenIDs.insert($0.id).inserted }
             sections[idx].videos.append(contentsOf: newVideos)
             sections[idx].nextPageToken = newVideos.isEmpty && more.1 == token ? nil : more.1
             // `loadMore` will not fetch this page again, so its regular videos join the feed

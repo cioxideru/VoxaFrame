@@ -539,17 +539,23 @@ struct HomeViewModelTests {
         vm.load()
         await waitForTasks(until: { !vm.isRefreshing })
 
-        // The next subscriptions page: one regular video and one Short.
+        // Duplicate IDs within the page and against both initial shelves must stay unique.
         mock.subscriptionsResult = VideoGroup(
             title: "Subs",
             videos: [
                 makeVideo("vid_0000003"),
+                makeVideo("vid_0000003"),
+                makeVideo("vid_0000001"),
+                makeVideo("vid_0000002"),
                 Video(id: "srt_0000004", title: "Short", channelTitle: "Ch", isShort: true),
             ])
         vm.loadShorts(atLeast: 10)
         await waitForTasks(until: { vm.homeShortsVideos.contains { $0.id == "srt_0000004" } })
 
-        #expect(vm.homeRegularVideos.map(\.id).contains("vid_0000003"))
+        #expect(vm.homeRegularVideos.map(\.id) == ["vid_0000001", "vid_0000002", "vid_0000003"])
+        let subscriptionIDs = vm.sections.first { $0.section.type == .subscriptions }?.videos.map(\.id) ?? []
+        #expect(subscriptionIDs == ["vid_0000002", "vid_0000003", "vid_0000001", "srt_0000004"])
+        #expect(Set(vm.mergedVideos.map(\.id)).count == vm.mergedVideos.count)
     }
 }
 
