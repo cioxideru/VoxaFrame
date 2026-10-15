@@ -71,8 +71,8 @@ package enum InnerTubeClients {
         package static let osVersion = "26.6.0.23O770"
         package static let userAgent =
             "com.google.visionos.youtube/1.04(RealityDevice17,1; U; CPU visionOS 26_6_0 like Mac OS X; US)"
-        /// Higher HLS tiers are currently VP9/AV1; tvOS AVFoundation needs the
-        /// H.264 ladder, which tops out at 1080p for this client.
+        /// Top of this client's H.264 HLS ladder. Higher tiers (1440p, 2160p) are VP9 only,
+        /// played when the system VP9 decoder is available (`HLSPlaybackPolicy`).
         package static let maximumHLSHeight = 1080
     }
 

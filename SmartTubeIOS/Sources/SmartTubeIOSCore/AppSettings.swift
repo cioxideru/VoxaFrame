@@ -151,6 +151,12 @@ public struct AppSettings: Codable {
     /// without music or effects); off mutes it.
     public var yandexVOTKeepOriginalAudio: Bool
 
+    // MARK: Video codecs (AVPlayer, VISIONOS HLS)
+    /// Plays the VP9 ladder (up to 2160p) when the device has a VP9 decoder.
+    public var vp9Enabled: Bool
+    /// Plays the H.264 ladder (up to 1080p). Used anyway when VP9 is off or not decodable.
+    public var h264Enabled: Bool
+
     /// BCP 47 language code of the user's last selected caption track (e.g. "en", "es").
     /// `nil` means captions are off. Set implicitly when the user picks a caption track in the player.
     /// Applied automatically to each new video on load.
@@ -319,6 +325,8 @@ public struct AppSettings: Codable {
         yandexVOTEnabled = false
         yandexVOTLivelyVoice = false
         yandexVOTKeepOriginalAudio = true
+        vp9Enabled = true
+        h264Enabled = false
         preferredCaptionLanguage = nil
         deArrowEnabled = false
         poTokenServiceURL = nil
@@ -400,6 +408,8 @@ extension AppSettings {
         case yandexVOTEnabled
         case yandexVOTLivelyVoice
         case yandexVOTKeepOriginalAudio
+        case vp9Enabled
+        case h264Enabled
         case preferredCaptionLanguage
         case deArrowEnabled
         case poTokenServiceURL
@@ -475,6 +485,8 @@ extension AppSettings {
         yandexVOTLivelyVoice = c.safeDecode(Bool.self, forKey: .yandexVOTLivelyVoice, default: d.yandexVOTLivelyVoice)
         yandexVOTKeepOriginalAudio = c.safeDecode(
             Bool.self, forKey: .yandexVOTKeepOriginalAudio, default: d.yandexVOTKeepOriginalAudio)
+        vp9Enabled = c.safeDecode(Bool.self, forKey: .vp9Enabled, default: d.vp9Enabled)
+        h264Enabled = c.safeDecode(Bool.self, forKey: .h264Enabled, default: d.h264Enabled)
         preferredCaptionLanguage = c.safeDecode(
             String?.self, forKey: .preferredCaptionLanguage, default: d.preferredCaptionLanguage)
         deArrowEnabled = c.safeDecode(Bool.self, forKey: .deArrowEnabled, default: d.deArrowEnabled)

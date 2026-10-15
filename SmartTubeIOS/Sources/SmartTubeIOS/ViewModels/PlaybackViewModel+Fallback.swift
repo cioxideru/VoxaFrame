@@ -13,58 +13,6 @@ private typealias VideoFormat = SmartTubeIOSCore.VideoFormat
 
 private let playerLog = CrashlyticsLogger(category: "Player")
 
-/// Client-specific HLS settings used for both initial playback and quality changes.
-struct HLSPlaybackPolicy: Equatable, Sendable {
-    let userAgent: String
-    let maximumHeight: Int?
-    let filtersMasterManifest: Bool
-    let requiresH264: Bool
-
-    static func resolve(label: String, isHLS: Bool) -> Self {
-        guard isHLS else {
-            return Self(
-                userAgent: "com.google.ios.youtube/19.45.4 (iPhone16,2; U; CPU iOS 18_1_0 like Mac OS X)",
-                maximumHeight: nil,
-                filtersMasterManifest: false,
-                requiresH264: false
-            )
-        }
-        if label.localizedCaseInsensitiveContains("visionos") {
-            return Self(
-                userAgent: InnerTubeClients.VisionOS.userAgent,
-                maximumHeight: InnerTubeClients.VisionOS.maximumHLSHeight,
-                filtersMasterManifest: true,
-                requiresH264: true
-            )
-        }
-        if label.contains("WebSafari") {
-            return Self(
-                userAgent: InnerTubeClients.WebSafari.userAgent,
-                maximumHeight: nil,
-                filtersMasterManifest: false,
-                requiresH264: false
-            )
-        }
-        return Self(
-            userAgent: "com.google.ios.youtube/19.45.4 (iPhone16,2; U; CPU iOS 18_1_0 like Mac OS X)",
-            maximumHeight: nil,
-            filtersMasterManifest: false,
-            requiresH264: false
-        )
-    }
-
-    func cappedHeight(requested: Int?) -> Int? {
-        guard let maximumHeight else { return requested }
-        return min(requested ?? maximumHeight, maximumHeight)
-    }
-
-    func allowsFormat(height: Int, mimeType: String) -> Bool {
-        if let maximumHeight, height > maximumHeight { return false }
-        if requiresH264, !mimeType.contains("avc1") { return false }
-        return true
-    }
-}
-
 // MARK: - Exhaustive Playback Retry
 
 extension PlaybackViewModel {
@@ -96,7 +44,7 @@ extension PlaybackViewModel {
             return
         }
         // VISIONOS is the JS-less client NewPipe takes all streams from: token-free HLS
-        // with H.264 through 1080p that AVPlayer plays natively. Tried first on every
+        // that AVPlayer plays natively (VP9 through 2160p, else H.264 through 1080p). Tried first on every
         // platform — the WKWebView/BotGuard paths below can each wait up to 40 s.
         do {
             let visionInfo = try await api.fetchPlayerInfoVisionOS(videoId: video.id)
@@ -1036,7 +984,9 @@ extension PlaybackViewModel {
 
         playerInfo = info
         let isHLSManifest = label.contains("/HLS")
-        let hlsPolicy = HLSPlaybackPolicy.resolve(label: label, isHLS: isHLSManifest)
+        let hlsPolicy = HLSPlaybackPolicy.resolve(
+            label: label, isHLS: isHLSManifest,
+            vp9Enabled: settings.vp9Enabled, h264Enabled: settings.h264Enabled)
         let newFormats = Self.deduplicatedVideoFormats(info.formats)
         // Never reduce quality options for adaptive/HLS streams — preserve the richest set seen.
         // Exception: muxed fallback (label contains "/muxed") always resets availableFormats to
@@ -1091,11 +1041,7 @@ extension PlaybackViewModel {
                 } ?? allVariantURLs
             playerLog.notice(
                 "[\(label)] HLS: hlsURL=yes variantCount=\(variantURLs.count) effectiveQuality=\(effectiveQuality)")
-            if hlsPolicy.requiresH264 {
-                availableFormats = availableFormats.filter { format in
-                    hlsPolicy.allowsFormat(height: format.height, mimeType: format.mimeType)
-                }
-            }
+            availableFormats = hlsPolicy.pickerFormats(from: info.formats, current: availableFormats)
             if !variantURLs.isEmpty {
                 hlsVariantURLs = variantURLs
                 let playableFormats = availableFormats.filter { variantURLs.keys.contains($0.height) }
@@ -1116,7 +1062,8 @@ extension PlaybackViewModel {
                     if hlsPolicy.filtersMasterManifest {
                         effectiveURL = hlsURL
                         playerLog.notice(
-                            "[\(label)] HLS: using H.264-filtered master with \(chosen.key)p cap and audio renditions")
+                            "[\(label)] HLS: using \(hlsPolicy.videoCodecs.joined(separator: "+"))-filtered master (top \(chosen.key)p) with audio renditions"
+                        )
                     } else {
                         effectiveURL = chosen.value
                         playerLog.notice("[\(label)] HLS: selected variant \(chosen.key)p")
@@ -1222,7 +1169,7 @@ extension PlaybackViewModel {
             qualityManager.configureHLSPlayback(
                 userAgent: hlsPolicy.userAgent,
                 maximumHeight: hlsPolicy.maximumHeight,
-                requiredVideoCodec: hlsPolicy.requiresH264 ? "avc1" : nil
+                videoCodecs: hlsPolicy.videoCodecs
             )
             qualityManager.setSelectedFormatForCurrentPreference()
             applyHLSHints = true

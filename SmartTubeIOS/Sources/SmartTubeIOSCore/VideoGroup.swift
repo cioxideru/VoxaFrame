@@ -214,7 +214,7 @@ public struct VideoFormat: Identifiable, Hashable, Sendable {
     /// Short human-readable codec identifier derived from `mimeType`, e.g. "H.264", "VP9", "AV1".
     public var codecShortLabel: String {
         if mimeType.contains("avc1") { return "H.264" }
-        if mimeType.contains("vp09") { return "VP9" }
+        if mimeType.contains("vp09") || mimeType.contains("vp9") { return "VP9" }
         if mimeType.contains("av01") { return "AV1" }
         if mimeType.contains("hvc1") || mimeType.contains("hev1") { return "HEVC" }
         if mimeType.contains("mp4") { return "mp4" }

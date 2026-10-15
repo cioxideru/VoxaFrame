@@ -140,6 +140,39 @@ public extension Video {
         }
     }
 
+    /// How long ago the video was published: "45 minutes", "6 hours", "5 days", "1.5 weeks",
+    /// "3 months", "2 years". Falls back to the API's own text when there is no date.
+    func publishedAgeLabel(now: Date = Date(), locale: Locale = .autoupdatingCurrent) -> String? {
+        guard let publishedAt else {
+            // Same shape as the computed labels: "3 years", not "Streamed 3 years ago".
+            let raw = publishedTimeText?
+                .replacingOccurrences(of: RelativeDate.liveEventPrefix, with: "", options: .regularExpression)
+                .replacingOccurrences(of: #"\s+ago$"#, with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespaces)
+            return raw?.isEmpty == false ? raw : nil
+        }
+        return Self.ageLabel(max(0, now.timeIntervalSince(publishedAt)), locale: locale)
+    }
+
+    /// Weeks and longer round to the nearest half; unit lengths come from `RelativeDate`.
+    static func ageLabel(_ seconds: TimeInterval, locale: Locale = .autoupdatingCurrent) -> String {
+        let hour: TimeInterval = 3_600
+        let day = RelativeDate.day
+        func halves(_ value: Double) -> Double { (value * 2).rounded() / 2 }
+        func label(_ value: Double, _ unit: String) -> String {
+            let number = value.formatted(.number.precision(.fractionLength(0...1)).locale(locale))
+            return "\(number) \(unit)\(value == 1 ? "" : "s")"
+        }
+        switch seconds {
+        case ..<hour: return label(max(1, (seconds / 60).rounded(.down)), "minute")
+        case ..<day: return label((seconds / hour).rounded(.down), "hour")
+        case ..<RelativeDate.week: return label((seconds / day).rounded(.down), "day")
+        case ..<RelativeDate.month: return label(halves(seconds / RelativeDate.week), "week")
+        case ..<RelativeDate.year: return label(halves(seconds / RelativeDate.month), "month")
+        default: return label(halves(seconds / RelativeDate.year), "year")
+        }
+    }
+
     /// High-quality thumbnail URL using YouTube's image CDN (480×360, always available).
     var highQualityThumbnailURL: URL? {
         URL(string: "https://i.ytimg.com/vi/\(id)/hqdefault.jpg")

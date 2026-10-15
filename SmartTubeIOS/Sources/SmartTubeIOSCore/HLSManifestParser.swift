@@ -239,8 +239,8 @@ public func parseHLSBestVariant(from manifest: String, baseURL: URL, minHeight: 
 /// a video-only variant) keeps `EXT-X-MEDIA` audio groups and removes incompatible video.
 public func filterHLSMasterManifest(
     _ manifest: String,
-    maximumHeight: Int,
-    requiredVideoCodec: String
+    maximumHeight: Int?,
+    videoCodecs: [String]
 ) -> String {
     let lines = manifest.components(separatedBy: .newlines)
     var output: [String] = []
@@ -269,8 +269,8 @@ public func filterHLSMasterManifest(
                 .map { String(trimmed[$0]) }
                 .flatMap { $0.components(separatedBy: "x").last }
                 .flatMap(Int.init)
-            let codecMatches = trimmed.localizedCaseInsensitiveContains(requiredVideoCodec)
-            guard codecMatches, let height, height <= maximumHeight else {
+            let codecMatches = videoCodecs.contains { trimmed.localizedCaseInsensitiveContains($0) }
+            guard codecMatches, let height, height <= maximumHeight ?? .max else {
                 shouldDropNextURI = true
                 continue
             }
@@ -296,6 +296,44 @@ public func filterHLSMasterManifest(
     }
 
     return output.joined(separator: "\n")
+}
+
+/// The original-language audio rendition of a YouTube HLS master (the first one, which is
+/// also the lowest-bitrate group), else the first audio rendition.
+public func hlsOriginalAudioPlaylistURL(in master: String, baseURL: URL) -> URL? {
+    let audio = master.components(separatedBy: .newlines)
+        .map { $0.trimmingCharacters(in: .whitespaces) }
+        .filter { $0.hasPrefix("#EXT-X-MEDIA:") && $0.contains("TYPE=AUDIO") }
+    guard let line = audio.first(where: hlsMediaLineIsOriginalAudio) ?? audio.first,
+        let uri = extractQuotedHLSAttribute("URI", from: line)
+    else { return nil }
+    return URL(string: uri, relativeTo: baseURL)?.absoluteURL
+}
+
+/// Every media URL of an HLS media playlist in play order: the `EXT-X-MAP` init segment
+/// (when present), then the segments. Each URL appears once: a byte-range playlist repeats
+/// one file per `EXT-X-BYTERANGE` slice, and fetched once that file is the whole stream.
+public func hlsSegmentURLs(in playlist: String, baseURL: URL) -> [URL] {
+    var seen = Set<URL>()
+    return playlist.components(separatedBy: .newlines)
+        .map { $0.trimmingCharacters(in: .whitespaces) }
+        .compactMap { line -> String? in
+            if line.hasPrefix("#EXT-X-MAP:") { return extractQuotedHLSAttribute("URI", from: line) }
+            return line.isEmpty || line.hasPrefix("#") ? nil : line
+        }
+        .compactMap { URL(string: $0, relativeTo: baseURL)?.absoluteURL }
+        .filter { seen.insert($0).inserted }
+}
+
+/// A packed-audio HLS segment without its leading ID3v2 timestamp tag. Concatenated with the
+/// tags, YouTube's AAC segments leave ID3 blocks mid-stream and Yandex never finishes
+/// decoding the upload; stripped, they form one plain ADTS AAC stream.
+public func strippingLeadingID3Tag(_ segment: Data) -> Data {
+    let header = [UInt8](segment.prefix(10))
+    guard header.count == 10, header.starts(with: Array("ID3".utf8)) else { return segment }
+    // Size is a 28-bit "syncsafe" integer: 7 bits per byte.
+    let size = header[6...9].reduce(0) { $0 << 7 | Int($1 & 0x7F) }
+    return Data(segment.dropFirst(min(10 + size, segment.count)))  // rebased: indices start at 0
 }
 
 private func hlsMediaLineIsOriginalAudio(_ line: String) -> Bool {

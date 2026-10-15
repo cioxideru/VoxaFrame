@@ -131,7 +131,7 @@ extension InnerTubeAPI {
     func parseRelativeDate(_ text: String) -> Date? {
         let stripped =
             text
-            .replacingOccurrences(of: #"^(Streamed|Premiered|Started)\s+"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: RelativeDate.liveEventPrefix, with: "", options: .regularExpression)
             .lowercased()
         let pattern = #"(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago"#
         guard let regex = try? NSRegularExpression(pattern: pattern),
@@ -149,10 +149,10 @@ extension InnerTubeAPI {
         case "second": seconds = TimeInterval(value)
         case "minute": seconds = TimeInterval(value * 60)
         case "hour": seconds = TimeInterval(value * 3_600)
-        case "day": seconds = TimeInterval(value * 86_400)
-        case "week": seconds = TimeInterval(value * 7 * 86_400)
-        case "month": seconds = TimeInterval(value * 30 * 86_400)
-        case "year": seconds = TimeInterval(value * 365 * 86_400)
+        case "day": seconds = TimeInterval(value) * RelativeDate.day
+        case "week": seconds = TimeInterval(value) * RelativeDate.week
+        case "month": seconds = TimeInterval(value) * RelativeDate.month
+        case "year": seconds = TimeInterval(value) * RelativeDate.year
         default: return nil
         }
         let result = Date(timeIntervalSinceNow: -seconds)
@@ -215,4 +215,15 @@ public func findTimestamps(in text: String) -> [(range: Range<String.Index>, sec
         results.append((range, seconds))
     }
     return results
+}
+
+/// YouTube's relative dates ("3 months ago") as fixed lengths, shared by `parseRelativeDate`
+/// and `Video.ageLabel` so an API "3 months ago" reads back as "3 months".
+package enum RelativeDate {
+    package static let day: TimeInterval = 86_400
+    package static let week = 7 * day
+    package static let month = 30 * day
+    package static let year = 365 * day
+    /// "Streamed 2 days ago", "Premiered …", "Started …": the prefix before the relative date.
+    package static let liveEventPrefix = #"^(Streamed|Premiered|Started)\s+"#
 }

@@ -787,8 +787,23 @@ extension InnerTubeAPI {
         let metaContentVM = (lockupMeta?["metadata"] as? [String: Any])?["contentMetadataViewModel"] as? [String: Any]
         let metaRows = metaContentVM?["metadataRows"] as? [[String: Any]] ?? []
 
+        // Row 0 is the channel name, unless it is the only row and holds the stats instead
+        // ("2.8M views • 1 day ago" on channel pages and single-creator playlists).
+        let firstRowIsChannel: Bool = {
+            guard metaRows.count == 1, let parts = metaRows[0]["metadataParts"] as? [[String: Any]] else {
+                return true
+            }
+            return !parts.contains { part in
+                guard let text = part["text"] as? [String: Any],
+                    let str = text["content"] as? String ?? extractText(text)
+                else { return false }
+                return str.contains("view") || str.contains("watching") || parseRelativeDate(str) != nil
+            }
+        }()
+        let statsRows = firstRowIsChannel ? Array(metaRows.dropFirst()) : metaRows
+
         let channelTitle: String = {
-            guard let firstRow = metaRows.first,
+            guard firstRowIsChannel, let firstRow = metaRows.first,
                 let parts = firstRow["metadataParts"] as? [[String: Any]],
                 let firstPart = parts.first,
                 let text = firstPart["text"] as? [String: Any]
@@ -858,7 +873,7 @@ extension InnerTubeAPI {
         }
 
         let publishedAt: Date? = {
-            for row in metaRows.dropFirst() {
+            for row in statsRows {
                 guard let parts = row["metadataParts"] as? [[String: Any]] else { continue }
                 for part in parts {
                     guard let text = part["text"] as? [String: Any],
@@ -876,7 +891,7 @@ extension InnerTubeAPI {
             viewCount: {
                 // BUG-011 fix: extract viewCount from contentMetadataViewModel metadataRows.
                 // Row index 1 (second row) often contains "N views" or compact count.
-                for row in metaRows.dropFirst() {
+                for row in statsRows {
                     guard let parts = row["metadataParts"] as? [[String: Any]] else { continue }
                     for part in parts {
                         guard let text = part["text"] as? [String: Any],

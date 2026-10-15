@@ -666,29 +666,7 @@ public struct VideoCardView: View {
             dateFmt.timeStyle = .short
             return "Scheduled: \(dateFmt.string(from: date))"
         }
-        guard let date = video.publishedAt else { return nil }
-        let now = Date()
-        let elapsed = now.timeIntervalSince(date)
-        if elapsed < 86_400 { return "Today" }
-        let days = Int(elapsed / 86_400)
-        // For recent videos (<7 days) always compute fresh relative label — avoids
-        // showing a stale "2 hours ago" from a cached `publishedTimeText`.
-        if days < 7 { return days == 1 ? "1 day ago" : "\(days) days ago" }
-        // For older videos, prefer the raw API text (e.g. "2 years ago", "3 months ago").
-        // Formatting an approximate publishedAt as "May 12" looks precise but can be weeks off.
-        if let raw = video.publishedTimeText, !raw.isEmpty {
-            let cleaned = raw.replacingOccurrences(
-                of: #"^(Streamed|Premiered|Started)\s+"#,
-                with: "",
-                options: .regularExpression
-            ).trimmingCharacters(in: .whitespaces)
-            if !cleaned.isEmpty { return cleaned }
-        }
-        // Fallback: format the computed Date (exact for RSS feed videos, approximate for others).
-        let sameYear = Calendar.current.component(.year, from: date) == Calendar.current.component(.year, from: now)
-        return sameYear
-            ? date.formatted(.dateTime.month(.abbreviated).day())
-            : date.formatted(.dateTime.month(.abbreviated).year())
+        return video.publishedAgeLabel()
     }
 
     private var liveBadge: some View {

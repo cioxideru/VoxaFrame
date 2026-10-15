@@ -263,4 +263,64 @@ struct HLSManifestParserTests {
         let result = parseHLSBestVariant(from: manifest, baseURL: masterURL, minHeight: 0)
         #expect(result == URL(string: "https://cdn.example.com/hls/1080p.m3u8"))
     }
+
+    // MARK: - Audio rendition download (Yandex upload fallback)
+
+    @Test("original audio rendition is preferred over a dub, URIs resolve against the master")
+    func originalAudioPlaylist() {
+        let master = """
+            #EXTM3U
+            #EXT-X-MEDIA:URI="dub.m3u8",TYPE=AUDIO,GROUP-ID="233",NAME="Español - dubbed",DEFAULT=NO
+            #EXT-X-MEDIA:URI="orig.m3u8",TYPE=AUDIO,GROUP-ID="233",NAME="English - original",DEFAULT=YES
+            #EXT-X-STREAM-INF:BANDWIDTH=1,RESOLUTION=640x360,CODECS="avc1,mp4a",AUDIO="233"
+            v.m3u8
+            """
+        #expect(
+            hlsOriginalAudioPlaylistURL(in: master, baseURL: base)
+                == URL(string: "https://cdn.example.com/hls/orig.m3u8"))
+        #expect(hlsOriginalAudioPlaylistURL(in: "#EXTM3U", baseURL: base) == nil)
+    }
+
+    @Test("segment list starts with the init segment and skips tags")
+    func segmentURLs() {
+        let playlist = """
+            #EXTM3U
+            #EXT-X-MAP:URI="init.mp4"
+            #EXTINF:4.0,
+            https://g.example.com/seg0.ts
+            #EXTINF:4.0,
+            seg1.ts
+            #EXT-X-ENDLIST
+            """
+        #expect(
+            hlsSegmentURLs(in: playlist, baseURL: base).map(\.absoluteString) == [
+                "https://cdn.example.com/hls/init.mp4", "https://g.example.com/seg0.ts",
+                "https://cdn.example.com/hls/seg1.ts",
+            ])
+    }
+
+    @Test("a byte-range playlist yields its single file once")
+    func byteRangeSegmentURLs() {
+        let playlist = """
+            #EXTM3U
+            #EXT-X-MAP:URI="audio.mp4",BYTERANGE="700@0"
+            #EXT-X-BYTERANGE:5000@700
+            audio.mp4
+            #EXT-X-BYTERANGE:5000@5700
+            audio.mp4
+            """
+        #expect(
+            hlsSegmentURLs(in: playlist, baseURL: base).map(\.absoluteString) == [
+                "https://cdn.example.com/hls/audio.mp4"
+            ])
+    }
+
+    @Test("leading ID3 tag is stripped from a packed-audio segment")
+    func stripsID3() {
+        let adts: [UInt8] = [0xFF, 0xF1, 0x5C, 0x80]
+        // 10-byte header with syncsafe size 0x81 = 129 (bytes 0x00 0x00 0x01 0x01), then 129 tag bytes.
+        let tagged = Data(Array("ID3".utf8) + [3, 0, 0, 0, 0, 1, 1] + Array(repeating: 0, count: 129) + adts)
+        #expect(strippingLeadingID3Tag(tagged) == Data(adts))
+        #expect(strippingLeadingID3Tag(Data(adts)) == Data(adts))
+    }
 }

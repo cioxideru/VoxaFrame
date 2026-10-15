@@ -49,6 +49,7 @@ public struct SettingsView: View {
             playerEngineSection
             #endif
             if usesAVPlayer {
+                videoCodecsSection
                 yandexVOTSection
             }
             generalSection
@@ -491,6 +492,30 @@ public struct SettingsView: View {
         } footer: {
             Text(
                 "The video's original or dubbed track in this language is played instead of the system language. With Yandex translation on, a video without such a track is voice-over translated by Yandex into Russian, English or Kazakh. AVPlayer only (turn off the IFrame Player). A video Yandex hasn't translated before stays paused for a few minutes until the translation is ready. Lively voices: Russian only, needs the token."
+            )
+        }
+    }
+
+    // MARK: - Video codecs (AVPlayer)
+
+    private var videoCodecsSection: some View {
+        @Bindable var store = store
+        let settings = store.settings
+        return Section {
+            // At least one codec stays on: the last one enabled can't be switched off.
+            Toggle("VP9 (up to 4K)", isOn: $store.settings.vp9Enabled)
+                .disabled(settings.vp9Enabled && !settings.h264Enabled)
+                .accessibilityIdentifier("settings.vp9Toggle")
+            Toggle("H.264 (up to 1080p)", isOn: $store.settings.h264Enabled)
+                .disabled(settings.h264Enabled && !settings.vp9Enabled)
+                .accessibilityIdentifier("settings.h264Toggle")
+        } header: {
+            Text("Video Codecs")
+        } footer: {
+            Text(
+                HLSPlaybackPolicy.isVP9DecodingAvailable
+                    ? "VP9 gives 1440p and 4K. H.264 tops out at 1080p but plays on every device. With both on, the player picks between them. Applies to the next video."
+                    : "This device has no VP9 decoder (iOS 26.2 or later needed), so H.264 up to 1080p is used."
             )
         }
     }

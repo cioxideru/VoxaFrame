@@ -183,6 +183,47 @@ struct LockupViewModelPublishAgeTests {
             "publishedAt should be approximately 2 years ago")
     }
 
+    @Test("parseLockupViewModel reads a lone metadata row (channel pages, playlists)")
+    func lockupViewModel_singleRow_populatesDateAndViews() async throws {
+        let rows: [[String: Any]] = [
+            [
+                "metadataParts": [
+                    ["text": ["content": "2.8M views"]],
+                    ["text": ["content": "1 day ago"]],
+                ]
+            ]
+        ]
+        let response = makeLockupViewModelAgeResponse(makeLockup(metadataRows: rows))
+        let group = try await InnerTubeAPI().parseVideoGroupForTesting(response, title: nil)
+        let video = try #require(group.videos.first)
+        let publishedAt = try #require(video.publishedAt)
+        #expect(abs(publishedAt.timeIntervalSinceNow + 86_400) < 60)
+        #expect(video.viewCount == 2_800_000)
+        #expect(video.channelTitle.isEmpty, "a views/date row is not a channel name")
+    }
+
+    @Test("parseLockupViewModel keeps a lone channel-name row as the channel")
+    func lockupViewModel_singleChannelRow_keepsChannelTitle() async throws {
+        let rows: [[String: Any]] = [["metadataParts": [["text": ["content": "Channel Name"]]]]]
+        let response = makeLockupViewModelAgeResponse(makeLockup(metadataRows: rows))
+        let video = try #require(try await InnerTubeAPI().parseVideoGroupForTesting(response, title: nil).videos.first)
+        #expect(video.channelTitle == "Channel Name")
+        #expect(video.publishedAt == nil)
+    }
+
+    @Test("parseLockupViewModel does not read a date out of the channel name")
+    func lockupViewModel_channelNameLikeDate_isNotTheDate() async throws {
+        let rows: [[String: Any]] = [
+            ["metadataParts": [["text": ["content": "10 Years Ago"]]]],
+            ["metadataParts": [["text": ["content": "1.2M views"]], ["text": ["content": "2 days ago"]]]],
+        ]
+        let response = makeLockupViewModelAgeResponse(makeLockup(metadataRows: rows))
+        let video = try #require(try await InnerTubeAPI().parseVideoGroupForTesting(response, title: nil).videos.first)
+        #expect(video.channelTitle == "10 Years Ago")
+        let publishedAt = try #require(video.publishedAt)
+        #expect(abs(publishedAt.timeIntervalSinceNow + 2 * 86_400) < 60)
+    }
+
     @Test("parseLockupViewModel with no relative-date text leaves publishedAt nil")
     func lockupViewModel_noRelativeDate_publishedAtIsNil() async throws {
         let rows: [[String: Any]] = [
@@ -197,5 +238,50 @@ struct LockupViewModelPublishAgeTests {
         #expect(
             video.publishedAt == nil,
             "publishedAt should be nil when no row contains a relative date string")
+    }
+}
+
+// MARK: - Age label under feed videos
+
+@Suite("Video age label")
+struct VideoAgeLabelTests {
+    private let en = Locale(identifier: "en_US")
+    private let day: TimeInterval = 86_400
+
+    private func label(_ seconds: TimeInterval) -> String { Video.ageLabel(seconds, locale: en) }
+
+    @Test("minutes, hours and days count whole units")
+    func shortAges() {
+        #expect(label(20) == "1 minute")
+        #expect(label(45 * 60) == "45 minutes")
+        #expect(label(6.7 * 3_600) == "6 hours")
+        #expect(label(1 * day) == "1 day")
+        #expect(label(5.9 * day) == "5 days")
+    }
+
+    @Test("weeks, months and years round to the nearest half")
+    func longAges() {
+        #expect(label(7 * day) == "1 week")
+        #expect(label(10 * day) == "1.5 weeks")
+        #expect(label(45 * day) == "1.5 months")
+        #expect(label(5 * 30 * day) == "5 months")
+        #expect(label(2 * 365 * day) == "2 years")
+    }
+
+    @Test("decimal separator follows the locale")
+    func localizedSeparator() {
+        #expect(Video.ageLabel(10 * day, locale: Locale(identifier: "ru_RU")) == "1,5 weeks")
+    }
+
+    @Test("dated videos use the date; undated ones fall back to the API text")
+    func publishedAgeLabel() {
+        let now = Date()
+        var video = Video(id: "a", title: "t", channelTitle: "c", publishedAt: now.addingTimeInterval(-6 * 3_600))
+        #expect(video.publishedAgeLabel(now: now, locale: en) == "6 hours")
+        video.publishedAt = nil
+        video.publishedTimeText = "Streamed 3 years ago"
+        #expect(video.publishedAgeLabel(now: now, locale: en) == "3 years")
+        video.publishedTimeText = nil
+        #expect(video.publishedAgeLabel(now: now, locale: en) == nil)
     }
 }

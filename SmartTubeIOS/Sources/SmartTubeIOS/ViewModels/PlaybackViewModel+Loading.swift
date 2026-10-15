@@ -814,7 +814,7 @@ extension PlaybackViewModel {
             // trying AndroidVR adaptive (which works for these videos via visitorData).
             // Route through exhaustiveRetry first; it will try all adaptive paths and fall
             // back to muxed 360p as Phase 2 if all adaptive attempts fail.
-            // VISIONOS HLS needs its own policy (H.264-filtered master, 1080p cap, visionOS UA) —
+            // VISIONOS HLS needs its own policy (codec-filtered master, visionOS UA) —
             // also when the VISIONOS response comes back from VideoPreloadCache on a replay.
             if let visionOSHLSInfo = visionOSHLSInfo ?? (info.hlsURL != nil && info.isFromVisionOSClient ? info : nil) {
                 if await tryAllStreams(video: video, info: visionOSHLSInfo, label: "VisionOS", skipMuxed: true) {

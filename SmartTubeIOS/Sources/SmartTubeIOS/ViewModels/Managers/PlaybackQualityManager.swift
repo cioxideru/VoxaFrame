@@ -90,7 +90,9 @@ final class PlaybackQualityManager {
     var hlsVariantURLs: [Int: URL] = [:]
     private var hlsPlaybackUserAgent = InnerTubeClients.Web.userAgent
     private var hlsPlaybackMaximumHeight: Int? = nil
-    private var hlsRequiredVideoCodec: String? = nil
+    private var hlsVideoCodecs: [String] = []
+    /// Codecs the policy allows for this video; a picked row narrows `hlsVideoCodecs` to its own.
+    private var hlsAllowedVideoCodecs: [String] = []
     @ObservationIgnored private var nativeHLSProxyLoader: YTHLSProxyLoader? = nil
     /// `true` when the current stream is a muxed (360p) fallback.
     /// Quality-switch attempts while muxed trigger fresh WKWebView extraction
@@ -144,7 +146,8 @@ final class PlaybackQualityManager {
         hlsVariantURLs = [:]
         hlsPlaybackUserAgent = InnerTubeClients.Web.userAgent
         hlsPlaybackMaximumHeight = nil
-        hlsRequiredVideoCodec = nil
+        hlsVideoCodecs = []
+        hlsAllowedVideoCodecs = []
         nativeHLSProxyLoader = nil
         isMuxedFallback = false
         hasAppliedH264Cap = false
@@ -190,6 +193,11 @@ final class PlaybackQualityManager {
         }
         // Per-video intent: overrides the persisted default for this video only.
         perVideoQuality = quality
+        // With several codecs allowed, a picked row plays its own codec; Auto lets AVPlayer choose.
+        if hlsAllowedVideoCodecs.count > 1 {
+            let picked = format.flatMap { HLSPlaybackPolicy.videoCodec(ofMimeType: $0.mimeType) }
+            hlsVideoCodecs = picked.flatMap { hlsAllowedVideoCodecs.contains($0) ? [$0] : nil } ?? hlsAllowedVideoCodecs
+        }
         delegate?.toastMessage = format.map { "\($0.height)p" } ?? "Auto"
         qualityTask?.cancel()
         qualityTask = nil
@@ -316,26 +324,25 @@ final class PlaybackQualityManager {
     func configureHLSPlayback(
         userAgent: String,
         maximumHeight: Int?,
-        requiredVideoCodec: String?
+        videoCodecs: [String]
     ) {
         hlsPlaybackUserAgent = userAgent
         hlsPlaybackMaximumHeight = maximumHeight
-        hlsRequiredVideoCodec = requiredVideoCodec
+        hlsVideoCodecs = videoCodecs
+        hlsAllowedVideoCodecs = videoCodecs
         nativeHLSProxyLoader = nil
     }
 
     func makeHLSAsset(url: URL, options: [String: Any]) -> AVURLAsset {
-        guard let requiredVideoCodec = hlsRequiredVideoCodec,
-            let maximumVideoHeight = hlsPlaybackMaximumHeight,
-            let proxyURL = url.proxyURL
+        guard !hlsVideoCodecs.isEmpty, let proxyURL = url.proxyURL
         else {
             nativeHLSProxyLoader = nil
             return AVURLAsset(url: url, options: options)
         }
         let loader = YTHLSProxyLoader(
             ua: hlsPlaybackUserAgent,
-            maximumVideoHeight: maximumVideoHeight,
-            requiredVideoCodec: requiredVideoCodec
+            maximumVideoHeight: hlsPlaybackMaximumHeight,
+            videoCodecs: hlsVideoCodecs
         )
         let asset = AVURLAsset(url: proxyURL, options: options)
         asset.resourceLoader.setDelegate(loader, queue: .global(qos: .userInitiated))
@@ -592,6 +599,13 @@ final class PlaybackQualityManager {
     func reloadHLSItemH264Capped(seekTo time: TimeInterval) async {
         guard let hlsURL = delegate?.playerInfo?.hlsURL else { return }
         guard !Task.isCancelled else { return }
+        // A filtered master that can't be decoded here (VP9) drops to the H.264 ladder for the
+        // rest of this video; unfiltered masters keep their mix and rely on the 1080p hints.
+        if !hlsVideoCodecs.isEmpty {
+            hlsVideoCodecs = [HLSPlaybackPolicy.h264]
+            hlsAllowedVideoCodecs = hlsVideoCodecs
+            hlsPlaybackMaximumHeight = InnerTubeClients.VisionOS.maximumHLSHeight
+        }
         let uaOpts: [String: Any] = [
             "AVURLAssetHTTPHeaderFieldsKey": [
                 "User-Agent": hlsPlaybackUserAgent,
