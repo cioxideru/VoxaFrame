@@ -141,7 +141,7 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   firebase-ios-sdk checkout fails in the Crashlytics run script, and the iOS app still bundles a
   local `GoogleService-Info.plist` when one exists on disk.
 - Steps in Xcode (`SmartTube.xcworkspace`, project `SmartTubeApp`):
-  1. Target **SmartTube** (iOS/Catalyst) → Build Phases: delete the Run Script phase that runs
+  1. Target **SmartTube** (iOS/native macOS) → Build Phases: delete the Run Script phase that runs
      `.../firebase-ios-sdk/Crashlytics/run -gsp ${SRCROOT}/SmartTubeApp/GoogleService-Info.plist`
      (shown as "Run Script", object `67F34A972FA0A6A200EA6054`).
   2. Same target → Build Phases: delete "Copy Firebase Binary dSYMs" (`FFDDBB9900112233445566AA`).
@@ -155,7 +155,7 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
      `Package.resolved` files were deleted with the removal because every pin was a Firebase/Google
      package; if Xcode recreates the workspace one, it should list no remote packages.
   6. Optional: `NSApplicationCrashOnExceptions` in `SmartTubeApp/SmartTubeApp/Info-macOS.plist`
-     was a Crashlytics recommendation; it only changes local exception handling on Catalyst.
+     was a Crashlytics recommendation; it only changes local exception handling on native macOS.
 - App Store Connect: update the App Privacy answers (crash data no longer collected) and replace
   the obsolete [reviewer notes](archive/reviewer-notes.md) with text matching the
   [privacy policy](../PRIVACY_POLICY.md). Server-side state was **NOT CHECKED**.
