@@ -32,10 +32,8 @@ already used). Reversal means restoring the deleted files from git history.
 - Good: about 15k lines and two WKWebView player stacks removed.
 - Bad: iOS is again exposed to the stream-resolution failures ADR-0006 avoided (CDN/geo blocks,
   BotGuard/PO-token churn); the AVPlayer fallback cascade (ADR-0005) carries that load.
-- "Play Incognito" (#94), previously honored only by the embed player, is wired into
-  `PlaybackViewModel` (`load(video:incognito:)`).
-- Bad: iOS loses the embed player's brightness/volume edge-swipe gestures and its chapters
-  overlay; `PlayerView` has no equivalent (deferred, [OQ-0012](../OPEN_QUESTIONS.md#oq-0012--ios-player-gestures-lost-with-the-embed-player)).
+- Bad: the "watch in incognito" action no longer suppresses history; the AVPlayer path never
+  honored `incognito` (see [open questions](../OPEN_QUESTIONS.md)).
 - Device playback of iOS Shorts through AVPlayer has not been re-verified.
 
 ## Alternatives considered
@@ -43,3 +41,15 @@ already used). Reversal means restoring the deleted files from git history.
 - **Keep the TOS player behind the setting**: keeps three player stacks for a minority path.
 - **Rebuild Shorts on a dedicated AVPlayer view model**: not needed; `ShortsPlayerView` already
   had a `PlaybackViewModel` branch for tvOS.
+
+## Amendment — 2026-10-15
+
+The accepted text above describes the state at the decision. Subsequent implementation
+restored "Play Incognito" (#94) in `PlaybackViewModel.load(video:incognito:)`, including
+same-video mode changes during playback, loading and parked-item reuse. Mode changes
+establish a fresh tracking session; incognito playback skips local history, watchtime
+and resume-position recording. See the [changelog](../../CHANGELOG.md).
+
+Additional consequence identified after acceptance: iOS loses the embed player's
+brightness/volume edge-swipe gestures and its chapters overlay. `PlayerView` has no
+equivalent; this remains deferred in [OQ-0012](../OPEN_QUESTIONS.md#oq-0012--ios-player-gestures-lost-with-the-embed-player).

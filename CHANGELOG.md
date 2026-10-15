@@ -6,6 +6,16 @@ All notable changes to SmartTube are documented here.
 
 ## [Unreleased]
 
+### Fixed — 2026-10-15
+
+- **Same-video privacy changes (#94)** now reset tracking when reopening a playing,
+  loading or parked item. Returning from incognito to normal playback records local
+  history and resume position again; entering incognito disables recording for the new session.
+- **Shorts dismissal and navigation** cancel pending transitions, ignore end-of-video
+  handling during an existing transition, and release the end handler when stopping.
+- Preserved [ADR-0010](docs/adr/0010-remove-iframe-player.md)'s accepted text and appended
+  a dated amendment for the subsequent incognito fix and identified gesture losses.
+
 ### Removed — 2026-10-15
 
 - **IFrame (TOS) player and Shorts embed player** ([ADR-0010](docs/adr/0010-remove-iframe-player.md),
