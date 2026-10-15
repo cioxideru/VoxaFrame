@@ -75,7 +75,8 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - UI-test target cleanup: the removed embed-player UI-test files are still listed in the
   `UITests` group and Sources build phase of `SmartTubeApp.xcodeproj` until removed in Xcode
   (`TOSPlayerUITests`, `TOSPlayerIOSUITests`, `TOSPlayerSwipeNavigationUITests`,
-  `ShortsEmbedPauseControlsUITests`, `ShortsEmbedSrcSwapSpikeUITests`, `ShortsEmbedPlayerUITests`).
+  `ShortsEmbedPauseControlsUITests`, `ShortsEmbedSrcSwapSpikeUITests`, `ShortsEmbedPlayerUITests`,
+  `ShortsVisualPlaybackUITests` — 7 files; deleted from disk, references remain).
 
 ## OQ-0006 — BotGuard acceptance
 
