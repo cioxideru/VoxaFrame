@@ -279,39 +279,13 @@ extension PlaybackViewModel {
         return true
     }
 
-    // Immutable track arrays are transferred through AsyncStream and consumed only on MainActor.
-    private struct CompositionTracks: @unchecked Sendable {
-        let video: [AVAssetTrack]
-        let audio: [AVAssetTrack]
-    }
-
     private func loadCompositionTracks(
         videoAsset: AVURLAsset, audioAsset: AVURLAsset, context: CompositionRequestContext, label: String
-    ) async -> CompositionTracks? {
+    ) async -> LoadedAssetTracks? {
         let clientParam = context.clientParam
         let videoRqh = context.videoRqh
         do {
-            // AVAssetTrack is not Sendable in Swift 6 strict mode.
-            // Wrap the pair so AsyncStream<CompositionTracks?> satisfies Sendable.
-            // Ownership is transferred atomically through the stream; no concurrent
-            // access occurs after the box is read on the main actor.
-            let (raceStream, raceCont) = AsyncStream<CompositionTracks?>.makeStream()
-
-            // Asynchronous track loading yields result or nil on error.
-            let loaderTask = Task {
-                do {
-                    async let videoTracks = videoAsset.loadTracks(withMediaType: .video)
-                    async let audioTracks = audioAsset.loadTracks(withMediaType: .audio)
-                    let (vv, aa) = try await (videoTracks, audioTracks)
-                    raceCont.yield(CompositionTracks(video: vv, audio: aa))
-                } catch {
-                    raceCont.yield(nil)
-                }
-                raceCont.finish()
-            }
-
-            // Timeout task — prevents indefinite CDN hang for rqh=1 Bearer experiments.
-            // After finish() is called by either task, subsequent yield/finish are no-ops.
+            // Timeout — prevents indefinite CDN hang for rqh=1 Bearer experiments.
             // On tvOS/iOS: AndroidVR gets 2s — the firstByte probe (Range: bytes=0-0) is a
             // false positive for rqh=1 CDN enforcement: the CDN serves the first byte (206)
             // but stalls actual AVURLAsset segment requests. fast non-rqh videos complete
@@ -331,14 +305,9 @@ extension PlaybackViewModel {
                 : (needsQuickStartup
                     ? PlaybackTuning.adaptiveStartupTimeoutNanoseconds : PlaybackTuning.adaptiveTimeoutNanoseconds)
             #endif
-            Task {
-                try? await Task.sleep(nanoseconds: timeoutNs)
-                raceCont.yield(nil)
-                raceCont.finish()
-            }
 
-            if let firstOrNil = await raceStream.first(where: { @Sendable _ in true }),
-                let box = firstOrNil
+            if let box = await loadTracksRacingTimeout(
+                videoAsset: videoAsset, audioAsset: audioAsset, timeout: .nanoseconds(timeoutNs))
             {
                 return box
             } else {
@@ -349,9 +318,6 @@ extension PlaybackViewModel {
                 let timeoutSec = isVRAttempt ? 2 : (needsQuickStartup ? 1 : 8)
                 #endif
                 let reason = "timed out after \(timeoutSec)s or loadTracks failed"
-                loaderTask.cancel()
-                videoAsset.cancelLoading()
-                audioAsset.cancelLoading()
                 playerLog.error("❌ [\(label)/adaptive] loadTracks \(reason) (rqh=\(videoRqh))")
                 return nil
             }

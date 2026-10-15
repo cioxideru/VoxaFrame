@@ -4,7 +4,7 @@ import AVFoundation
 //
 // In-memory cache for AVAssetTrack arrays loaded from CDN URLs.
 // AVAssetTrack is not Sendable, so this is a final class with NSLock rather
-// than an actor — same @unchecked Sendable pattern used by TrackBox elsewhere.
+// than an actor — same @unchecked Sendable pattern used by LoadedAssetTracks.
 //
 // Populated by:
 //   • rebuildCompositionForQuality — caches tracks after a successful CDN load
