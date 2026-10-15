@@ -438,7 +438,7 @@ extension PlaybackViewModel {
         _ masterURL: URL, nSolver: (unsolved: String, solved: String)?, poToken: String? = nil,
         skipIfPfa1: Bool = false, for video: Video
     ) async -> Bool {
-        playerLog.notice("[webView/HLS] fetching master manifest: \(masterURL.absoluteString.prefix(120))")
+        playerLog.notice("[webView/HLS] fetching master manifest: \(ViewModelLogger.urlHost(masterURL))")
 
         let ua =
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"
@@ -465,7 +465,7 @@ extension PlaybackViewModel {
             playerLog.error("❌ [webView/HLS] no quality URL found in master manifest")
             return false
         }
-        playerLog.notice("[webView/HLS] selected per-quality URL: \(bestURL.absoluteString.prefix(200))")
+        playerLog.notice("[webView/HLS] selected per-quality URL: \(ViewModelLogger.urlHost(bestURL))")
 
         // fix28: Fast-fail for pfa/1 urls in Phase -1a when no pot= is available.
         //
@@ -536,7 +536,7 @@ extension PlaybackViewModel {
                 webViewHLSItemBecameReady(item, video: video, preferredHeight: preferredHeight)
                 return true
             case .failed:
-                let err = item.error?.localizedDescription ?? "nil"
+                let err = ViewModelLogger.errorSummary(item.error)
                 playerLog.error("❌ [webView/HLS] AVPlayerItem failed: \(err)")
                 // If the CDN denied access (permission error), a fresh WKWebView extraction
                 // will produce the same URL signed by the same CDN session → same 403.

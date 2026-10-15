@@ -163,7 +163,7 @@ public final class PlaybackViewModel {
                 if case .ipBlocked = apiError { return }
             }
             playerLog.error(
-                "[error] \(nsError.domain)(\(nsError.code)): \(error.localizedDescription) video=\(currentVideo?.id ?? "unknown") stream=\(lastAttemptedStreamURL?.host() ?? "none") retries=\(retryAttempts) t=\(Int(currentTime))s"
+                "[error] \(ViewModelLogger.errorSummary(error)) video=\(currentVideo?.id ?? "unknown") stream=\(lastAttemptedStreamURL?.host() ?? "none") retries=\(retryAttempts) t=\(Int(currentTime))s"
             )
         }
     }
@@ -461,7 +461,7 @@ public final class PlaybackViewModel {
             // setCategory alone does not interrupt other apps per AVAudioSession docs.
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
         } catch {
-            playerLog.error("AVAudioSession category setup failed: \(error.localizedDescription)")
+            playerLog.error("AVAudioSession category setup failed: \(ViewModelLogger.errorSummary(error))")
         }
         #endif
         setupTimeObserver()

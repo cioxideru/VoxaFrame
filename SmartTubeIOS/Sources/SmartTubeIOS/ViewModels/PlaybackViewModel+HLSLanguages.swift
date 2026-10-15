@@ -84,7 +84,7 @@ extension PlaybackViewModel {
                 player.rate = Float(settings.playbackSpeed)
                 return
             case .failed:
-                let err = item.error?.localizedDescription ?? "nil"
+                let err = ViewModelLogger.errorSummary(item.error)
                 playerLog.error("❌ [wkHLS/lang] AVPlayerItem failed: \(err)")
                 return
             case .unknown: continue
@@ -173,7 +173,7 @@ extension PlaybackViewModel {
     func parseHLSBestVariant(from manifest: String, baseURL: URL, minHeight: Int) -> URL? {
         let result = SmartTubeIOSCore.parseHLSBestVariant(from: manifest, baseURL: baseURL, minHeight: minHeight)
         if let result {
-            playerLog.notice("[webView/HLS] best variant ≥\(minHeight)p: \(result.absoluteString.prefix(80))")
+            playerLog.notice("[webView/HLS] best variant ≥\(minHeight)p: \(ViewModelLogger.urlHost(result))")
         }
         return result
     }
@@ -204,7 +204,7 @@ extension PlaybackViewModel {
     #if targetEnvironment(simulator)
     /// Loads a yt-dlp `hls_playlist` URL directly into AVPlayer. Kept for backward compatibility.
     private func tryYtDlpHLS(_ url: URL, for video: Video) async -> Bool {
-        playerLog.notice("[ytDlp[sim]/HLS]: \(url.absoluteString.prefix(120))")
+        playerLog.notice("[ytDlp[sim]/HLS]: \(ViewModelLogger.urlHost(url))")
         let ua = "com.google.ios.youtube/19.45.4 (iPhone16,2; U; CPU iOS 18_1_0 like Mac OS X)"
         let uaOpts: [String: Any] = ["AVURLAssetHTTPHeaderFieldsKey": ["User-Agent": ua]]
         let asset = AVURLAsset(url: url, options: uaOpts)
@@ -228,7 +228,7 @@ extension PlaybackViewModel {
                 isPlaying = true
                 return true
             case .failed:
-                let err = item.error?.localizedDescription ?? "nil"
+                let err = ViewModelLogger.errorSummary(item.error)
                 playerLog.error("❌ [ytDlp[sim]/HLS] AVPlayerItem failed: \(err)")
                 return false
             case .unknown: continue

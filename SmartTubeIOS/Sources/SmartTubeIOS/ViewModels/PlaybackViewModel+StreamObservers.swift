@@ -22,7 +22,7 @@ extension PlaybackViewModel {
                 case .readyToPlay:
                     self.initialPlayerItemBecameReady(item, info: info, isHLS: isHLS)
                 case .failed:
-                    let err = item.error.map { "\($0)" } ?? "nil"
+                    let err = ViewModelLogger.errorSummary(item.error)
                     playerLog.error("❌ AVPlayerItem failed: \(err)")
                     if let video = self.currentVideo {
                         self.exhaustiveRetryTask?.cancel()

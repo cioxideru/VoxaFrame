@@ -101,7 +101,7 @@ extension PlaybackViewModel {
                 isLoading = false
             }
         } catch {
-            playerLog.error("[probe] ❌ \(method) threw: \(error) for \(video.id)")
+            playerLog.error("[probe] ❌ \(method) threw: \(ViewModelLogger.errorSummary(error)) for \(video.id)")
             self.error = error
             isLoading = false
         }

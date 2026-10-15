@@ -115,7 +115,7 @@ public final class PlaylistViewModel {
             }
         } catch {
             if !Task.isCancelled {
-                playlistLog.error("fetchPlaylistVideos error: \(String(describing: error))")
+                playlistLog.error("fetchPlaylistVideos error: \(ViewModelLogger.errorSummary(error))")
                 self.error = error
             }
         }

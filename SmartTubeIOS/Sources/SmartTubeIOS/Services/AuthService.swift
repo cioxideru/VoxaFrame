@@ -110,7 +110,7 @@ public final class AuthService {
         if isSignedIn && accountName == nil {
             Task {
                 do { try await fetchUserInfo() } catch {
-                    authLog.error("fetchUserInfo on init failed: \(String(describing: error))")
+                    authLog.error("fetchUserInfo on init failed: \(ViewModelLogger.errorSummary(error))")
                 }
             }
         }
@@ -177,7 +177,7 @@ public final class AuthService {
                     creds: creds)
             }
         } catch {
-            authLog.error("❌ beginSignIn error: \(String(describing: error))")
+            authLog.error("❌ beginSignIn error: \(ViewModelLogger.errorSummary(error))")
             self.error = error
         }
     }
@@ -219,7 +219,7 @@ public final class AuthService {
         do {
             try await refreshAccessToken(refreshToken: refresh, creds: creds)
         } catch {
-            authLog.error("refreshIfNeeded() failed: \(String(describing: error))")
+            authLog.error("refreshIfNeeded() failed: \(ViewModelLogger.errorSummary(error))")
         }
     }
 
@@ -325,7 +325,7 @@ public final class AuthService {
                 authLog.notice("scheduleProactiveRefresh() — token refreshed ✅")
                 self.scheduleProactiveRefresh()
             } catch {
-                authLog.error("scheduleProactiveRefresh() failed: \(String(describing: error))")
+                authLog.error("scheduleProactiveRefresh() failed: \(ViewModelLogger.errorSummary(error))")
             }
         }
     }

@@ -156,7 +156,7 @@ extension PlaybackViewModel {
         do {
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            playerLog.error("[fix12] AVAudioSession setActive failed: \(error.localizedDescription)")
+            playerLog.error("[fix12] AVAudioSession setActive failed: \(ViewModelLogger.errorSummary(error))")
         }
         setupRemoteCommandCenter()
         UIApplication.shared.isIdleTimerDisabled = true
@@ -262,7 +262,7 @@ extension PlaybackViewModel {
         do {
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            playerLog.error("AVAudioSession reactivation failed: \(error.localizedDescription)")
+            playerLog.error("AVAudioSession reactivation failed: \(ViewModelLogger.errorSummary(error))")
         }
         #endif
         // Resume only if we consider ourselves to be in playing state.
@@ -395,7 +395,7 @@ extension PlaybackViewModel {
         do {
             try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         } catch {
-            playerLog.error("AVAudioSession deactivation failed: \(error.localizedDescription)")
+            playerLog.error("AVAudioSession deactivation failed: \(ViewModelLogger.errorSummary(error))")
         }
         #endif
         loadTask?.cancel()
@@ -653,7 +653,7 @@ extension PlaybackViewModel {
                 playerLog.notice("endCards: \(webCards.count) from web client fallback")
                 await VideoPreloadCache.shared.store(endCards: webCards, for: video.id)
             } catch {
-                playerLog.error("endCards fetch failed: \(error.localizedDescription)")
+                playerLog.error("endCards fetch failed: \(ViewModelLogger.errorSummary(error))")
                 endCards = []
             }
         }

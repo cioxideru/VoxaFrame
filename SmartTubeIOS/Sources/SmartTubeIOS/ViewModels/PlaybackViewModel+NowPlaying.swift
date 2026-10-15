@@ -57,7 +57,7 @@ extension PlaybackViewModel {
                     do {
                         try AVAudioSession.sharedInstance().setActive(true)
                     } catch {
-                        playerLog.error("[interruption] setActive failed: \(error.localizedDescription)")
+                        playerLog.error("[interruption] setActive failed: \(ViewModelLogger.errorSummary(error))")
                     }
                     if options.contains(.shouldResume) && self.wasPlayingBeforeInterruption {
                         self.player.rate = Float(self.settings.playbackSpeed)

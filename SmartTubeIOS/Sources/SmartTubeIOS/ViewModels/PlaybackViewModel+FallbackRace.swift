@@ -126,7 +126,7 @@ extension PlaybackViewModel {
                 return true
             case .failed:
                 playerLog.notice(
-                    "[BotGuardWV] ⚠️ proxy HLS failed: \(proxyItem.error?.localizedDescription ?? "unknown")")
+                    "[BotGuardWV] ⚠️ proxy HLS failed: \(ViewModelLogger.errorSummary(proxyItem.error))")
             default:
                 continue
             }
@@ -166,7 +166,7 @@ extension PlaybackViewModel {
                     return true
                 }
             } catch {
-                playerLog.notice("[BotGuardWV] ⚠️ iOS adaptive fetch failed: \(error)")
+                playerLog.notice("[BotGuardWV] ⚠️ iOS adaptive fetch failed: \(ViewModelLogger.errorSummary(error))")
             }
             guard !Task.isCancelled else { return false }
             playerLog.notice("[BotGuardWV] trying Android adaptive with WAA minted token (Path A)")
@@ -177,10 +177,10 @@ extension PlaybackViewModel {
                     return true
                 }
             } catch {
-                playerLog.notice("[BotGuardWV] ⚠️ Android adaptive fetch failed: \(error)")
+                playerLog.notice("[BotGuardWV] ⚠️ Android adaptive fetch failed: \(ViewModelLogger.errorSummary(error))")
             }
         } catch {
-            playerLog.notice("[BotGuardWV] ⚠️ WEB client fetch failed: \(error)")
+            playerLog.notice("[BotGuardWV] ⚠️ WEB client fetch failed: \(ViewModelLogger.errorSummary(error))")
         }
         playerLog.notice("[BotGuardWV] Path A exhausted — all BotGuardWV attempts failed")
         return false
@@ -230,7 +230,7 @@ extension PlaybackViewModel {
                 return true
             }
         } catch {
-            playerLog.notice("[AndroidVR] ⚠️ Path C fetch failed: \(error)")
+            playerLog.notice("[AndroidVR] ⚠️ Path C fetch failed: \(ViewModelLogger.errorSummary(error))")
         }
         playerLog.notice("[AndroidVR] Path C done — AndroidVR adaptive failed")
         return false
@@ -275,7 +275,7 @@ extension PlaybackViewModel {
                 savedPositionToRestore = nil
             }
         } catch {
-            playerLog.notice("[VR→HLS/upgrade] TVEmbedded fetch failed: \(error)")
+            playerLog.notice("[VR→HLS/upgrade] TVEmbedded fetch failed: \(ViewModelLogger.errorSummary(error))")
         }
 
         guard !Task.isCancelled, currentVideo?.id == video.id else { return }
@@ -295,7 +295,7 @@ extension PlaybackViewModel {
                 savedPositionToRestore = nil
             }
         } catch {
-            playerLog.notice("[VR→HLS/upgrade] MWEB fetch failed: \(error)")
+            playerLog.notice("[VR→HLS/upgrade] MWEB fetch failed: \(ViewModelLogger.errorSummary(error))")
         }
 
         if await upgradeWithAndroidVR(video: video) { return }
@@ -336,7 +336,7 @@ extension PlaybackViewModel {
                 "[upgrade] AndroidVR adaptive failed — isMuxedFallback restored, \(availableFormats.count) formats visible in picker"
             )
         } catch {
-            playerLog.notice("[upgrade] AndroidVR fetch failed: \(error)")
+            playerLog.notice("[upgrade] AndroidVR fetch failed: \(ViewModelLogger.errorSummary(error))")
         }
 
         return false

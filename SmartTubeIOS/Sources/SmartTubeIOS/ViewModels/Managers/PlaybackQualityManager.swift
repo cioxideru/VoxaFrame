@@ -301,7 +301,7 @@ final class PlaybackQualityManager {
                     self.player.rate = Float(self.delegate?.settings.playbackSpeed ?? 1)
                     self.delegate?.qualityItemDidBecomeReady(item, seekTo: time)
                 case .failed:
-                    let err = item.error.map { "\($0)" } ?? "nil"
+                    let err = ViewModelLogger.errorSummary(item.error)
                     playerLog.error("❌ Quality-switch AVPlayerItem failed: \(err)")
                     await self.delegate?.qualityItemDidFail(
                         error: item.error,
@@ -632,7 +632,7 @@ extension PlaybackQualityManager {
                     self.delegate?.qualityItemDidBecomeReady(item, seekTo: time)
                     playerLog.notice("✅ H.264-capped AVPlayerItem readyToPlay")
                 case .failed:
-                    let err = item.error.map { "\($0)" } ?? "nil"
+                    let err = ViewModelLogger.errorSummary(item.error)
                     playerLog.error("❌ H.264-capped AVPlayerItem also failed: \(err)")
                     await self.delegate?.qualityItemDidFail(
                         error: item.error,
@@ -710,7 +710,7 @@ extension PlaybackQualityManager {
                     self.player.rate = Float(self.delegate?.settings.playbackSpeed ?? 1)
                     self.delegate?.qualityItemDidBecomeReady(item, seekTo: time)
                 case .failed:
-                    let err = item.error.map { "\($0)" } ?? "nil"
+                    let err = ViewModelLogger.errorSummary(item.error)
                     playerLog.error("❌ [wkHLS quality] AVPlayerItem failed: \(err)")
                     await MainActor.run { self.delegate?.toastMessage = "Quality unavailable" }
                 case .unknown: break

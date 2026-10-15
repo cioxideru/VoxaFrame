@@ -26,7 +26,7 @@ extension PlaybackViewModel {
             // cancels an in-flight loadTask. Surfacing it would show a spurious error
             // banner on the next video open.
             guard !(error is CancellationError) else { return }
-            playerLog.error("❌ loadAsync error: \(String(describing: error))")
+            playerLog.error("❌ loadAsync error: \(ViewModelLogger.errorSummary(error))")
             // signInRequired from the primary iOS client can be a false-positive when
             // the user's auth session is broken (Multilogin INVALID_TOKENS): YouTube
             // returns LOGIN_REQUIRED even for public content. Route to exhaustiveRetry
@@ -56,7 +56,7 @@ extension PlaybackViewModel {
             }
             if shouldRetryWithFallback {
                 playerLog.notice(
-                    "⚠️ \(error.localizedDescription) from primary client (signed-in user) — routing to exhaustiveRetry for fallback clients"
+                    "⚠️ \(ViewModelLogger.errorSummary(error)) from primary client (signed-in user) — routing to exhaustiveRetry for fallback clients"
                 )
                 exhaustiveRetryTask?.cancel()
                 exhaustiveRetryTask = Task { [weak self] in
@@ -231,7 +231,7 @@ extension PlaybackViewModel {
             try AVAudioSession.sharedInstance().setActive(true)
             playerLog.notice("[loadAsync] AVAudioSession activated early (lock-screen pre-seed)")
         } catch {
-            playerLog.error("[loadAsync] early setActive failed: \(error.localizedDescription)")
+            playerLog.error("[loadAsync] early setActive failed: \(ViewModelLogger.errorSummary(error))")
         }
         updateNowPlayingInfo()
         #endif
@@ -333,16 +333,16 @@ extension PlaybackViewModel {
         selectedFormat = nil
 
         playerLog.notice(
-            "playerInfo: formats=\(info.formats.count) hlsURL=\(info.hlsURL?.absoluteString ?? "nil") dashURL=\(info.dashURL?.absoluteString ?? "nil")"
+            "playerInfo: formats=\(info.formats.count) hlsHost=\(ViewModelLogger.urlHost(info.hlsURL)) dashHost=\(ViewModelLogger.urlHost(info.dashURL))"
         )
         for (index, fmt) in info.formats.enumerated() {
             playerLog.notice(
-                "  format[\(index)] mimeType=\(fmt.mimeType) quality=\(fmt.label) url=\(fmt.url?.absoluteString.prefix(80) ?? "nil")"
+                "  format[\(index)] mimeType=\(fmt.mimeType) quality=\(fmt.label) host=\(ViewModelLogger.urlHost(fmt.url))"
             )
         }
 
         let prefURL = info.preferredStreamURL
-        playerLog.notice("preferredStreamURL=\(prefURL?.absoluteString.prefix(120) ?? "nil")")
+        playerLog.notice("preferredStreamHost=\(ViewModelLogger.urlHost(prefURL))")
 
     }
 
@@ -424,7 +424,7 @@ extension PlaybackViewModel {
             initialMaxH = 0  // unconstrained — resolved to .zero / 0 below
             playerLog.notice("Initial quality Auto — unconstrained (no resolution/bitrate cap)")
         }
-        playerLog.notice("Starting AVPlayer with: \(initialStreamURL.absoluteString.prefix(120))")
+        playerLog.notice("Starting AVPlayer with: \(ViewModelLogger.urlHost(initialStreamURL))")
         lastAttemptedStreamURL = initialStreamURL
         // HLS manifests are signed by WEB_EMBEDDED_PLAYER (web client) — use browser UA
         // plus Origin + Referer matching the embed context to unlock higher-quality variants.
@@ -479,14 +479,14 @@ extension PlaybackViewModel {
         do {
             return try await api.fetchPlayerInfo(videoId: video.id)
         } catch {
-            if case APIError.ipBlocked(let reason) = error {
+            if case APIError.ipBlocked = error {
                 // NW-6-FIX: IP-block short-circuit. Every extra /player call from a
                 // blocked IP can extend the block duration — skip ALL retries,
                 // including the TV-authenticated path (an authenticated request
                 // carries the same blocked IP and will fail too). Throw immediately
                 // so the error banner appears with the specific VPN message and
                 // without a "Try Again" button.
-                playerLog.error("⚠️ iOS client detected IP block — reason: \(reason)")
+                playerLog.error("⚠️ iOS client detected IP block — \(ViewModelLogger.errorSummary(error))")
                 throw error
             } else if case APIError.unavailable = error, hasAuthToken {
                 playerLog.notice("⚠️ iOS client returned unavailable — retrying with authenticated TV client")
@@ -553,7 +553,7 @@ extension PlaybackViewModel {
             try AVAudioSession.sharedInstance().setActive(true)
             playerLog.notice("[loadAsync] AVAudioSession activated before playback")
         } catch {
-            playerLog.error("[loadAsync] AVAudioSession setActive(true) failed: \(error.localizedDescription)")
+            playerLog.error("[loadAsync] AVAudioSession setActive(true) failed: \(ViewModelLogger.errorSummary(error))")
         }
         #endif
         playerLog.notice(

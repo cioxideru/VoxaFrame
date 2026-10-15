@@ -24,6 +24,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0011) | current | 2026-10-15 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/active/firebase-review-fixes.md](exec-plans/active/firebase-review-fixes.md) | PLAN-0004: review findings 2–6; coordinator owns build/test acceptance | current | 2026-10-15 |
 | [exec-plans/active/BotGuard.md](exec-plans/active/BotGuard.md) | PLAN-0003: active; implemented token paths, remaining live acceptance | current | 2026-10-15 |
 | [exec-plans/completed/tos-player-ios-plan.md](exec-plans/completed/tos-player-ios-plan.md) | PLAN-0001: completed port; original tasks and closure evidence | current | 2026-10-15 |
 | [exec-plans/completed/task-89-short-detection-issue.md](exec-plans/completed/task-89-short-detection-issue.md) | PLAN-0002 / #89: completed duration guard; tests present, not rerun | current | 2026-10-15 |
