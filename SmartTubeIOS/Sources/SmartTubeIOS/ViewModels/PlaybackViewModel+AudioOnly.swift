@@ -25,10 +25,13 @@ extension PlaybackViewModel {
             ? String(localized: "Audio-Only Mode", bundle: .module)
             : String(localized: "Video Mode", bundle: .module)
 
+        // A previous on/off swap may still be in flight; only the latest toggle wins.
+        audioOnlySwapTask?.cancel()
+        audioOnlySwapTask = nil
         if isAudioOnlyMode {
             // Overlay shows immediately via isAudioOnlyMode = true.
             // Attempt stream swap in background; failure does NOT revert the overlay.
-            Task { [weak self] in
+            audioOnlySwapTask = Task { [weak self] in
                 guard let self else { return }
                 await self.loadAudioOnlyItemIfEnabled(seekTo: savedTime, liveToggle: true)
             }
@@ -37,14 +40,17 @@ extension PlaybackViewModel {
             // otherwise HLS is already playing and no reload is needed.
             if audioOnlyItemActive {
                 audioOnlyItemActive = false
-                Task { [weak self] in
-                    guard let self else { return }
+                audioOnlySwapTask = Task { [weak self] in
+                    guard let self, !Task.isCancelled, !self.isAudioOnlyMode else { return }
                     // Restore the user's quality preference (fixes W6: passing nil dropped the preference).
                     await self.reloadHLSItem(seekTo: savedTime, quality: settings.preferredQuality)
                 }
             }
         }
     }
+
+    /// `false` once the user turned audio-only off (or toggled again) while a swap was awaiting.
+    private var audioOnlySwapStillWanted: Bool { isAudioOnlyMode && !Task.isCancelled }
 
     /// Entry point called from `loadAsync()` only when `isAudioOnlyMode == true`
     /// and `playerInfo` is already populated by the normal fetch.
@@ -70,6 +76,7 @@ extension PlaybackViewModel {
             let success = await tryLoadAudioURL(
                 url, userAgent: InnerTubeClients.iOS.userAgent, seekTo: seekTime, liveToggle: liveToggle)
             if success { return }
+            guard audioOnlySwapStillWanted else { return }
             audioOnlyLog.notice("Audio-only: iOS client URL failed, retrying with android_vr")
         }
 
@@ -87,6 +94,7 @@ extension PlaybackViewModel {
         ]
         let asset = AVURLAsset(url: url, options: opts)
         guard (try? await asset.load(.isPlayable)) == true else { return false }
+        guard audioOnlySwapStillWanted else { return false }
 
         let item = AVPlayerItem(asset: asset)
         item.audioTimePitchAlgorithm = .spectral
@@ -158,6 +166,7 @@ extension PlaybackViewModel {
     ) async {
         do {
             let vrInfo = try await api.fetchPlayerInfoAndroidVR(videoId: videoId)
+            guard audioOnlySwapStillWanted else { return }
             if let url = vrInfo.bestAdaptiveAudioURL {
                 let success = await tryLoadAudioURL(
                     url, userAgent: InnerTubeClients.AndroidVR.userAgent, seekTo: seekTime, liveToggle: liveToggle)
@@ -167,6 +176,7 @@ extension PlaybackViewModel {
             audioOnlyLog.error("Audio-only: android_vr fetch failed: \(error)")
         }
 
+        guard audioOnlySwapStillWanted else { return }
         // Both attempts failed.
         audioOnlyItemActive = false
         if liveToggle {
