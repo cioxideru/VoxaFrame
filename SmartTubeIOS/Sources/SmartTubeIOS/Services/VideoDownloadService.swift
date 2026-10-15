@@ -13,7 +13,7 @@ import Photos
 @preconcurrency import ActivityKit
 #endif
 
-private let downloadLog = CrashlyticsLogger(category: "Download")
+private let downloadLog = ViewModelLogger(category: "Download")
 
 // MARK: - VideoDownloadService
 //

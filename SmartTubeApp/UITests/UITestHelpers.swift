@@ -25,7 +25,6 @@ enum AccessibilityID {
     static var settingsAccentColorPicker: String { "settings.accentColorPicker" }
     static var settingsChangePINButton: String { "settings.changePINButton" }
     static var settingsClearLocalHistoryButton: String { "settings.clearLocalHistoryButton" }
-    static var settingsDisableAnalyticsToggle: String { "settings.disableAnalyticsToggle" }
     static var settingsDisableLiquidGlassToggle: String { "settings.disableLiquidGlassToggle" }
     static var settingsGridColumnsLandscapePicker: String { "settings.gridColumnsLandscapePicker" }
     static var settingsGridColumnsPortraitPicker: String { "settings.gridColumnsPortraitPicker" }

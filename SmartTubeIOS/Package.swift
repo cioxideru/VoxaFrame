@@ -18,13 +18,7 @@ let package = Package(
         // SwiftUI UI layer (iOS/iPadOS/macOS).
         .library(name: "SmartTubeIOS", targets: ["SmartTubeIOS"]),
     ],
-    dependencies: [
-        .package(
-            url: "https://github.com/firebase/firebase-ios-sdk",
-            from: "12.0.0"
-        ),
-
-    ],
+    dependencies: [],
     targets: [
         // MARK: Core – iOS, macOS (Foundation only)
         .target(
@@ -37,8 +31,7 @@ let package = Package(
         .target(
             name: "SmartTubeIOS",
             dependencies: [
-                "SmartTubeIOSCore",
-                .product(name: "FirebaseCrashlytics", package: "firebase-ios-sdk"),
+                "SmartTubeIOSCore"
             ],
             path: "Sources/SmartTubeIOS",
             resources: [

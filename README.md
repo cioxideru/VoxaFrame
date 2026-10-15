@@ -107,7 +107,7 @@ open SmartTube.xcworkspace
 
 ### Signing
 
-The project requires an Apple Developer Team ID and a Firebase `GoogleService-Info.plist` to build.  
+The project requires an Apple Developer Team ID to build.  
 Copy `SmartTubeApp/Config/Secrets.xcconfig.example` to `SmartTubeApp/Config/Secrets.xcconfig` and fill in your Team ID:
 
 ```
@@ -115,15 +115,14 @@ DEVELOPMENT_TEAM = YOUR_TEAM_ID
 SMARTTUBE_TV_TEAM = YOUR_TEAM_ID
 ```
 
-Add your own `GoogleService-Info.plist` to both `SmartTubeApp/SmartTubeApp/` (iOS) and `SmartTubeApp/Smart Tube/` (tvOS) (create a free Firebase project at [console.firebase.google.com](https://console.firebase.google.com) — only Analytics and Crashlytics are used).  
-All of these files are gitignored (via glob rules matching any `GoogleService-Info.plist` or `Secrets.xcconfig`) and will never be committed; `setup.sh` installs them for you if you have access to the private config repo.
+`Secrets.xcconfig` is gitignored and will never be committed; `setup.sh` installs it for you if you have access to the private config repo.
 
 ---
 
 ## Contributing
 
 Pull requests are welcome. See [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) for the checklist.  
-Please ensure `Secrets.xcconfig` and `GoogleService-Info.plist` are **never** included in a PR.
+Please ensure `Secrets.xcconfig` is **never** included in a PR.
 
 ---
 

@@ -8,8 +8,8 @@ import Testing
 // Unit tests for the `preferH264` AppSettings property added in task #206.
 //
 // `PlaybackQualityManager.selectBestVideoFormat` behaviour (H.264 codec sorting) is
-// exercised via Xcode UI/integration tests — PlaybackQualityManager imports SmartTubeIOS
-// which depends on FirebaseCrashlytics and cannot be built in the headless SPM test target.
+// exercised via Xcode UI/integration tests (PlaybackQualityManager lives in SmartTubeIOS,
+// which the package test target does not import).
 //
 // What is tested here (SmartTubeIOSCore only):
 //   1. AppSettings.preferH264 defaults to false.

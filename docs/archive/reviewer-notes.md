@@ -1,5 +1,5 @@
 > Status: archived — classified from code on 2026-10-15.
-> Do not submit this text for review. Its no-storage/no-sharing statements conflict with TokenManager, local stores, network APIs and optional Crashlytics. OQ-0004 tracks replacement and reconciliation with the privacy policy.
+> Do not submit this text for review. Its no-storage/no-sharing statements conflict with TokenManager, local stores and network APIs. Use the privacy policy; OQ-0012 tracks replacement.
 > Current references: [architecture](../architecture.md), [open questions](../OPEN_QUESTIONS.md).
 
 # Reviewer Notes

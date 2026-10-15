@@ -7,7 +7,7 @@ import UIKit
 import MediaPlayer
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Initial Stream Loading
 
@@ -73,8 +73,8 @@ extension PlaybackViewModel {
         // Check VideoPreloadCache for all data types. Fresh hits skip the network
         // call entirely; partial hits fill only the missing pieces in parallel.
         let cached = await VideoPreloadCache.shared.consume(videoId: video.id)
-        // Log the full cache verdict as a single breadcrumb so wrong-video / prefetch-race
-        // scenarios are immediately visible in Firebase reports.
+        // Log the full cache verdict as a single line so wrong-video / prefetch-race
+        // scenarios are immediately visible in the log.
         let cacheVerdict =
             "playerInfo=\(cached.playerInfo != nil) nextInfo=\(cached.nextInfo != nil) sponsor=\(cached.sponsorSegments != nil) endCards=\(cached.endCards != nil) tracking=\(cached.trackingURLs != nil) complete=\(cached.isComplete)"
         if cached.playerInfo != nil {
@@ -485,8 +485,7 @@ extension PlaybackViewModel {
                 // including the TV-authenticated path (an authenticated request
                 // carries the same blocked IP and will fail too). Throw immediately
                 // so the error banner appears with the specific VPN message and
-                // without a "Try Again" button. Suppress Crashlytics recording —
-                // this is a user-side network condition, not an app bug.
+                // without a "Try Again" button.
                 playerLog.error("⚠️ iOS client detected IP block — reason: \(reason)")
                 throw error
             } else if case APIError.unavailable = error, hasAuthToken {

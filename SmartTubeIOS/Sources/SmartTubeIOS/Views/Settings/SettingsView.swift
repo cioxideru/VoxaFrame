@@ -547,11 +547,6 @@ extension SettingsView {
         @Bindable var store = store
         return Section {
             LabeledContent("Version", value: appVersion)
-            Toggle("Disable Analytics & Crash Reporting", isOn: $store.settings.disableAnalytics)
-                .accessibilityIdentifier(AccessibilityID.settingsDisableAnalyticsToggle)
-            Text("Restart the app for this to take effect.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
             #if os(tvOS)
             Button {
                 showGithubQR = true

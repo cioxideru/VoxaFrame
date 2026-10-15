@@ -117,7 +117,6 @@ public final class PlayerStateStore {
         // Stamp intended_video_id immediately — before load() runs and before the
         // breadcrumb buffer can fill. Comparing with active_video_id in a report
         // reveals prefetch-race / wrong-card-tap scenarios.
-        CrashlyticsLogger.setIntendedVideo(id: video.id, title: video.title)
         // Also reload when:
         //   1. Different video — always load
         //   2. No current item — item was cleared by stop() (legacy path)

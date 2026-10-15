@@ -2,7 +2,6 @@ import Foundation
 
 /// Shared timing values for initial playback, fallback attempts and quality changes.
 enum PlaybackTuning {
-    static let slowVideoLoadMilliseconds = 4_000
     static let bufferReleaseDelay: Duration = .seconds(5)
     static let qualityRampDelay: Duration = .milliseconds(800)
     static let qualityUpgradeDelayNanoseconds: UInt64 = 700_000_000

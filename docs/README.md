@@ -15,10 +15,10 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 |---|---|---|---|
 | [../AGENTS.md](../AGENTS.md) | Agent map: commands, rules, gotchas and document entry points | current | 2026-10-15 |
 | [../CLAUDE.md](../CLAUDE.md) | Shared agent workflow and plan location | current | 2026-10-15 |
-| [../README.md](../README.md) | Published product overview; privacy/marketing wording follow-up in OQ-0004 | current | 2026-10-15 |
+| [../README.md](../README.md) | Published product overview | current | 2026-10-15 |
 | [../CHANGELOG.md](../CHANGELOG.md) | Release history and closed documentation findings | current | 2026-10-15 |
 | [../CONTEXT.md](../CONTEXT.md) | Domain and architecture vocabulary | current | 2026-10-15 |
-| [../PRIVACY_POLICY.md](../PRIVACY_POLICY.md) | Published policy; contradictions tracked in OQ-0004, not newly approved | current | 2026-10-15 |
+| [../PRIVACY_POLICY.md](../PRIVACY_POLICY.md) | Published policy; lists the services the app contacts (no analytics or crash reporting) | current | 2026-10-15 |
 | [../SmartTubeIOS/README.md](../SmartTubeIOS/README.md) | Package entry point and links to canonical guides | current | 2026-10-15 |
 | [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-15 |
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
@@ -46,7 +46,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [archive/home-feed-architecture.md](archive/home-feed-architecture.md) | Superseded two-shelf/no-Shorts-separation architecture | archived | 2026-10-15 |
 | [archive/dash-quality-switch-tests.md](archive/dash-quality-switch-tests.md) | May quality-test results and old helper names; not fresh acceptance | archived | 2026-10-15 |
 | [archive/no-botguard.md](archive/no-botguard.md) | Obsolete prohibition superseded by implemented token paths | archived | 2026-10-15 |
-| [archive/reviewer-notes.md](archive/reviewer-notes.md) | Obsolete submission copy; do not reuse (OQ-0004) | archived | 2026-10-15 |
+| [archive/reviewer-notes.md](archive/reviewer-notes.md) | Obsolete submission copy; do not reuse (OQ-0012) | archived | 2026-10-15 |
 | [archive/playing-methods.md](archive/playing-methods.md) | June stream-order snapshot, predating VISIONOS-first and file decomposition | archived | 2026-10-15 |
 | [adr/0001-maintainability-baseline.md](adr/0001-maintainability-baseline.md) | 0001 — Maintainability baseline; accepted | current | 2026-10-15 |
 | [adr/0002-mvvm-observable-no-tca.md](adr/0002-mvvm-observable-no-tca.md) | 0002 — MVVM with `@Observable`, no TCA; accepted | current | 2026-10-15 |

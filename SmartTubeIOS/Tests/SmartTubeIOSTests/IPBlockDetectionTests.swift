@@ -96,7 +96,7 @@ struct IPBlockDetectionTests {
         }
     }
 
-    @Test("NW-7: NSURLError -999 (request cancelled) is suppressed from Crashlytics")
+    @Test("NW-7: NSURLError -999 (request cancelled) is not logged as a playback error")
     func nsURLError999IsSuppressed() {
         // Mirrors the transient-suppression check in PlaybackViewModel.error.didSet.
         // -999 = URLError.cancelled — fires when AVPlayer or URLSession cancels an
@@ -138,8 +138,8 @@ struct IPBlockDetectionTests {
 
     // MARK: - NW-6-FIX: Suppression and retry behaviour
 
-    @Test("NW-6: ipBlocked error is suppressed from Crashlytics non-fatal recording")
-    func ipBlockedSuppressesCrashlyticsRecording() {
+    @Test("NW-6: ipBlocked error is not logged as a playback error")
+    func ipBlockedIsNotLoggedAsError() {
         // Mirrors the transient-suppression check in PlaybackViewModel.error.didSet.
         func shouldRecord(_ error: Error) -> Bool {
             if let apiError = error as? APIError {

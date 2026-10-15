@@ -3,7 +3,7 @@ import UIKit
 import MediaPlayer
 import SmartTubeIOSCore
 
-private let tosNowPlayingLog = CrashlyticsLogger(category: "TOSPlayer")
+private let tosNowPlayingLog = ViewModelLogger(category: "TOSPlayer")
 
 // File-scope factory — deliberately nonisolated so MPMediaItemArtwork can invoke the
 // returned closure from MediaPlayer's internal serial queue without triggering the

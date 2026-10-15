@@ -9,7 +9,7 @@ import UIKit
 import WebKit
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Adaptive Composition and WebView HLS
 
@@ -395,14 +395,6 @@ extension PlaybackViewModel {
                 needsQuickStartup = false
                 isLoading = false
                 timeToPlayMs = Int(Date().timeIntervalSince(videoLoadStartedAt) * 1000)
-                if timeToPlayMs > PlaybackTuning.slowVideoLoadMilliseconds {
-                    CrashlyticsLogger.recordSlowVideoLoad(
-                        videoId: video.id,
-                        elapsedMs: timeToPlayMs,
-                        streamType: "\(label)/adaptive",
-                        hasError: false
-                    )
-                }
                 player.rate = Float(settings.playbackSpeed)
                 isPlaying = true
                 launchPhase2(video: video, info: info)
@@ -727,14 +719,6 @@ extension PlaybackViewModel {
         isLoading = false
         timeToPlayMs = Int(Date().timeIntervalSince(videoLoadStartedAt) * 1000)
         lastSuccessfulStreamType = "webView/HLS"
-        if timeToPlayMs > PlaybackTuning.slowVideoLoadMilliseconds {
-            CrashlyticsLogger.recordSlowVideoLoad(
-                videoId: video.id,
-                elapsedMs: timeToPlayMs,
-                streamType: "webView/HLS",
-                hasError: false
-            )
-        }
         player.rate = Float(settings.playbackSpeed)
         isPlaying = true
         qualityManager.isMuxedFallback = false

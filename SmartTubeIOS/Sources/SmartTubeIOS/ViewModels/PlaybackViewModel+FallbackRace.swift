@@ -9,7 +9,7 @@ import UIKit
 import WebKit
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Fallback Races and Background Upgrades
 
@@ -122,14 +122,6 @@ extension PlaybackViewModel {
             case .readyToPlay:
                 playerLog.notice("[benchmark] readyToPlay — BotGuardWV/proxy-HLS — videoId=\(video.id)")
                 timeToPlayMs = Int(Date().timeIntervalSince(videoLoadStartedAt) * 1000)
-                if timeToPlayMs > PlaybackTuning.slowVideoLoadMilliseconds {
-                    CrashlyticsLogger.recordSlowVideoLoad(
-                        videoId: video.id,
-                        elapsedMs: timeToPlayMs,
-                        streamType: "BotGuardWV/proxyHLS",
-                        hasError: false
-                    )
-                }
                 playerLog.notice("[BotGuardWV] ✅ Path A won — proxy HLS")
                 return true
             case .failed:

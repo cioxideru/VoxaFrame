@@ -2,7 +2,7 @@ import AVFoundation
 import SmartTubeIOSCore
 import os
 
-private let qualityLog = CrashlyticsLogger(category: "Quality")
+private let qualityLog = ViewModelLogger(category: "Quality")
 
 // MARK: - Stream Format / HLS Quality Selection (thin wrapper — logic lives in PlaybackQualityManager)
 

@@ -7,7 +7,7 @@ import UIKit
 import MediaPlayer
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Load Video Lifecycle
 
@@ -31,12 +31,11 @@ extension PlaybackViewModel {
         // If the exact same video is already being loaded, ignore the duplicate call.
         // SwiftUI can trigger load() multiple times during a single navigation (e.g.
         // selectedVideo binding re-evaluated while a queue autoplay is in flight).
-        // Each duplicate spawns its own loadAsync → its own Crashlytics event storm.
+        // Each duplicate spawns its own loadAsync → its own duplicate request storm.
         if currentVideo?.id == video.id, isLoading {
             playerLog.notice("[load] already loading \(video.id) — ignoring duplicate call")
             return
         }
-        CrashlyticsLogger.setVideoContext(id: video.id, title: video.title)
         // Cancel any previous in-flight load so we never have two concurrent API
         // fetches for the same (or different) video running at the same time.
         loadTask?.cancel()
@@ -220,7 +219,6 @@ extension PlaybackViewModel {
         // fix236: Record the intended video at load() time so checkWrongVideoOnFirstPlay()
         // can detect if a stale task swaps currentVideo before readyToPlay fires.
         intendedVideoId = video.id
-        intendedVideoTitle = video.title
         pendingWrongVideoCheck = true
         hasPrevious = !history.isEmpty
         retryAttempts = 0

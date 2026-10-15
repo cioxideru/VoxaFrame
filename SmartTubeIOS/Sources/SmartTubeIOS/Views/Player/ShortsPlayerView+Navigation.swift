@@ -189,7 +189,6 @@ extension ShortsPlayerView {
 
     func loadVideo(at index: Int) {
         let video = videos[index]
-        CrashlyticsLogger.setIntendedVideo(id: video.id, title: video.title)
         #if os(iOS)
         vm.updateSettings(store.settings)
         vm.loadShort(video: video)
@@ -243,10 +242,7 @@ extension ShortsPlayerView {
         }
     }
 
-    /// Logs a Shorts embed load failure via Crashlytics — mirrors the stall-logging
-    /// pattern at PlaybackViewModel+Loading.swift:938 (bug #193), giving visibility
-    /// into real-world embed failure rates per the design spec's Error Handling
-    /// section.
+    /// Logs a Shorts embed load failure (design spec, Error Handling section).
     private func logEmbedLoadError(_ error: TOSPlayerError, videoId: String) {
         let reason: String
         switch error {
@@ -256,17 +252,7 @@ extension ShortsPlayerView {
         case .webViewLoadFailed: reason = "readyTimeout"
         case .signInRequired: reason = "signInRequired"
         }
-        let nsError = NSError(
-            domain: "SmartTube.ShortsEmbedLoadFailure",
-            code: 0,
-            userInfo: [NSLocalizedDescriptionKey: "Shorts embed load failure: \(reason) (video \(videoId))"]
-        )
-        CrashlyticsLogger(category: "ShortsPlayer").recordNonFatal(
-            nsError,
-            userInfo: [
-                "video_id": videoId,
-                "reason": reason,
-            ])
+        ViewModelLogger(category: "ShortsPlayer").error("[embed] load failure: \(reason) video=\(videoId)")
     }
 
     #endif

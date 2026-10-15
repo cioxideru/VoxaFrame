@@ -9,6 +9,18 @@ All notable changes to SmartTube are documented here.
 ### Removed
 
 - The Send Diagnostic Report button in Settings and the Report ID row in Stats for Nerds.
+- Firebase (Crashlytics and Analytics): no crash reports, breadcrumbs, non-fatal events
+  (slow load, playback stalls/errors, wrong video, Shorts embed failures) or analytics leave the
+  device. Logging stays in `os.Logger`. The "Disable Analytics & Crash Reporting" setting and
+  the "Wrong video loaded — report sent" toast are gone; saved settings with the old key still
+  load. `PrivacyInfo.xcprivacy` no longer declares crash data. Xcode project cleanup and the
+  App Store privacy answers are tracked in OQ-0012.
+
+### Documentation
+
+- Privacy policy rewritten to list the services the app contacts (YouTube/Google, SponsorBlock,
+  Yandex voice-over, an optional user PO-token server, optional iCloud sync) and local/Keychain
+  storage. Closed OQ-0004 (privacy statements vs. Crashlytics and data flows).
 
 ### Documentation — 2026-10-15
 

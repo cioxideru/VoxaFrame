@@ -7,7 +7,7 @@ import UIKit
 import MediaPlayer
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // File-scope factory — deliberately nonisolated so MPMediaItemArtwork can invoke the
 // returned closure from MediaPlayer's internal serial queue without triggering the

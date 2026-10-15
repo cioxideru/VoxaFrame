@@ -2,7 +2,7 @@ import Foundation
 import SmartTubeIOSCore
 import os
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Auth Token
 

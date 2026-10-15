@@ -9,7 +9,7 @@ import UIKit
 import WebKit
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Playback Quality Upgrades
 

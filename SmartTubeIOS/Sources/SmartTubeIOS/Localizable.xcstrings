@@ -6002,9 +6002,6 @@
         }
       }
     },
-    "Disable Analytics & Crash Reporting" : {
-
-    },
     "Disable Liquid Glass" : {
 
     },
@@ -17421,9 +17418,6 @@
           }
         }
       }
-    },
-    "Restart the app for this to take effect." : {
-
     },
     "Retry" : {
       "comment" : "Alert button to retry a failed network request",

@@ -7,7 +7,7 @@ import os
 import WebKit
 #endif
 
-let authLog = CrashlyticsLogger(category: "Auth")
+let authLog = ViewModelLogger(category: "Auth")
 
 // MARK: - AuthService
 //

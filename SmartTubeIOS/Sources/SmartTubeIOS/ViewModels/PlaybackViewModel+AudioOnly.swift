@@ -2,7 +2,7 @@ import AVFoundation
 import SmartTubeIOSCore
 import os
 
-private let audioOnlyLog = CrashlyticsLogger(category: "AudioOnly")
+private let audioOnlyLog = ViewModelLogger(category: "AudioOnly")
 
 // MARK: - Audio-Only Playback Mode
 

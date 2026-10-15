@@ -46,19 +46,6 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   membership, then provision/confirm a signed-in runner before enabling nightly. Acceptance:
   actual Smoke execution and a recorded Live run; compiling UI tests alone is insufficient.
 
-## OQ-0004 — Reviewer notes and privacy statements
-
-- Status: open; owner: maintainer / release owner; review before reusing submission text.
-- [Archived reviewer notes](archive/reviewer-notes.md) say no personal data is stored or shared;
-  the [published privacy policy](../PRIVACY_POLICY.md) also claims no network transmission or
-  telemetry. Source inspection contradicts those blanket statements: `TokenManager` persists
-  credentials/account metadata in Keychain; local stores retain watch/settings data; APIs send
-  network requests; `CrashlyticsLogger` forwards diagnostics when enabled by app startup.
-- Next step: inventory actual data flows and settings, then reconcile reviewer text, privacy
-  disclosures, and the overview's "no tracking" claim with the release owner. Source inspection
-  does not establish server retention or the contents of an App Store submission; those were
-  **NOT CHECKED**. Do not submit the archived notes as current copy.
-
 ## OQ-0005 — Playback device acceptance
 
 - Status: open; owner: playback/test maintainer; basis: [iOS port](exec-plans/completed/tos-player-ios-plan.md),
@@ -143,3 +130,34 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Next step: classify untranslated keys (including intentionally skipped format-only keys),
   fill required UI translations, and review them before release. Preserve existing/plural entries
   when using forced retranslation; `extractionState: manual` alone does not protect them.
+
+## OQ-0012 — Firebase removal: Xcode project and App Store follow-up
+
+- Status: open; owner: maintainer / release owner; basis: Firebase removal (CHANGELOG, Unreleased).
+- Source no longer imports Firebase and `SmartTubeIOS/Package.swift` has no dependencies, so the
+  firebase-ios-sdk package (and its transitive Google packages) is no longer resolved for the app.
+  The Xcode project still holds Firebase leftovers that must be removed in Xcode
+  (`project.pbxproj` is never hand-edited). Until then a build on a machine without a cached
+  firebase-ios-sdk checkout fails in the Crashlytics run script, and the iOS app still bundles a
+  local `GoogleService-Info.plist` when one exists on disk.
+- Steps in Xcode (`SmartTube.xcworkspace`, project `SmartTubeApp`):
+  1. Target **SmartTube** (iOS/Catalyst) → Build Phases: delete the Run Script phase that runs
+     `.../firebase-ios-sdk/Crashlytics/run -gsp ${SRCROOT}/SmartTubeApp/GoogleService-Info.plist`
+     (shown as "Run Script", object `67F34A972FA0A6A200EA6054`).
+  2. Same target → Build Phases: delete "Copy Firebase Binary dSYMs" (`FFDDBB9900112233445566AA`).
+  3. Same target → Build Phases → Copy Bundle Resources: remove `GoogleService-Info.plist`; then in
+     the navigator delete the `SmartTubeApp/GoogleService-Info.plist` reference (group `SmartTubeApp`,
+     "Remove Reference"), and delete local copies of that file from each checkout.
+  4. Target **Smart Tube** (tvOS) → Build Phases: delete the Crashlytics Run Script phase
+     (`674707572FB7AD00005095A5`, same command as step 1).
+  5. Project → Package Dependencies: confirm firebase-ios-sdk is not listed (the project only
+     references the local `../SmartTubeIOS` package; no target links a Firebase product). Both
+     `Package.resolved` files were deleted with the removal because every pin was a Firebase/Google
+     package; if Xcode recreates the workspace one, it should list no remote packages.
+  6. Optional: `NSApplicationCrashOnExceptions` in `SmartTubeApp/SmartTubeApp/Info-macOS.plist`
+     was a Crashlytics recommendation; it only changes local exception handling on Catalyst.
+- App Store Connect: update the App Privacy answers (crash data no longer collected) and replace
+  the obsolete [reviewer notes](archive/reviewer-notes.md) with text matching the
+  [privacy policy](../PRIVACY_POLICY.md). Server-side state was **NOT CHECKED**.
+- Acceptance: a clean checkout (no DerivedData, no `GoogleService-Info.plist`) builds iOS, tvOS and
+  the UI-test targets, and the built app contains no `Firebase_*` bundles.

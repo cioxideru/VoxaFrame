@@ -149,7 +149,7 @@ extension PlayerView {
 
     /// Executes the action for the currently highlighted control.
     func tvActivateControl(_ control: TVPlayerControl) {
-        let playerLog = CrashlyticsLogger(category: "Player")
+        let playerLog = ViewModelLogger(category: "Player")
         playerLog.notice("[tv] tvActivateControl(\(String(describing: control)))")
         switch control {
         case .back:

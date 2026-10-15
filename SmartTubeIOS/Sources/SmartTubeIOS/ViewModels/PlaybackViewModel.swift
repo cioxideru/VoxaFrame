@@ -9,7 +9,7 @@ import UIKit
 import MediaPlayer
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - PlaybackViewModel
 //
@@ -55,11 +55,10 @@ public final class PlaybackViewModel {
     var needsQuickStartup: Bool = false
     /// Timestamp set at the start of `load(video:)` — used to log total video-start latency.
     var videoLoadStartedAt: Date = .distantPast
-    /// Video ID (and title) that `load(video:)` was last called with. Compared against
+    /// Video ID that `load(video:)` was last called with. Compared against
     /// `currentVideo.id` when `isPlaying` fires for the first time in each load cycle
     /// to detect a wrong-video outcome (fix236).
     var intendedVideoId: String? = nil
-    var intendedVideoTitle: String? = nil
     /// Set to `true` at the start of each `load()` and cleared on the first
     /// `isPlaying = true` of that load cycle so the check fires exactly once.
     var pendingWrongVideoCheck: Bool = false
@@ -133,15 +132,15 @@ public final class PlaybackViewModel {
     public internal(set) var chapters: [Chapter] = []
     public internal(set) var hasPrevious: Bool = false
     public internal(set) var hasNext: Bool = false
-    /// The last stream URL handed to AVPlayer (primary or fallback). Stamped onto
-    /// Crashlytics non-fatal reports so the exact URL that failed is visible.
+    /// The last stream URL handed to AVPlayer (primary or fallback), shown in
+    /// Stats for Nerds and in error logs.
     var lastAttemptedStreamURL: URL?
     public var error: Error? {
         didSet {
             guard let error else { return }
             let nsError = error as NSError
             // Transient connectivity errors are expected in poor-network conditions and are
-            // not actionable via Crashlytics. Logging them caused a spike in non-fatal events
+            // not actionable. Logging them caused a spike in non-fatal events
             // in v2.0 — skip them.
             //   -1    = unknown (generic network failure, same signal as below)
             //   -999  = request cancelled (AVPlayer or URLSession cancelled in-flight
@@ -156,28 +155,16 @@ public final class PlaybackViewModel {
             }
             // APIError.unavailable means YouTube's server returned a known-unplayable status
             // (bot-detection, rate-limit, private/members-only, region block, cipher-protected
-            // URLs). These are never app bugs — log at notice level but don't inflate the
-            // Crashlytics non-fatal list. Pattern-match directly on the type rather than
-            // relying on NSError.code (which shifts when enum cases are reordered).
-            // APIError.ipBlocked is handled with a dedicated non-fatal in the loading path
-            // (vpn_ip_block=true) — skip double-logging here.
+            // URLs). These are never app bugs — don't log them as errors. Pattern-match
+            // directly on the type rather than relying on NSError.code (which shifts when enum cases are reordered).
+            // APIError.ipBlocked is logged in the loading path — skip double-logging here.
             if let apiError = error as? APIError {
                 if case .unavailable = apiError { return }
                 if case .ipBlocked = apiError { return }
             }
-            playerLog.recordNonFatal(
-                error,
-                userInfo: [
-                    "video_id": currentVideo?.id ?? "unknown",
-                    "video_title": currentVideo?.title ?? "unknown",
-                    "stream_url": lastAttemptedStreamURL?.absoluteString ?? "none",
-                    "error_message": error.localizedDescription,
-                    "error_domain": nsError.domain,
-                    "error_code": "\(nsError.code)",
-                    "retry_attempts": "\(retryAttempts)",
-                    "current_time": "\(Int(currentTime))s",
-                ])
-            CrashlyticsLogger.sendAutoPlaybackDiagnostic()
+            playerLog.error(
+                "[error] \(nsError.domain)(\(nsError.code)): \(error.localizedDescription) video=\(currentVideo?.id ?? "unknown") stream=\(lastAttemptedStreamURL?.host() ?? "none") retries=\(retryAttempts) t=\(Int(currentTime))s"
+            )
         }
     }
     public var controlsVisible: Bool = false
@@ -265,7 +252,7 @@ public final class PlaybackViewModel {
     /// Counts exhaustive retry cycles (0 = no retry yet). Set by exhaustiveRetry(video:originalError:).
     var retryAttempts: Int = 0
     /// The stream type that produced the current AVPlayerItem, set by each successful load path.
-    /// Used by the slow-load Crashlytics event to identify which fallback path was used.
+    /// Identifies which fallback path was used (Stats for Nerds).
     var lastSuccessfulStreamType: String = "unknown"
     /// Elapsed ms from `load()` to the first `readyToPlay` (low-quality fast-start frame). 0 = not yet measured.
     var timeToPlayMs: Int = 0
@@ -601,8 +588,7 @@ extension PlaybackViewModel: QualityEventHandler {
 
     /// Fires once per `load()` cycle when `isPlaying` transitions to `true`.
     /// Compares `currentVideo.id` against `intendedVideoId` set at `load()` time.
-    /// On mismatch: records a `SmartTube.WrongVideo` non-fatal to Crashlytics and
-    /// shows the user a toast so they know a report was filed automatically.
+    /// On mismatch: logs the intended and active IDs.
     private func checkWrongVideoOnFirstPlay() {
         guard pendingWrongVideoCheck else { return }
         pendingWrongVideoCheck = false
@@ -611,13 +597,6 @@ extension PlaybackViewModel: QualityEventHandler {
             active.id != intended
         else { return }
         playerLog.error("[WrongVideo] MISMATCH at readyToPlay — intended=\(intended) active=\(active.id)")
-        CrashlyticsLogger.sendWrongVideoReport(
-            intendedId: intended,
-            intendedTitle: intendedVideoTitle ?? intended,
-            activeId: active.id,
-            activeTitle: active.title
-        )
-        toastMessage = "⚠️ Wrong video loaded — report sent"
     }
 }
 

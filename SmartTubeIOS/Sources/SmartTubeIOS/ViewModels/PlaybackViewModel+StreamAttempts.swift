@@ -9,7 +9,7 @@ import UIKit
 import WebKit
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Stream Playback Attempts
 
@@ -507,14 +507,6 @@ extension PlaybackViewModel {
         isLoading = false
         timeToPlayMs = Int(Date().timeIntervalSince(videoLoadStartedAt) * 1000)
         lastSuccessfulStreamType = label
-        if timeToPlayMs > PlaybackTuning.slowVideoLoadMilliseconds {
-            CrashlyticsLogger.recordSlowVideoLoad(
-                videoId: video.id,
-                elapsedMs: timeToPlayMs,
-                streamType: label,
-                hasError: false
-            )
-        }
         player.rate = Float(settings.playbackSpeed)
         isPlaying = true
         launchPhase2(video: video, info: info)

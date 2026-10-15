@@ -2,7 +2,7 @@ import AVFoundation
 import SmartTubeIOSCore
 import os
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Stats for Nerds
 
@@ -73,9 +73,8 @@ extension PlaybackViewModel {
         let stalls = logEvent.map { $0.numberOfStalls } ?? 0
 
         let resSource = selectedFormat != nil ? "selectedFormat(\(selectedFormat!.qualityLabel))" : "presentationSize"
-        // Only forward to Crashlytics breadcrumbs when something meaningful changed.
-        // Silent 0.5 s ticks otherwise saturate the 64 KB breadcrumb buffer and push
-        // critical events (load, quality switch, errors) out of the window.
+        // Only log when something meaningful changed — silent 0.5 s ticks would
+        // otherwise flood the log.
         let prevSnap = statsSnapshot
         let codecChanged = codec != prevSnap.codec && prevSnap.codec != "—"
         let resChanged = res != prevSnap.displayResolution && prevSnap.displayResolution != "—"

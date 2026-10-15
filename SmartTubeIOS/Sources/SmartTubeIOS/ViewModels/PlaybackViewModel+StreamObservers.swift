@@ -7,7 +7,7 @@ import UIKit
 import MediaPlayer
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Playback Item Observers
 
@@ -55,15 +55,6 @@ extension PlaybackViewModel {
         // (fallback paths set it in attemptURL/tryWebViewHLS readyToPlay handlers).
         if self.lastSuccessfulStreamType == "unknown" {
             self.lastSuccessfulStreamType = isHLS ? "primaryHLS" : "primaryDirect"
-        }
-        if elapsedMs > PlaybackTuning.slowVideoLoadMilliseconds {
-            CrashlyticsLogger.recordSlowVideoLoad(
-                videoId: self.currentVideo?.id ?? "unknown",
-                elapsedMs: elapsedMs,
-                streamType: self.lastSuccessfulStreamType,
-                hasError: item.error != nil,
-                errorDescription: item.error?.localizedDescription
-            )
         }
         // Refresh duration from the AVPlayerItem now that it is
         // ready — the API metadata may have been absent (nil) or
@@ -152,7 +143,7 @@ extension PlaybackViewModel {
             }
         }
 
-        // Observe playback stalls and record them as Crashlytics non-fatals (bug #193).
+        // Observe playback stalls, log them and attempt recovery (bug #193).
         stallObserverTask?.cancel()
         stallObserverTask = Task { @MainActor [weak self] in
             let notifications = NotificationCenter.default.notifications(
@@ -166,23 +157,6 @@ extension PlaybackViewModel {
                 playerLog.notice(
                     "[stall] AVPlayerItemPlaybackStalled at t=\(stallTime)s stall#\(self.stallCount) video=\(self.currentVideo?.id ?? "unknown")"
                 )
-                let stallError = NSError(
-                    domain: "SmartTube.PlaybackStall",
-                    code: 0,
-                    userInfo: [
-                        NSLocalizedDescriptionKey:
-                            "AVPlayerItemPlaybackStalled at t=\(stallTime)s (stall #\(self.stallCount))"
-                    ]
-                )
-                playerLog.recordNonFatal(
-                    stallError,
-                    userInfo: [
-                        "video_id": self.currentVideo?.id ?? "unknown",
-                        "stall_at_time": String(stallTime),
-                        "stall_count": String(self.stallCount),
-                        "video_duration": String(Int(self.duration)),
-                        "stall_trigger": "AVPlayerItemPlaybackStalled",
-                    ])
                 // Stall recovery (#193): wait 2 s for AVPlayer to self-heal;
                 // if still stalled, nudge the pipeline with a near-zero seek
                 // + explicit rate restore. Capped at 3 attempts per item.

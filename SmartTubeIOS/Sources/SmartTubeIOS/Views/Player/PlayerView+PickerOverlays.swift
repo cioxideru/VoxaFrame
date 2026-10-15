@@ -6,7 +6,7 @@ import SwiftUI
 import UIKit
 #endif
 
-private let pickerLog = CrashlyticsLogger(category: "PlayerMenu")
+private let pickerLog = ViewModelLogger(category: "PlayerMenu")
 
 // MARK: - PlayerView picker overlays + share sheet
 //
