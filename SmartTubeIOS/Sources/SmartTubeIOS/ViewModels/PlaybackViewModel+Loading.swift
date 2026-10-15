@@ -441,29 +441,7 @@ extension PlaybackViewModel {
         // exhaustiveRetry race entirely → ~0.5s faster). The task is also assigned to
         // wkHLSEarlyTask so racePathB can use it if the re-tap happens before extraction
         // completes (< 1.25s after stop).
-        if let stoppedVideoId = currentVideo?.id {
-            Task { await VideoPreloadCache.shared.invalidateWKHLSURL(for: stoppedVideoId) }
-            #if canImport(WebKit)
-            wkHLSEarlyTaskVideoId = stoppedVideoId
-            let capturedId = stoppedVideoId
-            wkHLSEarlyTask = Task { @MainActor in
-                guard let url = await YouTubeWebViewHLSExtractor.shared.serialExtract(videoId: capturedId) else {
-                    return nil
-                }
-                // Defense-in-depth: if load() for a different video cancelled this task
-                // between serialExtract's return and the store, bail rather than write
-                // a potentially stale URL into the cache under the wrong key.
-                guard !Task.isCancelled else {
-                    playerLog.notice("[fix10] pre-warm task was cancelled — not caching URL for \(capturedId)")
-                    return nil
-                }
-                // Store the fresh URL so Phase -1a serves from cache on re-tap.
-                await VideoPreloadCache.shared.store(wkHLSManifestURL: url, for: capturedId)
-                playerLog.notice("[fix10] wkHLS pre-warm complete — cached for \(capturedId)")
-                return url
-            }
-            #endif
-        }
+        rewarmStoppedVideoHLS()
         itemObserverTask?.cancel()
         itemObserverTask = nil
         endObserverTask?.cancel()
@@ -706,5 +684,33 @@ extension PlaybackViewModel {
             }
         }
 
+    }
+}
+
+extension PlaybackViewModel {
+    /// fix10: evict the stopped video's CDN URL and start a fresh wkHLS extraction (see stop()).
+    func rewarmStoppedVideoHLS() {
+        guard let stoppedVideoId = currentVideo?.id else { return }
+        Task { await VideoPreloadCache.shared.invalidateWKHLSURL(for: stoppedVideoId) }
+        #if canImport(WebKit)
+        wkHLSEarlyTaskVideoId = stoppedVideoId
+        let capturedId = stoppedVideoId
+        wkHLSEarlyTask = Task { @MainActor in
+            guard let url = await YouTubeWebViewHLSExtractor.shared.serialExtract(videoId: capturedId) else {
+                return nil
+            }
+            // Defense-in-depth: if load() for a different video cancelled this task
+            // between serialExtract's return and the store, bail rather than write
+            // a potentially stale URL into the cache under the wrong key.
+            guard !Task.isCancelled else {
+                playerLog.notice("[fix10] pre-warm task was cancelled — not caching URL for \(capturedId)")
+                return nil
+            }
+            // Store the fresh URL so Phase -1a serves from cache on re-tap.
+            await VideoPreloadCache.shared.store(wkHLSManifestURL: url, for: capturedId)
+            playerLog.notice("[fix10] wkHLS pre-warm complete — cached for \(capturedId)")
+            return url
+        }
+        #endif
     }
 }
