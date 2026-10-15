@@ -20,6 +20,18 @@ struct PlaybackResumeAfterStopTests {
         #expect(vm.player.rate == 0)
     }
 
+    @Test("stop() clears the suspend and interruption resume flags")
+    func stopClearsResumeFlags() {
+        let vm = PlaybackViewModel()  // currentVideo nil: stop() starts no HLS re-extraction
+        vm.wasPlayingBeforeSuspend = true
+        vm.wasPlayingBeforeInterruption = true
+
+        vm.stop()
+
+        #expect(vm.wasPlayingBeforeSuspend == false)
+        #expect(vm.wasPlayingBeforeInterruption == false)
+    }
+
     @Test("togglePlayPause() on a parked item un-parks it so resume() works again")
     func togglePlayUnparks() {
         let vm = PlaybackViewModel()
