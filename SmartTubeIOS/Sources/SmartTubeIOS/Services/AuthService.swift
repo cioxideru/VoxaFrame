@@ -115,10 +115,9 @@ public final class AuthService {
             }
         }
         // UI-testing override: wipe all auth state (in-memory + keychain +
-        // cookies) and immediately begin a device-code sign-in. Used by the
-        // TOSPlayerIOSUITests one-time setup script — the simulator's prior
-        // sign-in cookies were stale server-side, and the test needs a fresh
-        // `__Secure-YT_TVFAS` to pass. The test runner reads the userCode from
+        // cookies) and immediately begin a device-code sign-in. Used by UI-test
+        // setup when the simulator's prior sign-in cookies are stale server-side
+        // and a fresh `__Secure-YT_TVFAS` is needed. The test runner reads the userCode from
         // the device log, shows it to the user, the user enters it at
         // youtube.com/activate on a real device, and the sign-in completes.
         if ProcessInfo.processInfo.arguments.contains("--uitesting-trigger-sign-in") {
@@ -261,8 +260,7 @@ public final class AuthService {
     /// Clears EVERYTHING (in-memory + keychain + cookies). Used by the test
     /// setup path that needs to drive a fresh device-code sign-in (the
     /// simulator's stale `__Secure-YT_TVFAS` from an earlier sign-in
-    /// wasn't being honored by YouTube's player-config check — see
-    /// TOSPlayerIOSUITests' skip message for the full root cause).
+    /// wasn't being honored by YouTube's player-config check).
     public func clearAllForTest() {
         clearSession()
         clearKeychain()
@@ -272,7 +270,7 @@ public final class AuthService {
     /// Wipes the web session (SAPISID etc.) so it doesn't outlive sign-out.
     private func clearCookies() {
         // Wipe both cookie stores (URLSession's binarycookies + WKWebView's
-        // origin index). Without this, the IFrame would still see stale
+        // origin index). Without this, web views would still see stale
         // cookies from the previous sign-in.
         if let cookies = HTTPCookieStorage.shared.cookies {
             for cookie in cookies {

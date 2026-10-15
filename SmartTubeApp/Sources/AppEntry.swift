@@ -25,7 +25,6 @@ struct AppEntry: App {
     @State private var settingsStore: SettingsStore
     #if os(iOS)
     @State private var playerStateStore: PlayerStateStore
-    @State private var tosPlayerStateStore: TOSPlayerStateStore
     @State private var playerRouter: PlayerRouter
     #endif
     @State private var deepLinkLaunchArgConsumed = false
@@ -79,15 +78,8 @@ struct AppEntry: App {
         _settingsStore = State(initialValue: settingsStore)
         #if os(iOS)
         let playerStateStore = PlayerStateStore(api: api)
-        let tosPlayerStateStore = TOSPlayerStateStore()
         _playerStateStore = State(initialValue: playerStateStore)
-        _tosPlayerStateStore = State(initialValue: tosPlayerStateStore)
-        _playerRouter = State(
-            initialValue: PlayerRouter(
-                playerState: playerStateStore,
-                tosState: tosPlayerStateStore,
-                settingsStore: settingsStore
-            ))
+        _playerRouter = State(initialValue: PlayerRouter(playerState: playerStateStore))
         #endif
         #if ENABLE_DOWNLOADS
         _cardDownloadService = State(initialValue: VideoDownloadService(api: api))
@@ -96,7 +88,7 @@ struct AppEntry: App {
         // Task #353: keep the Home Screen widget's snapshot in step with the Home page.
         HomeWidgetPublisher.attach(to: browseViewModel)
         // Player-control App Intents (play/pause, skip, next) act on these stores.
-        PlayerRemote.attach(playerState: playerStateStore, tosState: tosPlayerStateStore)
+        PlayerRemote.attach(playerState: playerStateStore)
         #endif
 
         // --uitesting-force-stream-method=<method>: restricts exhaustiveRetry to a
@@ -304,7 +296,6 @@ struct AppEntry: App {
                 #if os(iOS)
                 withDownloads(root)
                     .environment(playerStateStore)
-                    .environment(tosPlayerStateStore)
                     .environment(playerRouter)
                     // Spotlight: tapping a video or channel result opens it.
                     .onContinueUserActivity(CSSearchableItemActionType) { activity in
@@ -417,7 +408,7 @@ extension AppEntry {
         // window and its updates are paused, so MainTabView's onChange(of: deepLinkedVideo)
         // would not run until the player closed: a widget / Share Extension link opened
         // while watching did nothing. Route straight to the player instead.
-        if playerStateStore.presentation == .fullScreen || tosPlayerStateStore.presentation == .fullScreen {
+        if playerStateStore.presentation == .fullScreen {
             playerRouter.open(video: video, api: api)
         } else {
             browseViewModel.deepLinkedVideo = video
@@ -449,7 +440,6 @@ extension AppEntry {
     @MainActor
     private func leaveFullScreenPlayer() {
         #if os(iOS)
-        if tosPlayerStateStore.presentation == .fullScreen { tosPlayerStateStore.minimize() }
         if playerStateStore.presentation == .fullScreen { playerStateStore.minimize() }
         #endif
     }

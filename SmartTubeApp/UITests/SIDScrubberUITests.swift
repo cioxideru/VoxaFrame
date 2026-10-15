@@ -30,7 +30,6 @@ final class SIDScrubberUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments += ["--uitesting"]
-        app.launchArguments += ["--uitesting-disable-tos-player-on-ios"]
         app.launchArguments += ["--uitesting-deeplink-video=\(Self.targetVideoID)"]
         app.launch()
     }

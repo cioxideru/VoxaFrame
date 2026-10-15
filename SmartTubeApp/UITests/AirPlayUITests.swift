@@ -27,7 +27,7 @@ final class AirPlayUITests: XCTestCase {
         app = XCUIApplication()
         // --uitesting-enable-pip bypasses AVPictureInPictureController.isPictureInPictureSupported()
         // on parallel clone simulators where entitlements may not propagate.
-        app.launchArguments += ["--uitesting", "--uitesting-disable-tos-player-on-ios", "--uitesting-enable-pip"]
+        app.launchArguments += ["--uitesting", "--uitesting-enable-pip"]
         app.launch()
     }
 

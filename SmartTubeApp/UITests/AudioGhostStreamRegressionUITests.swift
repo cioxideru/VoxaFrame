@@ -38,7 +38,7 @@ final class PlayerGhostStreamRegressionUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments += ["--uitesting", "--uitesting-disable-tos-player-on-ios"]
+        app.launchArguments += ["--uitesting"]
         app.launch()
     }
 

@@ -8,9 +8,8 @@ private let landscapeLog = Logger(subsystem: "com.void.smarttube.app", category:
 
 // MARK: - FullScreenPlayerDismissible
 
-/// Conformed to by both PlayerStateStore (AVPlayer) and TOSPlayerStateStore (TOS),
-/// letting LandscapePresenter wire up the same imperative-dismiss-hook pattern for
-/// either pipeline without referencing the other's concrete type.
+/// Conformed to by PlayerStateStore, letting LandscapePresenter wire up its
+/// imperative-dismiss hook without referencing the concrete store type.
 ///
 /// `dismissPlayerAction` is set by LandscapePresenter's coordinator when this store's
 /// full-screen player is presented, and fired by minimize()/stop() to bypass the
@@ -23,7 +22,6 @@ protocol FullScreenPlayerDismissible: AnyObject {
 }
 
 extension PlayerStateStore: FullScreenPlayerDismissible {}
-extension TOSPlayerStateStore: FullScreenPlayerDismissible {}
 
 // MARK: - LandscapeAwareHostingController
 
@@ -72,8 +70,7 @@ extension View {
 
 private struct LandscapePresenter<Item: Identifiable & Hashable>: UIViewControllerRepresentable {
     @Binding var item: Item?
-    /// The presentation store for THIS cover (PlayerStateStore for the AVPlayer cover,
-    /// TOSPlayerStateStore for the TOS cover). Wired up imperatively below so
+    /// The presentation store for THIS cover. Wired up imperatively below so
     /// minimize()/stop() can dismiss the hosted VC directly — see
     /// FullScreenPlayerDismissible's doc comment.
     let dismissStore: any FullScreenPlayerDismissible
@@ -83,11 +80,6 @@ private struct LandscapePresenter<Item: Identifiable & Hashable>: UIViewControll
     @Environment(SettingsStore.self) private var store
     @Environment(AuthService.self) private var authService
     @Environment(PlayerStateStore.self) private var playerState
-    // TOSPlayerView (presented via the tosFullScreenBinding cover) reads this from
-    // the environment — without it, UIHostingController's fresh view hierarchy has
-    // no ancestor providing TOSPlayerStateStore and `tosState.vm!` force-unwrap path
-    // crashes with "No Observable object of type TOSPlayerStateStore found".
-    @Environment(TOSPlayerStateStore.self) private var tosState
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -108,14 +100,12 @@ private struct LandscapePresenter<Item: Identifiable & Hashable>: UIViewControll
         let capturedStore = store
         let capturedAuth = authService
         let capturedPlayerState = playerState
-        let capturedTosState = tosState
         coordinator.contentBuilder = { [content] item in
             AnyView(
                 content(item)
                     .environment(capturedStore)
                     .environment(capturedAuth)
                     .environment(capturedPlayerState)
-                    .environment(capturedTosState)
             )
         }
         coordinator.latestBinding = _item

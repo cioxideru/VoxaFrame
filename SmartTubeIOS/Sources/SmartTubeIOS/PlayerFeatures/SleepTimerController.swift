@@ -2,11 +2,7 @@ import Foundation
 
 // MARK: - Sleep Timer
 //
-// Shared between PlaybackViewModel (standard player) and TOSPlayerViewModel
-// (TOS player) — both implementations were a verbatim countdown-task dance
-// that differed only in how playback is paused when the timer fires
-// (`player.pause(); isPlaying = false` vs. the JS-bridge `pause()`), so that
-// one action is supplied per call.
+// Used by PlaybackViewModel. The pause action is supplied per call.
 
 /// Counts down to a pause action, cancellable by starting a new countdown
 /// or passing `nil`.

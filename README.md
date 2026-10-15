@@ -29,7 +29,7 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 
 ### Playback
 - Adaptive HLS and DASH streaming — up to 8K via AVPlayer; manual quality picker (144p → 4K)
-- Player engine choice on iOS (Settings → Player): native AVPlayer, fed by the VISIONOS client's HLS (H.264, up to 1080p), or YouTube's official IFrame player
+- Native AVPlayer on every platform, fed first by the VISIONOS client's HLS (H.264, up to 1080p)
 - DASH adaptive quality switching via `AVMutableComposition` — no black frames, audio preserved on every switch
 - Audio-only playback mode
 - Landscape playback with one-tap orientation lock (iPhone)

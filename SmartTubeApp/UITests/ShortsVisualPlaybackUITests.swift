@@ -22,7 +22,7 @@ import XCTest
 //
 // BUG skip (must fix before closing):
 //   - None on a physical device — this test exists specifically because
-//     Darwin-notification-based tests (ShortsEmbedPlayerUITests) can report
+//     Darwin-notification-based tests (the since-removed embed-player tests) can report
 //     "ready"/"tick"/"playing" while the actual WKWebView renders solid black on
 //     screen. Every brightness assertion here is a hard XCTAssertGreaterThan on
 //     device, not a skip — a failure means the screen really is black, not a flaky
@@ -50,7 +50,7 @@ import XCTest
 // Programmatically verifies Shorts ACTUALLY RENDER on screen, not just that the JS
 // bridge reports ready/playing. Samples average pixel brightness of the video area
 // from real XCUIScreenshot captures — Darwin notifications can lie (and did: #275 was
-// filed because ShortsEmbedPlayerUITests passed on every notification assertion while
+// filed because the since-removed embed-player tests passed on every notification assertion while
 // the device showed a solid black screen), but a real screenshot's pixels cannot.
 //
 // Brightness assertions only run on a physical device (see AGENT-POST-RUN-CHECK
@@ -213,7 +213,7 @@ final class ShortsVisualPlaybackUITests: XCTestCase {
     /// Opens the Shorts player and swipes through 4 Shorts (5 total), taking a
     /// screenshot after each one becomes ready and asserting the center of the
     /// screen is not solid black. This is the test that would have caught #275 —
-    /// the Darwin-notification-based ShortsEmbedPlayerUITests passed throughout
+    /// the since-removed Darwin-notification-based embed tests passed throughout
     /// while the on-screen content was actually black.
     func testShortsRenderVisibleContentAcrossSwipes() throws {
         let opening = try openFirstShort()

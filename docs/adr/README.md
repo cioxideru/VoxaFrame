@@ -10,8 +10,7 @@ to meet an arbitrary line limit.
 
 Code reconciliation: 2026-10-15. `accepted` records a decision, not a passing runtime test.
 ADR 0005 remains proposed: the cascade is split across files but no `StreamSource` or
-`ResolutionPipeline` exists. ADR 0006's default remains, but its exclusive-player wording
-conflicts with the current setting; see its implementation note and [open questions](../OPEN_QUESTIONS.md).
+`ResolutionPipeline` exists. ADRs 0006–0008 are superseded by ADR 0010, which removed the embed players.
 
 | ADR | Title | Status |
 |---|---|---|
@@ -20,7 +19,8 @@ conflicts with the current setting; see its implementation note and [open questi
 | [0003](0003-no-project-generation.md) | No Tuist/XcodeGen — the `.xcodeproj` is the source of truth | accepted |
 | [0004](0004-plain-init-injection.md) | Plain protocol + initializer injection, no DI framework | accepted |
 | [0005](0005-stream-source-pipeline.md) | `StreamSource` + `ResolutionPipeline` replace the `exhaustiveRetry` cascade | proposed |
-| [0006](0006-tos-player-default-on-ios.md) | TOS-compliant WKWebView player is the default player on iOS | accepted |
-| [0007](0007-no-hybrid-avplayer-handoff-for-tos.md) | No hybrid AVPlayer handoff for TOS background play / PiP | accepted |
-| [0008](0008-standby-swap-disabled.md) | Shorts standby-swap "instant swipe" promotion is permanently disabled | accepted |
+| [0006](0006-tos-player-default-on-ios.md) | TOS-compliant WKWebView player is the default player on iOS | superseded |
+| [0007](0007-no-hybrid-avplayer-handoff-for-tos.md) | No hybrid AVPlayer handoff for TOS background play / PiP | superseded |
+| [0008](0008-standby-swap-disabled.md) | Shorts standby-swap "instant swipe" promotion is permanently disabled | superseded |
 | [0009](0009-docs-live-with-code.md) | Non-secret docs live in the public repo, with code | accepted |
+| [0010](0010-remove-iframe-player.md) | Remove the IFrame (TOS) and Shorts embed players; AVPlayer is the only engine | accepted |

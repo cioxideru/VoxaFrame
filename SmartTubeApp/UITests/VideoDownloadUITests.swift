@@ -104,10 +104,7 @@ final class VideoDownloadUITests: XCTestCase {
     /// Launches the app with an optional set of extra arguments.
     private func launch(extraArgs: [String] = []) {
         app = XCUIApplication()
-        // TOS (IFrame/WKWebView) is the default iOS player as of the PlayerRouter
-        // refactor, but its more-menu has no "Download to Gallery" entry — disable
-        // it so these tests continue to exercise the AVPlayer-based pipeline.
-        app.launchArguments = ["--uitesting", "--uitesting-disable-tos-player-on-ios"] + extraArgs
+        app.launchArguments = ["--uitesting"] + extraArgs
         app.launch()
     }
 

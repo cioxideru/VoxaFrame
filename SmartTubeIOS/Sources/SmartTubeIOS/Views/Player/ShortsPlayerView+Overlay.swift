@@ -23,31 +23,14 @@ extension ShortsPlayerView {
 
     // MARK: - Overlay
 
-    // When paused, the SwiftUI overlay must NOT use .contentShape(Rectangle()).
-    // That modifier makes the full-screen UIHostingView the UIKit hit-test target,
-    // blocking every touch from reaching the native HTML5 video controls inside
-    // WKWebView. Without .contentShape, only the back button (which has a visible
-    // background) is hit-testable; touches anywhere else fall through to WKWebView.
-    // Swipe navigation while paused is handled by the window-level UIPanGestureRecognizer
-    // in SwipeGestureOverlay, which fires regardless of which UIView owns the touch.
-
     @ViewBuilder
     var shortsOverlay: some View {
         #if os(iOS)
-        // When paused, skip .contentShape so the UIHostingView doesn't intercept UIKit
-        // touches in the transparent Spacer region — native controls need direct delivery.
-        // Swipe navigation while paused is handled by the window-level UIPanGestureRecognizer
-        // in SwipeGestureOverlay (fires regardless of which UIView owns the touch).
-        if vm.playerState == .paused {
-            overlayStack
-        } else {
-            overlayStack
-                .contentShape(Rectangle())
-                .simultaneousGesture(overlaySwipeGesture)
-        }
+        overlayStack
+            .contentShape(Rectangle())
+            .simultaneousGesture(overlaySwipeGesture)
         #else
-        // tvOS: no playerState on PlaybackViewModel, no DragGesture; contentShape for
-        // D-pad focus but no swipe gesture (navigation via .onMoveCommand instead).
+        // tvOS: no DragGesture; navigation via .onMoveCommand instead.
         overlayStack
             .contentShape(Rectangle())
         #endif
@@ -75,9 +58,7 @@ extension ShortsPlayerView {
             Spacer()
         }
         // Play/pause taps are handled by the window-level UITapGestureRecognizer in
-        // SwipeGestureOverlay (onTap: { vm.togglePlayPause() }). A SwiftUI
-        // .onTapGesture here would never fire — WKWebView absorbs UIKit touches
-        // before the hosting UIView's gesture recognizers see them.
+        // SwipeGestureOverlay (onTap: { vm.togglePlayPause() }).
     }
 
     // Swipe navigation gesture applied to the overlay when playing (contentShape active).

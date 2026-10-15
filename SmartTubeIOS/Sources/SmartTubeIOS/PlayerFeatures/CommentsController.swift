@@ -3,11 +3,8 @@ import SmartTubeIOSCore
 
 // MARK: - Comments
 //
-// Shared between PlaybackViewModel (standard player) and TOSPlayerViewModel
-// (TOS player) — both fetched top-level comments via InnerTubeAPI with an
-// identical "skip if already loaded or in flight" guard. `videoId` is
-// supplied per call so each adapter can keep its own video-id resolution
-// (`(vm.playerInfo?.video ?? video).id` vs. `self.videoId`).
+// Used by PlaybackViewModel. Fetches top-level comments via InnerTubeAPI with a
+// "skip if already loaded or in flight" guard; `videoId` is supplied per call.
 
 /// Fetches and caches top-level comments for a video.
 @MainActor

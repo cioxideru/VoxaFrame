@@ -28,7 +28,6 @@ final class PlayerDoubleTapUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments += [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=dQw4w9WgXcQ",
             "--uitesting-disable-sponsorblock",
         ]

@@ -35,7 +35,6 @@ final class ChannelViewUITests: XCTestCase {
         sharedApp = XCUIApplication()
         sharedApp.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-channel=\(kTestChannelID)",
         ]
         sharedApp.launch()

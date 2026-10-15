@@ -1,7 +1,8 @@
 # 0008 — Shorts standby-swap "instant swipe" promotion is permanently disabled
 
 - ID: ADR-0008
-- Status: accepted
+- Status: superseded
+- Superseded-by: [ADR-0010](0010-remove-iframe-player.md)
 - Date: 2026-06
 - Deciders: maintainer
 
@@ -59,3 +60,7 @@ disabled before assuming a new Shorts report is a regression of something else.
 ## Implementation check — 2026-10-15
 
 `ShortsPlayerView+Navigation.goTo` still calls `loadVideo(at:)` and does not invoke `prewarmStandby(for:)`; standby hosts remain unreachable. Historical passing runs above were not repeated. Re-enabling promotion still requires root-causing issue #279.
+
+## Superseded — 2026-10-15
+
+The embed player this record governs was removed; see [ADR-0010](0010-remove-iframe-player.md).

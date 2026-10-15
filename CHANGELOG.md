@@ -6,6 +6,18 @@ All notable changes to SmartTube are documented here.
 
 ## [Unreleased]
 
+### Removed — 2026-10-15
+
+- **IFrame (TOS) player and Shorts embed player** ([ADR-0010](docs/adr/0010-remove-iframe-player.md),
+  superseding ADR-0006/0007/0008). All playback on iOS, iPadOS and macOS now uses the native
+  AVPlayer pipeline that tvOS already used; Shorts play in `ShortsPlayerView` over
+  `PlaybackViewModel` on every platform. Removed the "IFrame Player" setting (iOS and macOS),
+  `TOSPlayerStateStore` and the TOS mini player, the WKWebView embed views/scripts, the Shorts
+  src-swap spike, the `--uitesting-*-tos-player-on-ios` launch arguments, and their unit/UI tests.
+  The quality picker, captions, PiP and Yandex voice-over are always available again; iOS HLS
+  pre-warming on card appearance is re-enabled. "Watch in incognito" no longer suppresses history
+  (see open questions).
+
 ### Documentation — 2026-10-15
 
 - Added the [execution-plan lifecycle](docs/exec-plans/README.md) and [open-question register](docs/OPEN_QUESTIONS.md);

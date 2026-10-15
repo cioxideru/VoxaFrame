@@ -90,7 +90,6 @@ final class SIDPlaybackStallingUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=\(Self.videoID)",
         ]
         app.launch()

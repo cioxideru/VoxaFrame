@@ -6,7 +6,7 @@ import Testing
 // MARK: - VideoShareURLTests (#104)
 //
 // All four of the app's own Share entry points (VideoCardView, ShortsCardView,
-// TOSPlayerView, PlayerView+Overlays) already built a clean watch?v=<id> URL with no
+// PlayerView+Overlays, and the since-removed embed player) already built a clean watch?v=<id> URL with no
 // tracking query params before this task — they just duplicated the string literal
 // four times with no test locking that in. Extracted to Video.shareURL so there's one
 // place to check (and one test to catch a regression) instead of four.

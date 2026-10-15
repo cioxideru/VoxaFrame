@@ -190,7 +190,7 @@ public extension Video {
     /// (#104). Deliberately just `watch?v=<id>` — no `si=` or other tracking query
     /// parameters — so this is the single place to check/fix if that ever regresses,
     /// instead of four separate `URL(string: "https://www.youtube.com/watch?v=...")`
-    /// literals across VideoCardView, ShortsCardView, TOSPlayerView, and
+    /// literals across VideoCardView, ShortsCardView, and
     /// PlayerView+Overlays.
     var shareURL: URL? {
         URL(string: "https://www.youtube.com/watch?v=\(id)")

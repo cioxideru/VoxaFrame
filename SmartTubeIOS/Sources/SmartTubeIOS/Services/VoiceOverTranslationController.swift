@@ -8,9 +8,9 @@ private let votLog = Logger(subsystem: appSubsystem, category: "VoiceOver")
 
 // MARK: - VoiceOverTranslationController
 //
-// Plays a Yandex VOT translation alongside the main AVPlayer (the IFrame player is not
-// supported). While Yandex has no translation yet, the main player stays paused; once an
-// audio URL arrives the video resumes with the original audio ducked. The translation MP3
+// Plays a Yandex VOT translation alongside the main AVPlayer. While Yandex has no
+// translation yet, the main player stays paused; once an audio URL arrives the video
+// resumes with the original audio ducked. The translation MP3
 // shares the video timeline, so syncing is: mirror rate (any speed) and pause, and seek the
 // voice player whenever it drifts from the video.
 

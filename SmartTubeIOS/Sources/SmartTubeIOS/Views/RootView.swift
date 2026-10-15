@@ -152,10 +152,8 @@ struct MainTabView: View {
     @Environment(SettingsStore.self) private var store
     #if os(iOS)
     @Environment(PlayerStateStore.self) private var playerState
-    @Environment(TOSPlayerStateStore.self) private var tosState
     @Environment(PlayerRouter.self) private var playerRouter
     @Environment(BrowseViewModel.self) private var browseVM
-    @State private var showSrcSwapSpike = false
     #endif
 
     var body: some View {
@@ -177,19 +175,6 @@ struct MainTabView: View {
                 // caused the mini-player X button to unexpectedly restore fullscreen.
                 guard newValue == nil, playerState.presentation == .fullScreen else { return }
                 playerState.minimize()
-            }
-        )
-        // TOS full-screen cover binding — mirrors the AVPlayer binding above.
-        // When the user swipes down or the system dismisses the cover while TOS is
-        // still in .fullScreen, this setter calls minimize() so audio continues in
-        // TOSMiniPlayerView. If tosState.stop() already moved us to .hidden the
-        // setter is a no-op (guard prevents spurious minimize).
-        let tosFullScreenVideo: Video? = tosState.presentation == .fullScreen ? tosState.currentVideo : nil
-        let tosFullScreenBinding = Binding<Video?>(
-            get: { tosFullScreenVideo },
-            set: { newValue in
-                guard newValue == nil, tosState.presentation == .fullScreen else { return }
-                tosState.minimize()
             }
         )
         #endif
@@ -238,9 +223,7 @@ struct MainTabView: View {
         // mini player. Uses a transparent placeholder rather than the real MiniPlayerView
         // to avoid duplicating the PersistentPlayerHostView UIKit layer across tabs.
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            // Reserve vertical space for whichever mini-player is visible so
-            // scrollable content is not obscured (only one can be active at a time).
-            if playerState.presentation == .miniPlayer || tosState.presentation == .miniPlayer {
+            if playerState.presentation == .miniPlayer {
                 Color.clear.frame(height: 62)
             }
         }
@@ -250,8 +233,6 @@ struct MainTabView: View {
         // already baked it into the safe area. The transparent passthrough spacer below
         // the mini player ensures tab-bar items remain tappable.
         .overlay(alignment: .bottom) {
-            // Only one mini-player can be active at a time: AVPlayer and TOS are
-            // mutually exclusive (onChange stops the other before starting the new one).
             if playerState.presentation == .miniPlayer {
                 VStack(spacing: 0) {
                     MiniPlayerView()
@@ -261,53 +242,10 @@ struct MainTabView: View {
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .animation(.easeInOut(duration: 0.2), value: playerState.presentation)
-            } else if tosState.presentation == .miniPlayer {
-                VStack(spacing: 0) {
-                    TOSMiniPlayerView()
-                    Color.clear
-                    .frame(height: tabBarBottomInset)
-                    .allowsHitTesting(false)
-                }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeInOut(duration: 0.2), value: tosState.presentation)
             }
         }
         .landscapePlayerCover(item: fullScreenBinding, dismissStore: playerState) { video in
             PlayerView(video: video, api: api)
-        }
-        // TOS player full-screen cover — presented when tosState.presentation == .fullScreen.
-        // TOSPlayerView reads tosState from the environment (injected via AppEntry) so the
-        // WKWebView that was created by TOSPlayerStateStore.play(video:api:) is reused here.
-        //
-        // onFallback (2026-07-12): AVPlayer is disabled on iOS — the AVPlayer branch in
-        // PlayerRouter is gone, so calling playerRouter.open() from here would either
-        // re-enter TOS (the same embed that just failed) or be a no-op. Either way it
-        // hides the error from the user. Just log; the YouTube IFrame renders its own
-        // error UI inside the WKWebView. The user closes the player manually (back button
-        // → tosState.minimize) and re-taps the video to retry the embed.
-        //
-        // TEST-ONLY: when `--uitesting-inline-tos` is in launch args, the helper
-        // uses a direct SwiftUI `.overlay` instead of `landscapePlayerCover`'s UIKit
-        // modal. The cover-present animation hides the WKWebView in the test
-        // simulator long enough that YouTube's 5s player-config check times out
-        // (error 153). The inline path is full-bleed and the WKWebView is visible
-        // from frame 1.
-        .landscapePlayerCover(item: tosFullScreenBinding, dismissStore: tosState) { video in
-            TOSPlayerView(video: video, api: api) {
-                // #158: YouTube's bot check asks to sign in inside the embed, which can't
-                // work there. The standard player plays with the app's own sign-in, so
-                // this one error still falls back to it on iOS.
-                if tosState.vm?.playerError == .signInRequired {
-                    rootLog.notice(
-                        "[RootView] TOS sign-in required for videoId=\(video.id) — opening the standard player")
-                    tosState.markFallback(videoId: video.id)
-                    playerRouter.open(video: video, api: api)
-                    return
-                }
-                rootLog.notice(
-                    "[RootView] TOS onFallback for videoId=\(video.id) — AVPlayer disabled, not routing away. User must close + re-tap to retry."
-                )
-            }
         }
         .onChange(of: browseVM.deepLinkedVideo) { _, video in
             guard let video else { return }
@@ -328,7 +266,7 @@ struct MainTabView: View {
                     return id.isEmpty ? nil : id
                 } ?? nil
             if isUITesting, let id = deeplinkID,
-                playerState.presentation == .hidden, tosState.presentation == .hidden
+                playerState.presentation == .hidden
             {
                 Button {
                     browseVM.deepLinkedVideo = Video(id: id, title: "", channelTitle: "")
@@ -336,14 +274,6 @@ struct MainTabView: View {
                     Color.clear.frame(width: 44, height: 44)
                 }
                 .accessibilityIdentifier("uitesting.reopenDeeplinkVideoButton")
-            }
-        }
-        .fullScreenCover(isPresented: $showSrcSwapSpike) {
-            ShortsEmbedSrcSwapSpikeView()
-        }
-        .onAppear {
-            if ProcessInfo.processInfo.arguments.contains("--uitesting-shorts-srcswap-spike") {
-                showSrcSwapSpike = true
             }
         }
         #endif
@@ -385,11 +315,6 @@ struct MainSidebarView: View {
     @State private var searchVM = SearchViewModel()
 
     @State private var selectedSection: AppSection? = .home
-    /// Set when the IFrame player hits a fatal embed error on the current video so we
-    /// drop through to the standard PlayerView for that video only. Cleared when the
-    /// video changes.
-    @State private var tosPlayerFallbackVideoId: String? = nil
-
     var body: some View {
         @Bindable var browseVM = browseVM
         ZStack {
@@ -423,42 +348,11 @@ struct MainSidebarView: View {
             // Full-window player overlay — avoids macOS sheet coordinate issues that
             // prevent XCUITest click events from reaching controls inside a popover window.
             if let video = browseVM.deepLinkedVideo {
-                #if os(macOS)
-                let shouldUseTOS =
-                    store.settings.useTOSPlayerOnMac
-                    && tosPlayerFallbackVideoId != video.id
-                if shouldUseTOS {
-                    // TOS-compliant IFrame player experiment (macOS only, opt-in).
-                    // Falls back to the standard PlayerView on embedding-disabled videos.
-                    TOSPlayerView(video: video, api: api) {
-                        // Mark this video ID so the guard above drops to PlayerView.
-                        tosPlayerFallbackVideoId = video.id
-                    }
-                    .environment(store)
-                    .environment(auth)
-                    .environment(browseVM)
-                    .ignoresSafeArea()
-                } else {
-                    PlayerView(video: video, api: api)
-                        .environment(store)
-                        .environment(auth)
-                        .environment(browseVM)
-                        .ignoresSafeArea()
-                }
-                #else
                 PlayerView(video: video, api: api)
                     .environment(store)
                     .environment(auth)
                     .environment(browseVM)
                     .ignoresSafeArea()
-                #endif
-            }
-        }
-        // When a different video is opened, clear the per-video fallback guard so
-        // the next video gets a fresh attempt through the TOS player.
-        .onChange(of: browseVM.deepLinkedVideo?.id) { _, newId in
-            if newId != tosPlayerFallbackVideoId {
-                tosPlayerFallbackVideoId = nil
             }
         }
     }

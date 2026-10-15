@@ -5,7 +5,7 @@ import Testing
 
 // MARK: - WatchtimeTrackerOverlapTests
 //
-// Checkpoints overlap in practice: the TOS player ticks every 250 ms, and pause() is
+// Checkpoints overlap in practice: periodic progress ticks, and pause() is
 // followed by saveProgress() on close. WatchtimeTracker used to update its segment state
 // only after the network awaits, so overlapping calls re-sent the same watched interval
 // and, near the end, the final ping more than once.

@@ -68,7 +68,6 @@ final class VideoPlaybackBenchmarkUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-inject-queue-video-ids=\(orderedVideoIDs.joined(separator: ","))",
             "--uitesting-show-controls",
             "--uitesting-disable-sponsorblock",

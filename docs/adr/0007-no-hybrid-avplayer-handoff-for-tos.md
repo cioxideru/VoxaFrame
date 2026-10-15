@@ -1,7 +1,8 @@
 # 0007 — No hybrid AVPlayer handoff for TOS background play / PiP
 
 - ID: ADR-0007
-- Status: accepted
+- Status: superseded
+- Superseded-by: [ADR-0010](0010-remove-iframe-player.md)
 - Date: 2026-06
 - Deciders: maintainer
 
@@ -43,3 +44,7 @@ Rejected immediately and without a design review when proposed.
 ## Implementation check — 2026-10-15
 
 No TOS-to-AVPlayer handoff for background/PiP is implemented. `PlayerRouter` selecting AVPlayer at video open or after a fatal embed error is a different mechanism, not a background handoff. Device behavior was not rerun; see [OQ-0005](../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).
+
+## Superseded — 2026-10-15
+
+The embed player this record governs was removed; see [ADR-0010](0010-remove-iframe-player.md).

@@ -41,7 +41,6 @@ final class FallbackVideoPlaybackUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=\(fallbackVideoID)",
         ]
         app.launch()

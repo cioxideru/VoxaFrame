@@ -47,37 +47,18 @@ final class ShareExtensionE2EUITests: XCTestCase {
         smartTube = nil
     }
 
-    // MARK: - Player-backend-agnostic helpers
-    //
-    // SmartTube is launched here via the OS-level share-extension responder chain,
-    // NOT via `XCUIApplication().launch()` — so `--uitesting-disable-tos-player-on-ios`
-    // (the launch argument other UI tests use to force the AVPlayer pipeline) cannot
-    // be injected into this process. TOS (IFrame/WKWebView) is the iOS default player
-    // as of the PlayerRouter refactor and uses a disjoint `tosPlayer.*` accessibility-ID
-    // namespace, so these helpers check for either backend's equivalent element —
-    // matching this test's actual intent ("the video player opened"), not a specific
-    // pipeline.
+    // MARK: - Player helpers
 
-    /// Waits for either `player.titleLabel` (AVPlayer pipeline) or `tosPlayer.stateLabel`
-    /// (TOS pipeline) to appear — both are always-visible AX labels present once their
-    /// respective player view appears.
     private func waitForPlayerToOpen(in app: XCUIApplication, timeout: TimeInterval) -> Bool {
-        let predicate = NSPredicate(
-            format: "identifier == %@ OR identifier == %@", AccessibilityID.playerTitleLabel, "tosPlayer.stateLabel")
-        return app.staticTexts.matching(predicate).firstMatch.waitForExistence(timeout: timeout)
+        app.staticTexts[AccessibilityID.playerTitleLabel].waitForExistence(timeout: timeout)
     }
 
-    /// The back/dismiss button for whichever player backend is active.
     private func playerBackButton(in app: XCUIApplication) -> XCUIElement {
-        let predicate = NSPredicate(
-            format: "identifier == %@ OR identifier == %@", AccessibilityID.playerBackButton, "tosPlayer.backButton")
-        return app.buttons.matching(predicate).firstMatch
+        app.buttons[AccessibilityID.playerBackButton]
     }
 
-    /// The mini-player container for whichever player backend is active.
     private func miniPlayerBar(in app: XCUIApplication) -> XCUIElement {
-        let predicate = NSPredicate(format: "identifier == 'miniPlayer.bar' OR identifier == 'tosPlayer.miniPlayerBar'")
-        return app.otherElements.matching(predicate).firstMatch
+        app.otherElements["miniPlayer.bar"]
     }
 
     // MARK: - Tests
@@ -114,7 +95,7 @@ final class ShareExtensionE2EUITests: XCTestCase {
         // 5. The video player must open.
         guard waitForPlayerToOpen(in: smartTube, timeout: 20) else {
             try captureAndSkip(
-                "Neither player.titleLabel nor tosPlayer.stateLabel appeared within 20 s — "
+                "player.titleLabel did not appear within 20 s — "
                     + "SmartTube opened but InnerTube may not have resolved the video (network unavailable)",
                 in: smartTube
             )

@@ -17,7 +17,6 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
         let a = XCUIApplication()
         a.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=dQw4w9WgXcQ",
             "--uitesting-open-more-menu",
         ]
