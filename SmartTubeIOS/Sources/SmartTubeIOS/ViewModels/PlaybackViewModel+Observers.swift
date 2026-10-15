@@ -121,27 +121,33 @@ extension PlaybackViewModel {
                             self.startExhaustiveRetry(video: video, item: stalledItem, originalError: loopError)
                         }
                     } else if recoveryCount <= 3 {
-                        self.scheduleStallRecovery(item: stalledItem, recoveryCount: recoveryCount)
+                        self.scheduleStallRecovery(
+                            item: stalledItem, recoveryCount: recoveryCount, trigger: "rateObserver")
                     }
                 }
             }
         }
     }
 
-    /// After a rate→0 stall, waits for the system to self-heal, then seeks in place to flush
-    /// the pipeline. Does nothing if the video or item changed in the meantime.
-    func scheduleStallRecovery(item: AVPlayerItem?, recoveryCount: Int) {
+    /// After a stall, waits for the system to self-heal, then seeks in place to flush the
+    /// pipeline and restores the rate. The single recovery path for both the rate observer
+    /// and `AVPlayerItemPlaybackStalled`; a newer stall replaces a pending recovery.
+    /// Does nothing if the video, the item or `isPlaying` changed in the meantime (the rate
+    /// observer has already set `isPlaying = false`; the notification path leaves it true,
+    /// so a user pause or resume during the wait cancels the nudge either way).
+    func scheduleStallRecovery(item: AVPlayerItem?, recoveryCount: Int, trigger: String) {
         let videoId = currentVideo?.id
+        let expectedIsPlaying = isPlaying
         stallRecoveryTask?.cancel()
         stallRecoveryTask = Task { @MainActor [weak self, weak item] in
             try? await Task.sleep(nanoseconds: PlaybackTuning.stallRecoveryDelayNanoseconds)
             guard let self, !Task.isCancelled, let item,
                 self.player.currentItem === item, self.currentVideo?.id == videoId,
-                !self.isPlaying, self.player.rate == 0,
+                self.isPlaying == expectedIsPlaying, self.player.rate == 0,
                 !self.isQualityChangePending, !self.isSwappingItem
             else { return }
             let seekT = self.currentTime
-            playerLog.notice("[rateObserver] recovery#\(recoveryCount): seeking to \(seekT)s to flush pipeline")
+            playerLog.notice("[\(trigger)] recovery#\(recoveryCount): seeking to \(seekT)s to flush pipeline")
             self.player.seek(
                 to: CMTime(seconds: seekT, preferredTimescale: 600),
                 toleranceBefore: .zero,
@@ -149,11 +155,11 @@ extension PlaybackViewModel {
             ) { [weak self, weak item] _ in
                 Task { @MainActor [weak self, weak item] in
                     guard let self, let item, self.player.currentItem === item,
-                        !self.isPlaying, self.player.rate == 0
+                        self.isPlaying == expectedIsPlaying, self.player.rate == 0
                     else { return }
                     self.player.rate = Float(self.settings.playbackSpeed)
                     self.isPlaying = true
-                    playerLog.notice("[rateObserver] recovery#\(recoveryCount): rate restored, isPlaying=true")
+                    playerLog.notice("[\(trigger)] recovery#\(recoveryCount): rate restored, isPlaying=true")
                 }
             }
         }
