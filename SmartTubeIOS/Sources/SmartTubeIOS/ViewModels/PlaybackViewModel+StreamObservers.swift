@@ -24,13 +24,9 @@ extension PlaybackViewModel {
                 case .failed:
                     let err = item.error.map { "\($0)" } ?? "nil"
                     playerLog.error("❌ AVPlayerItem failed: \(err)")
-                    if let video = self.currentVideo {
-                        self.exhaustiveRetryTask?.cancel()
-                        self.exhaustiveRetryTask = Task {
-                            await self.exhaustiveRetry(video: video, originalError: item.error)
-                        }
-                    } else {
-                        self.error = item.error
+                    // Retry the video that owned this item; a stale item is ignored.
+                    if self.player.currentItem === item {
+                        self.startExhaustiveRetry(video: info.video, item: item, originalError: item.error)
                     }
                 case .unknown:
                     playerLog.notice("AVPlayerItem status: unknown (loading)")
@@ -124,9 +120,9 @@ extension PlaybackViewModel {
             // permanently greyed out (#183).
             self.durationObserverTask?.cancel()
             self.durationObserverTask = Task { [weak self, weak item] in
-                guard let self, let item else { return }
+                guard let item else { return }
                 for await seconds in item.firstValidDurationStream {
-                    guard !Task.isCancelled else { return }
+                    guard let self, !Task.isCancelled else { return }
                     let prev = self.duration
                     self.duration = seconds
                     playerLog.notice(
@@ -161,7 +157,7 @@ extension PlaybackViewModel {
             )
             for await _ in notifications {
                 guard let self, !Task.isCancelled else { return }
-                self.stallCount += 1
+                self.registerStall(on: item)
                 let stallTime = Int(self.currentTime)
                 playerLog.notice(
                     "[stall] AVPlayerItemPlaybackStalled at t=\(stallTime)s stall#\(self.stallCount) video=\(self.currentVideo?.id ?? "unknown")"
@@ -185,29 +181,11 @@ extension PlaybackViewModel {
                     ])
                 // Stall recovery (#193): wait 2 s for AVPlayer to self-heal;
                 // if still stalled, nudge the pipeline with a near-zero seek
-                // + explicit rate restore. Capped at 3 attempts per item.
+                // + explicit rate restore. Capped per stall sequence.
                 let recoveryCount = self.stallCount
-                if recoveryCount <= 3 {
-                    Task { @MainActor [weak self] in
-                        try? await Task.sleep(nanoseconds: PlaybackTuning.stallRecoveryDelayNanoseconds)
-                        guard let self, self.isPlaying, self.player.rate == 0,
-                            !self.isQualityChangePending
-                        else { return }
-                        let seekT = self.currentTime
-                        playerLog.notice(
-                            "[stall] recovery#\(recoveryCount): seeking to \(seekT)s to flush pipeline")
-                        self.player.seek(
-                            to: CMTime(seconds: seekT, preferredTimescale: 600),
-                            toleranceBefore: .zero,
-                            toleranceAfter: CMTime(seconds: 1, preferredTimescale: 600)
-                        ) { [weak self] _ in
-                            Task { @MainActor [weak self] in
-                                guard let self, self.isPlaying else { return }
-                                self.player.rate = Float(self.settings.playbackSpeed)
-                                playerLog.notice("[stall] recovery#\(recoveryCount): rate restored")
-                            }
-                        }
-                    }
+                if recoveryCount <= PlaybackTuning.maxStallRecoveryAttempts {
+                    self.scheduleStallRecovery(
+                        item: item, recoveryCount: recoveryCount, trigger: "stall")
                 }
             }
         }
