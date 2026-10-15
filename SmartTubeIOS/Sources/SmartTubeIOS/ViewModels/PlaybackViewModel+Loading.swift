@@ -32,7 +32,7 @@ extension PlaybackViewModel {
         // SwiftUI can trigger load() multiple times during a single navigation (e.g.
         // selectedVideo binding re-evaluated while a queue autoplay is in flight).
         // Each duplicate spawns its own loadAsync → its own Crashlytics event storm.
-        if currentVideo?.id == video.id, isLoading {
+        if currentVideo?.id == video.id, isIncognito == incognito, isLoading {
             playerLog.notice("[load] already loading \(video.id) — ignoring duplicate call")
             return
         }
@@ -57,8 +57,8 @@ extension PlaybackViewModel {
         // still .readyToPlay, bypass the entire exhaustiveRetry race (~1.27s saved per hot
         // cycle). Re-activates AVAudioSession, wires end/stall observers, and resumes.
         // Expected: <0.1s in-app → ~0.5s reported (XCTest polling overhead only).
-        if resumeParkedItem(for: video) {
-            isIncognito = incognito
+        // Changing privacy mode must reset tracking and history through the full load path.
+        if isIncognito == incognito, resumeParkedItem(for: video) {
             return
         }
         // Different video or parked item expired — clear parked state and tear down old item.
@@ -100,7 +100,10 @@ extension PlaybackViewModel {
             cancelControlsHide()
         }
         #endif
-        loadTask = Task { await loadAsync(video: video) }
+        loadTask = Task {
+            guard !Task.isCancelled else { return }
+            await loadAsync(video: video)
+        }
 
         // Kick off a background prefetch for the next video in the queue
         // so its PlayerInfo is warm in VideoPreloadCache before it is needed.

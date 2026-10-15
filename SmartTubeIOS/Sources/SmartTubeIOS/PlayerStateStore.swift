@@ -128,7 +128,10 @@ public final class PlayerStateStore {
         //   3. Not playing — item is parked (fix12 park path): stop() keeps the
         //      AVPlayerItem alive but pauses and sets isPlaying=false. On re-tap,
         //      call load() so the park fast-path in PlaybackViewModel resumes it.
-        if vm.currentVideoId != video.id || vm.player.currentItem == nil || !vm.isPlaying {
+        // A privacy-mode change needs a fresh tracking session even for the same video.
+        if vm.currentVideoId != video.id || vm.isIncognito != incognito
+            || vm.player.currentItem == nil || !vm.isPlaying
+        {
             vm.load(video: video, incognito: incognito)
         }
         currentVideo = video
