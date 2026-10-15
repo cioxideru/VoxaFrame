@@ -44,6 +44,7 @@ extension PlaybackViewModel {
                     guard let self else { return }
                     self.wasPlayingBeforeInterruption = self.isPlaying
                     self.isHandlingAudioInterruption = true
+                    self.cancelStallRecovery()
                     self.player.pause()
                     self.isPlaying = false
                     self.updateNowPlayingPlayback()
@@ -73,6 +74,26 @@ extension PlaybackViewModel {
         }
     }
 
+    /// Headphones unplugged (or another output vanished): AVPlayer pauses itself. Treat it as
+    /// a deliberate pause so stall recovery doesn't resume playback on the speaker.
+    /// Needs a device check: the Simulator has no wired/Bluetooth route to remove.
+    func setupRouteChangeObserver() {
+        routeChangeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            guard self != nil,
+                let raw = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                AVAudioSession.RouteChangeReason(rawValue: raw) == .oldDeviceUnavailable
+            else { return }
+            playerLog.notice("[routeChange] old output device unavailable — pausing without stall recovery")
+            Task { @MainActor [weak self] in
+                self?.handleAudioOutputLost()
+            }
+        }
+    }
+
     func setupRemoteCommandCenter() {
         let center = MPRemoteCommandCenter.shared()
         // Remove any existing targets first so this function is safe to call
@@ -98,6 +119,7 @@ extension PlaybackViewModel {
         }
         center.pauseCommand.addTarget { [weak self] _ in
             Task { @MainActor [weak self] in
+                self?.cancelStallRecovery()
                 self?.player.pause()
                 self?.isPlaying = false
                 self?.updateNowPlayingPlayback()

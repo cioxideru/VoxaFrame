@@ -486,9 +486,9 @@ extension PlaybackViewModel {
         } else if self.duration == 0 {
             durationObserverTask?.cancel()
             durationObserverTask = Task { [weak self, weak item] in
-                guard let self, let item else { return }
+                guard let item else { return }
                 for await seconds in item.firstValidDurationStream {
-                    guard !Task.isCancelled else { return }
+                    guard let self, !Task.isCancelled else { return }
                     let prev = self.duration
                     self.duration = seconds
                     playerLog.notice(

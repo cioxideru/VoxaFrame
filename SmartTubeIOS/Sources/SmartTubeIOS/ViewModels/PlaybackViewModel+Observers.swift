@@ -96,11 +96,15 @@ extension PlaybackViewModel {
                     // resume, etc.), then nudge the pipeline if still stalled. Guard on
                     // !isPlaying (already set above) rather than isPlaying, and also on
                     // !isSwappingItem to avoid interfering with intentional item swaps.
-                    // Capped at 3 attempts per item, same as the notification-based path.
+                    // Capped at PlaybackTuning.maxStallRecoveryAttempts per stall sequence, same as
+                    // the notification-based path; escalations are capped per video.
                     let recoveryCount = self.stallCount
                     let elapsed = self.firstRapidStallTime.map { Date().timeIntervalSince($0) } ?? 0
                     let isRapidRepeat = elapsed < PlaybackTuning.rapidStallWindow
-                    if recoveryCount >= 3 && isRapidRepeat && self.exhaustiveRetryTask == nil {
+                    let canEscalate =
+                        self.exhaustiveRetryTask == nil
+                        && self.stallEscalationCount < PlaybackTuning.maxStallEscalationsPerVideo
+                    if recoveryCount >= PlaybackTuning.maxStallRecoveryAttempts && isRapidRepeat && canEscalate {
                         // Rapid stall loop: seeks are re-stalling immediately because the
                         // format URL is expired or rate-limited (CDN returns the same broken
                         // URL after each seek). Escalate to exhaustiveRetry instead of
@@ -118,9 +122,10 @@ extension PlaybackViewModel {
                                         "Stall loop \(recoveryCount)× in \(Int(elapsed))s — format unrecoverable, escalating"
                                 ]
                             )
+                            self.stallEscalationCount += 1
                             self.startExhaustiveRetry(video: video, item: stalledItem, originalError: loopError)
                         }
-                    } else if recoveryCount <= 3 {
+                    } else if recoveryCount <= PlaybackTuning.maxStallRecoveryAttempts {
                         self.scheduleStallRecovery(
                             item: stalledItem, recoveryCount: recoveryCount, trigger: "rateObserver")
                     }
@@ -132,9 +137,11 @@ extension PlaybackViewModel {
     /// After a stall, waits for the system to self-heal, then seeks in place to flush the
     /// pipeline and restores the rate. The single recovery path for both the rate observer
     /// and `AVPlayerItemPlaybackStalled`; a newer stall replaces a pending recovery.
-    /// Does nothing if the video, the item or `isPlaying` changed in the meantime (the rate
-    /// observer has already set `isPlaying = false`; the notification path leaves it true,
-    /// so a user pause or resume during the wait cancels the nudge either way).
+    /// Does nothing if the video, the item or `isPlaying` changed in the meantime. The rate
+    /// observer has already set `isPlaying = false`, so a later deliberate pause leaves
+    /// `isPlaying` unchanged; every deliberate pause (suspend, background, interruption,
+    /// remote/sleep-timer pause, voice-over hold, output-device loss) therefore calls
+    /// `cancelStallRecovery()` explicitly. A user resume during the wait still skips the nudge.
     func scheduleStallRecovery(item: AVPlayerItem?, recoveryCount: Int, trigger: String) {
         let videoId = currentVideo?.id
         let expectedIsPlaying = isPlaying
@@ -183,6 +190,7 @@ extension PlaybackViewModel {
     /// longer current, and clears `exhaustiveRetryTask` when it finishes so later stall loops
     /// can escalate again.
     func startExhaustiveRetry(video: Video, item: AVPlayerItem?, originalError: Error?) {
+        cancelStallRecovery()
         exhaustiveRetryTask?.cancel()
         exhaustiveRetryTask = Task { [weak self, weak item] in
             guard let self else { return }
@@ -191,6 +199,23 @@ extension PlaybackViewModel {
             }
             if !Task.isCancelled { self.exhaustiveRetryTask = nil }
         }
+    }
+
+    func cancelStallRecovery() {
+        stallRecoveryTask?.cancel()
+        stallRecoveryTask = nil
+    }
+
+    /// The audio output went away (e.g. headphones unplugged) and AVPlayer paused itself.
+    /// Record it as a deliberate pause so neither stall path resumes on the speaker.
+    func handleAudioOutputLost() {
+        cancelStallRecovery()
+        guard isPlaying else { return }
+        isPlaying = false
+        player.pause()
+        #if canImport(UIKit)
+        updateNowPlayingPlayback()
+        #endif
     }
 
     #if canImport(UIKit)

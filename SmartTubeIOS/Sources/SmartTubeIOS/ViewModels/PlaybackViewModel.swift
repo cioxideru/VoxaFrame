@@ -258,6 +258,8 @@ public final class PlaybackViewModel {
     @ObservationIgnored nonisolated(unsafe) var timeObserver: Any?
     // Registered and removed on MainActor; deinit only removes the final token after all owners are gone.
     @ObservationIgnored nonisolated(unsafe) var audioSessionObserver: Any?
+    // Same lifecycle as audioSessionObserver: set on MainActor, deinit removes the final token.
+    @ObservationIgnored nonisolated(unsafe) var routeChangeObserver: Any?
     @ObservationIgnored nonisolated(unsafe) var rateObserver: NSKeyValueObservation?
     /// True while the video is being routed to an external display via AirPlay.
     public internal(set) var isAirPlaying: Bool = false
@@ -297,8 +299,11 @@ public final class PlaybackViewModel {
     var firstRapidStallTime: Date? = nil
     /// Item the current stall sequence belongs to; a stall on another item starts a new sequence.
     @ObservationIgnored weak var stallItem: AVPlayerItem?
-    /// Delayed seek/rate nudge after a rate→0 stall; cancelled in load() and stop().
+    /// Delayed seek/rate nudge after a stall. Cancelled by `cancelStallRecovery()` whenever
+    /// playback is paused or torn down on purpose.
     var stallRecoveryTask: Task<Void, Never>?
+    /// Rapid-stall-loop escalations to exhaustiveRetry for the current video; reset in load().
+    var stallEscalationCount = 0
     var qualityTask: Task<Void, Never>? {
         get { qualityManager.qualityTask }
         set { qualityManager.qualityTask = newValue }
@@ -346,6 +351,7 @@ public final class PlaybackViewModel {
     public var sleepTimerMinutes: Int? { sleepTimer.sleepTimerMinutes }
     public func setSleepTimer(minutes: Int?) {
         sleepTimer.setSleepTimer(minutes: minutes) { [weak self] in
+            self?.cancelStallRecovery()
             self?.player.pause()
             self?.isPlaying = false
         }
@@ -487,6 +493,7 @@ public final class PlaybackViewModel {
         #if canImport(UIKit)
         setupRemoteCommandCenter()
         setupAudioSessionObserver()
+        setupRouteChangeObserver()
         setupAirPlayObserver()
         #endif
 
@@ -508,6 +515,7 @@ public final class PlaybackViewModel {
         rateObserver?.invalidate()
         airPlayObserver?.invalidate()
         if let obs = audioSessionObserver { NotificationCenter.default.removeObserver(obs) }
+        if let obs = routeChangeObserver { NotificationCenter.default.removeObserver(obs) }
         #if canImport(UIKit)
         let center = MPRemoteCommandCenter.shared()
         center.playCommand.removeTarget(nil)

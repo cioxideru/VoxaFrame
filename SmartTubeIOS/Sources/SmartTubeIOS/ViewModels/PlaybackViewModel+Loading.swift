@@ -226,8 +226,8 @@ extension PlaybackViewModel {
         retryAttempts = 0
         exhaustiveRetryTask?.cancel()
         exhaustiveRetryTask = nil
-        stallRecoveryTask?.cancel()
-        stallRecoveryTask = nil
+        cancelStallRecovery()
+        stallEscalationCount = 0
         #if os(tvOS)
         tvEmbeddedEarlyTask?.cancel()
         tvEmbeddedEarlyTask = nil
@@ -282,9 +282,12 @@ extension PlaybackViewModel {
     /// Pauses playback when the user has disabled background audio.
     public func handleBackground() {
         guard !settings.backgroundPlaybackEnabled else { return }
+        // A pending stall recovery would otherwise resume playback in the background.
+        cancelStallRecovery()
         guard isPlaying else { return }
+        // Clear isPlaying before pausing so the rate observer doesn't treat this as a stall.
+        isPlaying = false
         player.pause()
-        // isPlaying is synced to false by the rate KVO observer.
         playerLog.notice("[handleBackground] background playback disabled — paused")
     }
 
@@ -304,6 +307,7 @@ extension PlaybackViewModel {
             }
         }
         wasPlayingBeforeSuspend = isPlaying
+        cancelStallRecovery()
         player.pause()
         isPlaying = false
         controlsTimer?.cancel()
@@ -409,8 +413,7 @@ extension PlaybackViewModel {
         // exhaustiveRetryTask is left dangling otherwise.
         exhaustiveRetryTask?.cancel()
         exhaustiveRetryTask = nil
-        stallRecoveryTask?.cancel()
-        stallRecoveryTask = nil
+        cancelStallRecovery()
         // Reset isLoading immediately so a same-video re-open via play() does not hit
         // the early-return guard in load() before the cancelled task cleans up.
         isLoading = false
@@ -483,10 +486,11 @@ extension PlaybackViewModel {
         center.nextTrackCommand.removeTarget(nil)
         center.previousTrackCommand.removeTarget(nil)
         #endif
-        if let obs = audioSessionObserver {
+        for obs in [audioSessionObserver, routeChangeObserver].compactMap({ $0 }) {
             NotificationCenter.default.removeObserver(obs)
-            audioSessionObserver = nil
         }
+        audioSessionObserver = nil
+        routeChangeObserver = nil
     }
 
     // MARK: - Phase 2: Background enrichment

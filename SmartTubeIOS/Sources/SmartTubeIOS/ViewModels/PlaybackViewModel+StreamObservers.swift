@@ -181,9 +181,9 @@ extension PlaybackViewModel {
                     ])
                 // Stall recovery (#193): wait 2 s for AVPlayer to self-heal;
                 // if still stalled, nudge the pipeline with a near-zero seek
-                // + explicit rate restore. Capped at 3 attempts per item.
+                // + explicit rate restore. Capped per stall sequence.
                 let recoveryCount = self.stallCount
-                if recoveryCount <= 3 {
+                if recoveryCount <= PlaybackTuning.maxStallRecoveryAttempts {
                     self.scheduleStallRecovery(
                         item: item, recoveryCount: recoveryCount, trigger: "stall")
                 }

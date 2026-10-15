@@ -61,6 +61,7 @@ extension PlaybackViewModel {
                 exhaustiveRetryTask?.cancel()
                 exhaustiveRetryTask = Task { [weak self] in
                     await self?.exhaustiveRetry(video: video, originalError: error)
+                    if !Task.isCancelled { self?.exhaustiveRetryTask = nil }
                 }
             } else {
                 self.error = error

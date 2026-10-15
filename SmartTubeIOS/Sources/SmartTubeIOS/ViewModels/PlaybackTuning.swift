@@ -10,6 +10,10 @@ enum PlaybackTuning {
     static let stallRecoveryDelayNanoseconds: UInt64 = 2_000_000_000
     /// Stalls closer together than this on one item count as a rapid stall loop.
     static let rapidStallWindow: TimeInterval = 30
+    /// Seek-in-place recoveries attempted per stall sequence before giving up or escalating.
+    static let maxStallRecoveryAttempts = 3
+    /// Rapid-stall-loop escalations to exhaustiveRetry allowed per video (reset by load()).
+    static let maxStallEscalationsPerVideo = 2
     static let botGuardTimeoutNanoseconds: UInt64 = 6_000_000_000
     static let adaptiveVRTimeoutNanoseconds: UInt64 = 2_000_000_000
     static let adaptiveTVTimeoutNanoseconds: UInt64 = 3_000_000_000

@@ -68,6 +68,7 @@ extension PlaybackViewModel {
     /// sync so the rate observer doesn't treat the hold as a stall.
     private func setPlayingForVoiceOver(_ playing: Bool) {
         isPlaying = playing
+        if !playing { cancelStallRecovery() }
         if playing { player.rate = Float(settings.playbackSpeed) } else { player.pause() }
         #if canImport(UIKit)
         updateNowPlayingPlayback()

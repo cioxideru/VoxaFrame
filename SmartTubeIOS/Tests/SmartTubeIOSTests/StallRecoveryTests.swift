@@ -49,4 +49,35 @@ struct StallRecoveryTests {
         #expect(vm.stallCount == 1)
         #expect(vm.firstRapidStallTime == later)
     }
+
+    @Test("stop() cancels a pending stall recovery")
+    func stopCancelsRecovery() throws {
+        let vm = PlaybackViewModel()
+        vm.scheduleStallRecovery(item: makeItem(), recoveryCount: 1, trigger: "test")
+        let task = try #require(vm.stallRecoveryTask)
+        vm.stop()
+        #expect(task.isCancelled)
+        #expect(vm.stallRecoveryTask == nil)
+    }
+
+    @Test("suspend() cancels a pending stall recovery")
+    func suspendCancelsRecovery() throws {
+        let vm = PlaybackViewModel()
+        vm.scheduleStallRecovery(item: makeItem(), recoveryCount: 1, trigger: "test")
+        let task = try #require(vm.stallRecoveryTask)
+        vm.suspend()
+        #expect(task.isCancelled)
+        #expect(vm.stallRecoveryTask == nil)
+    }
+
+    @Test("Losing the audio output cancels recovery and clears isPlaying")
+    func audioOutputLostCancelsRecovery() throws {
+        let vm = PlaybackViewModel()
+        vm.isPlaying = true
+        vm.scheduleStallRecovery(item: makeItem(), recoveryCount: 1, trigger: "test")
+        let task = try #require(vm.stallRecoveryTask)
+        vm.handleAudioOutputLost()
+        #expect(task.isCancelled)
+        #expect(vm.isPlaying == false)
+    }
 }
