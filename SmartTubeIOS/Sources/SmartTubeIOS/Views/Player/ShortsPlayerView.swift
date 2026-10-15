@@ -34,6 +34,7 @@ public struct ShortsPlayerView: View {
     @State var slideOffset: CGFloat = 0
     @State var containerHeight: CGFloat = 0
     @State var isTransitioning = false
+    @State var transitionTask: Task<Void, Never>?
     @State var isFetchingMore = false
     /// True while the app is backgrounded — guards onDisappear from calling stop()
     /// when iOS fires it as a side-effect of backgrounding rather than navigation.
@@ -239,6 +240,10 @@ public struct ShortsPlayerView: View {
             }
             .onDisappear {
                 guard !isInBackground else { return }
+                transitionTask?.cancel()
+                transitionTask = nil
+                isTransitioning = false
+                slideOffset = 0
                 vm.stop()
             }
             .onChange(of: scenePhase) { _, phase in

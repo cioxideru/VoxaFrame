@@ -14,20 +14,24 @@ extension ShortsPlayerView {
     /// runs `action` to switch to the new video, then slides the new content in
     /// from the opposite side.
     func performVerticalTransition(direction: CGFloat, action: @escaping () -> Void) {
+        guard !isTransitioning else { return }
         let transitionHeight = containerHeight
         isTransitioning = true
         withAnimation(.easeIn(duration: 0.2)) {
             slideOffset = direction * transitionHeight
         }
-        Task { @MainActor in
+        transitionTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(220))
+            guard !Task.isCancelled else { return }
             action()  // switch video, clears AVPlayer
             slideOffset = -direction * transitionHeight  // snap to opposite side (off-screen)
             withAnimation(.easeOut(duration: 0.25)) {
                 slideOffset = 0  // slide new content in
             }
             try? await Task.sleep(for: .milliseconds(270))
+            guard !Task.isCancelled else { return }
             isTransitioning = false
+            transitionTask = nil
         }
     }
 
@@ -106,6 +110,7 @@ extension ShortsPlayerView {
     /// End of a Short: replay, advance to the next Short, or freeze on the last one —
     /// never the regular player's queue/recommendation autoplay.
     func handleShortEnded() {
+        guard !isTransitioning else { return }
         switch ShortsEndOfVideoDecision.decide(
             settings: store.settings, currentIndex: currentIndex, count: videos.count)
         {
