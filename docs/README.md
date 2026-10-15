@@ -25,7 +25,9 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0013) | current | 2026-10-15 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
 | [exec-plans/active/BotGuard.md](exec-plans/active/BotGuard.md) | PLAN-0003: active; implemented token paths, remaining live acceptance | current | 2026-10-15 |
+| [exec-plans/completed/tos-player-ios-plan.md](exec-plans/completed/tos-player-ios-plan.md) | PLAN-0001: historical port and closure evidence; superseded by ADR-0010 | archived | 2026-10-15 |
 | [exec-plans/completed/task-89-short-detection-issue.md](exec-plans/completed/task-89-short-detection-issue.md) | PLAN-0002 / #89: completed duration guard; tests present, not rerun | current | 2026-10-15 |
+| [design/2026-06-11-tos-player-shorts-design.md](design/2026-06-11-tos-player-shorts-design.md) | Historical Shorts embed design and reconciliation; superseded by ADR-0010 | archived | 2026-10-15 |
 | [adr/README.md](adr/README.md) | ADR index, statuses and preservation rules | current | 2026-10-15 |
 | [adr/template.md](adr/template.md) | ADR form: stable ID, Status, Date, Context, Decision, Consequences | current | 2026-10-15 |
 | [explanation/swift-style.md](explanation/swift-style.md) | Swift conventions | current | 2026-10-15 |
@@ -40,6 +42,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [research/freetube-analysis.md](research/freetube-analysis.md) | Historical FreeTube analysis; external facts not refreshed | current | 2026-10-15 |
 | [research/yt-dlp.md](research/yt-dlp.md) | May 2026 yt-dlp research snapshot; external facts not refreshed | current | 2026-10-15 |
 | [archive/2026-05-aether-engine-proposal/AetherEngine.md](archive/2026-05-aether-engine-proposal/AetherEngine.md) | Unadopted proposal and historical investigation; not current tasks | archived | 2026-10-15 |
+| [archive/tos-player.md](archive/tos-player.md) | Historical TOS development worklog and test evidence; superseded by ADR-0010 | archived | 2026-10-15 |
 | [archive/home-feed-architecture.md](archive/home-feed-architecture.md) | Superseded two-shelf/no-Shorts-separation architecture | archived | 2026-10-15 |
 | [archive/dash-quality-switch-tests.md](archive/dash-quality-switch-tests.md) | May quality-test results and old helper names; not fresh acceptance | archived | 2026-10-15 |
 | [archive/no-botguard.md](archive/no-botguard.md) | Obsolete prohibition superseded by implemented token paths | archived | 2026-10-15 |
