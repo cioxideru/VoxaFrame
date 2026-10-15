@@ -481,13 +481,9 @@ extension PlayerView {
             pipDelegate = delegate
             pipController = pip
         }
-        // When PiP ends (user returns to app), release the stale controller so the
-        // next background exit creates a fresh one attached to the current playerLayer.
-        .onChange(of: isPiPActive) { wasActive, isActive in
-            guard wasActive, !isActive else { return }
-            pipController = nil
-            pipDelegate = nil
-        }
+        // The controller is kept after PiP ends: playerLayer is owned by playerState and
+        // outlives PiP, and onChange(of: vm.isPlaying) above would not recreate it while
+        // playback keeps running after a restore (TD-5). It is released in onDisappear.
         // Update isLandscape when the device physically rotates.
         .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
             let orientation = UIDevice.current.orientation
