@@ -140,3 +140,14 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   `PlayerView` has none of these, so iOS users lost them. The code is in git history before ADR-0010.
 - Next step: decide whether `PlayerView` should get them; if so, port with tests rather than
   restoring the embed-player wiring.
+
+## OQ-0013 — iOS HLS prewarm on card appearance
+
+- Status: open; owner: playback / release maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
+- `VideoCardView` starts HLS prewarm when non-Shorts cards appear. This was formerly the main
+  source of SlowLoad; its effect on iOS after the embed-player removal is **NOT MEASURED**.
+- Next step: before release, compare prewarm enabled and disabled on a physical iOS device
+  with the same feed and network conditions, covering cold and warm caches. Record card
+  appearance/scroll responsiveness, tap-to-play latency and SlowLoad frequency, with the exact
+  revision, device, sample counts and logs. Acceptance: measured results and a recorded decision
+  to retain, limit or disable prewarm; source inspection alone does not establish a performance gain.
