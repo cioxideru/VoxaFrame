@@ -4,6 +4,7 @@ import SmartTubeIOS
 import SmartTubeIOSCore
 import SwiftUI
 import os
+
 #if os(iOS)
 import CoreSpotlight
 #endif
@@ -144,14 +145,11 @@ struct AppEntry: App {
     var body: some Scene {
         #if os(macOS)
         WindowGroup {
-            RootView()
+            let root = RootView()
                 .environment(authService)
                 .environment(browseViewModel)
                 .environment(settingsStore)
                 .environment(\.innerTubeAPI, api)
-                #if ENABLE_DOWNLOADS
-                .environment(cardDownloadService)
-                #endif
                 .onChange(of: authService.accessToken, initial: true) { _, newToken in
                     Task {
                         await api.setAuthToken(newToken)
@@ -186,6 +184,7 @@ struct AppEntry: App {
                     enableShortsIfNeeded()
                     signOutIfNeeded()
                 }
+            withDownloads(root)
         }
         .defaultSize(width: 1280, height: 800)
 
@@ -201,14 +200,11 @@ struct AppEntry: App {
         // tvOS: no Share Extension, no Settings scene, no App Group pending video.
         // The device-code + QR sign-in flow works natively on Apple TV.
         WindowGroup {
-            RootView()
+            let root = RootView()
                 .environment(authService)
                 .environment(browseViewModel)
                 .environment(settingsStore)
                 .environment(\.innerTubeAPI, api)
-                #if ENABLE_DOWNLOADS
-                .environment(cardDownloadService)
-                #endif
                 .onChange(of: authService.accessToken, initial: true) { _, newToken in
                     Task {
                         await api.setAuthToken(newToken)
@@ -230,32 +226,23 @@ struct AppEntry: App {
                         browseViewModel.loadContent(refresh: true, source: "perDeviceRecommendationsChanged")
                     }
                 }
+            withDownloads(root)
         }
         #else
         WindowGroup {
             if isShortsUITesting {
-                ShortsPlayerView(videos: AppEntry.shortsForUITesting(), startIndex: 0, api: api)
+                let shorts = ShortsPlayerView(videos: AppEntry.shortsForUITesting(), startIndex: 0, api: api)
                     .environment(authService)
                     .environment(settingsStore)
                     .environment(\.innerTubeAPI, api)
                     .environment(playerStateStore)
-                    #if ENABLE_DOWNLOADS
-                    .environment(cardDownloadService)
-                    #endif
+                withDownloads(shorts)
             } else {
-                RootView()
+                let root = RootView()
                     .environment(authService)
                     .environment(browseViewModel)
                     .environment(settingsStore)
                     .environment(\.innerTubeAPI, api)
-                    #if ENABLE_DOWNLOADS
-                    .environment(cardDownloadService)
-                    #endif
-                    #if os(iOS)
-                .environment(playerStateStore)
-                .environment(tosPlayerStateStore)
-                .environment(playerRouter)
-                    #endif
                     .onChange(of: authService.accessToken, initial: true) { _, newToken in
                         #if os(iOS)
                         playerStateStore.vm.updateAuthToken(newToken)
@@ -284,27 +271,6 @@ struct AppEntry: App {
                         }
                     }
                     .onOpenURL { url in handleOpenURL(url) }
-                    #if os(iOS)
-                    // Spotlight: tapping a video or channel result opens it.
-                    .onContinueUserActivity(CSSearchableItemActionType) { activity in
-                        guard let id = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
-                            let route = SpotlightIndexer.route(forIdentifier: id)
-                        else { return }
-                        handleOpenURL(route.url)
-                    }
-                    // Spotlight: recently watched videos (removed when history is off or cleared)
-                    // and subscribed channels (removed on sign-out).
-                    .onChange(of: LocalWatchHistoryStore.shared.entries.map(\.video.id), initial: true) { _, _ in
-                        syncSpotlightHistory()
-                    }
-                    .onChange(of: settingsStore.settings.historyState) { _, _ in syncSpotlightHistory() }
-                    .onChange(of: browseViewModel.subscribedChannels) { _, channels in
-                        if !channels.isEmpty { SpotlightIndexer.shared.syncChannels(channels) }
-                    }
-                    .onChange(of: authService.isSignedIn) { _, signedIn in
-                        if !signedIn { SpotlightIndexer.shared.syncChannels([]) }
-                    }
-                    #endif
                     .onChange(of: scenePhase, initial: true) { _, phase in
                         if phase == .active {
                             consumePendingVideoID()
@@ -335,17 +301,52 @@ struct AppEntry: App {
                         enableShortsIfNeeded()
                         signOutIfNeeded()
                     }
-                    #if os(iOS)
-                .alert(item: $watchLaterAlert) { item in
-                    Alert(
-                        title: Text(item.title),
-                        message: Text(item.message),
-                        dismissButton: .default(Text("OK"))
-                    )
-                }
+                #if os(iOS)
+                withDownloads(root)
+                    .environment(playerStateStore)
+                    .environment(tosPlayerStateStore)
+                    .environment(playerRouter)
+                    // Spotlight: tapping a video or channel result opens it.
+                    .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                        guard let id = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+                            let route = SpotlightIndexer.route(forIdentifier: id)
+                        else { return }
+                        handleOpenURL(route.url)
+                    }
+                    // Spotlight: recently watched videos (removed when history is off or cleared)
+                    // and subscribed channels (removed on sign-out).
+                    .onChange(of: LocalWatchHistoryStore.shared.entries.map(\.video.id), initial: true) { _, _ in
+                        syncSpotlightHistory()
+                    }
+                    .onChange(of: settingsStore.settings.historyState) { _, _ in syncSpotlightHistory() }
+                    .onChange(of: browseViewModel.subscribedChannels) { _, channels in
+                        if !channels.isEmpty { SpotlightIndexer.shared.syncChannels(channels) }
+                    }
+                    .onChange(of: authService.isSignedIn) { _, signedIn in
+                        if !signedIn { SpotlightIndexer.shared.syncChannels([]) }
+                    }
+                    .alert(item: $watchLaterAlert) { item in
+                        Alert(
+                            title: Text(item.title),
+                            message: Text(item.message),
+                            dismissButton: .default(Text("OK"))
+                        )
+                    }
+                #else
+                withDownloads(root)
                 #endif
             }
         }
+        #endif
+    }
+
+    /// Adds the download service to `view`'s environment in builds with downloads.
+    @ViewBuilder
+    private func withDownloads(_ view: some View) -> some View {
+        #if ENABLE_DOWNLOADS
+        view.environment(cardDownloadService)
+        #else
+        view
         #endif
     }
 
@@ -376,7 +377,8 @@ struct AppEntry: App {
             NotificationCenter.default.post(name: .smartTubeOpenSearch, object: nil, userInfo: ["query": query])
         case .section(let type):
             leaveFullScreenPlayer()
-            NotificationCenter.default.post(name: .smartTubeOpenSection, object: nil, userInfo: ["section": type.rawValue])
+            NotificationCenter.default.post(
+                name: .smartTubeOpenSection, object: nil, userInfo: ["section": type.rawValue])
         case .playWatchLater:
             Task { @MainActor in
                 // Needs a signed-in account; otherwise show the Watch Later section, which

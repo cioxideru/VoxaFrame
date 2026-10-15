@@ -49,14 +49,11 @@ struct SmartTubeTVApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            let root = RootView()
                 .environment(authService)
                 .environment(browseViewModel)
                 .environment(settingsStore)
                 .environment(\.innerTubeAPI, api)
-                #if ENABLE_DOWNLOADS
-                .environment(cardDownloadService)
-                #endif
                 .onChange(of: authService.accessToken, initial: true) { _, newToken in
                     Task {
                         await api.setAuthToken(newToken)
@@ -72,6 +69,11 @@ struct SmartTubeTVApp: App {
                 .onChange(of: settingsStore.settings.historyState, initial: true) { _, newState in
                     browseViewModel.updateHistoryEnabled(newState == .enabled)
                 }
+            #if ENABLE_DOWNLOADS
+            root.environment(cardDownloadService)
+            #else
+            root
+            #endif
         }
     }
 }

@@ -48,7 +48,8 @@ struct GestureAdjustmentInfo: Equatable {
     var systemImage: String {
         switch kind {
         case .brightness: return value < 0.3 ? "sun.min.fill" : "sun.max.fill"
-        case .volume: return value == 0 ? "speaker.slash.fill" : value < 0.5 ? "speaker.wave.1.fill" : "speaker.wave.2.fill"
+        case .volume:
+            return value == 0 ? "speaker.slash.fill" : value < 0.5 ? "speaker.wave.1.fill" : "speaker.wave.2.fill"
         }
     }
 }
