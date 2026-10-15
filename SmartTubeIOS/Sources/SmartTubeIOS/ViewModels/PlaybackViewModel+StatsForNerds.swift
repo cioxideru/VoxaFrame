@@ -98,7 +98,6 @@ extension PlaybackViewModel {
             droppedFrames: droppedFrames,
             stalls: stalls,
             pendingQualityLabel: qualityManager.pendingQualityLabel,
-            reportID: CrashlyticsLogger.sessionReportID,
             timeToPlayMs: timeToPlayMs,
             timeToHighQualityMs: timeToHighQualityMs,
             cacheStatus: cacheStatusSummary,
@@ -152,10 +151,6 @@ public struct StatsForNerdsSnapshot: Sendable {
     /// Quality label most recently selected by the user — persists after CDN failures
     /// so Stats for Nerds can show user intent vs actual delivery.
     public var pendingQualityLabel: String
-    /// Session report ID — matches the `report_id` custom key stamped on Crashlytics
-    /// reports. Quote this when sending a diagnostic report so the developer can
-    /// locate the exact session in Firebase.
-    public var reportID: String
     /// Elapsed ms from `load()` to the first `readyToPlay` (low-quality fast-start frame). 0 = not yet measured.
     public var timeToPlayMs: Int
     /// Elapsed ms from `load()` to the quality-ramp task firing (~readyToPlay + 800 ms). 0 = not yet measured.
@@ -177,7 +172,6 @@ public struct StatsForNerdsSnapshot: Sendable {
         droppedFrames: 0,
         stalls: 0,
         pendingQualityLabel: "",
-        reportID: CrashlyticsLogger.sessionReportID,
         timeToPlayMs: 0,
         timeToHighQualityMs: 0,
         cacheStatus: "",

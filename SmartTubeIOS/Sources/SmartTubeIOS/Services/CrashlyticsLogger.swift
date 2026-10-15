@@ -17,13 +17,6 @@ public struct CrashlyticsLogger: Sendable {
     /// is a fatal error, not a silent no-op.
     nonisolated(unsafe) public static var isEnabled = true
 
-    /// Short identifier (8 hex chars) generated once per app session, independent of
-    /// `isEnabled` — it's shown in the Stats for Nerds debug overlay purely as a local
-    /// reference number even when analytics reporting is off.
-    static let sessionReportID: String = {
-        let raw = UUID().uuidString.replacingOccurrences(of: "-", with: "")
-        return String(raw.prefix(8)).uppercased()
-    }()
     private let logger: Logger
     private let category: String
 
@@ -91,27 +84,6 @@ public struct CrashlyticsLogger: Sendable {
         crashlytics.setCustomValue(ISO8601DateFormatter().string(from: Date()), forKey: "intended_video_tap_time")
     }
 
-    /// Records a user-triggered diagnostic non-fatal event in Crashlytics.
-    /// All breadcrumbs accumulated during the session are attached to this event,
-    /// giving a detailed picture of the app flow leading up to the user's report.
-    /// The `report_id` custom key matches the ID shown in the Stats for Nerds
-    /// debug overlay (two-finger tap in the player) so reports can be correlated
-    /// with user-provided IDs from support conversations.
-    static func sendDiagnosticReport() {
-        guard isEnabled else { return }
-        let crashlytics = Crashlytics.crashlytics()
-        crashlytics.setCustomValue(sessionReportID, forKey: "report_id")
-        crashlytics.log(
-            "[Diagnostic] User-requested diagnostic report — report_id=\(sessionReportID). Tip: two-finger tap the player to open the debug overlay and confirm this ID before sending."
-        )
-        let error = NSError(
-            domain: "SmartTube.UserDiagnostic",
-            code: 0,
-            userInfo: [NSLocalizedDescriptionKey: "User-requested diagnostic report (ID: \(sessionReportID))"]
-        )
-        crashlytics.record(error: error)
-    }
-
     /// Records a non-fatal Crashlytics event when time-to-first-frame exceeds 4 seconds.
     /// Surfaces in the Firebase console under domain `SmartTube.SlowLoad` (code 4001),
     /// tagged with the stream type and elapsed ms so we can correlate slow-load rate
@@ -143,7 +115,7 @@ public struct CrashlyticsLogger: Sendable {
 
     /// Automatically records a diagnostic report when playback fails and the error is
     /// shown to the user. Uses domain `SmartTube.AutoDiagnostic` (code 1) so it appears
-    /// as a distinct Firebase issue from user-triggered reports, making it easy to query
+    /// as a distinct Firebase issue, making it easy to query
     /// "all sessions where a user couldn't play a video" without manual intervention.
     /// Custom keys set by `recordNonFatal` (stream_url, has_retried, etc.) are already
     /// stamped on the Crashlytics instance and are automatically attached to this event.

@@ -11,7 +11,6 @@ public struct SettingsView: View {
     @Environment(AuthService.self) private var auth
     @Environment(SettingsStore.self) private var store
     @State private var showSignIn = false
-    @State private var reportSent = false
     #if os(tvOS)
     @State private var showGithubQR = false
     #endif
@@ -564,19 +563,6 @@ extension SettingsView {
                 Label("View on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
             }
             #endif
-            Button {
-                CrashlyticsLogger.sendDiagnosticReport()
-                reportSent = true
-            } label: {
-                if reportSent {
-                    Label("Report Sent", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                } else {
-                    Label("Send Diagnostic Report", systemImage: "ladybug")
-                }
-            }
-            .disabled(reportSent || store.settings.disableAnalytics)
-            .accessibilityIdentifier("settings.sendDiagnosticReportButton")
             Button("Reset All Settings", role: .destructive) { store.reset() }
                 .accessibilityIdentifier("settings.resetAllButton")
         } header: {
