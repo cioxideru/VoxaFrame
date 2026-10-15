@@ -32,6 +32,7 @@ public struct ShortsPlayerView: View {
     @Environment(PlayerStateStore.self) var playerState
     #endif
     @State var slideOffset: CGFloat = 0
+    @State var containerHeight: CGFloat = 0
     @State var isTransitioning = false
     @State var isFetchingMore = false
     /// True while the app is backgrounded — guards onDisappear from calling stop()
@@ -146,6 +147,11 @@ public struct ShortsPlayerView: View {
             // Single-tap toggles play/pause via the UIKit window-level tap
             // recognizer inside SwipeGestureOverlay (onTap above).
             .offset(y: slideOffset)
+            .onGeometryChange(for: CGFloat.self) {
+                $0.size.height
+            } action: {
+                containerHeight = $0
+            }
             .background(Color.black.ignoresSafeArea())
             #if os(tvOS)
             // Siri Remote D-pad: up/down navigate prev/next short.
