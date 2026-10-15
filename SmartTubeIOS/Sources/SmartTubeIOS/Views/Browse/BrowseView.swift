@@ -213,33 +213,17 @@ struct VideoGridSection: View {
     var body: some View {
         let compact = store.settings.compactThumbnails
         if compact {
-            LazyVStack(spacing: 0) {
-                ForEach(videos) { video in
-                    #if os(tvOS)
-                    VideoCardView(video: video, compact: true, onSelect: { onSelect(video) })
-                        .padding(.horizontal)
-                        .padding(.vertical, 6)
-                        .accessibilityIdentifier("video.card.\(video.id)")
-                        .onAppear {
-                            if video.id == videos.last?.id { loadMore?() }
-                        }
-                    #else
-
-                    VideoCardView(video: video, compact: true)
-                        .padding(.horizontal)
-                        .padding(.vertical, 6)
-                        .accessibilityIdentifier("video.card.\(video.id)")
-                        .accessibilityValue(video.isShort ? "short" : "")
-                        .onTapGesture { onSelect(video) }
-                        .onAppear {
-                            if video.id == videos.last?.id { loadMore?() }
-                        }
-                    #endif
-                    Divider().padding(.horizontal)
+            let list = Group {
+                if eager {
+                    VStack(spacing: 0) { compactCards }
+                } else {
+                    LazyVStack(spacing: 0) { compactCards }
                 }
             }
             #if os(tvOS)
-            .focusSection()
+            list.focusSection()
+            #else
+            list
             #endif
         } else {
             #if os(tvOS)
@@ -247,9 +231,15 @@ struct VideoGridSection: View {
             // invisible — the focus engine cannot traverse cells that have not
             // been laid out yet. Use LazyVStack + HStack rows (4 per row) instead,
             // which is the same approach BrowseView.content already uses on tvOS.
-            LazyVStack(alignment: .leading, spacing: videoGridRowSpacing) { gridRows }
-                .padding(.vertical, eager ? videoGridRowSpacing / 2 : 8)
-                .focusSection()
+            Group {
+                if eager {
+                    VStack(alignment: .leading, spacing: videoGridRowSpacing) { gridRows }
+                } else {
+                    LazyVStack(alignment: .leading, spacing: videoGridRowSpacing) { gridRows }
+                }
+            }
+            .padding(.vertical, eager ? videoGridRowSpacing / 2 : 8)
+            .focusSection()
             #else
             if eager {
                 // Half the row spacing above and below, so stacked blocks read as one grid.
@@ -278,6 +268,31 @@ struct VideoGridSection: View {
                 #endif
             }
             #endif
+        }
+    }
+
+    @ViewBuilder private var compactCards: some View {
+        ForEach(videos) { video in
+            #if os(tvOS)
+            VideoCardView(video: video, compact: true, onSelect: { onSelect(video) })
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
+                .onAppear {
+                    if video.id == videos.last?.id { loadMore?() }
+                }
+            #else
+            VideoCardView(video: video, compact: true)
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
+                .accessibilityValue(video.isShort ? "short" : "")
+                .onTapGesture { onSelect(video) }
+                .onAppear {
+                    if video.id == videos.last?.id { loadMore?() }
+                }
+            #endif
+            Divider().padding(.horizontal)
         }
     }
 

@@ -64,6 +64,10 @@ public enum AccessibilityID {
     public static func videoCard(_ videoId: String) -> String {
         "video.card.\(videoId)"
     }
+
+    public static func shortsCard(_ videoId: String) -> String {
+        "shorts.card.\(videoId)"
+    }
     public static var homeSectionFeed: String { "home.sectionFeed" }
     public static var playerBackButton: String { "player.backButton" }
     public static var playerProbeStreamResult: String { "player.probeStreamResult" }

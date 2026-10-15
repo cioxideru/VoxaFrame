@@ -34,6 +34,9 @@ public struct HomeView: View {
     /// same lifetime as a search filter rather than a durable preference.
     @State var subscriptionsChannelFilter: String?
     @State private var showSignIn = false
+    /// Where the Home feed's Shorts rows sit; reset whenever the feed is replaced.
+    @State private var homeLayout = HomeFeedLayout()
+    @State private var homeFeedHeight: CGFloat = 0
     @State var queueVideosCount: Int = 0
     // Auto-retry tracking: record the type-specific video count at the moment a
     // scroll trigger fires so onChange can detect whether the next page helped.
@@ -350,70 +353,55 @@ extension HomeView {
 
     // MARK: - Home shelves  (unified interleaved feed)
 
-    /// Shorts per Home Shorts row. tvOS shows at most `shortsCardMaxTVCount` cards per row;
-    /// elsewhere the row scrolls, so it holds a few screens' worth even on a wide iPad.
+    /// Shorts per Home Shorts row: all a tvOS row shows, about three iPhone screens elsewhere.
     #if os(tvOS)
     private static let homeShortsPerRow = ShortsRowSection.shortsCardMaxTVCount
     #else
-    private static let homeShortsPerRow = 20
+    private static let homeShortsPerRow = 10
     #endif
 
     /// One vertical feed: a Shorts row, two rows of videos, another Shorts row, and so on
-    /// (`HomeFeedSegment.interleave`). Each Shorts row scrolls horizontally on its own.
+    /// (`HomeFeedLayout`). Each Shorts row scrolls horizontally on its own.
     private var homeShelves: some View {
         Group {
             if homeVM.isLoadingAny && homeVM.mergedVideos.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                let hideShorts = store.settings.hideShorts
-                let regularVideos = homeVM.homeRegularVideos
-                let shortsVideos = hideShorts ? [] : homeVM.homeShortsVideos
-                let segments = HomeFeedSegment.interleave(
+                let shortsVideos = store.settings.hideShorts ? [] : homeVM.homeShortsVideos
+                let segments = homeLayout.segments(
                     shorts: shortsVideos,
-                    videos: regularVideos,
+                    videos: homeVM.homeRegularVideos,
                     columns: videoGridColumnCount(store.settings, landscape: isLandscapeLayout),
                     shortsPerRow: Self.homeShortsPerRow
                 )
-                let lastShortsRow = segments.last { $0.kind == .shorts }?.id
-                let lastVideoBlock = segments.last { $0.kind == .videos }?.id
-                let feed = ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        ForEach(segments) { segment in
-                            switch segment.kind {
-                            case .shorts:
-                                // The last Shorts row asks for the next Shorts page when it
-                                // scrolls into view or is scrolled to its end.
-                                let isLast = segment.id == lastShortsRow
-                                ShortsRowSection(
-                                    videos: segment.items,
-                                    onSelect: { selectVideo($0, from: shortsVideos) },
-                                    accessibilityID: AccessibilityID.homeShortsRow(segment.index),
-                                    loadMore: isLast ? { homeVM.loadNextShortsPage() } : nil
-                                )
-                                .onAppear { if isLast { homeVM.loadNextShortsPage() } }
-                            case .videos:
-                                let block = VideoGridSection(
-                                    videos: segment.items,
-                                    onSelect: { selectVideo($0, from: regularVideos) },
-                                    loadMore: segment.id == lastVideoBlock ? { homeVM.loadMoreMerged() } : nil,
-                                    eager: true
-                                )
-                                // On the video blocks only: a sideways drag over a Shorts row
-                                // scrolls that row instead of switching the section.
-                                #if os(iOS)
-                                block.simultaneousGesture(sectionSwipe)
-                                #else
-                                block
-                                #endif
-                            }
-                        }
-                        if homeVM.sections.contains(where: \.isLoadingMore) {
-                            ProgressView().frame(maxWidth: .infinity).padding()
-                        }
+                let stack = LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(segments) { homeFeedSegment($0, in: segments, shorts: shortsVideos) }
+                    if homeVM.sections.contains(where: \.isLoadingMore) {
+                        ProgressView().frame(maxWidth: .infinity).padding()
                     }
                 }
-                .refreshable { homeVM.load() }
+                // At least the viewport tall, so the space below a short feed takes the chip swipe.
+                .frame(minHeight: homeFeedHeight, alignment: .top)
+                let feed = ScrollView {
+                    #if os(iOS)
+                    // The gaps between segments take the chip swipe too. Shorts rows sit in front
+                    // of this background, so dragging one still scrolls the row.
+                    stack.background {
+                        Color.clear.contentShape(Rectangle()).simultaneousGesture(sectionSwipe)
+                    }
+                    #else
+                    stack
+                    #endif
+                }
+                .onGeometryChange(for: CGFloat.self) {
+                    $0.size.height
+                } action: {
+                    homeFeedHeight = $0
+                }
+                .refreshable { await homeVM.refresh() }
+                .onChange(of: homeVM.feedGeneration) { homeLayout = HomeFeedLayout() }
+                .onChange(of: homeVM.loadedAt) { requestHomeShorts(through: homeLayout.laidOutThrough + 3) }
                 #if os(tvOS)
                 feed.focusSection()
                 #else
@@ -421,6 +409,47 @@ extension HomeView {
                 #endif
             }
         }
+    }
+
+    @ViewBuilder
+    private func homeFeedSegment(
+        _ segment: HomeFeedSegment<Video>, in segments: [HomeFeedSegment<Video>], shorts: [Video]
+    ) -> some View {
+        switch segment.kind {
+        case .shorts:
+            ShortsRowSection(
+                videos: segment.items,
+                onSelect: { selectVideo($0, from: shorts) },
+                accessibilityID: AccessibilityID.homeShortsRow(segment.index)
+            )
+        case .videos:
+            let isLastBlock = segment.id == segments.last { $0.kind == .videos }?.id
+            let block = VideoGridSection(
+                videos: segment.items,
+                onSelect: { selectVideo($0, from: homeVM.homeRegularVideos) },
+                loadMore: isLastBlock ? { homeVM.loadMoreMerged() } : nil,
+                eager: true
+            )
+            .contentShape(Rectangle())
+            .onAppear {
+                homeLayout.markLaidOut(block: segment.index, in: segments)
+                requestHomeShorts(through: segment.index + 2)
+            }
+            // On the video blocks, not the Shorts rows: dragging a Shorts row sideways scrolls
+            // the row instead of switching the section.
+            #if os(iOS)
+            block.simultaneousGesture(sectionSwipe)
+            #else
+            block
+            #endif
+        }
+    }
+
+    /// Asks for enough Shorts to put a row in front of every block through `block` that can
+    /// still take one.
+    private func requestHomeShorts(through block: Int) {
+        guard !store.settings.hideShorts else { return }
+        homeVM.loadShorts(atLeast: homeLayout.shortsWanted(through: block, shortsPerRow: Self.homeShortsPerRow))
     }
 
     // MARK: - Section feed  (non-Home chips)

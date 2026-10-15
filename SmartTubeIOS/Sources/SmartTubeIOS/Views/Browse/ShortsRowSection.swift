@@ -59,7 +59,7 @@ struct ShortsRowSection: View {
                         .frame(width: cardWidth, height: cardWidth * 16 / 9)
                 }
                 .buttonStyle(.plain)
-                .accessibilityIdentifier("shorts.card.\(video.id)")
+                .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
             }
         }
         .padding(.horizontal)
@@ -69,7 +69,7 @@ struct ShortsRowSection: View {
         #else
         let scrollView = ScrollView(.horizontal, showsIndicators: true) {
             // Eager HStack (not LazyHStack): the endless-scroll cascade pre-loads
-            // dozens of cards into `videos` in the background (preloadMoreShorts),
+            // dozens of cards into `videos` in the background,
             // and a LazyHStack would only materialize the few cards near the
             // visible viewport, leaving the rest invisible (and untestable via
             // accessibility) until the user manually scrolls past them.
@@ -77,7 +77,7 @@ struct ShortsRowSection: View {
                 ForEach(videos) { video in
                     ShortsCardView(video: video, onTap: { onSelect(video) })
                         .frame(width: cardWidth, height: cardWidth * 16 / 9)
-                        .accessibilityIdentifier("shorts.card.\(video.id)")
+                        .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
                 }
             }
             .padding(.horizontal)
@@ -128,7 +128,7 @@ struct ShortsRowSection: View {
                         .aspectRatio(9 / 16, contentMode: .fit)
                 }
                 .buttonStyle(.plain)
-                .accessibilityIdentifier("shorts.card.\(video.id)")
+                .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
             }
         }
         .padding(.horizontal)
@@ -142,7 +142,7 @@ struct ShortsRowSection: View {
                     ShortsCardView(video: video, onTap: { onSelect(video) })
                         .frame(maxWidth: .infinity)
                         .aspectRatio(9 / 16, contentMode: .fit)
-                        .accessibilityIdentifier("shorts.card.\(video.id)")
+                        .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
                 }
             }
             .padding(.horizontal)
