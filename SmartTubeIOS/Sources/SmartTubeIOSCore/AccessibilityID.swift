@@ -55,6 +55,15 @@ public enum AccessibilityID {
     public static var tosPlayerSeekForwardButton: String { "tosPlayer.seekForwardButton" }
     public static var tosPlayerUndoAutoSkipToast: String { "tosPlayer.undoAutoSkipToast" }
     public static var homeCurrentQueueRow: String { "home.currentQueueRow" }
+
+    /// Home feed Shorts rows: the first keeps the long-standing `home.shortsRow`.
+    public static func homeShortsRow(_ index: Int) -> String {
+        index == 0 ? "home.shortsRow" : "home.shortsRow.\(index)"
+    }
+
+    public static func videoCard(_ videoId: String) -> String {
+        "video.card.\(videoId)"
+    }
     public static var homeSectionFeed: String { "home.sectionFeed" }
     public static var playerBackButton: String { "player.backButton" }
     public static var playerProbeStreamResult: String { "player.probeStreamResult" }

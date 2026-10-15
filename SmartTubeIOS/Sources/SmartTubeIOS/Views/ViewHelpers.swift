@@ -43,6 +43,16 @@ func videoGridColumns(_ settings: AppSettings, landscape: Bool) -> [GridItem] {
 }
 #endif
 
+/// Videos per row in `VideoGridSection`: 1 in the compact list, otherwise its grid columns.
+func videoGridColumnCount(_ settings: AppSettings, landscape: Bool) -> Int {
+    guard !settings.compactThumbnails else { return 1 }
+    #if os(tvOS)
+    return videoGridColumns.count
+    #else
+    return videoGridColumns(settings, landscape: landscape).count
+    #endif
+}
+
 // MARK: - Layout orientation
 
 private struct IsLandscapeLayoutKey: EnvironmentKey {

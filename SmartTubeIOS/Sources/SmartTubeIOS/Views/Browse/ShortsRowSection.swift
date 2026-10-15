@@ -30,7 +30,7 @@ struct ShortsRowSection: View {
 
     /// Maximum cards shown on tvOS in horizontal mode. A 1920-pt screen holds
     /// ~9 cards at 200 pt each; capping prevents overflow and keeps focus manageable.
-    private let shortsCardMaxTVCount = 9
+    static let shortsCardMaxTVCount = 9
 
     // MARK: - Body
 
@@ -51,7 +51,7 @@ struct ShortsRowSection: View {
         // navigation to the content below. Use a plain HStack capped at
         // shortsCardMaxTVCount cards instead.
         HStack(alignment: .top, spacing: videoGridRowSpacing) {
-            ForEach(Array(videos.prefix(shortsCardMaxTVCount))) { video in
+            ForEach(Array(videos.prefix(Self.shortsCardMaxTVCount))) { video in
                 Button {
                     onSelect(video)
                 } label: {
@@ -119,7 +119,7 @@ struct ShortsRowSection: View {
         // tvOS: plain LazyVStack capped at shortsCardMaxTVCount — no ScrollView
         // to avoid trapping Siri remote directional events.
         LazyVStack(alignment: .leading, spacing: videoGridRowSpacing) {
-            ForEach(Array(videos.prefix(shortsCardMaxTVCount))) { video in
+            ForEach(Array(videos.prefix(Self.shortsCardMaxTVCount))) { video in
                 Button {
                     onSelect(video)
                 } label: {

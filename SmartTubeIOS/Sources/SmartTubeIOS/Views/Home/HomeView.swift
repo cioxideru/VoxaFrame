@@ -18,6 +18,7 @@ public struct HomeView: View {
     @Environment(\.innerTubeAPI) private var api
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.isLandscapeLayout) private var isLandscapeLayout
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
     #endif
@@ -349,6 +350,16 @@ extension HomeView {
 
     // MARK: - Home shelves  (unified interleaved feed)
 
+    /// Shorts per Home Shorts row. tvOS shows at most `shortsCardMaxTVCount` cards per row;
+    /// elsewhere the row scrolls, so it holds a few screens' worth even on a wide iPad.
+    #if os(tvOS)
+    private static let homeShortsPerRow = ShortsRowSection.shortsCardMaxTVCount
+    #else
+    private static let homeShortsPerRow = 20
+    #endif
+
+    /// One vertical feed: a Shorts row, two rows of videos, another Shorts row, and so on
+    /// (`HomeFeedSegment.interleave`). Each Shorts row scrolls horizontally on its own.
     private var homeShelves: some View {
         Group {
             if homeVM.isLoadingAny && homeVM.mergedVideos.isEmpty {
@@ -358,41 +369,56 @@ extension HomeView {
                 let hideShorts = store.settings.hideShorts
                 let regularVideos = homeVM.homeRegularVideos
                 let shortsVideos = hideShorts ? [] : homeVM.homeShortsVideos
-                // ShortsRowSection is placed OUTSIDE the ScrollView so it stays
-                // pinned at the top while the video grid scrolls beneath it.
-                VStack(spacing: 0) {
-                    if !shortsVideos.isEmpty {
-                        ShortsRowSection(
-                            videos: shortsVideos,
-                            onSelect: { selectVideo($0, from: shortsVideos) },
-                            accessibilityID: "home.shortsRow",
-                            loadMore: { homeVM.loadNextShortsPage() }
-                        )
-                        #if os(tvOS)
-                        .focusSection()
-                        #endif
-                    }
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 0) {
-                            VideoGridSection(
-                                videos: regularVideos,
-                                onSelect: { selectVideo($0, from: regularVideos) },
-                                loadMore: { homeVM.loadMoreMerged() }
-                            )
-                            let isLoadingMore = homeVM.sections.contains { $0.isLoadingMore }
-                            if isLoadingMore {
-                                ProgressView().frame(maxWidth: .infinity).padding()
+                let segments = HomeFeedSegment.interleave(
+                    shorts: shortsVideos,
+                    videos: regularVideos,
+                    columns: videoGridColumnCount(store.settings, landscape: isLandscapeLayout),
+                    shortsPerRow: Self.homeShortsPerRow
+                )
+                let lastShortsRow = segments.last { $0.kind == .shorts }?.id
+                let lastVideoBlock = segments.last { $0.kind == .videos }?.id
+                let feed = ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(segments) { segment in
+                            switch segment.kind {
+                            case .shorts:
+                                // The last Shorts row asks for the next Shorts page when it
+                                // scrolls into view or is scrolled to its end.
+                                let isLast = segment.id == lastShortsRow
+                                ShortsRowSection(
+                                    videos: segment.items,
+                                    onSelect: { selectVideo($0, from: shortsVideos) },
+                                    accessibilityID: AccessibilityID.homeShortsRow(segment.index),
+                                    loadMore: isLast ? { homeVM.loadNextShortsPage() } : nil
+                                )
+                                .onAppear { if isLast { homeVM.loadNextShortsPage() } }
+                            case .videos:
+                                let block = VideoGridSection(
+                                    videos: segment.items,
+                                    onSelect: { selectVideo($0, from: regularVideos) },
+                                    loadMore: segment.id == lastVideoBlock ? { homeVM.loadMoreMerged() } : nil,
+                                    eager: true
+                                )
+                                // On the video blocks only: a sideways drag over a Shorts row
+                                // scrolls that row instead of switching the section.
+                                #if os(iOS)
+                                block.simultaneousGesture(sectionSwipe)
+                                #else
+                                block
+                                #endif
                             }
                         }
+                        if homeVM.sections.contains(where: \.isLoadingMore) {
+                            ProgressView().frame(maxWidth: .infinity).padding()
+                        }
                     }
-                    .refreshable { homeVM.load() }
-                    #if os(iOS)
-                    .simultaneousGesture(sectionSwipe)
-                    #endif
-                    #if os(tvOS)
-                    .focusSection()
-                    #endif
                 }
+                .refreshable { homeVM.load() }
+                #if os(tvOS)
+                feed.focusSection()
+                #else
+                feed
+                #endif
             }
         }
     }
