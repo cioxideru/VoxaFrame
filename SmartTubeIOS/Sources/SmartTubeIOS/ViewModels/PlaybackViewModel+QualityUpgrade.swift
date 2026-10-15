@@ -112,22 +112,24 @@ extension PlaybackViewModel {
         let videoAsset = AVURLAsset(url: videoURL, options: ["AVURLAssetHTTPHeaderFieldsKey": ["User-Agent": ua]])
         let audioAsset = AVURLAsset(url: audioURL, options: ["AVURLAssetHTTPHeaderFieldsKey": ["User-Agent": ua]])
         playerLog.notice("[prefetch] pre-warming tracks for preferredQuality=\(maxH)p (itag=\(itag))")
+        // Immutable tracks pass once through AsyncStream to the MainActor cache; no concurrent mutation.
         struct PrefetchTrackBox: @unchecked Sendable {
             let video: [AVAssetTrack]
             let audio: [AVAssetTrack]
         }
         let (stream, cont) = AsyncStream<PrefetchTrackBox?>.makeStream()
-        Task.detached {
-            let box: PrefetchTrackBox? = try? await { () async throws -> PrefetchTrackBox in
+        Task {
+            do {
                 async let videoTracks = videoAsset.loadTracks(withMediaType: .video)
                 async let audioTracks = audioAsset.loadTracks(withMediaType: .audio)
                 let (vv, aa) = try await (videoTracks, audioTracks)
-                return PrefetchTrackBox(video: vv, audio: aa)
-            }()
-            cont.yield(box)
+                cont.yield(PrefetchTrackBox(video: vv, audio: aa))
+            } catch {
+                cont.yield(nil)
+            }
             cont.finish()
         }
-        Task.detached {
+        Task {
             try? await Task.sleep(for: PlaybackTuning.prefetchTrackTimeout)
             cont.yield(nil)
             cont.finish()
@@ -274,6 +276,7 @@ extension PlaybackViewModel {
         }
     }
 
+    // Immutable track arrays are transferred through AsyncStream and consumed only on MainActor.
     private struct QualityCompositionTracks: @unchecked Sendable {
         let video: [AVAssetTrack]
         let audio: [AVAssetTrack]
@@ -293,17 +296,18 @@ extension PlaybackViewModel {
         } else {
             do {
                 let (raceStream, raceCont) = AsyncStream<QualityCompositionTracks?>.makeStream()
-                Task.detached {
-                    let box: QualityCompositionTracks? = try? await { () async throws -> QualityCompositionTracks in
+                Task {
+                    do {
                         async let videoTracks = videoAsset.loadTracks(withMediaType: .video)
                         async let audioTracks = audioAsset.loadTracks(withMediaType: .audio)
                         let (vv, aa) = try await (videoTracks, audioTracks)
-                        return QualityCompositionTracks(video: vv, audio: aa)
-                    }()
-                    raceCont.yield(box)
+                        raceCont.yield(QualityCompositionTracks(video: vv, audio: aa))
+                    } catch {
+                        raceCont.yield(nil)
+                    }
                     raceCont.finish()
                 }
-                Task.detached {
+                Task {
                     try? await Task.sleep(for: PlaybackTuning.qualityTrackTimeout)
                     raceCont.yield(nil)
                     raceCont.finish()

@@ -15,6 +15,7 @@ import Testing
 // InnerTubeAPI+VideoRenderers.swift's own chapter-parsing tests for that).
 
 private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
+    // The serialized suite installs fixtures before awaiting the view-model request; callbacks only read them.
     nonisolated(unsafe) static var responses: [String: (statusCode: Int, body: Data)] = [:]
 
     override static func canInit(with request: URLRequest) -> Bool { true }

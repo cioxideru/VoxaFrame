@@ -279,6 +279,7 @@ extension PlaybackViewModel {
         return true
     }
 
+    // Immutable track arrays are transferred through AsyncStream and consumed only on MainActor.
     private struct CompositionTracks: @unchecked Sendable {
         let video: [AVAssetTrack]
         let audio: [AVAssetTrack]
@@ -296,15 +297,16 @@ extension PlaybackViewModel {
             // access occurs after the box is read on the main actor.
             let (raceStream, raceCont) = AsyncStream<CompositionTracks?>.makeStream()
 
-            // loadTracks on thread pool — yields result or nil on error
-            Task.detached {
-                let box: CompositionTracks? = try? await { () async throws -> CompositionTracks in
+            // Asynchronous track loading yields result or nil on error.
+            Task {
+                do {
                     async let videoTracks = videoAsset.loadTracks(withMediaType: .video)
                     async let audioTracks = audioAsset.loadTracks(withMediaType: .audio)
                     let (vv, aa) = try await (videoTracks, audioTracks)
-                    return CompositionTracks(video: vv, audio: aa)
-                }()
-                raceCont.yield(box)
+                    raceCont.yield(CompositionTracks(video: vv, audio: aa))
+                } catch {
+                    raceCont.yield(nil)
+                }
                 raceCont.finish()
             }
 
@@ -329,7 +331,7 @@ extension PlaybackViewModel {
                 : (needsQuickStartup
                     ? PlaybackTuning.adaptiveStartupTimeoutNanoseconds : PlaybackTuning.adaptiveTimeoutNanoseconds)
             #endif
-            Task.detached {
+            Task {
                 try? await Task.sleep(nanoseconds: timeoutNs)
                 raceCont.yield(nil)
                 raceCont.finish()

@@ -26,8 +26,8 @@ import XCTest
 // After the run, extract device/app logs and verify each play loaded the
 // correct video:
 //
-//   # All play attempts from the test (expected IDs)
-//   grep '\[wrongvideo\]' "$APP_LOG"
+//   # All play attempts from the test (expected IDs): the `[wrongvideo] play#N expected=…`
+//   # diagnostics are attached to the .xcresult (kept always), not printed to the log
 //
 //   # Actual video IDs loaded by the app
 //   grep '\[load\] load() called' "$APP_LOG"
@@ -108,9 +108,9 @@ final class WrongVideoRegressionUITests: XCTestCase {
     /// Finds `video.card.<videoId>` in the current feed, taps it, and waits for
     /// `player.titleLabel` to appear.
     ///
-    /// Prints `[wrongvideo] play#N expected=<videoId>` immediately before the tap
-    /// so post-run log grep can pair it against the app's `[load] load() called — id=`
-    /// line.
+    /// Records `[wrongvideo] play#N expected=<videoId>` as an .xcresult attachment
+    /// immediately before the tap, to pair it with the app's `[load] load() called — id=`
+    /// log line.
     ///
     /// - Returns: the player title label text on success.
     /// - Throws: `XCTSkip` if the card is not found, `XCTFail` if the player
@@ -127,7 +127,7 @@ final class WrongVideoRegressionUITests: XCTestCase {
             )
         }
 
-        print("[wrongvideo] play#\(playNumber) expected=\(videoId)")
+        recordDiagnostic("[wrongvideo] play#\(playNumber) expected=\(videoId)")
         let tapStart = Date()
         card.tap()
 
@@ -140,8 +140,8 @@ final class WrongVideoRegressionUITests: XCTestCase {
 
         let ttpMs = Int(Date().timeIntervalSince(tapStart) * 1000)
         let title = titleLabel.label
-        print("[wrongvideo] play#\(playNumber) opened — title='\(title)'")
-        print("[wrongvideo] play#\(playNumber) TTP=\(ttpMs)ms  tap→titleLabel  videoId=\(videoId)")
+        recordDiagnostic("[wrongvideo] play#\(playNumber) opened — title='\(title)'")
+        recordDiagnostic("[wrongvideo] play#\(playNumber) TTP=\(ttpMs)ms  tap→titleLabel  videoId=\(videoId)")
 
         // Dwell so [load], readyToPlay, quality-ramp, and path-won log lines all land.
         Thread.sleep(forTimeInterval: 3.0)
@@ -192,7 +192,7 @@ final class WrongVideoRegressionUITests: XCTestCase {
 
         let videoId1 = seenIDs[0]
         let videoId2 = seenIDs[2]
-        print("[wrongvideo] setup: first=\(videoId1) third=\(videoId2)")
+        recordDiagnostic("[wrongvideo] setup: first=\(videoId1) third=\(videoId2)")
 
         // ── Play #1: first video ─────────────────────────────────────────────
         try tapAndPlay(videoId: videoId1, playNumber: 1)

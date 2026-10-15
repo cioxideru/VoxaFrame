@@ -162,7 +162,7 @@ public struct ShortsPlayerView: View {
                         // controls bar at the bottom of the 9:16 embed). Taps there are
                         // passed through to WKWebView when paused so native controls work.
                         // Taps anywhere above that: toggle play/pause regardless of state.
-                        let screenH = UIScreen.main.bounds.height
+                        let screenH = vm.webView.window?.bounds.height ?? vm.webView.bounds.height
                         let inNativeControlsArea = point.y / screenH > 0.88
                         if vm.playerState == .paused && inNativeControlsArea { return }
                         vm.togglePlayPause()

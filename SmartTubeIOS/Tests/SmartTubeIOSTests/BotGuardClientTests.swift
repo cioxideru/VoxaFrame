@@ -452,6 +452,7 @@ struct BotGuardClientLiveTests {
 /// URLProtocol that serves pre-registered Data for matching URL strings.
 /// Fails all unregistered URLs with URLError(.fileDoesNotExist).
 private final class WAARouterProtocol: URLProtocol, @unchecked Sendable {
+    // The serialized suite installs routes before awaiting token generation; callbacks only read them.
     nonisolated(unsafe) static var routes: [String: Data] = [:]
 
     override class func canInit(with request: URLRequest) -> Bool { true }

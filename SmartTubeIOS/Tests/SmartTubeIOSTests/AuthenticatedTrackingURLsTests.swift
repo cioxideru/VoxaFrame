@@ -139,7 +139,7 @@ struct AuthenticatedTrackingURLsTests {
     }
 
     @Test("fetchAuthenticatedTrackingURLs extracts URLs when playbackTracking is present")
-    func extractsTrackingURLsWhenPresent() async {
+    func extractsTrackingURLsWhenPresent() async throws {
         let playerResponse: [String: Any] = [
             "videoDetails": ["videoId": "testvid123"],
             "playabilityStatus": ["status": "OK"],
@@ -153,7 +153,7 @@ struct AuthenticatedTrackingURLsTests {
                 ],
             ],
         ]
-        let responseData = try! JSONSerialization.data(withJSONObject: playerResponse)
+        let responseData = try JSONSerialization.data(withJSONObject: playerResponse)
         StubURLProtocol.responses = [
             "youtube.com/": (200, Data("\"STS\":12345".utf8)),
             "youtubei/v1/player": (200, responseData),

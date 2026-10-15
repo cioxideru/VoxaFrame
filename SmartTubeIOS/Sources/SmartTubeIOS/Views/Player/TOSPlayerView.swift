@@ -113,7 +113,7 @@ public struct TOSPlayerView: View {
 
     // MARK: - Brightness/volume gesture (#19)
     //
-    // Left half of the screen adjusts brightness (UIScreen.main.brightness — a
+    // Left half of the screen adjusts brightness (the player window's screen — a
     // direct, app-settable property, no special API needed); right half adjusts
     // system volume (via SystemVolumeControl's hidden MPVolumeView, the only
     // sanctioned mechanism). Both are relative to a value captured once per
@@ -122,11 +122,12 @@ public struct TOSPlayerView: View {
     // position derived from touch coordinates.
     private func handleVerticalDrag(isLeftHalf: Bool, translationY: CGFloat, viewHeight: CGFloat) {
         if isLeftHalf {
-            let start = brightnessDragStart ?? Float(UIScreen.main.brightness)
+            guard let screen = tosState.vm?.webView.window?.windowScene?.screen else { return }
+            let start = brightnessDragStart ?? Float(screen.brightness)
             if brightnessDragStart == nil { brightnessDragStart = start }
             let newValue = GestureAdjustmentInfo.adjustedValue(
                 start: start, translationY: translationY, viewHeight: viewHeight)
-            UIScreen.main.brightness = CGFloat(newValue)
+            screen.brightness = CGFloat(newValue)
             gestureHUD = GestureAdjustmentInfo(kind: .brightness, value: newValue)
         } else {
             let start = volumeDragStart ?? AVAudioSession.sharedInstance().outputVolume
@@ -345,7 +346,7 @@ public struct TOSPlayerView: View {
             }
             // Invisible AX label exposing player state for UI tests.
             // Mirrors player.titleLabel / player.probeStreamResult on PlayerView.
-            // foregroundColor(.clear) keeps the text in the AX tree with a readable
+            // foregroundStyle(.clear) keeps the text in the AX tree with a readable
             // label while being visually transparent. opacity(0/0.001) and frame(1,1)
             // both cause macOS 26 AX to return an empty label.
             .overlay(alignment: .topTrailing) {
@@ -356,7 +357,7 @@ public struct TOSPlayerView: View {
                             ? "paused"
                             : vm.playerState == .ended ? "ended" : "unstarted"
                 )
-                .foregroundColor(.clear)  // visually invisible; AX still reads text
+                .foregroundStyle(.clear)  // visually invisible; AX still reads text
                 .font(.caption2)
                 .allowsHitTesting(false)
                 .accessibilityIdentifier("tosPlayer.stateLabel")
@@ -514,9 +515,7 @@ public struct TOSPlayerView: View {
                 vm.handleForeground()
             }
             #endif
-            .alert(item: $reportSegmentAlert) { item in
-                Alert(title: Text(item.title), message: Text(item.message), dismissButton: .default(Text("OK")))
-            }
+            .feedbackAlert(item: $reportSegmentAlert)
         )
     }
 
@@ -867,6 +866,7 @@ private struct YouTubeWebPlayerView: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(onWindowReady: onWindowReady) }
 
+    // NSLock protects the fired flag; observer setup and callbacks run on MainActor, with final cleanup in deinit.
     final class Coordinator: NSObject, @unchecked Sendable {
         let onWindowReady: (() -> Void)?
         private var observer: NSObjectProtocol?

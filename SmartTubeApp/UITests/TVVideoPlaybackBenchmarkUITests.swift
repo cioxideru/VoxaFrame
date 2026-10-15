@@ -107,7 +107,7 @@ final class TVVideoPlaybackBenchmarkUITests: XCTestCase {
         var timings: [(id: String, elapsed: Double, hot: Bool)] = [
             (videoIDs[0], coldElapsed, false)
         ]
-        print("[benchmark-tv] \(videoIDs[0])  cold  \(String(format: "%.2f", coldElapsed))s")
+        recordDiagnostic("[benchmark-tv] \(videoIDs[0])  cold  \(String(format: "%.2f", coldElapsed))s")
 
         // ── Videos 1…N: feed-based hot navigation ────────────────────────────
         // On tvOS, nextBtn focus navigation is unreliable via XCTest (the focusable
@@ -163,11 +163,11 @@ final class TVVideoPlaybackBenchmarkUITests: XCTestCase {
                 }
 
                 if readyResult != .completed {
-                    print(
+                    recordDiagnostic(
                         "[benchmark-tv] \(videoID)  hot   \(String(format: "%.2f", elapsed))s (readyToPlay not received — stalled?)"
                     )
                 } else {
-                    print("[benchmark-tv] \(videoID)  hot   \(String(format: "%.2f", elapsed))s")
+                    recordDiagnostic("[benchmark-tv] \(videoID)  hot   \(String(format: "%.2f", elapsed))s")
                 }
                 timings.append((videoID, elapsed, true))
             }
@@ -183,7 +183,7 @@ final class TVVideoPlaybackBenchmarkUITests: XCTestCase {
         }
         lines.append(separator)
         let report = lines.joined(separator: "\n")
-        print("[benchmark-tv] results:\n\(report)")
+        recordDiagnostic("[benchmark-tv] results:\n\(report)")
 
         let attachment = XCTAttachment(string: report)
         attachment.name = "TV per-video playback times"

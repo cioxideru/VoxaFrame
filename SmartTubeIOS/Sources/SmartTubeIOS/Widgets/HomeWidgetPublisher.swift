@@ -35,7 +35,7 @@ public enum HomeWidgetPublisher {
             WidgetCenter.shared.reloadTimelines(ofKind: HomeWidgetStore.widgetKind)
             return
         }
-        saveTask = Task.detached(priority: .utility) {
+        saveTask = Task(priority: .utility) {
             do {
                 guard try await store.save(widgetVideos) else { return }
                 widgetLog.notice("snapshot saved (\(widgetVideos.count) videos) — reloading widget")

@@ -325,12 +325,16 @@ struct AppEntry: App {
                     .onChange(of: authService.isSignedIn) { _, signedIn in
                         if !signedIn { SpotlightIndexer.shared.syncChannels([]) }
                     }
-                    .alert(item: $watchLaterAlert) { item in
-                        Alert(
-                            title: Text(item.title),
-                            message: Text(item.message),
-                            dismissButton: .default(Text("OK"))
+                    .alert(
+                        watchLaterAlert?.title ?? "",
+                        isPresented: Binding(
+                            get: { watchLaterAlert != nil },
+                            set: { if !$0 { watchLaterAlert = nil } }
                         )
+                    ) {
+                        Button("OK") { watchLaterAlert = nil }
+                    } message: {
+                        Text(watchLaterAlert?.message ?? "")
                     }
                 #else
                 withDownloads(root)
@@ -678,7 +682,7 @@ extension AppEntry {
         // Use fully-qualified os.Logger to avoid type ambiguity with SmartTubeIOS imports.
         let probeLog = os.Logger(subsystem: "com.void.smarttube.app", category: "BotGuardProbe")
         probeLog.notice("[BotGuardProbe] 🔵 starting probe for videoId=\(videoID)")
-        Task.detached {
+        Task {
             let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
             let resultURL = docs?.appendingPathComponent("bg_probe_result.txt")
             // Write "started" immediately so we know the task launched.

@@ -127,7 +127,7 @@ final class ShortsEmbedSrcSwapSpikeUITests: XCTestCase {
             XCTFail("could not parse statusSummary: '\(summary)'")
             return
         }
-        print("[shorts-spike] final status: \(summary)")
+        recordDiagnostic("[shorts-spike] final status: \(summary)")
 
         // 1. freshReady — 4 ready messages, each >0, consecutive entries differ.
         XCTAssertEqual(status.ready.count, 4, "expected 4 'ready' messages (1 per video), got \(status.ready.count)")

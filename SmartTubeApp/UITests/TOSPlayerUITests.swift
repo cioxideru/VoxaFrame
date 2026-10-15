@@ -137,7 +137,7 @@ final class TOSPlayerUITests: XCTestCase {
         }
 
         let cardID = card.identifier  // "video.card.<videoId>"
-        print("[TOS] clicking card: \(cardID)")
+        recordDiagnostic("[TOS] clicking card: \(cardID)")
 
         // ── 2. Register Darwin expectations BEFORE clicking ───────────────────
         // CRITICAL: The navigation often completes (and notifies) during the 1s
@@ -175,19 +175,19 @@ final class TOSPlayerUITests: XCTestCase {
             stateLabel.waitForExistence(timeout: 15),
             "tosPlayer.stateLabel did not appear — TOS player was not opened (check useTOSPlayerOnMac=true)"
         )
-        print("[TOS] ✓ player opened — stateLabel present")
+        recordDiagnostic("[TOS] ✓ player opened — stateLabel present")
 
         // ── 5. Collect diagnostic notification results ────────────────────────
         // Stage 0a: Was loadHTMLString even called?
         let loadResult = XCTWaiter().wait(for: [loadStartNote], timeout: 1)
-        print("[TOS] loadHTMLString called: \(loadResult == .completed ? "✓ YES" : "✗ NO (loadHTML never called)")")
+        recordDiagnostic("[TOS] loadHTMLString: \(loadResult == .completed ? "called" : "NOT called")")
 
         // Stage 0b: Nav finished — does WKNavigationDelegate.didFinish fire?
         let navResult = XCTWaiter().wait(for: [navNote], timeout: 5)
         if navResult == .completed {
-            print("[TOS] ✓ HTML navigation finished (WKNavigationDelegate.didFinish fired)")
+            recordDiagnostic("[TOS] ✓ HTML navigation finished (WKNavigationDelegate.didFinish fired)")
         } else {
-            print("[TOS] ✗ HTML navigation did NOT finish — didFinish not called within 6s of click")
+            recordDiagnostic("[TOS] ✗ HTML navigation did NOT finish — didFinish not called within 6s of click")
         }
 
         // Stage 1: Bridge check — does JS<->Swift messaging work at all?
@@ -197,9 +197,9 @@ final class TOSPlayerUITests: XCTestCase {
             ? XCTWaiter().wait(for: [bridgeNote], timeout: bridgeTimeout)
             : .timedOut
         if bridgeResult == .completed {
-            print("[TOS] ✓ JS<->Swift bridge confirmed working")
+            recordDiagnostic("[TOS] ✓ JS<->Swift bridge confirmed working")
         } else {
-            print("[TOS] ✗ JS<->Swift bridge NOT working — window.webkit.messageHandlers unavailable")
+            recordDiagnostic("[TOS] ✗ JS<->Swift bridge NOT working — window.webkit.messageHandlers unavailable")
         }
 
         // Stage 2: onPlayerReady — did the iframe_api script load?
@@ -209,9 +209,9 @@ final class TOSPlayerUITests: XCTestCase {
             ? XCTWaiter().wait(for: [readyNote], timeout: readyTimeout)
             : .timedOut
         if readyResult == .completed {
-            print("[TOS] ✓ onPlayerReady fired — iframe_api loaded")
+            recordDiagnostic("[TOS] ✓ onPlayerReady fired — iframe_api loaded")
         } else if bridgeResult == .completed {
-            print("[TOS] ✗ onPlayerReady did NOT fire within 30s — iframe_api script may have failed to load")
+            recordDiagnostic("[TOS] onPlayerReady absent after 30s — check iframe_api load")
         }
 
         // Stage 2.5: Tick poll — is startPolling() running?
@@ -220,9 +220,9 @@ final class TOSPlayerUITests: XCTestCase {
             ? XCTWaiter().wait(for: [tickStartNote], timeout: 3)
             : .timedOut
         if tickResult == .completed {
-            print("[TOS] ✓ tick poll received — startPolling() is running")
+            recordDiagnostic("[TOS] ✓ tick poll received — startPolling() is running")
         } else if readyResult == .completed {
-            print("[TOS] ✗ no tick received within 3s of ready — startPolling() may not be called")
+            recordDiagnostic("[TOS] ✗ no tick received within 3s of ready — startPolling() may not be called")
         }
 
         // Stage 3: playing state
@@ -236,7 +236,7 @@ final class TOSPlayerUITests: XCTestCase {
         let isPlaying: Bool
         if playResult == .completed {
             isPlaying = true
-            print("[TOS] ✓ Darwin notification received — player is playing")
+            recordDiagnostic("[TOS] ✓ Darwin notification received — player is playing")
         } else {
             // Darwin notification timed out — check AX state (label or value).
             // On macOS 26, SwiftUI Text exposes text content via AXValue (not AXTitle).
@@ -256,7 +256,7 @@ final class TOSPlayerUITests: XCTestCase {
                 seenEnded ? "ended(0)" : nil,
             ]
             .compactMap { $0 }.joined(separator: ",")
-            print(
+            recordDiagnostic(
                 "[TOS] playing notification timed out — stateLabel='\(stateStr)' states=[\(statesSeen.isEmpty ? "none — stuck at -1/unstarted" : statesSeen)]"
             )
         }
@@ -272,7 +272,7 @@ final class TOSPlayerUITests: XCTestCase {
             stateLabel.exists,
             "tosPlayer.stateLabel disappeared during playback — possible crash or view re-render"
         )
-        print("[TOS] ✓ 5 s of playback — no crash")
+        recordDiagnostic("[TOS] ✓ 5 s of playback — no crash")
 
         // ── 7. Close the player via Esc — the only dismissal path ────────────
         // (see TOSPlayerView body's .onExitCommand doc comment for why there is
@@ -286,7 +286,7 @@ final class TOSPlayerUITests: XCTestCase {
             closedResult, .completed,
             "tosPlayer.stateLabel still visible after Esc — player did not dismiss"
         )
-        print("[TOS] ✓ player dismissed — test complete")
+        recordDiagnostic("[TOS] ✓ player dismissed — test complete")
     }
 
     // MARK: - Pause-on-dismiss test
@@ -374,7 +374,7 @@ final class TOSPlayerUITests: XCTestCase {
         guard let card = firstNonShortCard(from: cards, maxCheck: 20) else {
             throw XCTSkip("No non-short video card found in first 20 cards")
         }
-        print("[TOS-pauseondismiss] clicking card: \(card.identifier)")
+        recordDiagnostic("[TOS-pauseondismiss] clicking card: \(card.identifier)")
 
         // ── 2. Register Darwin expectations BEFORE clicking — notifications can ──
         //      fire during the open animation (see smoke test's comment for why).
@@ -395,7 +395,7 @@ final class TOSPlayerUITests: XCTestCase {
             stateLabel.waitForExistence(timeout: 15),
             "tosPlayer.stateLabel did not appear — TOS player was not opened"
         )
-        print("[TOS-pauseondismiss] ✓ player opened")
+        recordDiagnostic("[TOS-pauseondismiss] ✓ player opened")
 
         guard XCTWaiter().wait(for: [readyNote], timeout: 30) == .completed else {
             throw XCTSkip("onPlayerReady never fired — iframe_api may have failed to load (network)")
@@ -403,7 +403,7 @@ final class TOSPlayerUITests: XCTestCase {
         guard XCTWaiter().wait(for: [playingNote], timeout: 15) == .completed else {
             throw XCTSkip("player never reached 'playing' — autoplay blocked or network too slow to exercise dismissal")
         }
-        print("[TOS-pauseondismiss] ✓ playing — letting it play briefly before dismissing")
+        recordDiagnostic("[TOS-pauseondismiss] ✓ playing — letting it play briefly before dismissing")
         // Let real playback accumulate so onDisappear's logged currentTime is
         // unambiguously non-zero (proof the thing we're pausing was actually live).
         Thread.sleep(forTimeInterval: 3)
@@ -425,7 +425,7 @@ final class TOSPlayerUITests: XCTestCase {
             XCTWaiter().wait(for: [dismissExpect], timeout: 5), .completed,
             "tosPlayer.stateLabel still visible after Esc — player did not dismiss"
         )
-        print("[TOS-pauseondismiss] ✓ player dismissed")
+        recordDiagnostic("[TOS-pauseondismiss] ✓ player dismissed")
 
         // ── 6. THE ASSERTION: did dismissal actually stop playback? ──────────────
         // TOSPlayerView.onDisappear → vm.pause() → WKWebView.pauseAllMediaPlayback()
@@ -449,7 +449,8 @@ final class TOSPlayerUITests: XCTestCase {
                 + "WKWebView.pauseAllMediaPlayback() rather than the eval-based "
                 + "document.querySelector('video') no-op (see TOSPlayerViewModel.pause())."
         )
-        print("[TOS-pauseondismiss] ✓ pausedAllMedia notification received — playback actually stopped on dismiss")
+        recordDiagnostic(
+            "[TOS-pauseondismiss] ✓ pausedAllMedia notification received — playback actually stopped on dismiss")
     }
 
     // MARK: - Speed picker → setPlaybackRate cross-frame fix test
@@ -514,7 +515,7 @@ final class TOSPlayerUITests: XCTestCase {
         guard let card = firstNonShortCard(from: cards, maxCheck: 20) else {
             throw XCTSkip("No non-short video card found in first 20 cards")
         }
-        print("[TOS-speedpicker] clicking card: \(card.identifier)")
+        recordDiagnostic("[TOS-speedpicker] clicking card: \(card.identifier)")
 
         // ── 2. Register Darwin expectations BEFORE clicking (see smoke test for why) ─
         let readyNote = XCTDarwinNotificationExpectation(notificationName: "com.void.smarttube.tosplayer.ready")
@@ -533,14 +534,14 @@ final class TOSPlayerUITests: XCTestCase {
             stateLabel.waitForExistence(timeout: 15),
             "tosPlayer.stateLabel did not appear — TOS player was not opened"
         )
-        print("[TOS-speedpicker] ✓ player opened")
+        recordDiagnostic("[TOS-speedpicker] ✓ player opened")
 
         // "ready" is when `embedFrameInfo` gets captured (see handleScriptMessage's
         // "ready" case) — the precondition for setPlaybackRate to reach the <video>.
         guard XCTWaiter().wait(for: [readyNote], timeout: 30) == .completed else {
             throw XCTSkip("onPlayerReady never fired — iframe_api may have failed to load (network)")
         }
-        print("[TOS-speedpicker] ✓ ready — embedFrameInfo should now be captured")
+        recordDiagnostic("[TOS-speedpicker] ✓ ready — embedFrameInfo should now be captured")
 
         // ── 4. Open the speed menu and pick a non-default speed ──────────────────
         // Confirmed via a probe run's "Check for interrupting elements affecting
@@ -555,7 +556,7 @@ final class TOSPlayerUITests: XCTestCase {
         // confirm where XCUITest thinks the button is BEFORE clicking, so a future
         // "menu never opened" failure can be told apart from "menu opened but its
         // items use an AX type/label this query doesn't match".
-        print("[TOS-speedpicker] speedButton frame=\(speedButton.frame) hittable=\(speedButton.isHittable)")
+        recordDiagnostic("[TOS-speedpicker] speedButton frame=\(speedButton.frame) hittable=\(speedButton.isHittable)")
         speedButton.click()
 
         // SwiftUI `Menu` items surface as `.menuItems` in the macOS AX tree — matched
@@ -585,11 +586,11 @@ final class TOSPlayerUITests: XCTestCase {
                     + "staticTexts with '×': \(staticLabelsWithX)")
             return
         }
-        print(
+        recordDiagnostic(
             "[TOS-speedpicker] found '1.5×' option — type=\(speedOption.elementType.rawValue) frame=\(speedOption.frame)"
         )
         speedOption.click()
-        print("[TOS-speedpicker] ✓ selected 1.5× — vm.setPlaybackRate(1.5) should have fired")
+        recordDiagnostic("[TOS-speedpicker] ✓ selected 1.5× — vm.setPlaybackRate(1.5) should have fired")
 
         // setPlaybackRate's `eval` completion handler logs asynchronously — give it a
         // moment to land in the device log before we close (and the process tears down).
@@ -605,7 +606,7 @@ final class TOSPlayerUITests: XCTestCase {
             XCTWaiter().wait(for: [dismissExpect], timeout: 5), .completed,
             "tosPlayer.stateLabel still visible after Esc — player did not dismiss"
         )
-        print(
+        recordDiagnostic(
             "[TOS-speedpicker] ✓ player dismissed — test complete (inspect device log for "
                 + "'[eval] setPlaybackRate(1.5) result:' — found should be 1, not 0)")
     }
@@ -651,7 +652,7 @@ final class TOSPlayerUITests: XCTestCase {
         guard let card = firstNonShortCard(from: cards, maxCheck: 20) else {
             throw XCTSkip("No non-short video card found in first 20 cards")
         }
-        print("[TOS-sponsorskip] clicking card: \(card.identifier)")
+        recordDiagnostic("[TOS-sponsorskip] clicking card: \(card.identifier)")
 
         // ── 2. Register Darwin expectations BEFORE clicking (see smoke test above ─
         //      for why: notifications can fire during the open animation).
@@ -673,14 +674,14 @@ final class TOSPlayerUITests: XCTestCase {
             stateLabel.waitForExistence(timeout: 15),
             "tosPlayer.stateLabel did not appear — TOS player was not opened"
         )
-        print("[TOS-sponsorskip] ✓ player opened")
+        recordDiagnostic("[TOS-sponsorskip] ✓ player opened")
 
         // ── 4. "ready" is when fetchSponsorSegments() runs and the injection seam ─
         //      applies the synthetic segment (see TOSPlayerViewModel "ready" handler).
         guard XCTWaiter().wait(for: [readyNote], timeout: 30) == .completed else {
             throw XCTSkip("onPlayerReady never fired — iframe_api may have failed to load (network)")
         }
-        print("[TOS-sponsorskip] ✓ ready — synthetic segment [2–6]s should now be applied")
+        recordDiagnostic("[TOS-sponsorskip] ✓ ready — synthetic segment [2–6]s should now be applied")
 
         _ = XCTWaiter().wait(for: [playingNote], timeout: 15)
 
@@ -698,7 +699,7 @@ final class TOSPlayerUITests: XCTestCase {
                 + "'[SponsorBlock] UI-TEST INJECT' (segment applied?) and 'skip TRIGGER' (guard "
                 + "conditions in checkSponsorSkip — sponsorBlockEnabled / activeSkipEnd / sponsorAction)."
         )
-        print("[TOS-sponsorskip] ✓ auto-skip notification received — checkSponsorSkip fired seekTo()")
+        recordDiagnostic("[TOS-sponsorskip] ✓ auto-skip notification received — checkSponsorSkip fired seekTo()")
 
         // ── 6. Player survives the skip — no crash / re-render ───────────────────
         // Sleep long enough for `logSkipLanding`'s "after" log to actually fire and
@@ -716,7 +717,7 @@ final class TOSPlayerUITests: XCTestCase {
             stateLabel.exists,
             "tosPlayer.stateLabel disappeared after the auto-skip — possible crash or view re-render"
         )
-        print("[TOS-sponsorskip] ✓ player survived the skip — no crash")
+        recordDiagnostic("[TOS-sponsorskip] ✓ player survived the skip — no crash")
 
         // ── 7. Close the player via Esc — the only dismissal path (see ───────────
         //      TOSPlayerView body's .onExitCommand doc comment).
@@ -728,7 +729,7 @@ final class TOSPlayerUITests: XCTestCase {
             XCTWaiter().wait(for: [dismissExpect], timeout: 5), .completed,
             "tosPlayer.stateLabel still visible after Esc — player did not dismiss"
         )
-        print(
+        recordDiagnostic(
             "[TOS-sponsorskip] ✓ player dismissed — test complete (inspect device log for skip TRIGGER/LANDED before/after times)"
         )
     }

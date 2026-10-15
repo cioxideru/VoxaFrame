@@ -119,7 +119,7 @@ final class MacVideoPlaybackBenchmarkUITests: XCTestCase {
         var timings: [(id: String, elapsed: Double, hot: Bool)] = [
             (videoIDs[0], coldElapsed, false)
         ]
-        print("[benchmark-mac] \(videoIDs[0])  cold  \(String(format: "%.2f", coldElapsed))s")
+        recordDiagnostic("[benchmark-mac] \(videoIDs[0])  cold  \(String(format: "%.2f", coldElapsed))s")
 
         // ── Videos 1…N: tap nextBtn, time each ───────────────────────────────
         for index in 1..<videoIDs.count {
@@ -194,7 +194,7 @@ final class MacVideoPlaybackBenchmarkUITests: XCTestCase {
                 }
 
                 timings.append((videoID, elapsed, true))
-                print("[benchmark-mac] \(videoID)  hot   \(String(format: "%.2f", elapsed))s")
+                recordDiagnostic("[benchmark-mac] \(videoID)  hot   \(String(format: "%.2f", elapsed))s")
             }
         }
 
@@ -208,7 +208,7 @@ final class MacVideoPlaybackBenchmarkUITests: XCTestCase {
         }
         lines.append(separator)
         let report = lines.joined(separator: "\n")
-        print("[benchmark-mac] results:\n\(report)")
+        recordDiagnostic("[benchmark-mac] results:\n\(report)")
 
         let attachment = XCTAttachment(string: report)
         attachment.name = "macOS per-video playback times"

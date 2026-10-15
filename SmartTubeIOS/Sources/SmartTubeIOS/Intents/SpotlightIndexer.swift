@@ -87,34 +87,38 @@ public final class SpotlightIndexer {
         guard !removed.isEmpty || !added.isEmpty else { return }
         defaults.set(Array(wanted), forKey: key)
 
-        Task.detached(priority: .utility) {
-            // CSSearchableIndex isn't Sendable, so the task takes its own reference.
-            let index = CSSearchableIndex.default()
-            if !removed.isEmpty {
-                try? await index.deleteSearchableItems(withIdentifiers: removed)
+        Task(priority: .utility) {
+            await Self.updateIndex(domain: domain, removed: removed, added: added)
+        }
+    }
+
+    nonisolated private static func updateIndex(domain: String, removed: [String], added: [Item]) async {
+        // Keep image decoding off MainActor and non-Sendable Spotlight objects within this worker.
+        let index = CSSearchableIndex.default()
+        if !removed.isEmpty {
+            try? await index.deleteSearchableItems(withIdentifiers: removed)
+        }
+        guard !added.isEmpty else { return }
+        var searchable: [CSSearchableItem] = []
+        for item in added {
+            let attributes = CSSearchableItemAttributeSet(contentType: .content)
+            attributes.title = item.title
+            attributes.contentDescription = item.detail
+            attributes.keywords = item.keywords + ["SmartTube", "YouTube"]
+            if let url = item.thumbnail,
+                let (data, _) = try? await URLSession.shared.data(from: url),
+                let jpeg = HomeWidgetStore.downscaledJPEG(data, maxWidth: 240)
+            {
+                attributes.thumbnailData = jpeg
             }
-            guard !added.isEmpty else { return }
-            var searchable: [CSSearchableItem] = []
-            for item in added {
-                let attributes = CSSearchableItemAttributeSet(contentType: .content)
-                attributes.title = item.title
-                attributes.contentDescription = item.detail
-                attributes.keywords = item.keywords + ["SmartTube", "YouTube"]
-                if let url = item.thumbnail,
-                    let (data, _) = try? await URLSession.shared.data(from: url),
-                    let jpeg = HomeWidgetStore.downscaledJPEG(data, maxWidth: 240)
-                {
-                    attributes.thumbnailData = jpeg
-                }
-                searchable.append(
-                    CSSearchableItem(uniqueIdentifier: item.id, domainIdentifier: domain, attributeSet: attributes))
-            }
-            do {
-                try await index.indexSearchableItems(searchable)
-                spotlightLog.notice("\(domain, privacy: .public): +\(added.count) −\(removed.count)")
-            } catch {
-                spotlightLog.error("indexing failed: \(error.localizedDescription, privacy: .public)")
-            }
+            searchable.append(
+                CSSearchableItem(uniqueIdentifier: item.id, domainIdentifier: domain, attributeSet: attributes))
+        }
+        do {
+            try await index.indexSearchableItems(searchable)
+            spotlightLog.notice("\(domain, privacy: .public): +\(added.count) −\(removed.count)")
+        } catch {
+            spotlightLog.error("indexing failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

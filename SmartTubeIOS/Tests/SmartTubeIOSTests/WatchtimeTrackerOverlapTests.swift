@@ -12,6 +12,7 @@ import Testing
 
 private final class StatsCountingURLProtocol: URLProtocol, @unchecked Sendable {
     private static let lock = NSLock()
+    // Every read, append and reset is protected by the static NSLock above.
     nonisolated(unsafe) private static var urls: [URL] = []
 
     static func reset() { lock.withLock { urls = [] } }

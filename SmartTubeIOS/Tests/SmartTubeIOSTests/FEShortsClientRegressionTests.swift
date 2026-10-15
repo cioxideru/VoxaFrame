@@ -24,6 +24,7 @@ import Testing
 /// Returns HTTP 400 so the caller's network path fails fast.
 private final class BodyCapturingURLProtocol: URLProtocol, @unchecked Sendable {
 
+    // The serialized suite resets before the request and reads after await; sequential callbacks capture only the first body.
     nonisolated(unsafe) static var capturedBody: Data?
 
     override class func canInit(with request: URLRequest) -> Bool {

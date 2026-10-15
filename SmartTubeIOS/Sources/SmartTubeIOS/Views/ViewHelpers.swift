@@ -117,6 +117,22 @@ struct DownloadAlertItem: Identifiable {
     let message: String
 }
 
+extension View {
+    func feedbackAlert(item: Binding<DownloadAlertItem?>) -> some View {
+        alert(
+            item.wrappedValue?.title ?? "",
+            isPresented: Binding(
+                get: { item.wrappedValue != nil },
+                set: { if !$0 { item.wrappedValue = nil } }
+            )
+        ) {
+            Button("OK") { item.wrappedValue = nil }
+        } message: {
+            Text(item.wrappedValue?.message ?? "")
+        }
+    }
+}
+
 // MARK: - AppSymbol
 //
 // Single source of truth for SF Symbol names used across the app.

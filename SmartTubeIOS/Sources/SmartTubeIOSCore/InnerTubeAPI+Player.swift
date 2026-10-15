@@ -315,6 +315,7 @@ extension InnerTubeAPI {
                     return urls
                 }
             } catch {
+                tubeLog.debug("History tracking unavailable via \(client): \(error)")
             }
         }
         return nil
@@ -363,7 +364,7 @@ extension InnerTubeAPI {
         {
             tubeLog.notice("D-16 SABR URL (first 200): \(sabrStr.prefix(200), privacy: .public)")
             let capturedToken = bearerToken
-            Task.detached {
+            Task {
                 var req = URLRequest(url: sabrURL)
                 req.setValue("Bearer \(capturedToken)", forHTTPHeaderField: "Authorization")
                 req.setValue(InnerTubeClients.TV.userAgent, forHTTPHeaderField: "User-Agent")

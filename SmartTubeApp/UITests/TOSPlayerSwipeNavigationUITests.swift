@@ -159,7 +159,7 @@ final class TOSPlayerSwipeNavigationUITests: XCTestCase {
             throw XCTSkip(
                 "onPlayerReady never fired within 30 s — IFrame embed failed to load (network/YouTube availability)")
         }
-        print("[TOS-swipe] ✓ first video ready")
+        recordDiagnostic("[TOS-swipe] ✓ first video ready")
 
         // Don't hard-require "playing" — buffering is enough to proceed, and slow
         // CI network shouldn't fail this test on a transient stall.
@@ -173,7 +173,7 @@ final class TOSPlayerSwipeNavigationUITests: XCTestCase {
         let secondReady = XCTDarwinNotificationExpectation(notificationName: "com.void.smarttube.tosplayer.ready")
 
         swipeLeft()
-        print("[TOS-swipe] swiped left")
+        recordDiagnostic("[TOS-swipe] swiped left")
 
         let secondReadyResult = XCTWaiter().wait(for: [secondReady], timeout: 20)
         guard secondReadyResult == .completed else {
@@ -181,7 +181,7 @@ final class TOSPlayerSwipeNavigationUITests: XCTestCase {
                 "No second 'ready' notification after swipe left within 20 s — related videos likely did not populate in time (network-dependent)"
             )
         }
-        print("[TOS-swipe] ✓ second video ready — swipe left advanced to next video")
+        recordDiagnostic("[TOS-swipe] ✓ second video ready — swipe left advanced to next video")
 
         // The new embed should reach playing/buffering, same as the smoke test.
         let secondPlaying = XCTDarwinNotificationExpectation(notificationName: "com.void.smarttube.tosplayer.playing")
@@ -257,7 +257,7 @@ final class TOSPlayerSwipeNavigationUITests: XCTestCase {
                 "No second 'ready' notification after swipe left within 20 s — related videos likely did not populate in time (network-dependent)"
             )
         }
-        print("[TOS-swipe] ✓ swiped left to second video")
+        recordDiagnostic("[TOS-swipe] ✓ swiped left to second video")
 
         // Give the second embed a moment to settle before swiping back.
         Thread.sleep(forTimeInterval: 2.0)
@@ -269,7 +269,7 @@ final class TOSPlayerSwipeNavigationUITests: XCTestCase {
                 "No third 'ready' notification after swipe right within 20 s — history-based back-navigation is network/timing-dependent"
             )
         }
-        print("[TOS-swipe] ✓ swiped right back to original video")
+        recordDiagnostic("[TOS-swipe] ✓ swiped right back to original video")
 
         XCTAssertTrue(app.windows.firstMatch.exists, "App should still be running after swipe left then right")
     }

@@ -183,8 +183,6 @@ struct ShortsCardView: View {
             .disabled(downloadService.state.isActive)
             #endif
         }
-        .alert(item: $watchLaterAlert) { item in
-            Alert(title: Text(item.title), message: Text(item.message), dismissButton: .default(Text("OK")))
-        }
+        .feedbackAlert(item: $watchLaterAlert)
     }
 }

@@ -63,11 +63,18 @@ extension PlaybackViewModel {
     /// video height the screen can actually show for standard 16:9 YouTube content.
     static func displayMaxVideoHeight() -> Int {
         #if canImport(UIKit)
-        let bounds = UIScreen.main.nativeBounds
-        return Int(max(bounds.width, bounds.height))
-        #else
-        return 1080  // Conservative fallback for non-UIKit targets
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let scene =
+            scenes.first(where: { scene in
+                scene.activationState == .foregroundActive && scene.windows.contains(where: \.isKeyWindow)
+            })
+            ?? scenes.first(where: { $0.activationState == .foregroundActive })
+            ?? scenes.first
+        if let bounds = scene?.screen.nativeBounds {
+            return Int(max(bounds.width, bounds.height))
+        }
         #endif
+        return 1080  // Conservative fallback when no scene or UIKit is available
     }
 
     // MARK: - HLS n-descrambling (simulator only)

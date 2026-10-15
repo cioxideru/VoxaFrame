@@ -11,7 +11,9 @@ import Testing
 // playlistId (from fetchUserPlaylists()), which the new PlaylistPickerSheet UI drives.
 
 private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
+    // The serialized suite installs fixtures before awaiting requests; callbacks only read them.
     nonisolated(unsafe) static var responses: [String: (statusCode: Int, body: Data)] = [:]
+    // URLSession callbacks write before completing each request; the serialized suite reads only after await.
     nonisolated(unsafe) static var capturedBodies: [String: Data] = [:]
 
     override static func canInit(with request: URLRequest) -> Bool { true }

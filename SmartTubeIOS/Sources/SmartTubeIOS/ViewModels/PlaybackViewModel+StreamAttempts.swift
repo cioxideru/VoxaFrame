@@ -330,7 +330,7 @@ extension PlaybackViewModel {
 
     private func probeHLSVariant(_ url: URL, label: String) {
         let capturedAuthToken = currentAuthToken
-        Task.detached {
+        Task {
             var diagReq = URLRequest(url: url)
             diagReq.setValue(
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15,gzip(gfe)",

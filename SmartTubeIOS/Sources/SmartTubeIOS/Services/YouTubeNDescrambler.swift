@@ -146,6 +146,7 @@ actor YouTubeNDescrambler {
 
     /// Finds the yt-dlp EJS vendor file under Homebrew using `posix_spawn`/`find`.
     private func findSolverFile(_ filename: String) async -> String? {
+        // ast-grep-ignore: task-detached — Blocking subprocess I/O must leave the descrambler actor free for other requests.
         return await Task.detached(priority: .background) { [filename] in
             let args = [
                 "/usr/bin/find", "/opt/homebrew", "-name", filename,
@@ -161,6 +162,7 @@ actor YouTubeNDescrambler {
     /// Writes the solver script to a temp file and invokes Deno via `posix_spawn`.
     private func runDeno(script: String, scrambledKey: String) async -> String? {
         let log = self.log
+        // ast-grep-ignore: task-detached — Deno uses blocking pipe reads and waitpid; only immutable inputs cross this boundary.
         return await Task.detached(priority: .userInitiated) { [script, scrambledKey] in
             // Write script to a temp file; avoids the stdin-deadlock risk with large payloads.
             let scriptPath = "/tmp/yt_n_solver_\(Int(Date().timeIntervalSince1970)).ts"

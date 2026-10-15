@@ -120,9 +120,9 @@ final class TVWKHLSReplayRegressionUITests: XCTestCase {
             let elapsed = Date().timeIntervalSince(tapTime)
             let label = cycle == 1 ? "cold" : "hot "
             if readyResult == .completed {
-                print("[WKHLSReplay] cycle \(cycle)  \(label)  \(String(format: "%.2f", elapsed))s")
+                recordDiagnostic("[WKHLSReplay] cycle \(cycle)  \(label)  \(String(format: "%.2f", elapsed))s")
             } else {
-                print(
+                recordDiagnostic(
                     "[WKHLSReplay] cycle \(cycle)  \(label)  \(String(format: "%.2f", elapsed))s (readyToPlay not received within 35 s)"
                 )
             }
@@ -188,15 +188,15 @@ final class TVWKHLSReplayRegressionUITests: XCTestCase {
             // WKWebView extraction (~2.5 s) with margin.
             Thread.sleep(forTimeInterval: 6.0)
 
-            print("[WKHLSReplay] cycle \(cycle): stop complete — wkHLS cache evicted")
+            recordDiagnostic("[WKHLSReplay] cycle \(cycle): stop complete — wkHLS cache evicted")
         }
 
         let timingSummary =
             replayTimings
             .map { "c\($0.cycle)=\(String(format: "%.2f", $0.elapsed))s" }
             .joined(separator: " ")
-        print("[WKHLSReplay] results: \(timingSummary)")
-        print("[WKHLSReplay] all \(totalCycles) cycles passed — no stale-session 403 regression")
+        recordDiagnostic("[WKHLSReplay] results: \(timingSummary)")
+        recordDiagnostic("[WKHLSReplay] all \(totalCycles) cycles passed — no stale-session 403 regression")
     }
 
     // MARK: - Helpers

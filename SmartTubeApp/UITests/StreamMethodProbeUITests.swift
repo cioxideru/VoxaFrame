@@ -162,7 +162,7 @@ final class StreamMethodProbeUITests: XCTestCase {
         let probeResultEl = app.staticTexts[AccessibilityID.playerProbeStreamResult].firstMatch
         let _ = probeResultEl.waitForExistence(timeout: 8)
         let resolution = probeResultEl.exists ? probeResultEl.label : "?"
-        print("[probe-result] \(method)/\(videoId): \(resolution)")
+        recordDiagnostic("[probe-result] \(method)/\(videoId): \(resolution)")
         XCTContext.runActivity(named: "stream: \(resolution)") { _ in }
 
         XCTAssertTrue(playReady, "[\(method)/\(videoId)] play button never became enabled after title appeared")

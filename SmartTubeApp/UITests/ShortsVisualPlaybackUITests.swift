@@ -199,7 +199,7 @@ final class ShortsVisualPlaybackUITests: XCTestCase {
     /// logs the result (see `isRunningOnSimulator`).
     private func assertRendersOrSkipOnSimulator(_ brightness: CGFloat, context: String, threshold: CGFloat = 8) {
         guard !isRunningOnSimulator else {
-            print("[shorts-visual] SKIP (Simulator, known limitation) — \(context) brightness=\(brightness)")
+            recordDiagnostic("[shorts-visual] SKIP (Simulator, known limitation) — \(context) brightness=\(brightness)")
             return
         }
         XCTAssertGreaterThan(
@@ -217,7 +217,7 @@ final class ShortsVisualPlaybackUITests: XCTestCase {
     /// while the on-screen content was actually black.
     func testShortsRenderVisibleContentAcrossSwipes() throws {
         let opening = try openFirstShort()
-        print("[shorts-visual] opened player at '\(opening)'")
+        recordDiagnostic("[shorts-visual] opened player at '\(opening)'")
 
         let total = totalCount(from: opening)
         guard let total, total >= 4 else {
@@ -232,7 +232,7 @@ final class ShortsVisualPlaybackUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1.0)
         let b0 = captureAndMeasureBrightness(name: "short-0-after-ready")
         brightnessResults.append((0, b0))
-        print("[shorts-visual] short 0 — center brightness=\(b0)")
+        recordDiagnostic("[shorts-visual] short 0 — center brightness=\(b0)")
 
         for shortNum in 1...3 {
             swipePlayerUp()
@@ -242,7 +242,7 @@ final class ShortsVisualPlaybackUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 1.0)
             let b = captureAndMeasureBrightness(name: "short-\(shortNum)-after-ready")
             brightnessResults.append((shortNum, b))
-            print("[shorts-visual] short \(shortNum) — center brightness=\(b)")
+            recordDiagnostic("[shorts-visual] short \(shortNum) — center brightness=\(b)")
         }
 
         for (short, brightness) in brightnessResults {
@@ -256,12 +256,12 @@ final class ShortsVisualPlaybackUITests: XCTestCase {
     /// not pass/fail. Used while investigating #275.
     func testShortsBrightnessOverTimeOnFirstShort() throws {
         let opening = try openFirstShort()
-        print("[shorts-visual-time] opened player at '\(opening)'")
+        recordDiagnostic("[shorts-visual-time] opened player at '\(opening)'")
         XCTAssertTrue(waitForLoadingCoverToClear(), "shorts.loadingCover never cleared — vm.isReady stuck false")
 
         for second in 0...6 {
             let b = captureAndMeasureBrightness(name: "t+\(second)s")
-            print("[shorts-visual-time] t+\(second)s — center brightness=\(b)")
+            recordDiagnostic("[shorts-visual-time] t+\(second)s — center brightness=\(b)")
             Thread.sleep(forTimeInterval: 1.0)
         }
     }
@@ -273,7 +273,7 @@ final class ShortsVisualPlaybackUITests: XCTestCase {
     /// black short doesn't get masked by the others succeeding.
     func testHomeFirstShortPlaysAcrossThreeSwipes() throws {
         let opening = try openFirstShort()
-        print("[shorts-home-swipe] opened player at '\(opening)'")
+        recordDiagnostic("[shorts-home-swipe] opened player at '\(opening)'")
 
         var results: [(swipe: Int, brightness: CGFloat)] = []
 
@@ -282,7 +282,7 @@ final class ShortsVisualPlaybackUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1.0)
         let b0 = captureAndMeasureBrightness(name: "home-short-0")
         results.append((0, b0))
-        print("[shorts-home-swipe] short 0 — center brightness=\(b0)")
+        recordDiagnostic("[shorts-home-swipe] short 0 — center brightness=\(b0)")
 
         for swipeNum in 1...3 {
             swipePlayerUp()
@@ -290,7 +290,8 @@ final class ShortsVisualPlaybackUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 1.0)
             let b = captureAndMeasureBrightness(name: "home-short-\(swipeNum)")
             results.append((swipeNum, b))
-            print("[shorts-home-swipe] swipe \(swipeNum) — loadingCoverCleared=\(coverCleared) center brightness=\(b)")
+            recordDiagnostic(
+                "[shorts-home-swipe] swipe \(swipeNum) — loadingCoverCleared=\(coverCleared) center brightness=\(b)")
         }
 
         for (swipeNum, brightness) in results {

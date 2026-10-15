@@ -205,6 +205,14 @@ enum UITestHelpers {
 
 extension XCTestCase {
 
+    /// Keeps diagnostic messages in the result bundle, including skipped tests and benchmark timings.
+    func recordDiagnostic(_ message: String) {
+        let attachment = XCTAttachment(string: message)
+        attachment.name = String(message.prefix(120))
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     /// Captures a screenshot and accessibility-tree dump, attaches both with
     /// `keepAlways` lifetime, then throws `XCTSkip` with the given reason.
     ///
@@ -263,15 +271,14 @@ extension XCTestCase {
         in app: XCUIApplication,
         timeout: TimeInterval
     ) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        let pollInterval: TimeInterval = 0.25
-        repeat {
+        let predicate = NSPredicate { _, _ in
             guard app.state == .runningForeground || app.state == .runningBackground else {
-                return false
+                return true
             }
-            if element.exists { return true }
-            Thread.sleep(forTimeInterval: pollInterval)
-        } while Date() < deadline
+            return element.exists
+        }
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
+        _ = XCTWaiter().wait(for: [expectation], timeout: timeout)
         guard app.state == .runningForeground || app.state == .runningBackground else {
             return false
         }

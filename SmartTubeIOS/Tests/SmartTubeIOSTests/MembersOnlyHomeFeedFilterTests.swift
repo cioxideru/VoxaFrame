@@ -52,28 +52,25 @@ struct MembersOnlyHomeFeedFilterTests {
             secondaryItems.append(["lineItemRenderer": ["text": ["simpleText": text]]])
         }
 
-        var metadataDict: [String: Any] = [
-            "tileMetadataRenderer": [
-                "title": ["simpleText": "Test Video"],
-                "lines": [
-                    // Line 0: channel name
-                    [
-                        "lineRenderer": [
-                            "items": [
-                                ["lineItemRenderer": ["text": ["simpleText": "Test Channel"]]]
-                            ]
+        var tileMetaRenderer: [String: Any] = [
+            "title": ["simpleText": "Test Video"],
+            "lines": [
+                // Line 0: channel name
+                [
+                    "lineRenderer": [
+                        "items": [
+                            ["lineItemRenderer": ["text": ["simpleText": "Test Channel"]]]
                         ]
-                    ],
-                    // Line 1: secondary info (views, date, or members-only text)
-                    ["lineRenderer": ["items": secondaryItems]],
+                    ]
                 ],
-            ]
+                // Line 1: secondary info (views, date, or members-only text)
+                ["lineRenderer": ["items": secondaryItems]],
+            ],
         ]
         if !badges.isEmpty {
-            var tileMetaRenderer = (metadataDict["tileMetadataRenderer"] as! [String: Any])
             tileMetaRenderer["badges"] = badges
-            metadataDict["tileMetadataRenderer"] = tileMetaRenderer
         }
+        let metadataDict: [String: Any] = ["tileMetadataRenderer": tileMetaRenderer]
 
         return [
             "contentType": "TILE_CONTENT_TYPE_VIDEO",

@@ -79,7 +79,12 @@ struct PlayerAVLayerView: UIViewRepresentable {
 
     final class _PlayerUIView: UIView {
         override static var layerClass: AnyClass { AVPlayerLayer.self }
-        var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+        var playerLayer: AVPlayerLayer {
+            guard let playerLayer = layer as? AVPlayerLayer else {
+                fatalError("layerClass must create an AVPlayerLayer")
+            }
+            return playerLayer
+        }
         var onLayerReady: ((AVPlayerLayer) -> Void)?
         private var didFireCallback = false
 
@@ -310,13 +315,14 @@ struct PlayerNSLayerView: NSViewRepresentable {
     }
 
     final class _PlayerNSView: NSView {
+        let playerLayer = AVPlayerLayer()
+
         override init(frame: NSRect) {
             super.init(frame: frame)
             wantsLayer = true
-            layer = AVPlayerLayer()
+            layer = playerLayer
         }
         required init?(coder: NSCoder) { fatalError("init(coder:) not supported") }
-        var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
 
         override func layout() {
             super.layout()

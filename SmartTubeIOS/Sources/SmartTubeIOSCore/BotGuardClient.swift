@@ -618,6 +618,7 @@ public final class BotGuardClient: PoTokenProvider, @unchecked Sendable {
             box.value = .success((integrityToken, websafeFallback, ttlSeconds))
         }.resume()
 
+        // ast-grep-ignore: blocking-wait — Only jsQueue blocks to retain JSContext ownership; URLSession signals on its own queue.
         sema.wait()
         return try box.value!.get()
     }

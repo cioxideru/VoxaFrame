@@ -20,7 +20,7 @@ extension PlaybackViewModel {
         // Pre-warm BotGuardWebViewRunner for rqh=1 queue videos — fire once, no-ops when ready.
         #if canImport(WebKit)
         if !BotGuardWebViewRunner.shared.isReady {
-            Task.detached(priority: .background) {
+            Task(priority: .background) {
                 await BotGuardWebViewRunner.shared.prepare()
             }
         }

@@ -114,14 +114,14 @@ final class PlayerDoubleTapUITests: XCTestCase {
 
     /// Double-tapping the left third must show the seek-back toast (e.g. "← 10s").
     func testDoubleTapLeftZoneShowsSeekBackToast() throws {
-        print("▶ [step] openPlayer")
+        recordDiagnostic("▶ [step] openPlayer")
         openPlayer()
-        print("▶ [step] waitForControlsToHide")
+        recordDiagnostic("▶ [step] waitForControlsToHide")
         waitForControlsToHide()
-        print("▶ [step] doubleTap left (x≈0.17)")
+        recordDiagnostic("▶ [step] doubleTap left (x≈0.17)")
         // Tap in the centre of the left third (normalised x ≈ 0.17).
         doubleTap(normalizedX: 1.0 / 6.0)
-        print("▶ [step] waiting for seek-back toast")
+        recordDiagnostic("▶ [step] waiting for seek-back toast")
         let toast = app.staticTexts["player.toast"].firstMatch
         XCTAssertTrue(
             toast.waitForExistence(timeout: 3),
@@ -136,14 +136,14 @@ final class PlayerDoubleTapUITests: XCTestCase {
 
     /// Double-tapping the right third must show the seek-forward toast (e.g. "30s →").
     func testDoubleTapRightZoneShowsSeekForwardToast() throws {
-        print("▶ [step] openPlayer")
+        recordDiagnostic("▶ [step] openPlayer")
         openPlayer()
-        print("▶ [step] waitForControlsToHide")
+        recordDiagnostic("▶ [step] waitForControlsToHide")
         waitForControlsToHide()
-        print("▶ [step] doubleTap right (x≈0.83)")
+        recordDiagnostic("▶ [step] doubleTap right (x≈0.83)")
         // Tap in the centre of the right third (normalised x ≈ 0.83).
         doubleTap(normalizedX: 5.0 / 6.0)
-        print("▶ [step] waiting for seek-forward toast")
+        recordDiagnostic("▶ [step] waiting for seek-forward toast")
         let toast = app.staticTexts["player.toast"].firstMatch
         XCTAssertTrue(
             toast.waitForExistence(timeout: 5),
@@ -161,16 +161,16 @@ final class PlayerDoubleTapUITests: XCTestCase {
     /// Uses the `test_ZZ` prefix so it runs last alphabetically, after the two
     /// warm-launch tests — reducing the chance of a cold-launch controls-hide race.
     func test_ZZDoubleTapCentreZoneTogglesFitFill() throws {
-        print("▶ [step] openPlayer")
+        recordDiagnostic("▶ [step] openPlayer")
         openPlayer()
-        print("▶ [step] waitForControlsToHide")
+        recordDiagnostic("▶ [step] waitForControlsToHide")
         waitForControlsToHide()
-        print("▶ [step] doubleTap centre (x=0.4)")
+        recordDiagnostic("▶ [step] doubleTap centre (x=0.4)")
         doubleTap(normalizedX: 0.4)
 
         // Diagnostic: if controls became visible the single-tap handler fired instead of
         // the double-tap handler (controls-toggle vs scale-toggle).
-        print("▶ [step] checking controls did not reappear")
+        recordDiagnostic("▶ [step] checking controls did not reappear")
         let ppAfter = app.buttons["player.playPauseButton"].firstMatch
         if ppAfter.waitForExistence(timeout: 1) {
             XCTFail(
@@ -179,7 +179,7 @@ final class PlayerDoubleTapUITests: XCTestCase {
             return
         }
 
-        print("▶ [step] waiting for toast")
+        recordDiagnostic("▶ [step] waiting for toast")
         // Try both the accessibility identifier AND the raw label text. The toast is
         // self-dismissing so query both in parallel to avoid a narrow timing window.
         let toast = app.staticTexts["player.toast"].firstMatch
@@ -202,7 +202,7 @@ final class PlayerDoubleTapUITests: XCTestCase {
             let allButtons = app.buttons.allElementsBoundByIndex.map {
                 "\($0.identifier.isEmpty ? "(no-id)" : $0.identifier): '\($0.label)' exists=\($0.exists)"
             }
-            print("▶ [skip] No toast found. Visible texts: \(allTexts). Buttons: \(allButtons)")
+            recordDiagnostic("▶ [skip] No toast found. Visible texts: \(allTexts). Buttons: \(allButtons)")
             try captureAndSkip(
                 "Centre-zone double-tap toast did not appear in the XCTest simulator environment — known issue (task-16). Visible texts: \(allTexts)",
                 in: app)
@@ -222,7 +222,7 @@ final class PlayerDoubleTapUITests: XCTestCase {
         XCTAssertEqual(
             app.state, .runningForeground,
             "App must still be running after centre-zone double-tap")
-        print("▶ [step] done — toast='\(toastLabel)'")
+        recordDiagnostic("▶ [step] done — toast='\(toastLabel)'")
     }
 
     /// Tapping each zone twice must not crash and must toggle the state consistently.

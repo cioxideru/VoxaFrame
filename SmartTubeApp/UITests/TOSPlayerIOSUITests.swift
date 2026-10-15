@@ -258,7 +258,7 @@ final class TOSPlayerIOSUITests: XCTestCase {
             throw XCTSkip(
                 "onPlayerReady never fired within 30 s — IFrame embed failed to load (network/YouTube availability)")
         }
-        print("[TOS-iOS] ✓ IFrame ready — YouTube embed loaded")
+        recordDiagnostic("[TOS-iOS] ✓ IFrame ready — YouTube embed loaded")
 
         // ── 3. Wait for the WKWebView to become visible ─────────────────────
         // The cover-present animation that brings the TOS player onto screen
@@ -273,9 +273,9 @@ final class TOSPlayerIOSUITests: XCTestCase {
         // existing error.153 skip path takes over.
         let pageVisibleResult = XCTWaiter().wait(for: [pageVisibleNote], timeout: 8)
         if pageVisibleResult == .completed {
-            print("[TOS-iOS] ✓ WKWebView visible — pageVisible received")
+            recordDiagnostic("[TOS-iOS] ✓ WKWebView visible — pageVisible received")
         } else {
-            print(
+            recordDiagnostic(
                 "[TOS-iOS] ⚠️ pageVisible never fired within 8s — proceeding to timeadvanced wait anyway (will likely time out → skip with error.153)"
             )
         }
@@ -339,7 +339,7 @@ final class TOSPlayerIOSUITests: XCTestCase {
                     + "for '[ytCallback]' events to diagnose. Likely causes: autoplay blocked, JS bridge "
                     + "broken, or an unexpected IFrame error code (not 153).")
         }
-        print("[TOS-iOS] ✓ timeadvanced fired — video playhead moved past t=0.1 in playing state")
+        recordDiagnostic("[TOS-iOS] ✓ timeadvanced fired — video playhead moved past t=0.1 in playing state")
 
         // ── 5. Snapshot #1 — capture the WKWebView's RENDERED content AFTER
         //        the playhead moved. `webView.takeSnapshot` (via the
@@ -373,9 +373,9 @@ final class TOSPlayerIOSUITests: XCTestCase {
         let snap1Result = XCTWaiter().wait(for: [snapshotTaken1], timeout: 8)
         if snap1Result == .completed, readSnapshotFile(at: t1Path) != nil {
             attachSnapshotFile(at: t1Path, named: "tosPlayerIOSSmoke_t1")
-            print("[TOS-iOS] ✓ snapshot #1 captured at \(t1Path)")
+            recordDiagnostic("[TOS-iOS] ✓ snapshot #1 captured at \(t1Path)")
         } else {
-            print("[TOS-iOS] ⚠️ snapshot #1 not captured (informational only)")
+            recordDiagnostic("[TOS-iOS] ⚠️ snapshot #1 not captured (informational only)")
         }
 
         // ── 6. Wait 3 seconds, then snapshot #2 (also informational) ─────
@@ -391,9 +391,9 @@ final class TOSPlayerIOSUITests: XCTestCase {
         let snap2Result = XCTWaiter().wait(for: [snapshotTaken2], timeout: 8)
         if snap2Result == .completed, readSnapshotFile(at: t2Path) != nil {
             attachSnapshotFile(at: t2Path, named: "tosPlayerIOSSmoke_t2")
-            print("[TOS-iOS] ✓ snapshot #2 captured at \(t2Path)")
+            recordDiagnostic("[TOS-iOS] ✓ snapshot #2 captured at \(t2Path)")
         } else {
-            print("[TOS-iOS] ⚠️ snapshot #2 not captured (informational only)")
+            recordDiagnostic("[TOS-iOS] ⚠️ snapshot #2 not captured (informational only)")
         }
 
         // ── 7. PASS: timeadvanced already fired, which is strict proof the
@@ -405,7 +405,7 @@ final class TOSPlayerIOSUITests: XCTestCase {
         //        just at the JavaScript layer instead of AVPlayer's).
         //        Visual frame capture is an iOS-test-simulator-only
         //        limitation; production users see the video normally.
-        print("[TOS-iOS] ✓ TEST PASSED — TOS player is playing the video")
+        recordDiagnostic("[TOS-iOS] ✓ TEST PASSED — TOS player is playing the video")
     }
 
     // MARK: - Snapshot helpers
@@ -448,7 +448,7 @@ final class TOSPlayerIOSUITests: XCTestCase {
         guard readyResult == .completed else {
             throw XCTSkip("onPlayerReady never fired — IFrame embed failed to load (network/YouTube availability)")
         }
-        print("[TOS-iOS] ✓ player ready, minimizing to mini-player")
+        recordDiagnostic("[TOS-iOS] ✓ player ready, minimizing to mini-player")
 
         // ── 2. Tap back → mini-player ────────────────────────────────────────
         let backButton = app.buttons["tosPlayer.backButton"]
@@ -461,13 +461,13 @@ final class TOSPlayerIOSUITests: XCTestCase {
             miniBar.waitForExistence(timeout: 5),
             "tosPlayer.miniPlayerBar did not appear after back-button tap"
         )
-        print("[TOS-iOS] ✓ mini-player bar appeared")
+        recordDiagnostic("[TOS-iOS] ✓ mini-player bar appeared")
 
         // ── 3. Tap ✕ (close) button → fully stopped ─────────────────────────
         let closeButton = app.buttons["tosPlayer.miniPlayer.closeButton"]
         XCTAssertTrue(closeButton.waitForExistence(timeout: 3), "tosPlayer.miniPlayer.closeButton not found")
         closeButton.tap()
-        print("[TOS-iOS] ✓ close button tapped — expecting mini-player to disappear")
+        recordDiagnostic("[TOS-iOS] ✓ close button tapped — expecting mini-player to disappear")
 
         // ── 4. Verify mini-player bar is gone ────────────────────────────────
         let miniBarGone = XCTNSPredicateExpectation(
@@ -478,7 +478,7 @@ final class TOSPlayerIOSUITests: XCTestCase {
             XCTWaiter().wait(for: [miniBarGone], timeout: 5), .completed,
             "tosPlayer.miniPlayerBar still visible after close button — TOSPlayerStateStore.stop() did not fire"
         )
-        print("[TOS-iOS] ✓ mini-player bar gone — TOS player fully stopped")
+        recordDiagnostic("[TOS-iOS] ✓ mini-player bar gone — TOS player fully stopped")
 
         // ── 5. Verify the full-screen cover does NOT reappear ────────────────
         // Give SwiftUI a moment to settle.
@@ -487,7 +487,7 @@ final class TOSPlayerIOSUITests: XCTestCase {
             stateLabel.exists,
             "tosPlayer.stateLabel reappeared after stop — cover was unexpectedly re-presented"
         )
-        print("[TOS-iOS] ✓ stateLabel absent — no unexpected re-presentation after stop")
+        recordDiagnostic("[TOS-iOS] ✓ stateLabel absent — no unexpected re-presentation after stop")
     }
 
     /// Regression test for the landscape lock button — ported from

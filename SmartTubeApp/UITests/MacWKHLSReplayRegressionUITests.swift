@@ -119,9 +119,9 @@ final class MacWKHLSReplayRegressionUITests: XCTestCase {
             let elapsed = Date().timeIntervalSince(tapTime)
             let label = cycle == 1 ? "cold" : "hot "
             if readyResult == .completed {
-                print("[WKHLSReplay-mac] cycle \(cycle)  \(label)  \(String(format: "%.2f", elapsed))s")
+                recordDiagnostic("[WKHLSReplay-mac] cycle \(cycle)  \(label)  \(String(format: "%.2f", elapsed))s")
             } else {
-                print(
+                recordDiagnostic(
                     "[WKHLSReplay-mac] cycle \(cycle)  \(label)  \(String(format: "%.2f", elapsed))s (readyToPlay not received within 30 s — video stalled)"
                 )
             }
@@ -181,15 +181,15 @@ final class MacWKHLSReplayRegressionUITests: XCTestCase {
             // On macOS: warm WKWebView extraction ~2.5 s + heartbeat interval ≤3 s + margin → 6 s.
             Thread.sleep(forTimeInterval: 6.0)
 
-            print("[WKHLSReplay-mac] cycle \(cycle): stop complete — wkHLS cache evicted")
+            recordDiagnostic("[WKHLSReplay-mac] cycle \(cycle): stop complete — wkHLS cache evicted")
         }
 
         let timingSummary =
             replayTimings
             .map { "c\($0.cycle)=\(String(format: "%.2f", $0.elapsed))s" }
             .joined(separator: " ")
-        print("[WKHLSReplay-mac] results: \(timingSummary)")
-        print("[WKHLSReplay-mac] all \(totalCycles) cycles passed — no stale-session 403 regression")
+        recordDiagnostic("[WKHLSReplay-mac] results: \(timingSummary)")
+        recordDiagnostic("[WKHLSReplay-mac] all \(totalCycles) cycles passed — no stale-session 403 regression")
     }
 
     // MARK: - Helpers

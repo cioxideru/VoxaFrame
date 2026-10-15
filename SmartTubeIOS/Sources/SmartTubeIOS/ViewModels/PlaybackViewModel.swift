@@ -254,7 +254,9 @@ public final class PlaybackViewModel {
     // MARK: - AVPlayer
 
     public let player = AVPlayer()
+    // Created and replaced on MainActor; nonisolated access is only for cleanup after the last reference is released.
     @ObservationIgnored nonisolated(unsafe) var timeObserver: Any?
+    // Registered and removed on MainActor; deinit only removes the final token after all owners are gone.
     @ObservationIgnored nonisolated(unsafe) var audioSessionObserver: Any?
     @ObservationIgnored nonisolated(unsafe) var rateObserver: NSKeyValueObservation?
     /// True while the video is being routed to an external display via AirPlay.
@@ -420,12 +422,9 @@ public final class PlaybackViewModel {
     // read-modify-write while MediaPlayer is processing on its accessQueue
     // causes EXC_BREAKPOINT. Mirror the dict locally instead.
     @ObservationIgnored var nowPlayingInfoCache: [String: Any] = [:]
-    // Cached thumbnail for MPMediaItemArtwork. Written from a background URLSession task;
-    // read from MediaPlayer's internal artwork-closure thread. nonisolated(unsafe) is
-    // intentional: UIImage is immutable after creation and the worst-case race is that
-    // MediaPlayer gets nil on the first render (it will retry on the next state update).
+    // Cached thumbnail is read and replaced on MainActor; MediaPlayer receives an immutable image snapshot.
     #if canImport(UIKit)
-    nonisolated(unsafe) var cachedArtwork: UIImage? = nil
+    var cachedArtwork: UIImage?
     @ObservationIgnored var cachedArtworkVideoID: String? = nil
     #endif
 

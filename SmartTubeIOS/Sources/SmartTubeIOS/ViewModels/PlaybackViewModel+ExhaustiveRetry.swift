@@ -306,15 +306,13 @@ extension PlaybackViewModel {
     }
     #endif
 
-    // Task group result carrier — @unchecked Sendable because PlayerInfo is accessed
-    // only from @MainActor (the `for await` body runs on the calling actor).
-    private struct FallbackFetchedStream: @unchecked Sendable {
+    private struct FallbackFetchedStream: Sendable {
         let priority: Int
         let label: String
         let info: PlayerInfo
         let skipMuxed: Bool
     }
-    private enum FallbackFetchOutcome: @unchecked Sendable {
+    private enum FallbackFetchOutcome: Sendable {
         case result(FallbackFetchedStream)
         case ipBlocked(Error)
     }

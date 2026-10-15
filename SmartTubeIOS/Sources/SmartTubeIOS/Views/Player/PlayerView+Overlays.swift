@@ -218,7 +218,11 @@ extension PlayerView {
 
     var moreMenuPortraitWidth: CGFloat {
         #if os(iOS)
-        min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) * 0.8
+        if let bounds = playerState.playerHostView.window?.bounds {
+            min(bounds.width, bounds.height) * 0.8
+        } else {
+            .infinity
+        }
         #else
         .infinity
         #endif

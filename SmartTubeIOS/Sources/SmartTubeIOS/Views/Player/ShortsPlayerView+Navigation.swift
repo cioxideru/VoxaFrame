@@ -17,7 +17,7 @@ extension ShortsPlayerView {
     /// from the opposite side.
     func performVerticalTransition(direction: CGFloat, action: @escaping () -> Void) {
         #if os(iOS)
-        let screenHeight = UIScreen.main.bounds.height
+        let screenHeight = vm.webView.window?.bounds.height ?? vm.webView.bounds.height
         #else
         let screenHeight: CGFloat = 800
         #endif
