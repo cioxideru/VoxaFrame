@@ -19,6 +19,6 @@ Status: active
 |---|---|
 | 2: logging | Shared domain/code/host formatter, safe replacement-logger call sites, privacy regression tests added; builds/tests NOT RUN. |
 | 3: Yandex disclosure | Policy now describes the conditional original-audio download/upload; checked against `VoiceOverTranslationController.uploadOriginalAudio`. |
-| 4: file timestamps | Pending. |
+| 4: file timestamps | Added `NSPrivacyAccessedAPICategoryFileTimestamp` / `C617.1` for app-container cache metadata; checked against [Apple's required reasons](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitype). |
 | 5: native macOS naming | Pending. |
 | 6: design logging | Pending. |
