@@ -19,17 +19,14 @@ Naming a new module after a concept not listed here requires adding the term in 
   VisionOS, WebSafari, WebCreator. Each has its own auth rules, API key, and available fields.
 - **PoToken / BotGuard** — the proof-of-origin token YouTube requires for some playback requests,
   and the JS-challenge-solving pipeline (`BotGuardWebViewRunner`, `BotGuardClient`) that obtains it.
-- **TOS player** — the WKWebView-hosted YouTube IFrame embed player (`TOSPlayerViewModel`),
-  default on iOS since ADR-0006. "TOS" = terms-of-service-compliant (YouTube's own player, not a
-  stream-extraction pipeline).
-- **AVPlayer path** — the non-TOS playback path: resolve a raw stream URL, hand it to AVPlayer.
-  Used on tvOS and when AVPlayer is selected or a regular-video embed fails on iOS; iOS Shorts use the embed player.
-- **Shorts embed player** — the WKWebView/iframe pipeline specifically for Shorts
-  (`ShortsEmbedPlayerViewModel`), distinct from the TOS player though architecturally similar.
-- **Playback session** — planned (WS5, not yet implemented): one interface shared by AVPlayer,
-  TOS, and Shorts players so SponsorBlock/watch-history/Now-Playing wiring isn't tripled.
-- **Player engine** — the underlying playback technology (AVPlayer vs. WKWebView/IFrame) as
-  distinct from the view model that drives it.
+- **TOS player** — historical: the WKWebView-hosted YouTube IFrame embed player, removed by
+  ADR-0010 together with the Shorts embed player. Do not reintroduce the term for new code.
+- **AVPlayer path** — the only playback path on every platform: resolve a raw stream URL and hand
+  it to AVPlayer (`PlaybackViewModel`), for regular videos and Shorts alike.
+- **Playback session** — planned (WS5, not yet implemented): one interface for the player's
+  SponsorBlock/watch-history/Now-Playing wiring.
+- **Player engine** — the underlying playback technology (AVPlayer) as distinct from the view
+  model that drives it.
 - **Queue** — the ordered list of upcoming videos (`CurrentQueueStore`), independent of any one
   feed.
 - **Watch state / Watch history / Watchtime reporting** — *watch state* is per-video playback
@@ -46,7 +43,6 @@ Naming a new module after a concept not listed here requires adding the term in 
 - **RSS feed** — a channel feed added by RSS URL rather than by subscribing via YouTube.
 - **Quality (ABR hint, cap, override)** — *ABR hint* nudges adaptive bitrate selection; a *cap*
   is a hard ceiling (e.g. "never above 1080p"); an *override* is a per-video manual quality pin.
-  None of these apply on the TOS-player path (YouTube's own player owns ABR there — ADR-0006).
 - **Audio track / Caption track** — a selectable dubbed-audio or subtitle track on a video.
 - **Deep link / Pending action** — a *deep link* is an external entry point (share extension,
   Siri, Safari extension, URL scheme) that names a video/channel to open; a *pending action* is

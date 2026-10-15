@@ -20,29 +20,21 @@ import UIKit
 public struct ShortsPlayerView: View {
     public let startIndex: Int
     @State var videos: [Video]
-    #if os(iOS)
-    @State var vm: ShortsEmbedPlayerViewModel
-    /// Pre-warmed VM for Short N+1. Loaded in the background while Short N plays
-    /// so swipe-to-next has no black-screen delay. Swapped into `vm` by `goTo(_:)`
-    /// when the user swipes up and the standby is ready.
-    @State var standbyVM: ShortsEmbedPlayerViewModel? = nil
-    /// The just-retired Short N-1, kept alive (paused, not stopped) instead of
-    /// torn down on every forward swipe — so swipe-DOWN (backward) is also
-    /// instant, mirroring `standbyVM`'s forward case. Without this, backward
-    /// navigation always cold-reloads; if the user swipes back faster than a
-    /// cold reload can finish, every swipe interrupts the last one before it
-    /// ever paints a frame, producing a run of black screens. See #277.
-    @State var previousVM: ShortsEmbedPlayerViewModel? = nil
-    #else
     @State var vm: PlaybackViewModel
-    #endif
     @State var currentIndex: Int
     @Environment(\.dismiss) var dismiss
     @Environment(\.scenePhase) var scenePhase
     @Environment(SettingsStore.self) var store
     @Environment(AuthService.self) var authService
+    #if os(iOS)
+    /// The regular player. Stopped when Shorts open so only one AVPlayer plays and owns
+    /// the remote commands.
+    @Environment(PlayerStateStore.self) var playerState
+    #endif
     @State var slideOffset: CGFloat = 0
+    @State var containerHeight: CGFloat = 0
     @State var isTransitioning = false
+    @State var transitionTask: Task<Void, Never>?
     @State var isFetchingMore = false
     /// True while the app is backgrounded — guards onDisappear from calling stop()
     /// when iOS fires it as a side-effect of backgrounding rather than navigation.
@@ -54,11 +46,7 @@ public struct ShortsPlayerView: View {
         self.api = api
         self._videos = State(initialValue: videos)
         self._currentIndex = State(initialValue: startIndex)
-        #if os(iOS)
-        self._vm = State(initialValue: ShortsEmbedPlayerViewModel(api: api))
-        #else
         self._vm = State(initialValue: PlaybackViewModel(api: api))
-        #endif
     }
 
     public var body: some View {
@@ -66,58 +54,10 @@ public struct ShortsPlayerView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
 
-                #if os(iOS)
-                // Size the embed to its natural 9:16 aspect ratio and center it in the
-                // screen, so equal blank margins appear above and below the video. This
-                // moves the native HTML5 controls away from the very bottom edge.
-                GeometryReader { geo in
-                    let videoH = min(geo.size.height, geo.size.width * 16.0 / 9.0)
-                    ZStack {
-                        // Color.clear fills the ZStack to the full screen so the inner
-                        // views are centered; allowsHitTesting(false) keeps it passthrough.
-                        Color.clear.allowsHitTesting(false)
-                        ShortsTOSWebView(vm: vm)
-                            .frame(width: geo.size.width, height: videoH)
-                            .accessibilityHidden(true)
-                        // Currently unreachable: goTo(_:) no longer ever promotes standbyVM
-                        // (the WKWebView-reparenting bug in #279 made that path unfixable
-                        // here), so prewarmStandby is never called and this never becomes
-                        // non-nil. Left in place, off-screen rather than near-zero-opacity
-                        // (an earlier attempt — opacity made WebKit deprioritize the video
-                        // compositor and never properly reinstate it after a reparent), in
-                        // case the underlying bug is fixed and this is revisited. See #279.
-                        if let standby = standbyVM {
-                            ShortsTOSWebView(vm: standby)
-                                .frame(width: geo.size.width, height: videoH)
-                                .offset(y: geo.size.height * 3)
-                                .allowsHitTesting(false)
-                                .accessibilityHidden(true)
-                        }
-                        // Host the retired-but-cached Short N-1's WKWebView the same way —
-                        // same constraints as standbyVM. See #277/#279.
-                        if let previous = previousVM {
-                            ShortsTOSWebView(vm: previous)
-                                .frame(width: geo.size.width, height: videoH)
-                                .offset(y: geo.size.height * 3)
-                                .allowsHitTesting(false)
-                                .accessibilityHidden(true)
-                        }
-                        // Cover the video area (not the margins) while the new embed loads.
-                        if !vm.isReady {
-                            Color.black
-                                .frame(width: geo.size.width, height: videoH)
-                                .allowsHitTesting(false)
-                                .accessibilityHidden(true)
-                                .accessibilityIdentifier("shorts.loadingCover")
-                        }
-                    }
-                }
-                .ignoresSafeArea()
-                #else
                 if ProcessInfo.processInfo.arguments.contains("--uitesting") {
                     Color.black.ignoresSafeArea()
                 } else {
-                    #if os(tvOS)
+                    #if os(iOS) || os(tvOS)
                     // PlayerAVLayerView instead of VideoPlayer/AVPlayerViewController.
                     // Using AVPlayerViewController (VideoPlayer) causes it to dominate
                     // the entire UIKit accessibility tree, hiding all overlaid SwiftUI
@@ -130,7 +70,6 @@ public struct ShortsPlayerView: View {
                     Color.black.ignoresSafeArea()
                     #endif
                 }
-                #endif
 
                 // Gesture capture layer — a UIViewRepresentable that installs a
                 // UIPanGestureRecognizer at the UIKit level so it fires even when
@@ -157,16 +96,7 @@ public struct ShortsPlayerView: View {
                             loadMoreAtStart()
                         }
                     },
-                    onTap: { point in
-                        // Native controls occupy the bottom ~12% of the screen (the HTML5
-                        // controls bar at the bottom of the 9:16 embed). Taps there are
-                        // passed through to WKWebView when paused so native controls work.
-                        // Taps anywhere above that: toggle play/pause regardless of state.
-                        let screenH = vm.webView.window?.bounds.height ?? vm.webView.bounds.height
-                        let inNativeControlsArea = point.y / screenH > 0.88
-                        if vm.playerState == .paused && inNativeControlsArea { return }
-                        vm.togglePlayPause()
-                    },
+                    onTap: { _ in vm.togglePlayPause() },
                     onTwoFingerTap: {},
                     onPanChanged: { dy in
                         guard !isTransitioning else { return }
@@ -190,7 +120,6 @@ public struct ShortsPlayerView: View {
                 .accessibilityHidden(true)
                 #endif
 
-                #if !os(iOS)
                 if vm.isLoading {
                     VStack(spacing: 12) {
                         ProgressView()
@@ -215,13 +144,15 @@ public struct ShortsPlayerView: View {
                         .transition(.opacity)
                         .animation(.easeInOut(duration: 0.2), value: vm.statsForNerdsVisible)
                 }
-                #endif
             }
-            // Single-tap always toggles play/pause via the UIKit window-level tap
-            // recognizer inside SwipeGestureOverlay (onTap above). WKWebView absorbs
-            // UIKit touches before this SwiftUI view sees them, so .onTapGesture here
-            // would never fire — the window-level path is the only reliable one.
+            // Single-tap toggles play/pause via the UIKit window-level tap
+            // recognizer inside SwipeGestureOverlay (onTap above).
             .offset(y: slideOffset)
+            .onGeometryChange(for: CGFloat.self) {
+                $0.size.height
+            } action: {
+                containerHeight = $0
+            }
             .background(Color.black.ignoresSafeArea())
             #if os(tvOS)
             // Siri Remote D-pad: up/down navigate prev/next short.
@@ -261,17 +192,6 @@ public struct ShortsPlayerView: View {
                 }
             }
             .overlay {
-                #if os(iOS)
-                if let msg = vm.errorMessage {
-                    Text(msg)
-                        .font(.caption)
-                        .foregroundStyle(.white)
-                        .padding(12)
-                        .background(.black.opacity(0.6))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .accessibilityIdentifier("shorts.errorBanner")
-                }
-                #else
                 if let err = vm.error {
                     Text(err.localizedDescription)
                         .font(.caption)
@@ -281,7 +201,6 @@ public struct ShortsPlayerView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .accessibilityIdentifier("shorts.errorBanner")
                 }
-                #endif
             }
             .overlay(alignment: .bottomTrailing) {
                 if isFetchingMore {
@@ -303,6 +222,12 @@ public struct ShortsPlayerView: View {
             #endif
             .ignoresSafeArea()
             .onAppear {
+                #if os(iOS)
+                if playerState.presentation != .hidden { playerState.stop() }
+                #endif
+                vm.onPlaybackEnd = { handleShortEnded() }
+                vm.updateAuthToken(authService.accessToken)
+                vm.updateSAPISID(authService.sapisid)
                 if vm.currentVideoId == videos[currentIndex].id {
                     if vm.wasPlayingBeforeSuspend { vm.resume() }
                 } else {
@@ -315,10 +240,11 @@ public struct ShortsPlayerView: View {
             }
             .onDisappear {
                 guard !isInBackground else { return }
+                transitionTask?.cancel()
+                transitionTask = nil
+                isTransitioning = false
+                slideOffset = 0
                 vm.stop()
-                #if os(iOS)
-                previousVM?.stop()
-                #endif
             }
             .onChange(of: scenePhase) { _, phase in
                 switch phase {
@@ -332,21 +258,6 @@ public struct ShortsPlayerView: View {
                     break
                 }
             }
-            #if os(iOS)
-            .onChange(of: vm.playerState) { _, newState in
-                if newState == .ended {
-                    handleShortEnded()
-                } else if newState == .playing {
-                    // Restart auto-hide timer so controls fade out 3s after playback resumes.
-                    vm.showControls()
-                }
-            }
-            .onChange(of: vm.playerError) { _, newError in
-                if newError != nil {
-                    advanceAfterError()
-                }
-            }
-            #endif
         }  // NavigationStack
     }
 

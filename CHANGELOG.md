@@ -6,6 +6,33 @@ All notable changes to SmartTube are documented here.
 
 ## [Unreleased]
 
+### Fixed — 2026-10-15
+
+- **Same-video privacy changes (#94)** now reset tracking when reopening a playing,
+  loading or parked item. Returning from incognito to normal playback records local
+  history and resume position again; entering incognito disables recording for the new session.
+- **Shorts dismissal and navigation** cancel pending transitions, ignore end-of-video
+  handling during an existing transition, and release the end handler when stopping.
+- Preserved [ADR-0010](docs/adr/0010-remove-iframe-player.md)'s accepted text and appended
+  a dated amendment for the subsequent incognito fix and identified gesture losses.
+
+### Removed — 2026-10-15
+
+- **IFrame (TOS) player and Shorts embed player** ([ADR-0010](docs/adr/0010-remove-iframe-player.md),
+  superseding ADR-0006/0007/0008). All playback on iOS, iPadOS and macOS now uses the native
+  AVPlayer pipeline that tvOS already used; Shorts play in `ShortsPlayerView` over
+  `PlaybackViewModel` on every platform. Removed the "IFrame Player" setting (iOS and macOS),
+  `TOSPlayerStateStore` and the TOS mini player, the WKWebView embed views/scripts, the Shorts
+  src-swap spike, the `--uitesting-*-tos-player-on-ios` launch arguments, and their unit/UI tests.
+  The quality picker, captions, PiP and Yandex voice-over are always available again; iOS HLS
+  pre-warming on card appearance is re-enabled. Lost on iOS with the embed player: the
+  brightness/volume edge-swipe gestures and the chapters overlay (not ported; see open questions).
+- **Play Incognito (#94) on the AVPlayer path**: `PlayerRouter` → `PlayerStateStore.play` →
+  `PlaybackViewModel.load(video:incognito:)`; the video is not recorded to local history,
+  watchtime or resume position. Autoplay after it records normally.
+- **End of a Short** replays, advances to the next Short or freezes (`ShortsEndOfVideoDecision`,
+  via `PlaybackViewModel.onPlaybackEnd`) instead of autoplaying an unrelated video in the Shorts player.
+
 ### Documentation — 2026-10-15
 
 - Added the [execution-plan lifecycle](docs/exec-plans/README.md) and [open-question register](docs/OPEN_QUESTIONS.md);

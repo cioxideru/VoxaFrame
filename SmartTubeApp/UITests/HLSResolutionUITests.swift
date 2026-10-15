@@ -50,7 +50,6 @@ final class HLSResolutionUITests: XCTestCase {
         app.launchArguments = [
             "--uitesting",
             "--uitesting-reset-settings",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=\(Self.videoID)",
             "--uitesting-show-controls",
             "--uitesting-disable-sponsorblock",

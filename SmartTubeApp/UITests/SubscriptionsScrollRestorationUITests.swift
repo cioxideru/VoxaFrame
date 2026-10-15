@@ -31,7 +31,7 @@ final class SubscriptionsScrollRestorationUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments += [
-            "--uitesting", "--uitesting-disable-tos-player-on-ios",
+            "--uitesting",
             "--uitesting-inject-recommended-ids=dQw4w9WgXcQ,9bZkp7q19f0,MCv4EyEFgVg,pPvd8UxmCGY,fKopy74weus,jNQXAC9IVRw,kJQP7kiw5Fk,OPf0YbXqDm0,RgKAFK5djSk,2vjPBrBU-HM",
         ]
         app.launch()

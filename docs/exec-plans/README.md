@@ -23,7 +23,7 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
-- [PLAN-0001: TOS player iOS port](completed/tos-player-ios-plan.md) — delivered; later settings behavior is recorded separately.
+- [PLAN-0001: TOS player iOS port](completed/tos-player-ios-plan.md) — historically delivered; superseded by [ADR-0010](../adr/0010-remove-iframe-player.md).
 - [PLAN-0002 / #89: Shorts duration guard](completed/task-89-short-detection-issue.md) — fix and regression tests present.
 
 Reviewed against the working tree on 2026-10-15. Historical closure is not a fresh test result.

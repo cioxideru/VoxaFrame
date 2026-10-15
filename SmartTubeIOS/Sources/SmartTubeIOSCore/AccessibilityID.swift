@@ -35,7 +35,6 @@ public enum AccessibilityID {
     public static var settingsRemovePINButton: String { "settings.removePINButton" }
     public static var settingsSetPINButton: String { "settings.setPINButton" }
     public static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }
-    public static var settingsUseTOSPlayerOnIOSToggle: String { "settings.useTOSPlayerOnIOSToggle" }
     public static var settingsVp9Toggle: String { "settings.vp9Toggle" }
     public static var settingsYandexVOTKeepOriginalAudioToggle: String { "settings.yandexVOTKeepOriginalAudioToggle" }
     public static var settingsYandexVOTLivelyVoiceToggle: String { "settings.yandexVOTLivelyVoiceToggle" }
@@ -43,17 +42,6 @@ public enum AccessibilityID {
     public static var settingsYandexVOTTokenField: String { "settings.yandexVOTTokenField" }
     public static var settingsPINLock: String { "settingsPINLock" }
 
-    public static func tosPlayerChapter(_ id: UUID) -> String {
-        "tosPlayer.chaptersOverlay.chapter.\(id)"
-    }
-    public static var tosPlayerMoreMenuChaptersRow: String { "tosPlayer.moreMenu.chaptersRow" }
-    public static var tosPlayerMoreMenuLoopRow: String { "tosPlayer.moreMenu.loopRow" }
-    public static var tosPlayerNextButton: String { "tosPlayer.nextButton" }
-    public static var tosPlayerPreviousButton: String { "tosPlayer.previousButton" }
-    public static var tosPlayerReportSegmentButton: String { "tosPlayer.reportSegmentButton" }
-    public static var tosPlayerSeekBackButton: String { "tosPlayer.seekBackButton" }
-    public static var tosPlayerSeekForwardButton: String { "tosPlayer.seekForwardButton" }
-    public static var tosPlayerUndoAutoSkipToast: String { "tosPlayer.undoAutoSkipToast" }
     public static var homeCurrentQueueRow: String { "home.currentQueueRow" }
     public static var homeSectionFeed: String { "home.sectionFeed" }
     public static var playerBackButton: String { "player.backButton" }
@@ -62,7 +50,5 @@ public enum AccessibilityID {
     public static var playerRetryButton: String { "player.retryButton" }
     public static var playerSignInButton: String { "player.signInButton" }
     public static var playerTitleLabel: String { "player.titleLabel" }
-    public static var tosPlayerMoreMenuSleepTimerRow: String { "tosPlayer.moreMenu.sleepTimerRow" }
-    public static var tosPlayerSkipToast: String { "tosPlayer.skipToast" }
 
 }

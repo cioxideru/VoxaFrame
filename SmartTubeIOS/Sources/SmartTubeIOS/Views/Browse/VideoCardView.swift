@@ -106,11 +106,6 @@ public struct VideoCardView: View {
             // total — not per-card.
             #if canImport(WebKit)
             await BotGuardWebViewRunner.shared.prepare()
-            // iOS uses TOS player (WKWebView embed) by default — HLS URLs are never
-            // consumed there, so pre-warming the HLS extractor is pure waste and the
-            // primary source of the SlowLoad NON_FATAL (4497ms per card on scroll).
-            // Mac/tvOS still use AVPlayer and need the pre-warm.
-            #if !os(iOS)
             if !video.isShort
                 && YouTubeWebViewHLSExtractor.activePreWarmLoops < YouTubeWebViewHLSExtractor.maxPreWarmLoops
             {
@@ -149,7 +144,6 @@ public struct VideoCardView: View {
                     if stillCached { break outer }
                 }
             }
-            #endif
             #endif
         }
         .contextMenu {

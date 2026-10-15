@@ -40,7 +40,6 @@ final class OrientationCrashRegressionUITests: XCTestCase {
     func testOrientationRotationDoesNotCrash() throws {
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=dQw4w9WgXcQ",
         ]
         app.launch()

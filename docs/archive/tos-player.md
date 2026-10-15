@@ -1,5 +1,5 @@
 > Status: archived — classified from code on 2026-10-15.
-> Historical development worklog, not an implementation plan or current macOS-only architecture. The player now has iOS support; old machine-specific destinations and pass counts are evidence only for the recorded runs.
+> Resolution: superseded by [ADR-0010](../adr/0010-remove-iframe-player.md), which removes the TOS and Shorts embed players in favor of AVPlayer. Retained as a historical development worklog, not current implementation guidance. Old machine-specific destinations and pass counts are evidence only for the recorded runs; current playback acceptance remains in [OQ-0005](../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).
 > Current references: [architecture](../architecture.md), [open questions](../OPEN_QUESTIONS.md).
 
 # TOS Player — Development Worklog

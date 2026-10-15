@@ -54,7 +54,6 @@ final class PlayerMoreMenuAudioTrackUITests: XCTestCase {
     func testAudioTrackRowAppearsInOverflowMenuForMultiTrackVideo() throws {
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=\(Self.multiTrackVideoID)",
         ]
         app.launch()
@@ -96,7 +95,6 @@ final class PlayerMoreMenuAudioTrackUITests: XCTestCase {
     func testAudioTrackRowAbsentForSingleTrackVideo() throws {
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=\(Self.singleTrackVideoID)",
         ]
         app.launch()
@@ -143,7 +141,6 @@ final class PlayerMoreMenuAudioTrackUITests: XCTestCase {
     func testTappingAudioTrackRowOpensPicker() throws {
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=\(Self.multiTrackVideoID)",
         ]
         app.launch()

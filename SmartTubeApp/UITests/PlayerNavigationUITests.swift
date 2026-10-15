@@ -27,11 +27,7 @@ final class PlayerLiveSwipeUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        // TOS (IFrame/WKWebView) is the default iOS player as of the PlayerRouter
-        // refactor and uses a different accessibility-ID namespace (tosPlayer.*).
-        // These tests assert on AVPlayer-pipeline IDs (player.titleLabel, player.nextBtn),
-        // so disable TOS — navigation is otherwise unbypassed/real.
-        app.launchArguments = ["--uitesting-disable-tos-player-on-ios"]
+        app.launchArguments = []
         app.launch()
     }
 
@@ -309,7 +305,6 @@ final class PlayerLiveSwipeUITests: XCTestCase {
         app.terminate()
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=dQw4w9WgXcQ",
             "--uitesting-disable-sponsorblock",
             "--uitesting-inject-related-video-ids=9bZkp7q19f0,MCv4EyEFgVg,pPvd8UxmCGY",

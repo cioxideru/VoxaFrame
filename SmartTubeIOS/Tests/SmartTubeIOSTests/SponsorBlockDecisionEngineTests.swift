@@ -4,9 +4,7 @@ import Testing
 
 // MARK: - SponsorBlockDecisionEngine unit tests
 //
-// Covers the pure decision logic shared by SponsorBlockSkipManager (standard
-// player) and TOSPlayerViewModel+SponsorBlock (TOS player) — see
-// arch-plan-2-sponsorblock-decision-engine.md.
+// Covers the pure decision logic used by SponsorBlockSkipManager.
 
 @Suite("SponsorBlockDecisionEngine")
 struct SponsorBlockDecisionEngineTests {

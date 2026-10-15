@@ -1,17 +1,13 @@
 import Foundation
 
-/// Pure end-of-video decision for the Shorts TOS embed player — what to do when
-/// the embedded `<iframe>`'s `"stateChange"` message reports `ended`.
+/// Pure end-of-video decision for `ShortsPlayerView` — what to do when a Short
+/// finishes playing (`PlaybackViewModel.onPlaybackEnd`).
 ///
-/// Mirrors `PlaybackViewModel.handlePlaybackEnd()`
-/// (`PlaybackViewModel+Navigation.swift:114-163`), simplified for Shorts: no
-/// queue/shuffle/related-videos concepts — just the linear `videos` array
-/// `ShortsPlayerView` already pages through via `ShortsNavigation.targetIndex`.
-/// Testable the same way: a pure function over `(settings, currentIndex, count)`,
-/// no `WKWebView` required.
+/// Replaces `PlaybackViewModel.handlePlaybackEnd()`'s queue/related-videos autoplay
+/// for Shorts: just the linear `videos` array `ShortsPlayerView` pages through via
+/// `ShortsNavigation.targetIndex`. A pure function over `(settings, currentIndex, count)`.
 public enum ShortsEndOfVideoDecision: Equatable {
-    /// `settings.loopEnabled` is on — seek the current Short back to 0 and replay
-    /// (`ShortsEmbedPlayerViewModel.seekTo(0)` + `play()`).
+    /// `settings.loopEnabled` is on — seek the current Short back to 0 and replay.
     case replay
     /// Advance to `videos[to]` — same path as a swipe-up (`goTo(to)`).
     case advance(to: Int)

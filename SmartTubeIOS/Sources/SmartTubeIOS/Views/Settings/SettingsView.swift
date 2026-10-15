@@ -45,21 +45,13 @@ public struct SettingsView: View {
         Form {
             accountSection
             playerSection
-            #if os(iOS)
-            playerEngineSection
-            #endif
-            if usesAVPlayer {
-                videoCodecsSection
-                yandexVOTSection
-            }
+            videoCodecsSection
+            yandexVOTSection
             generalSection
             uiSection
             sponsorBlockSection
             deArrowSection
             parentalControlsSection
-            #if os(macOS)
-            experimentalSection
-            #endif
             aboutSection
         }
         #if os(macOS)
@@ -407,36 +399,7 @@ extension SettingsView {
         }
     }
 
-    // MARK: - Experimental (macOS)
-
-    #if os(macOS)
-    private var experimentalSection: some View {
-        @Bindable var store = store
-        return Section {
-            Toggle("IFrame Player (TOS-compliant, shows ads)", isOn: $store.settings.useTOSPlayerOnMac)
-                .accessibilityIdentifier("settings.useTOSPlayerOnMacToggle")
-        } header: {
-            Text("Experimental")
-        } footer: {
-            Text(
-                "Uses YouTube's official embedded player instead of the direct stream pipeline. Quality selection is unavailable. Ads will play. Useful for videos that refuse to play via the standard path."
-            )
-        }
-    }
-    #endif
-
     // MARK: - Yandex voice-over translation
-
-    /// Audio-track choice and Yandex VOT work with AVPlayer only, so they hide while the IFrame player is on.
-    private var usesAVPlayer: Bool {
-        #if os(iOS)
-        !store.useTOSPlayerOnIOS
-        #elseif os(macOS)
-        !store.settings.useTOSPlayerOnMac
-        #else
-        true
-        #endif
-    }
 
     private var yandexVOTSection: some View {
         @Bindable var store = store
@@ -523,24 +486,6 @@ extension SettingsView {
             )
         }
     }
-
-    // MARK: - Player engine (iOS)
-
-    #if os(iOS)
-    private var playerEngineSection: some View {
-        @Bindable var store = store
-        return Section {
-            Toggle("IFrame Player (TOS-compliant, shows ads)", isOn: $store.settings.useTOSPlayerOnIOS)
-                .accessibilityIdentifier(AccessibilityID.settingsUseTOSPlayerOnIOSToggle)
-        } header: {
-            Text("Player")
-        } footer: {
-            Text(
-                "On: YouTube's official embedded player. Off: native AVPlayer with quality selection, captions and Picture-in-Picture, but some videos may fail to load. Applies to the next video."
-            )
-        }
-    }
-    #endif
 
     // MARK: - About
 

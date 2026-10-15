@@ -46,7 +46,7 @@ final class SiriShortcutsUITests: XCTestCase {
     /// Launches the app with the deep-link launch argument for `videoID`.
     private func launchWithDeepLink(videoID: String) {
         app.launchArguments = [
-            "--uitesting", "--uitesting-disable-tos-player-on-ios", "--uitesting-deeplink-video=\(videoID)",
+            "--uitesting", "--uitesting-deeplink-video=\(videoID)",
         ]
         app.launch()
     }

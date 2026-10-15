@@ -35,7 +35,6 @@ enum AccessibilityID {
     static var settingsRemovePINButton: String { "settings.removePINButton" }
     static var settingsSetPINButton: String { "settings.setPINButton" }
     static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }
-    static var settingsUseTOSPlayerOnIOSToggle: String { "settings.useTOSPlayerOnIOSToggle" }
     static var settingsVp9Toggle: String { "settings.vp9Toggle" }
     static var settingsYandexVOTKeepOriginalAudioToggle: String { "settings.yandexVOTKeepOriginalAudioToggle" }
     static var settingsYandexVOTLivelyVoiceToggle: String { "settings.yandexVOTLivelyVoiceToggle" }
@@ -43,17 +42,6 @@ enum AccessibilityID {
     static var settingsYandexVOTTokenField: String { "settings.yandexVOTTokenField" }
     static var settingsPINLock: String { "settingsPINLock" }
 
-    static func tosPlayerChapter(_ id: UUID) -> String {
-        "tosPlayer.chaptersOverlay.chapter.\(id)"
-    }
-    static var tosPlayerMoreMenuChaptersRow: String { "tosPlayer.moreMenu.chaptersRow" }
-    static var tosPlayerMoreMenuLoopRow: String { "tosPlayer.moreMenu.loopRow" }
-    static var tosPlayerNextButton: String { "tosPlayer.nextButton" }
-    static var tosPlayerPreviousButton: String { "tosPlayer.previousButton" }
-    static var tosPlayerReportSegmentButton: String { "tosPlayer.reportSegmentButton" }
-    static var tosPlayerSeekBackButton: String { "tosPlayer.seekBackButton" }
-    static var tosPlayerSeekForwardButton: String { "tosPlayer.seekForwardButton" }
-    static var tosPlayerUndoAutoSkipToast: String { "tosPlayer.undoAutoSkipToast" }
     static var homeCurrentQueueRow: String { "home.currentQueueRow" }
     static var homeSectionFeed: String { "home.sectionFeed" }
     static var playerBackButton: String { "player.backButton" }
@@ -62,8 +50,6 @@ enum AccessibilityID {
     static var playerRetryButton: String { "player.retryButton" }
     static var playerSignInButton: String { "player.signInButton" }
     static var playerTitleLabel: String { "player.titleLabel" }
-    static var tosPlayerMoreMenuSleepTimerRow: String { "tosPlayer.moreMenu.sleepTimerRow" }
-    static var tosPlayerSkipToast: String { "tosPlayer.skipToast" }
 
 }
 

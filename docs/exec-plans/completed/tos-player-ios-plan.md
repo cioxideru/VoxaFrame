@@ -10,12 +10,15 @@
 - Blockers: none for historical implementation closure; current verification gaps are tracked separately.
 - Basis: [architecture](../../architecture.md), [decisions](../../adr/README.md), [open questions](../../OPEN_QUESTIONS.md).
 
-Resolution: delivered, with the original opt-in experiment replaced by the default-player
-release in [4.5](../../../CHANGELOG.md#45--2026-06-11) and [ADR-0006](../../adr/0006-tos-player-default-on-ios.md).
-The current selectable-engine implementation differs from that ADR's exclusive-player wording;
-[OQ-0010](../../OPEN_QUESTIONS.md#oq-0010--ios-player-choice-decision) tracks reconciliation.
-Remaining background/PiP acceptance is [OQ-0005](../../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance), not an unfinished port.
-Next slice: no port implementation remains; retain the historical tasks and verify device behavior separately.
+Resolution: historically delivered in [4.5](../../../CHANGELOG.md#45--2026-06-11) and
+[ADR-0006](../../adr/0006-tos-player-default-on-ios.md), then superseded by
+[ADR-0010](../../adr/0010-remove-iframe-player.md), which removes both embed players
+and closes OQ-0010. AVPlayer is now the only playback engine. The original plan and
+reconciliation evidence below are retained for history; their source references describe
+the pre-removal implementation, not the current tree or a fresh verification result.
+Remaining device, background and PiP acceptance is
+[OQ-0005](../../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).
+Next slice: no port implementation remains; verify the replacement playback path separately.
 
 ## Acceptance and evidence
 

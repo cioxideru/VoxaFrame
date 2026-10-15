@@ -45,7 +45,6 @@ final class QuickAccessRowUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-show-controls",
             "--uitesting-disable-sponsorblock",
         ]

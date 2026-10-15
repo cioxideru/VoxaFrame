@@ -67,7 +67,6 @@ final class BotGuardPoTokenUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=\(videoID)",
         ]
         app.launch()

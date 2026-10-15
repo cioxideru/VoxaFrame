@@ -18,7 +18,7 @@ final class HomeInteractionsUITests: XCTestCase {
     override class func setUp() {
         super.setUp()
         sharedApp = XCUIApplication()
-        sharedApp.launchArguments += ["--uitesting", "--uitesting-disable-tos-player-on-ios"]
+        sharedApp.launchArguments += ["--uitesting"]
         sharedApp.launch()
     }
 

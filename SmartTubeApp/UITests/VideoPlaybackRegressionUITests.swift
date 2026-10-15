@@ -28,7 +28,6 @@ final class VideoPlaybackRegressionUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments += ["--uitesting"]
-        app.launchArguments += ["--uitesting-disable-tos-player-on-ios"]
         app.launchArguments += ["--uitesting-deeplink-video=\(Self.targetVideoID)"]
         app.launch()
     }
@@ -53,7 +52,7 @@ final class VideoPlaybackRegressionUITests: XCTestCase {
     func testReplayAfterStop() throws {
         // Launch without the class-level deeplink so the Home feed is shown.
         let homeApp = XCUIApplication()
-        homeApp.launchArguments = ["--uitesting", "--uitesting-disable-tos-player-on-ios"]
+        homeApp.launchArguments = ["--uitesting"]
         homeApp.launch()
 
         // 1. Wait for Home feed to load.

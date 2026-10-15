@@ -3,13 +3,8 @@ import SmartTubeIOSCore
 
 // MARK: - Like / Dislike
 //
-// Shared between PlaybackViewModel (standard player) and TOSPlayerViewModel
-// (TOS player) — the optimistic-update/rollback logic was previously
-// duplicated nearly verbatim in PlaybackViewModel+LikeDislike.swift and
-// TOSPlayerViewModel+LikeDislike.swift. The two stacks differ only in how
-// they resolve a video id (optional `currentVideo?.id` vs. always-present
-// `videoId`) and where errors are logged — both are supplied per call so the
-// controller needs no back-reference to its owning view model.
+// Used by PlaybackViewModel. The video id and error logging are supplied per
+// call so the controller needs no back-reference to its owning view model.
 
 /// Toggles the like/dislike state for a video via InnerTubeAPI, with an
 /// optimistic update that rolls back on failure.

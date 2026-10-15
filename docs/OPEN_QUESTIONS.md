@@ -61,20 +61,22 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 ## OQ-0005 — Playback device acceptance
 
-- Status: open; owner: playback/test maintainer; basis: [iOS port](exec-plans/completed/tos-player-ios-plan.md),
-  [Shorts design](design/2026-06-11-tos-player-shorts-design.md), [ADR-0007](adr/0007-no-hybrid-avplayer-handoff-for-tos.md),
-  [ADR-0008](adr/0008-standby-swap-disabled.md).
-- **NOT RUN in this review:** TOS autoplay/unmute, minimize/expand/stop audio continuity,
-  background/foreground recovery, inline/fullscreen behavior, physical-device PiP; repeated
-  Shorts src swaps, fresh bridge events, rapid swipe memory/stale-state behavior and decoded video;
+- Status: open; owner: playback/test maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
+- **NOT RUN in this review:** iOS regular-video and Shorts playback through AVPlayer after the
+  embed players were removed (ADR-0010), including swipe navigation, end-of-Short behavior and
+  per-Short load errors (the embed path's auto-advance-on-error is gone); minimize/expand/stop
+  audio continuity, background/foreground recovery, physical-device PiP;
   AVPlayer HLS/DASH quality switching and CDN segment playback. Existing UI suites and old pass
   counts do not establish current results for this dirty working tree.
 - Simulator selection checks cannot establish VP9/AV1 decoding or PiP. Follow the
   [test guide](how-to/run-tests.md) and [device-log guide](how-to/device-logs.md), recording exact
   revision, platform, suite, executed test count, result bundle and logs; zero executed tests is
-  not acceptance (see the [TOS worklog](archive/tos-player.md)).
-- Hybrid background handoff remains excluded by ADR-0007. Standby promotion remains disabled;
-  reopening issue #279 needs a reproducible root cause and device evidence, not a silent enable.
+  not acceptance.
+- UI-test target cleanup: the removed embed-player UI-test files are still listed in the
+  `UITests` group and Sources build phase of `SmartTubeApp.xcodeproj` until removed in Xcode
+  (`TOSPlayerUITests`, `TOSPlayerIOSUITests`, `TOSPlayerSwipeNavigationUITests`,
+  `ShortsEmbedPauseControlsUITests`, `ShortsEmbedSrcSwapSpikeUITests`, `ShortsEmbedPlayerUITests`,
+  `ShortsVisualPlaybackUITests` — 7 files; deleted from disk, references remain).
 
 ## OQ-0006 — BotGuard acceptance
 
@@ -100,14 +102,11 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 ## OQ-0008 — Shorts follow-ups
 
-- Status: deferred; owner: playback maintainer; basis: [Shorts design](design/2026-06-11-tos-player-shorts-design.md).
-- The original design deferred like/dislike and comments UI, a shared embed engine, and
-  mid-playback stall detection. The current Shorts bridge has ready-timeout/error handling;
-  that does not prove recovery from a stream stuck buffering after ready. Decide which follow-ups
-  are still wanted before making an execution plan.
-- The src-swap spike, pure embed URL/end-decision helpers, SponsorBlock, watch progress, and
-  sleep timer are present and are not outstanding implementation tasks. Their current runtime
-  verification is OQ-0005. Standby infrastructure is intentionally retained under ADR-0008.
+- Status: deferred; owner: playback maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
+- Shorts now play through `PlaybackViewModel` on every platform. Like/dislike and comments UI in
+  the Shorts overlay, and pre-warming the next Short for instant swipes, are not implemented.
+  Decide which follow-ups are still wanted before making an execution plan; runtime verification
+  is OQ-0005.
 
 ## OQ-0009 — Architecture debt
 
@@ -123,17 +122,6 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Close each debt only with scoped source changes, relevant checks and independent review;
   file decomposition alone is not closure.
 
-## OQ-0010 — iOS player-choice decision
-
-- Status: decision needed; owner: maintainer; basis: [ADR-0006](adr/0006-tos-player-default-on-ios.md).
-- TOS is still the default in `AppSettings`, but `SettingsView.playerEngineSection` exposes
-  `useTOSPlayerOnIOS`, `SettingsStore` reads it, and `PlayerRouter` supports both selection and
-  fatal-embed fallback. This contradicts the accepted ADR's "only player" / hardcoded/no-toggle
-  wording, although it matches the current project overview.
-- Next step: confirm the intended supported policy and record a replacement ADR if retaining
-  the choice. Preserve ADR-0006's accepted text and number; do not change behavior merely to make
-  the old document true. No replacement policy was accepted during this documentation review.
-
 ## OQ-0011 — Localization coverage and review
 
 - Status: open; owner: localization maintainer; basis: [localization guide](how-to/localization.md).
@@ -143,3 +131,23 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Next step: classify untranslated keys (including intentionally skipped format-only keys),
   fill required UI translations, and review them before release. Preserve existing/plural entries
   when using forced retranslation; `extractionState: manual` alone does not protect them.
+
+## OQ-0012 — iOS player gestures lost with the embed player
+
+- Status: deferred; owner: playback maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
+- The removed TOS player had left/right edge swipes for screen brightness and system volume
+  (`GestureAdjustmentHUD`, `SystemVolumeControl`) and a chapters overlay (`ChaptersOverlayView`).
+  `PlayerView` has none of these, so iOS users lost them. The code is in git history before ADR-0010.
+- Next step: decide whether `PlayerView` should get them; if so, port with tests rather than
+  restoring the embed-player wiring.
+
+## OQ-0013 — iOS HLS prewarm on card appearance
+
+- Status: open; owner: playback / release maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
+- `VideoCardView` starts HLS prewarm when non-Shorts cards appear. This was formerly the main
+  source of SlowLoad; its effect on iOS after the embed-player removal is **NOT MEASURED**.
+- Next step: before release, compare prewarm enabled and disabled on a physical iOS device
+  with the same feed and network conditions, covering cold and warm caches. Record card
+  appearance/scroll responsiveness, tap-to-play latency and SlowLoad frequency, with the exact
+  revision, device, sample counts and logs. Acceptance: measured results and a recorded decision
+  to retain, limit or disable prewarm; source inspection alone does not establish a performance gain.

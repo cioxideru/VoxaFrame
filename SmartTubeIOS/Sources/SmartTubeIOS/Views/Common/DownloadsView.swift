@@ -15,6 +15,7 @@ struct DownloadsView: View {
 
     #if os(iOS)
     @Environment(PlayerStateStore.self) private var playerState
+    @Environment(SettingsStore.self) private var settingsStore
     #else
     @State private var selectedVideo: Video?
     #endif
@@ -48,7 +49,7 @@ struct DownloadsView: View {
                         DownloadedVideoRow(entry: entry)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                playerState.play(video: entry.video)
+                                playerState.play(video: entry.video, settings: settingsStore.settings)
                             }
                             .accessibilityIdentifier("downloads.videoRow.\(entry.videoId)")
                     }

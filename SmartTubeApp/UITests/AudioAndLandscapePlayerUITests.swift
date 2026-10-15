@@ -21,7 +21,6 @@ final class AudioAndLandscapePlayerUITests: XCTestCase {
         sharedApp = XCUIApplication()
         sharedApp.launchArguments = [
             "--uitesting",
-            "--uitesting-disable-tos-player-on-ios",
             "--uitesting-deeplink-video=dQw4w9WgXcQ",
         ]
         sharedApp.launch()

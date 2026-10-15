@@ -1,7 +1,8 @@
 # 0006 — TOS-compliant WKWebView player is the default player on iOS
 
 - ID: ADR-0006
-- Status: accepted
+- Status: superseded
+- Superseded-by: [ADR-0010](0010-remove-iframe-player.md)
 - Date: 2026-06-11
 - Deciders: maintainer
 
@@ -44,4 +45,8 @@ DEC-3 keeps this unchanged and out of scope for the modernization program.
 
 ## Implementation check — 2026-10-15
 
-The default remains `useTOSPlayerOnIOS = true` in `AppSettings`, but `SettingsStore` now reads the persisted setting (with a test override), `SettingsView.playerEngineSection` exposes a toggle, and `PlayerRouter.open` permits AVPlayer selection and per-video fatal-embed fallback. iOS Shorts use `ShortsEmbedPlayerViewModel`. The accepted text above records the original decision; the exclusive-player statement no longer matches implementation. A replacement decision requires reconciliation in [OQ-0010](../OPEN_QUESTIONS.md#oq-0010--ios-player-choice-decision).
+The default remains `useTOSPlayerOnIOS = true` in `AppSettings`, but `SettingsStore` now reads the persisted setting (with a test override), `SettingsView.playerEngineSection` exposes a toggle, and `PlayerRouter.open` permits AVPlayer selection and per-video fatal-embed fallback. iOS Shorts use `ShortsEmbedPlayerViewModel`. The accepted text above records the original decision; the exclusive-player statement no longer matches implementation. The replacement decision is [ADR-0010](0010-remove-iframe-player.md) (OQ-0010 closed).
+
+## Superseded — 2026-10-15
+
+The embed player this record governs was removed; see [ADR-0010](0010-remove-iframe-player.md).

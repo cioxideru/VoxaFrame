@@ -80,6 +80,10 @@ public final class PlaybackViewModel {
         }
     }
     public internal(set) var videoEnded: Bool = false
+    /// When set, `handlePlaybackEnd()` hands end-of-video to this instead of the
+    /// loop/queue/recommendation autoplay (used by `ShortsPlayerView`).
+    /// Cleared by `stop()`; the presenting view installs it again on appearance.
+    var onPlaybackEnd: (@MainActor () -> Void)?
     public internal(set) var currentTime: TimeInterval = 0
     public internal(set) var duration: TimeInterval = 0
 
@@ -216,6 +220,14 @@ public final class PlaybackViewModel {
     /// Used by `PlayerView.onAppear` to decide whether to resume after a
     /// sheet dismissal — prevents overriding an intentional user pause.
     public internal(set) var wasPlayingBeforeSuspend: Bool = false
+    /// "Play Incognito" (#94): the current video is not recorded to local history,
+    /// watchtime or resume position. Set per `load(video:incognito:)`, so autoplay
+    /// and other loads revert to normal recording.
+    public internal(set) var isIncognito: Bool = false
+    /// Whether the current video's playback is recorded (history on, not incognito).
+    var recordsHistory: Bool { !isIncognito && settings.historyState == .enabled }
+    /// On-device history (#150); a seam so tests can use an isolated store.
+    var localHistory: LocalWatchHistoryStore = .shared
     /// Position tracked during a scrub drag; committed to AVPlayer on release.
     public internal(set) var scrubTime: TimeInterval = 0
 

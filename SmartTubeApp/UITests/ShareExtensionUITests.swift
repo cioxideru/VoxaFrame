@@ -52,11 +52,7 @@ final class ShareExtensionUITests: XCTestCase {
     /// Launches the app with the given extra arguments.
     private func launch(extraArgs: [String] = []) {
         app = XCUIApplication()
-        // These tests assert on AVPlayer-pipeline accessibility IDs (player.titleLabel,
-        // player.backButton). TOS (IFrame/WKWebView) is the default iOS player as of the
-        // PlayerRouter refactor and uses a different ID namespace (tosPlayer.*), so
-        // disable it to keep exercising the AVPlayer-based deep-link/pending-video paths.
-        app.launchArguments = ["--uitesting-disable-tos-player-on-ios"] + extraArgs
+        app.launchArguments = extraArgs
         app.launch()
     }
 

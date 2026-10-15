@@ -1,9 +1,15 @@
 # TOS Player for Shorts (iOS) — Design
 
-Status: current
+Status: archived
 Reviewed: 2026-10-15 (source inspection; no runtime acceptance)
 
-## Implementation reconciliation
+Resolution: superseded by [ADR-0010](../adr/0010-remove-iframe-player.md). The embed player
+was removed; Shorts now use `PlaybackViewModel` on every platform. The reconciliation and
+original design below describe the implementation before removal, not current guidance or
+fresh test results. Current playback acceptance and deferred features remain in OQ-0005
+and OQ-0008, linked below.
+
+## Historical implementation reconciliation — before ADR-0010
 
 This is a design description, not an open execution plan. Its iOS embed replacement is present:
 `ShortsPlayerView` selects `ShortsEmbedPlayerViewModel` on iOS, while other platforms retain

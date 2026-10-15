@@ -15,7 +15,7 @@ final class PlayerControlsUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments += ["--uitesting", "--uitesting-disable-tos-player-on-ios"]
+        app.launchArguments += ["--uitesting"]
         app.launch()
     }
 
@@ -102,7 +102,7 @@ final class PlayerControlsUITests: XCTestCase {
         // guard on parallel clone simulators where the entitlement may not propagate.
         app.terminate()
         app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--uitesting-disable-tos-player-on-ios", "--uitesting-enable-pip"]
+        app.launchArguments = ["--uitesting", "--uitesting-enable-pip"]
         app.launch()
         try openPlayerFromHome()
         showControls()
