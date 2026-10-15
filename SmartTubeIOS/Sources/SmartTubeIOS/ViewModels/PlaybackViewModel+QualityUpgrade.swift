@@ -112,30 +112,9 @@ extension PlaybackViewModel {
         let videoAsset = AVURLAsset(url: videoURL, options: ["AVURLAssetHTTPHeaderFieldsKey": ["User-Agent": ua]])
         let audioAsset = AVURLAsset(url: audioURL, options: ["AVURLAssetHTTPHeaderFieldsKey": ["User-Agent": ua]])
         playerLog.notice("[prefetch] pre-warming tracks for preferredQuality=\(maxH)p (itag=\(itag))")
-        // Immutable tracks pass once through AsyncStream to the MainActor cache; no concurrent mutation.
-        struct PrefetchTrackBox: @unchecked Sendable {
-            let video: [AVAssetTrack]
-            let audio: [AVAssetTrack]
-        }
-        let (stream, cont) = AsyncStream<PrefetchTrackBox?>.makeStream()
-        Task {
-            do {
-                async let videoTracks = videoAsset.loadTracks(withMediaType: .video)
-                async let audioTracks = audioAsset.loadTracks(withMediaType: .audio)
-                let (vv, aa) = try await (videoTracks, audioTracks)
-                cont.yield(PrefetchTrackBox(video: vv, audio: aa))
-            } catch {
-                cont.yield(nil)
-            }
-            cont.finish()
-        }
-        Task {
-            try? await Task.sleep(for: PlaybackTuning.prefetchTrackTimeout)
-            cont.yield(nil)
-            cont.finish()
-        }
-        if let result = await stream.first(where: { @Sendable _ in true }),
-            let box = result, !box.video.isEmpty, !box.audio.isEmpty
+        if let box = await loadTracksRacingTimeout(
+            videoAsset: videoAsset, audioAsset: audioAsset, timeout: PlaybackTuning.prefetchTrackTimeout),
+            !box.video.isEmpty, !box.audio.isEmpty
         {
             AVAssetTrackCache.shared.store(
                 videoTracks: box.video, audioTracks: box.audio,
@@ -276,15 +255,9 @@ extension PlaybackViewModel {
         }
     }
 
-    // Immutable track arrays are transferred through AsyncStream and consumed only on MainActor.
-    private struct QualityCompositionTracks: @unchecked Sendable {
-        let video: [AVAssetTrack]
-        let audio: [AVAssetTrack]
-    }
-
     private func loadQualityCompositionTracks(
         videoURL: URL, audioURL: URL, videoAsset: AVURLAsset, audioAsset: AVURLAsset, videoItag: String
-    ) async -> QualityCompositionTracks? {
+    ) async -> LoadedAssetTracks? {
         let vTracks: [AVAssetTrack]
         let aTracks: [AVAssetTrack]
         let cachedV = AVAssetTrackCache.shared.videoTracks(for: videoURL)
@@ -295,25 +268,8 @@ extension PlaybackViewModel {
             playerLog.notice("⚡ [quality/DASH] loadTracks cache hit (itag=\(videoItag)) — skipping CDN round-trip")
         } else {
             do {
-                let (raceStream, raceCont) = AsyncStream<QualityCompositionTracks?>.makeStream()
-                Task {
-                    do {
-                        async let videoTracks = videoAsset.loadTracks(withMediaType: .video)
-                        async let audioTracks = audioAsset.loadTracks(withMediaType: .audio)
-                        let (vv, aa) = try await (videoTracks, audioTracks)
-                        raceCont.yield(QualityCompositionTracks(video: vv, audio: aa))
-                    } catch {
-                        raceCont.yield(nil)
-                    }
-                    raceCont.finish()
-                }
-                Task {
-                    try? await Task.sleep(for: PlaybackTuning.qualityTrackTimeout)
-                    raceCont.yield(nil)
-                    raceCont.finish()
-                }
-                if let firstOrNil = await raceStream.first(where: { @Sendable _ in true }),
-                    let box = firstOrNil
+                if let box = await loadTracksRacingTimeout(
+                    videoAsset: videoAsset, audioAsset: audioAsset, timeout: PlaybackTuning.qualityTrackTimeout)
                 {
                     vTracks = box.video
                     aTracks = box.audio
@@ -321,6 +277,8 @@ extension PlaybackViewModel {
                         videoTracks: vTracks, audioTracks: aTracks,
                         videoURL: videoURL, audioURL: audioURL)
                 } else {
+                    // A newer load cancelled this switch; it owns recovery, so don't retry here.
+                    guard !Task.isCancelled else { return nil }
                     playerLog.error(
                         "❌ [quality/DASH] loadTracks timed out after 10s — triggering 403 recovery retry")
                     selectedFormat = nil
@@ -336,7 +294,7 @@ extension PlaybackViewModel {
         }  // end cache-miss else
         // ─────────────────────────────────────────────────────────────────────────
 
-        return QualityCompositionTracks(video: vTracks, audio: aTracks)
+        return LoadedAssetTracks(video: vTracks, audio: aTracks)
     }
 
     private func observeQualityComposition(_ compositeItem: AVPlayerItem, seekTo: TimeInterval) async {
