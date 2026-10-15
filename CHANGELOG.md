@@ -19,6 +19,8 @@ All notable changes to SmartTube are documented here.
 - **Play Incognito (#94) on the AVPlayer path**: `PlayerRouter` → `PlayerStateStore.play` →
   `PlaybackViewModel.load(video:incognito:)`; the video is not recorded to local history,
   watchtime or resume position. Autoplay after it records normally.
+- **End of a Short** replays, advances to the next Short or freezes (`ShortsEndOfVideoDecision`,
+  via `PlaybackViewModel.onPlaybackEnd`) instead of autoplaying an unrelated video in the Shorts player.
 
 ### Documentation — 2026-10-15
 

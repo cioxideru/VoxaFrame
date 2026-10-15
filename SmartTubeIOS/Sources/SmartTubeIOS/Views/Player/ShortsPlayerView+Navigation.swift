@@ -1,3 +1,4 @@
+import AVFoundation
 import SmartTubeIOSCore
 import SwiftUI
 
@@ -99,6 +100,22 @@ extension ShortsPlayerView {
             videos.insert(contentsOf: newVideos, at: 0)
             currentIndex += newVideos.count
             performVerticalTransition(direction: 1) { goTo(currentIndex - 1) }
+        }
+    }
+
+    /// End of a Short: replay, advance to the next Short, or freeze on the last one —
+    /// never the regular player's queue/recommendation autoplay.
+    func handleShortEnded() {
+        switch ShortsEndOfVideoDecision.decide(
+            settings: store.settings, currentIndex: currentIndex, count: videos.count)
+        {
+        case .replay:
+            vm.player.seek(to: .zero)
+            vm.player.rate = Float(store.settings.playbackSpeed)
+        case .advance(let next):
+            performVerticalTransition(direction: -1) { goTo(next) }
+        case .freeze:
+            vm.videoEnded = true
         }
     }
 

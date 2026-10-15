@@ -210,6 +210,7 @@ public struct ShortsPlayerView: View {
             #endif
             .ignoresSafeArea()
             .onAppear {
+                vm.onPlaybackEnd = { handleShortEnded() }
                 if vm.currentVideoId == videos[currentIndex].id {
                     if vm.wasPlayingBeforeSuspend { vm.resume() }
                 } else {

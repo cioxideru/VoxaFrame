@@ -113,6 +113,10 @@ extension PlaybackViewModel {
     }
 
     public func handlePlaybackEnd() {
+        if let onPlaybackEnd {
+            onPlaybackEnd()
+            return
+        }
         if settings.loopEnabled {
             player.seek(to: .zero)
             player.rate = Float(settings.playbackSpeed)
