@@ -384,8 +384,8 @@ public final class VideoDownloadService {
             throw URLError(.badServerResponse)
         }
 
-        let videoFmt = try await videoTrackSrc.load(.formatDescriptions).first!
-        let audioFmt = try await audioTrackSrc.load(.formatDescriptions).first!
+        let videoFmt = try await videoTrackSrc.firstFormatDescription()
+        let audioFmt = try await audioTrackSrc.firstFormatDescription()
         let duration = try await videoAsset.load(.duration)
 
         let writer = try AVAssetWriter(outputURL: destURL, fileType: .mp4)
@@ -578,4 +578,15 @@ public final class VideoDownloadService {
         #endif
     }
 }
+
+extension AVAssetTrack {
+    /// A corrupt track can load with no format descriptions; throw so the download fails instead of crashing.
+    fileprivate func firstFormatDescription() async throws -> CMFormatDescription {
+        guard let description = try await load(.formatDescriptions).first else {
+            throw URLError(.cannotDecodeContentData)
+        }
+        return description
+    }
+}
+
 #endif  // ENABLE_DOWNLOADS
