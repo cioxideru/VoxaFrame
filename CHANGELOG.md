@@ -6,6 +6,10 @@ All notable changes to SmartTube are documented here.
 
 ## [Unreleased]
 
+### Removed
+
+- The Send Diagnostic Report button in Settings and the Report ID row in Stats for Nerds.
+
 ### Documentation — 2026-10-15
 
 - Added the [execution-plan lifecycle](docs/exec-plans/README.md) and [open-question register](docs/OPEN_QUESTIONS.md);

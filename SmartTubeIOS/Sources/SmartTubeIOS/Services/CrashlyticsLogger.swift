@@ -135,7 +135,7 @@ public struct CrashlyticsLogger: Sendable {
     /// Records a non-fatal Crashlytics event when the video that reached readyToPlay
     /// (`activeId`) does not match the video the user intended to play (`intendedId`).
     /// Surfaces in Firebase under domain `SmartTube.WrongVideo` (code 2) so
-    /// wrong-video regressions can be queried independently of user-triggered reports.
+    /// wrong-video regressions can be queried.
     /// Custom keys `wv_intended_id` / `wv_active_id` make it easy to see both IDs
     /// in the Firebase console without opening the full breadcrumb log.
     static func sendWrongVideoReport(
