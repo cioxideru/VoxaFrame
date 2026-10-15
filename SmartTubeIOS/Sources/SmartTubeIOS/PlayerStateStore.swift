@@ -111,14 +111,17 @@ public final class PlayerStateStore {
     // MARK: - Actions
 
     /// Load `video` (if not already loaded) and present the full-screen player.
-    /// `incognito` (#94) skips history, watchtime and resume-position recording for this video.
-    public func play(video: Video, incognito: Bool = false) {
+    /// `settings` is applied before `load` so the first stream request uses the current
+    /// preferences (codecs, speed, audio-only). `incognito` (#94) skips history,
+    /// watchtime and resume-position recording for this video.
+    public func play(video: Video, settings: AppSettings, incognito: Bool = false) {
         storeLog.notice(
             "[PlayerStateStore] play — id=\(video.id) currentPresentation=\(String(describing: self.presentation))")
         // Stamp intended_video_id immediately — before load() runs and before the
         // breadcrumb buffer can fill. Comparing with active_video_id in a report
         // reveals prefetch-race / wrong-card-tap scenarios.
         CrashlyticsLogger.setIntendedVideo(id: video.id, title: video.title)
+        vm.updateSettings(settings)
         // Also reload when:
         //   1. Different video — always load
         //   2. No current item — item was cleared by stop() (legacy path)

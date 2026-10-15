@@ -12,15 +12,17 @@ import SmartTubeIOSCore
 @Observable
 public final class PlayerRouter {
     private let playerState: PlayerStateStore
+    private let settingsStore: SettingsStore
 
-    public init(playerState: PlayerStateStore) {
+    public init(playerState: PlayerStateStore, settingsStore: SettingsStore) {
         self.playerState = playerState
+        self.settingsStore = settingsStore
     }
 
     /// Open `video` in the AVPlayer pipeline. `incognito` (#94) skips history,
     /// watchtime and resume-position recording for this video only.
     public func open(video: Video, api: InnerTubeAPI, incognito: Bool = false) {
-        playerState.play(video: video, incognito: incognito)
+        playerState.play(video: video, settings: settingsStore.settings, incognito: incognito)
     }
 }
 #endif  // os(iOS)

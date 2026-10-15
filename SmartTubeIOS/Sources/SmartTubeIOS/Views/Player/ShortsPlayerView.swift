@@ -211,6 +211,8 @@ public struct ShortsPlayerView: View {
             .ignoresSafeArea()
             .onAppear {
                 vm.onPlaybackEnd = { handleShortEnded() }
+                vm.updateAuthToken(authService.accessToken)
+                vm.updateSAPISID(authService.sapisid)
                 if vm.currentVideoId == videos[currentIndex].id {
                     if vm.wasPlayingBeforeSuspend { vm.resume() }
                 } else {

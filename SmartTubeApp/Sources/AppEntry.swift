@@ -79,7 +79,7 @@ struct AppEntry: App {
         #if os(iOS)
         let playerStateStore = PlayerStateStore(api: api)
         _playerStateStore = State(initialValue: playerStateStore)
-        _playerRouter = State(initialValue: PlayerRouter(playerState: playerStateStore))
+        _playerRouter = State(initialValue: PlayerRouter(playerState: playerStateStore, settingsStore: settingsStore))
         #endif
         #if ENABLE_DOWNLOADS
         _cardDownloadService = State(initialValue: VideoDownloadService(api: api))
