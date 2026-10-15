@@ -76,9 +76,6 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   `UITests` group and Sources build phase of `SmartTubeApp.xcodeproj` until removed in Xcode
   (`TOSPlayerUITests`, `TOSPlayerIOSUITests`, `TOSPlayerSwipeNavigationUITests`,
   `ShortsEmbedPauseControlsUITests`, `ShortsEmbedSrcSwapSpikeUITests`, `ShortsEmbedPlayerUITests`).
-- "Watch in incognito" (#94) no longer suppresses watch history or resume position: only the
-  removed embed player honored it, and `PlayerRouter.open` ignores `incognito`. Wire it into the
-  AVPlayer path or remove the action.
 
 ## OQ-0006 — BotGuard acceptance
 

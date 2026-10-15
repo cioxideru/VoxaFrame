@@ -32,8 +32,8 @@ already used). Reversal means restoring the deleted files from git history.
 - Good: about 15k lines and two WKWebView player stacks removed.
 - Bad: iOS is again exposed to the stream-resolution failures ADR-0006 avoided (CDN/geo blocks,
   BotGuard/PO-token churn); the AVPlayer fallback cascade (ADR-0005) carries that load.
-- Bad: the "watch in incognito" action no longer suppresses history; the AVPlayer path never
-  honored `incognito` (see [open questions](../OPEN_QUESTIONS.md)).
+- "Play Incognito" (#94), previously honored only by the embed player, is wired into
+  `PlaybackViewModel` (`load(video:incognito:)`).
 - Device playback of iOS Shorts through AVPlayer has not been re-verified.
 
 ## Alternatives considered

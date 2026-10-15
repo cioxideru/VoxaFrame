@@ -111,7 +111,8 @@ public final class PlayerStateStore {
     // MARK: - Actions
 
     /// Load `video` (if not already loaded) and present the full-screen player.
-    public func play(video: Video) {
+    /// `incognito` (#94) skips history, watchtime and resume-position recording for this video.
+    public func play(video: Video, incognito: Bool = false) {
         storeLog.notice(
             "[PlayerStateStore] play — id=\(video.id) currentPresentation=\(String(describing: self.presentation))")
         // Stamp intended_video_id immediately — before load() runs and before the
@@ -125,7 +126,7 @@ public final class PlayerStateStore {
         //      AVPlayerItem alive but pauses and sets isPlaying=false. On re-tap,
         //      call load() so the park fast-path in PlaybackViewModel resumes it.
         if vm.currentVideoId != video.id || vm.player.currentItem == nil || !vm.isPlaying {
-            vm.load(video: video)
+            vm.load(video: video, incognito: incognito)
         }
         currentVideo = video
         presentation = .fullScreen

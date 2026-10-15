@@ -17,11 +17,10 @@ public final class PlayerRouter {
         self.playerState = playerState
     }
 
-    /// Open `video` in the AVPlayer pipeline. `incognito` (#94) is accepted for
-    /// call-site compatibility but the AVPlayer pipeline's history recording
-    /// isn't wired to it yet (see OPEN_QUESTIONS).
+    /// Open `video` in the AVPlayer pipeline. `incognito` (#94) skips history,
+    /// watchtime and resume-position recording for this video only.
     public func open(video: Video, api: InnerTubeAPI, incognito: Bool = false) {
-        playerState.play(video: video)
+        playerState.play(video: video, incognito: incognito)
     }
 }
 #endif  // os(iOS)

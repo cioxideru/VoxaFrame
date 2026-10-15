@@ -13,7 +13,7 @@ private let playerLog = CrashlyticsLogger(category: "Player")
 
 extension PlaybackViewModel {
 
-    public func load(video: Video) {
+    public func load(video: Video, incognito: Bool = false) {
         playerLog.notice(
             "[load] load() called — id=\(video.id) currentVideo=\(self.currentVideo?.id ?? "nil") isLoading=\(self.isLoading) player.item=\(self.player.currentItem != nil)"
         )
@@ -57,14 +57,17 @@ extension PlaybackViewModel {
         // still .readyToPlay, bypass the entire exhaustiveRetry race (~1.27s saved per hot
         // cycle). Re-activates AVAudioSession, wires end/stall observers, and resumes.
         // Expected: <0.1s in-app → ~0.5s reported (XCTest polling overhead only).
-        if resumeParkedItem(for: video) { return }
+        if resumeParkedItem(for: video) {
+            isIncognito = incognito
+            return
+        }
         // Different video or parked item expired — clear parked state and tear down old item.
         if parkedVideoId != nil {
             player.replaceCurrentItem(with: nil)
             parkedVideoId = nil
         }
 
-        resetPlaybackForLoad(video: video)
+        resetPlaybackForLoad(video: video, incognito: incognito)
 
         // UI-testing synchronous inject for related videos.
         // Checked here (before the Task is created) so that hasNext = true is set
@@ -167,27 +170,24 @@ extension PlaybackViewModel {
         return true
     }
 
-    private func resetPlaybackForLoad(video: Video) {
+    func resetPlaybackForLoad(video: Video, incognito: Bool) {
         // Report watchtime for the video being replaced before tearing it down.
         // This is the only opportunity when switching via load() directly (e.g. autoplay),
-        // since stop()/suspend() are not called in that path.
-        if settings.historyState == .enabled, duration > 0 {
-            let pos = self.currentTime
-            let dur = self.duration
-            let flush = tracker.transition(
-                to: video.id, cpn: InnerTubeAPI.generateCPN(),
-                flushPosition: pos, flushDuration: dur)
-            Task { await flush() }
-        } else {
-            tracker.transition(
-                to: video.id, cpn: InnerTubeAPI.generateCPN(),
-                flushPosition: 0, flushDuration: 0)
-        }
+        // since stop()/suspend() are not called in that path. Uses the outgoing video's
+        // incognito flag; an incognito video gets no tracker session (empty id), so
+        // nothing is flushed or checkpointed for it later.
+        let flushPrevious = recordsHistory && duration > 0
+        isIncognito = incognito
+        let flush = tracker.transition(
+            to: incognito ? "" : video.id, cpn: InnerTubeAPI.generateCPN(),
+            flushPosition: flushPrevious ? currentTime : 0,
+            flushDuration: flushPrevious ? duration : 0)
+        if flushPrevious { Task { await flush() } }
 
         // #150: on-device history, kept alongside the account reporting (which YouTube
         // doesn't always credit for device-code sign-in).
-        if settings.historyState == .enabled {
-            LocalWatchHistoryStore.shared.record(video)
+        if recordsHistory {
+            localHistory.record(video)
         }
 
         // Stop and clear the current item immediately so the previous frame
@@ -293,7 +293,7 @@ extension PlaybackViewModel {
         playerLog.notice(
             "[suspend] suspend() called — currentVideo=\(self.currentVideo?.id ?? "nil") currentTime=\(Int(self.currentTime))s"
         )
-        if settings.historyState == .enabled, duration > 0 {
+        if recordsHistory, duration > 0 {
             let pos = self.currentTime
             let dur = self.duration
             Task {
@@ -377,7 +377,7 @@ extension PlaybackViewModel {
             "[stop] stop() called — currentVideo=\(self.currentVideo?.id ?? "nil") currentTime=\(Int(self.currentTime))s isLoading=\(self.isLoading)"
         )
         // Save watch position before stopping (mirrors VideoStateController)
-        if settings.historyState == .enabled, duration > 0 {
+        if recordsHistory, duration > 0 {
             let pos = self.currentTime
             let dur = self.duration
             Task {
@@ -672,7 +672,7 @@ extension PlaybackViewModel {
             await VideoPreloadCache.shared.store(trackingURLs: resolvedTrackingURLs, for: video.id)
         }
         guard !Task.isCancelled else { return }
-        tracker.setTrackingURLs(resolvedTrackingURLs)
+        tracker.setTrackingURLs(resolvedTrackingURLs)  // incognito: session id is empty, never flushed
         playerLog.notice("activeTrackingURLs resolved: \(resolvedTrackingURLs != nil ? "account-bound" : "none")")
 
         // BUG-015 fix: read currentAuthToken per-prefetch-call so a token refresh mid-loop
