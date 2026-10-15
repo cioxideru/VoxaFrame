@@ -18,7 +18,7 @@ Status: active
 | Checkpoint | Evidence and review result |
 |---|---|
 | 2: logging | Shared domain/code/host formatter, safe replacement-logger call sites, privacy regression tests added; builds/tests NOT RUN. |
-| 3: Yandex disclosure | Pending. |
+| 3: Yandex disclosure | Policy now describes the conditional original-audio download/upload; checked against `VoiceOverTranslationController.uploadOriginalAudio`. |
 | 4: file timestamps | Pending. |
 | 5: native macOS naming | Pending. |
 | 6: design logging | Pending. |

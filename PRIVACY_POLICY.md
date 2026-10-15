@@ -41,7 +41,7 @@ To browse and play videos, the app sends requests directly from Your Device to t
 
 - **YouTube / Google** — pages, streams, thumbnails, search suggestions and, if You sign in, Google sign-in and Your account's subscriptions, history and playlists.
 - **SponsorBlock** (sponsor.ajay.app) — the ID of the video You open, to fetch skip segments and community titles, when these features are on.
-- **Yandex** — the video's address, only when You use voice-over translation, plus Yandex sign-in if You connect a Yandex account.
+- **Yandex** — the video's address, only when You use voice-over translation. If Yandex requests the original audio to prepare the translation, the app downloads that audio and uploads it directly from Your Device to Yandex's audio translation service (`api.browser.yandex.ru/video-translation/audio`). The app also connects to Yandex sign-in if You connect a Yandex account.
 - **A PO-token server You configure yourself**, only if You enter one in Settings.
 - **Apple iCloud** — if You turn on iCloud sync, Your subscriptions, watch state, queue and RSS feeds are stored in Your own iCloud account.
 
