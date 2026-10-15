@@ -26,6 +26,11 @@ public struct ShortsPlayerView: View {
     @Environment(\.scenePhase) var scenePhase
     @Environment(SettingsStore.self) var store
     @Environment(AuthService.self) var authService
+    #if os(iOS)
+    /// The regular player. Stopped when Shorts open so only one AVPlayer plays and owns
+    /// the remote commands.
+    @Environment(PlayerStateStore.self) var playerState
+    #endif
     @State var slideOffset: CGFloat = 0
     @State var isTransitioning = false
     @State var isFetchingMore = false
@@ -210,6 +215,9 @@ public struct ShortsPlayerView: View {
             #endif
             .ignoresSafeArea()
             .onAppear {
+                #if os(iOS)
+                if playerState.presentation != .hidden { playerState.stop() }
+                #endif
                 vm.onPlaybackEnd = { handleShortEnded() }
                 vm.updateAuthToken(authService.accessToken)
                 vm.updateSAPISID(authService.sapisid)
