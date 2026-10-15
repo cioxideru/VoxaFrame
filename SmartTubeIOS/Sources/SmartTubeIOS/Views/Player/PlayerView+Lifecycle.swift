@@ -345,6 +345,9 @@ extension PlayerView {
             vm.updateSettings(store.settings)
             vm.updateAuthToken(authService.accessToken)
             vm.updateSAPISID(authService.sapisid)
+            // Expanding from the mini-player gives a fresh @State with no controller while
+            // isPlaying stays true, so onChange(of: vm.isPlaying) alone would never create one.
+            ensurePiPController()
             if ProcessInfo.processInfo.arguments.contains("--uitesting-open-more-menu") {
                 playerLifecycleLog.notice(
                     "[PlayerView] --uitesting-open-more-menu launch arg detected — scheduling showMoreMenu=true")
@@ -460,34 +463,7 @@ extension PlayerView {
             }
         }
         #if os(iOS)
-        // Create the PiP controller the first time the player actually starts
-        // playing — AVPlayer must have a ready item for isPictureInPicturePossible
-        // to ever become true. Creating it at view-appear time (before any item
-        // is loaded) means it stays permanently inert.
-        .onChange(of: vm.isPlaying) { _, playing in
-            let pipUITestingOverride = ProcessInfo.processInfo.arguments.contains("--uitesting-enable-pip")
-            guard playing, pipController == nil,
-                playerLayer.player != nil,
-                store.settings.pipEnabled,
-                pipUITestingOverride || AVPictureInPictureController.isPictureInPictureSupported()
-            else { return }
-            let pip = AVPictureInPictureController(playerLayer: playerLayer)
-            pip?.canStartPictureInPictureAutomaticallyFromInline = true
-            let delegate = PiPDelegate(
-                onActiveChange: { active in isPiPActive = active },
-                onDidStart: { vm.updateNowPlayingInfo() }
-            )
-            pip?.delegate = delegate
-            pipDelegate = delegate
-            pipController = pip
-        }
-        // When PiP ends (user returns to app), release the stale controller so the
-        // next background exit creates a fresh one attached to the current playerLayer.
-        .onChange(of: isPiPActive) { wasActive, isActive in
-            guard wasActive, !isActive else { return }
-            pipController = nil
-            pipDelegate = nil
-        }
+        .onChange(of: vm.isPlaying) { _, _ in ensurePiPController() }
         // Update isLandscape when the device physically rotates.
         .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
             let orientation = UIDevice.current.orientation
@@ -579,6 +555,35 @@ extension PlayerView {
                 return .systemAction
             })
     }
+
+    #if os(iOS)
+    /// Creates the PiP controller once the player is actually playing (AVPlayer needs a
+    /// ready item, otherwise isPictureInPicturePossible never becomes true), and releases
+    /// it when PiP is turned off in settings. The controller is kept after PiP ends:
+    /// playerLayer is owned by playerState and outlives PiP (TD-5). Called from onAppear
+    /// and onChange(of: vm.isPlaying); also released in onDisappear on full dismissal.
+    func ensurePiPController() {
+        guard store.settings.pipEnabled else {
+            pipController = nil
+            pipDelegate = nil
+            return
+        }
+        let pipUITestingOverride = ProcessInfo.processInfo.arguments.contains("--uitesting-enable-pip")
+        guard vm.isPlaying, pipController == nil,
+            playerLayer.player != nil,
+            pipUITestingOverride || AVPictureInPictureController.isPictureInPictureSupported()
+        else { return }
+        let pip = AVPictureInPictureController(playerLayer: playerLayer)
+        pip?.canStartPictureInPictureAutomaticallyFromInline = true
+        let delegate = PiPDelegate(
+            onActiveChange: { active in isPiPActive = active },
+            onDidStart: { vm.updateNowPlayingInfo() }
+        )
+        pip?.delegate = delegate
+        pipDelegate = delegate
+        pipController = pip
+    }
+    #endif
 
     // MARK: - Controls overlay
 
