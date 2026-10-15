@@ -28,4 +28,33 @@ struct PlaybackEndHandlerTests {
         #expect(calls == 1)
         #expect(vm.currentVideo?.id == current.id)
     }
+
+    @Test("Stopping releases an end handler that retains its player")
+    func stopBreaksHandlerCycle() {
+        weak var dismissedVM: PlaybackViewModel?
+        do {
+            let vm = PlaybackViewModel()
+            dismissedVM = vm
+            // Reproduce the Shorts view's strong capture of its own state-held VM.
+            vm.onPlaybackEnd = { vm.videoEnded = true }
+
+            vm.stop()
+
+            #expect(vm.onPlaybackEnd == nil)
+        }
+        #expect(dismissedVM == nil)
+    }
+
+    @Test("Temporary suspension preserves the end handler")
+    func suspendKeepsHandler() {
+        let vm = PlaybackViewModel()
+        var calls = 0
+        vm.onPlaybackEnd = { calls += 1 }
+
+        vm.suspend()
+        vm.handlePlaybackEnd()
+
+        #expect(calls == 1)
+        vm.stop()
+    }
 }

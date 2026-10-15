@@ -82,6 +82,7 @@ public final class PlaybackViewModel {
     public internal(set) var videoEnded: Bool = false
     /// When set, `handlePlaybackEnd()` hands end-of-video to this instead of the
     /// loop/queue/recommendation autoplay (used by `ShortsPlayerView`).
+    /// Cleared by `stop()`; the presenting view installs it again on appearance.
     var onPlaybackEnd: (@MainActor () -> Void)?
     public internal(set) var currentTime: TimeInterval = 0
     public internal(set) var duration: TimeInterval = 0

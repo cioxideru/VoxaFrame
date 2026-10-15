@@ -376,6 +376,8 @@ extension PlaybackViewModel {
     // MARK: - Cleanup
 
     public func stop() {
+        // Release the presenting view before teardown; suspend() keeps its handler.
+        onPlaybackEnd = nil
         playerLog.notice(
             "[stop] stop() called — currentVideo=\(self.currentVideo?.id ?? "nil") currentTime=\(Int(self.currentTime))s isLoading=\(self.isLoading)"
         )
