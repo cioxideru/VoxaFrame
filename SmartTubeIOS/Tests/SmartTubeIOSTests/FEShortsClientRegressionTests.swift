@@ -99,16 +99,16 @@ struct FEShortsClientRegressionTests {
 
     // MARK: - fetchShortsMore
 
-    /// Verifies that fetchShortsMore sends `clientName: "TVHTML5"`.
-    ///
-    /// Continuation tokens are client-scoped: a token from a TVHTML5 FEshorts
-    /// response must be submitted with TVHTML5 context to work correctly.
-    @Test("fetchShortsMore sends TVHTML5 clientName")
-    func fetchShortsMoreSendsTVClient() async throws {
+    /// Continuation tokens must use their source client, with the routing prefix removed.
+    @Test(
+        "fetchShortsMore preserves legacy and tagged client routing",
+        arguments: ["", "stv:", "stvc:", "web:", "srch:"]
+    )
+    func fetchShortsMoreRoutesClient(prefix: String) async throws {
         BodyCapturingURLProtocol.capturedBody = nil
         let api = makeTestAPI(authToken: "fake-tv-oauth-token")
 
-        _ = try? await api.fetchShortsMore(continuationToken: "test-continuation-token-12345")
+        _ = try? await api.fetchShortsMore(continuationToken: prefix + "test-continuation-token-12345")
 
         let bodyData = try #require(
             BodyCapturingURLProtocol.capturedBody,
@@ -122,10 +122,11 @@ struct FEShortsClientRegressionTests {
         let context = json["context"] as? [String: Any]
         let clientDict = context?["client"] as? [String: Any]
 
+        let expectedClient = prefix == "web:" || prefix == "srch:" ? "WEB" : "TVHTML5"
         #expect(
-            clientDict?["clientName"] as? String == "TVHTML5",
+            clientDict?["clientName"] as? String == expectedClient,
             """
-            fetchShortsMore must use TVHTML5 client.
+            fetchShortsMore must use the source client for prefix \(prefix).
             Found clientName=\(String(describing: clientDict?["clientName"]))
             """
         )

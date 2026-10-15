@@ -22,7 +22,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [../SmartTubeIOS/README.md](../SmartTubeIOS/README.md) | Package entry point and links to canonical guides | current | 2026-10-15 |
 | [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-15 |
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
-| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0014) | current | 2026-10-15 |
+| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0015) | current | 2026-10-15 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
 | [exec-plans/active/firebase-review-fixes.md](exec-plans/active/firebase-review-fixes.md) | PLAN-0004: review findings 2–6; coordinator owns build/test acceptance | current | 2026-10-15 |
 | [exec-plans/active/BotGuard.md](exec-plans/active/BotGuard.md) | PLAN-0003: active; implemented token paths, remaining live acceptance | current | 2026-10-15 |
@@ -61,3 +61,4 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [adr/0010-remove-iframe-player.md](adr/0010-remove-iframe-player.md) | 0010 — Remove the IFrame (TOS) and Shorts embed players; accepted | current | 2026-10-15 |
 | [../.github/copilot-instructions.md](../.github/copilot-instructions.md) | Assistant entry point delegating to AGENTS.md | current | 2026-10-15 |
 | [../.github/PULL_REQUEST_TEMPLATE.md](../.github/PULL_REQUEST_TEMPLATE.md) | Pull-request acceptance checklist | current | 2026-10-15 |
+| [exec-plans/active/home-review-fixes.md](exec-plans/active/home-review-fixes.md) | PLAN-0005: Home review fixes; coordinator acceptance pending | current | 2026-10-15 |

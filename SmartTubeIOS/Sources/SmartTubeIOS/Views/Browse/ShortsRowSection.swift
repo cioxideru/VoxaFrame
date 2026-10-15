@@ -30,7 +30,7 @@ struct ShortsRowSection: View {
 
     /// Maximum cards shown on tvOS in horizontal mode. A 1920-pt screen holds
     /// ~9 cards at 200 pt each; capping prevents overflow and keeps focus manageable.
-    private let shortsCardMaxTVCount = 9
+    static let shortsCardMaxTVCount = 9
 
     // MARK: - Body
 
@@ -51,7 +51,7 @@ struct ShortsRowSection: View {
         // navigation to the content below. Use a plain HStack capped at
         // shortsCardMaxTVCount cards instead.
         HStack(alignment: .top, spacing: videoGridRowSpacing) {
-            ForEach(Array(videos.prefix(shortsCardMaxTVCount))) { video in
+            ForEach(Array(videos.prefix(Self.shortsCardMaxTVCount))) { video in
                 Button {
                     onSelect(video)
                 } label: {
@@ -59,7 +59,7 @@ struct ShortsRowSection: View {
                         .frame(width: cardWidth, height: cardWidth * 16 / 9)
                 }
                 .buttonStyle(.plain)
-                .accessibilityIdentifier("shorts.card.\(video.id)")
+                .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
             }
         }
         .padding(.horizontal)
@@ -69,7 +69,7 @@ struct ShortsRowSection: View {
         #else
         let scrollView = ScrollView(.horizontal, showsIndicators: true) {
             // Eager HStack (not LazyHStack): the endless-scroll cascade pre-loads
-            // dozens of cards into `videos` in the background (preloadMoreShorts),
+            // dozens of cards into `videos` in the background,
             // and a LazyHStack would only materialize the few cards near the
             // visible viewport, leaving the rest invisible (and untestable via
             // accessibility) until the user manually scrolls past them.
@@ -77,7 +77,7 @@ struct ShortsRowSection: View {
                 ForEach(videos) { video in
                     ShortsCardView(video: video, onTap: { onSelect(video) })
                         .frame(width: cardWidth, height: cardWidth * 16 / 9)
-                        .accessibilityIdentifier("shorts.card.\(video.id)")
+                        .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
                 }
             }
             .padding(.horizontal)
@@ -119,7 +119,7 @@ struct ShortsRowSection: View {
         // tvOS: plain LazyVStack capped at shortsCardMaxTVCount — no ScrollView
         // to avoid trapping Siri remote directional events.
         LazyVStack(alignment: .leading, spacing: videoGridRowSpacing) {
-            ForEach(Array(videos.prefix(shortsCardMaxTVCount))) { video in
+            ForEach(Array(videos.prefix(Self.shortsCardMaxTVCount))) { video in
                 Button {
                     onSelect(video)
                 } label: {
@@ -128,7 +128,7 @@ struct ShortsRowSection: View {
                         .aspectRatio(9 / 16, contentMode: .fit)
                 }
                 .buttonStyle(.plain)
-                .accessibilityIdentifier("shorts.card.\(video.id)")
+                .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
             }
         }
         .padding(.horizontal)
@@ -142,7 +142,7 @@ struct ShortsRowSection: View {
                     ShortsCardView(video: video, onTap: { onSelect(video) })
                         .frame(maxWidth: .infinity)
                         .aspectRatio(9 / 16, contentMode: .fit)
-                        .accessibilityIdentifier("shorts.card.\(video.id)")
+                        .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
                 }
             }
             .padding(.horizontal)

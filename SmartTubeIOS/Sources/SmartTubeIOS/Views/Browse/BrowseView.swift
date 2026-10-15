@@ -197,10 +197,13 @@ struct VideoGridSection: View {
     let videos: [Video]
     let onSelect: (Video) -> Void
     var loadMore: (() -> Void)? = nil
+    /// Lays the rows out eagerly. The Home feed uses this for its two-row blocks inside an
+    /// outer `LazyVStack`, where a nested lazy grid can collapse to zero height.
+    var eager = false
 
     @Environment(SettingsStore.self) private var store
-    #if !os(tvOS)
     @Environment(\.isLandscapeLayout) private var isLandscapeLayout
+    #if !os(tvOS)
     /// Rotated on every UIDevice orientation change so `.id(orientationToken)` forces
     /// SwiftUI to fully recreate the LazyVGrid, preventing hit-test/layout mismatches
     /// after rotation on iPad (GitHub issue #82 — wrong video tapped in landscape).
@@ -210,33 +213,17 @@ struct VideoGridSection: View {
     var body: some View {
         let compact = store.settings.compactThumbnails
         if compact {
-            LazyVStack(spacing: 0) {
-                ForEach(videos) { video in
-                    #if os(tvOS)
-                    VideoCardView(video: video, compact: true, onSelect: { onSelect(video) })
-                        .padding(.horizontal)
-                        .padding(.vertical, 6)
-                        .accessibilityIdentifier("video.card.\(video.id)")
-                        .onAppear {
-                            if video.id == videos.last?.id { loadMore?() }
-                        }
-                    #else
-
-                    VideoCardView(video: video, compact: true)
-                        .padding(.horizontal)
-                        .padding(.vertical, 6)
-                        .accessibilityIdentifier("video.card.\(video.id)")
-                        .accessibilityValue(video.isShort ? "short" : "")
-                        .onTapGesture { onSelect(video) }
-                        .onAppear {
-                            if video.id == videos.last?.id { loadMore?() }
-                        }
-                    #endif
-                    Divider().padding(.horizontal)
+            let list = Group {
+                if eager {
+                    VStack(spacing: 0) { compactCards }
+                } else {
+                    LazyVStack(spacing: 0) { compactCards }
                 }
             }
             #if os(tvOS)
-            .focusSection()
+            list.focusSection()
+            #else
+            list
             #endif
         } else {
             #if os(tvOS)
@@ -244,61 +231,103 @@ struct VideoGridSection: View {
             // invisible — the focus engine cannot traverse cells that have not
             // been laid out yet. Use LazyVStack + HStack rows (4 per row) instead,
             // which is the same approach BrowseView.content already uses on tvOS.
-            let columnCount = 4
-            LazyVStack(alignment: .leading, spacing: videoGridRowSpacing) {
-                ForEach(Array(stride(from: 0, to: videos.count, by: columnCount)), id: \.self) { startIdx in
-                    let rowVideos = Array(videos[startIdx..<min(startIdx + columnCount, videos.count)])
-                    HStack(alignment: .top, spacing: videoGridRowSpacing) {
-                        ForEach(rowVideos) { video in
-                            VideoCardView(video: video, compact: false, onSelect: { onSelect(video) })
-                                .frame(maxWidth: .infinity)
-                                .accessibilityIdentifier("video.card.\(video.id)")
-                        }
-                        let remainder = columnCount - rowVideos.count
-                        if remainder > 0 {
-                            ForEach(0..<remainder, id: \.self) { _ in
-                                Color.clear.frame(maxWidth: .infinity)
-                            }
-                        }
-                    }
-                    .onAppear {
-                        if rowVideos.last?.id == videos.last?.id { loadMore?() }
-                    }
+            Group {
+                if eager {
+                    VStack(alignment: .leading, spacing: videoGridRowSpacing) { gridRows }
+                } else {
+                    LazyVStack(alignment: .leading, spacing: videoGridRowSpacing) { gridRows }
                 }
             }
-            .padding(.horizontal, 0)
-            .padding(.vertical, 8)
-            #if os(tvOS)
+            .padding(.vertical, eager ? videoGridRowSpacing / 2 : 8)
             .focusSection()
-            #endif
             #else
-            LazyVGrid(
-                columns: videoGridColumns(store.settings, landscape: isLandscapeLayout), spacing: videoGridRowSpacing
-            ) {
-                ForEach(videos) { video in
-                    VideoCardView(video: video, compact: false)
-                        .accessibilityIdentifier("video.card.\(video.id)")
-                        .accessibilityValue(video.isShort ? "short" : "")
-                        .onTapGesture { onSelect(video) }
-                        .onAppear {
-                            if video.id == videos.last?.id { loadMore?() }
-                        }
+            if eager {
+                // Half the row spacing above and below, so stacked blocks read as one grid.
+                VStack(alignment: .leading, spacing: videoGridRowSpacing) { gridRows }
+                    .padding(.horizontal)
+                    .padding(.vertical, videoGridRowSpacing / 2)
+            } else {
+                let grid = LazyVGrid(
+                    columns: videoGridColumns(store.settings, landscape: isLandscapeLayout),
+                    spacing: videoGridRowSpacing
+                ) {
+                    ForEach(videos) { gridCard($0) }
                 }
+                // Column count now follows isLandscapeLayout (set by a later layout pass than the
+                // orientation notification, and also on iPad split-screen resizes), so reset the
+                // grid's identity on that too — a column change without an identity reset is the
+                // wrong-video-tapped-after-rotation bug (#82).
+                .id("\(orientationToken)-\(isLandscapeLayout)")
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                #if canImport(UIKit)
+                let rotations = NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)
+                grid.onReceive(rotations) { _ in orientationToken = UUID() }
+                #else
+                grid
+                #endif
             }
-            // Column count now follows isLandscapeLayout (set by a later layout pass than the
-            // orientation notification, and also on iPad split-screen resizes), so reset the
-            // grid's identity on that too — a column change without an identity reset is the
-            // wrong-video-tapped-after-rotation bug (#82).
-            .id("\(orientationToken)-\(isLandscapeLayout)")
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            #if canImport(UIKit)
-            .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
-                orientationToken = UUID()
-            }
-            #endif
             #endif
         }
+    }
+
+    @ViewBuilder private var compactCards: some View {
+        ForEach(videos) { video in
+            #if os(tvOS)
+            VideoCardView(video: video, compact: true, onSelect: { onSelect(video) })
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
+                .onAppear {
+                    if video.id == videos.last?.id { loadMore?() }
+                }
+            #else
+            VideoCardView(video: video, compact: true)
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
+                .accessibilityValue(video.isShort ? "short" : "")
+                .onTapGesture { onSelect(video) }
+                .onAppear {
+                    if video.id == videos.last?.id { loadMore?() }
+                }
+            #endif
+            Divider().padding(.horizontal)
+        }
+    }
+
+    /// `HStack` rows of `videoGridColumnCount` cards; a short last row is padded with spacers.
+    @ViewBuilder private var gridRows: some View {
+        let columnCount = videoGridColumnCount(store.settings, landscape: isLandscapeLayout)
+        ForEach(Array(stride(from: 0, to: videos.count, by: columnCount)), id: \.self) { startIdx in
+            let rowVideos = videos[startIdx..<min(startIdx + columnCount, videos.count)]
+            HStack(alignment: .top, spacing: videoGridRowSpacing) {
+                ForEach(rowVideos) { video in
+                    gridCard(video).frame(maxWidth: .infinity)
+                }
+                ForEach(rowVideos.count..<columnCount, id: \.self) { _ in
+                    Color.clear.frame(maxWidth: .infinity)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func gridCard(_ video: Video) -> some View {
+        #if os(tvOS)
+        VideoCardView(video: video, compact: false, onSelect: { onSelect(video) })
+            .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
+            .onAppear {
+                if video.id == videos.last?.id { loadMore?() }
+            }
+        #else
+        VideoCardView(video: video, compact: false)
+            .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
+            .accessibilityValue(video.isShort ? "short" : "")
+            .onTapGesture { onSelect(video) }
+            .onAppear {
+                if video.id == videos.last?.id { loadMore?() }
+            }
+        #endif
     }
 }
 

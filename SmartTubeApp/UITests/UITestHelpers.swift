@@ -42,6 +42,14 @@ enum AccessibilityID {
     static var settingsPINLock: String { "settingsPINLock" }
 
     static var homeCurrentQueueRow: String { "home.currentQueueRow" }
+
+    static func homeShortsRow(_ index: Int) -> String {
+        index == 0 ? "home.shortsRow" : "home.shortsRow.\(index)"
+    }
+
+    static func shortsCard(_ videoId: String) -> String {
+        "shorts.card.\(videoId)"
+    }
     static var homeSectionFeed: String { "home.sectionFeed" }
     static var playerBackButton: String { "player.backButton" }
     static var playerProbeStreamResult: String { "player.probeStreamResult" }

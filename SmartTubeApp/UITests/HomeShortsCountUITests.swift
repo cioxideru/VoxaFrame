@@ -145,9 +145,9 @@ final class HomeShortsCountUITests: XCTestCase {
     /// Scrolling all the way to the last injected card must not crash, reduce the
     /// card count, or remove any previously visible card.
     ///
-    /// Note: in UI-test inject mode `shortsNextPageToken` is nil, so
-    /// `loadNextShortsPage` skips silently — this test verifies the scroll-end
-    /// trigger is safe, not that a network page loads.
+    /// Each Home Shorts row holds a fixed chunk of Shorts; more Shorts go into the
+    /// rows further down the feed, so this only checks that scrolling to the end of
+    /// the row is safe.
     func testScrollToLastCardPreservesAllInjectedCards() {
         let row = app.scrollViews["home.shortsRow"]
         XCTAssertTrue(row.waitForExistence(timeout: 15), "home.shortsRow not found")
@@ -167,7 +167,7 @@ final class HomeShortsCountUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 0.3)
         }
 
-        // Brief pause — allows any async loadNextShortsPage work to settle.
+        // Brief pause — lets any async Shorts paging settle.
         Thread.sleep(forTimeInterval: 1.0)
 
         let finalCount = shortsCards().count
@@ -231,11 +231,8 @@ final class HomeShortsCountUITests: XCTestCase {
 
 // MARK: - HomeShortsEndlessUITests
 
-/// Verifies that the Shorts row loads at least 109 cards via the background
-/// endless-scroll cascade (loadNextShortsPage while loop).
-///
-/// IMPORTANT: does NOT inject shorts IDs — exercises real network so the
-/// endless cascade actually runs. Requires a signed-in account via keychain.
+/// The fixture supplies ten initial Shorts and two disjoint continuation pages.
+/// Regular shelves have no continuations, so only Shorts demand can fetch the new cards.
 final class HomeShortsEndlessUITests: XCTestCase {
 
     private var app: XCUIApplication!
@@ -243,11 +240,11 @@ final class HomeShortsEndlessUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        // No --uitesting-inject-shorts-ids: let load() run with real network
-        // so the endless loadNextShortsPage cascade fires.
         app.launchArguments += [
             "--uitesting",
             "--uitesting-signed-in",
+            "--uitesting-reset-settings",
+            "--uitesting-home-pagination",
         ]
         app.launch()
         UITestHelpers.tapTab(named: "Home", in: app)
@@ -257,101 +254,50 @@ final class HomeShortsEndlessUITests: XCTestCase {
         app = nil
     }
 
-    private func shortsCards() -> [XCUIElement] {
-        let row = app.scrollViews["home.shortsRow"]
-        guard row.exists else { return [] }
-        let predicate = NSPredicate(format: "identifier BEGINSWITH 'shorts.card.'")
-        let all = row.descendants(matching: .any).matching(predicate).allElementsBoundByIndex
-        var seen = Set<String>()
-        return all.filter { seen.insert($0.identifier).inserted }
+    private func isVisible(_ element: XCUIElement, inside viewport: CGRect) -> Bool {
+        guard element.exists, element.isHittable else { return false }
+        let frame = element.frame
+        return !frame.isEmpty && viewport.contains(CGPoint(x: frame.midX, y: frame.midY))
     }
 
-    /// The endless cascade (loadNextShortsPage while loop, primed from load())
-    /// must deliver at least 20 Shorts cards without the user scrolling.
-    /// 20 > 6 (iOS threshold) and > subs-only count, proving the cascade fires
-    /// at least one additional search-continuation page beyond the initial fill.
-    func testEndlessShortsLoadsAtLeast109Cards() {
-        let row = app.scrollViews["home.shortsRow"]
-        XCTAssertTrue(row.waitForExistence(timeout: 30), "home.shortsRow not found within 30s")
-
-        // Poll until ≥20 cards appear or timeout.
-        let target = 20
-        let timeout: TimeInterval = 90
-        let deadline = Date(timeIntervalSinceNow: timeout)
-        var count = 0
-        while Date() < deadline {
-            count = shortsCards().count
-            if count >= target { break }
-            Thread.sleep(forTimeInterval: 1.0)
+    /// Existence alone includes offscreen eager cards. Require a hittable element in the viewport.
+    private func scrollDown(until row: XCUIElement, maxSwipes: Int = 30) -> Bool {
+        for _ in 0..<maxSwipes {
+            if row.waitForExistence(timeout: 1), isVisible(row, inside: app.windows.firstMatch.frame) { return true }
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.75))
+            start.press(
+                forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.45)))
         }
-
-        let screenshot = XCTAttachment(screenshot: app.screenshot())
-        screenshot.name = "Endless shorts — target=\(target) actual=\(count)"
-        screenshot.lifetime = .keepAlways
-        add(screenshot)
-
-        XCTAssertGreaterThanOrEqual(
-            count, target,
-            "Endless Shorts cascade must load ≥\(target) cards in \(Int(timeout))s; got \(count). "
-                + "Check loadNextShortsPage while loop and fetchShortsMore search continuation."
-        )
+        return isVisible(row, inside: app.windows.firstMatch.frame)
     }
 
-    /// Swiping left through the Shorts row must trigger auto-loading of additional pages
-    /// so the user never runs out of new thumbnails.
-    ///
-    /// Mechanism: when the last card enters the viewport, `.onAppear` fires `loadMore`
-    /// → `homeVM.loadNextShortsPage()` → fetches the next search-continuation / subs page.
-    /// The row's `accessibilityValue` reflects `videos.count` from the live data array,
-    /// so it updates even when newly-loaded cards are off-screen in the LazyHStack.
-    func testSwipingLeftAutoLoadsMoreShorts() {
-        let row = app.scrollViews["home.shortsRow"]
-        XCTAssertTrue(row.waitForExistence(timeout: 30), "home.shortsRow not found within 30s")
+    private func assertContinuationCard(_ videoID: String, inRow index: Int) {
+        let row = app.scrollViews[AccessibilityID.homeShortsRow(index)]
+        XCTAssertTrue(scrollDown(until: row), "Continuation row \(index) never became visible")
+        let card = row.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.shortsCard(videoID)).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "Continuation-only card \(videoID) was not fetched")
+        XCTAssertTrue(
+            isVisible(card, inside: row.frame.intersection(app.windows.firstMatch.frame)),
+            "Fetched card \(videoID) must be hittable and inside both the row and window viewport")
+    }
 
-        /// Read the row's data count from the accessibilityValue the view exposes.
-        func rowCount() -> Int { Int(row.value as? String ?? "0") ?? 0 }
+    func testScrollingDownRevealsASecondShortsRow() {
+        let firstRow = app.scrollViews[AccessibilityID.homeShortsRow(0)]
+        XCTAssertTrue(scrollDown(until: firstRow), "Initial Shorts row never became visible")
+        let initialCard = firstRow.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.shortsCard("initial-short-0")).firstMatch
+        XCTAssertTrue(initialCard.waitForExistence(timeout: 10))
 
-        // Wait for initial batch (≥4 cards).
-        let initDeadline = Date(timeIntervalSinceNow: 30)
-        while Date() < initDeadline {
-            if rowCount() >= 4 { break }
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-        let initialCount = rowCount()
-        XCTAssertGreaterThanOrEqual(
-            initialCount, 4,
-            "Need ≥4 Shorts before testing auto-load; got \(initialCount)")
+        // This ID is absent from all initial data; a no-op loadShorts cannot satisfy this test.
+        assertContinuationCard("page-1-short-0", inRow: 1)
+    }
 
-        let beforeShot = XCTAttachment(screenshot: app.screenshot())
-        beforeShot.name = "Before swipes: \(initialCount) cards"
-        beforeShot.lifetime = .keepAlways
-        add(beforeShot)
-
-        // Swipe left aggressively to reach the last card — its .onAppear triggers loadMore.
-        for _ in 0..<20 {
-            row.swipeLeft(velocity: .fast)
-            Thread.sleep(forTimeInterval: 0.25)
-        }
-
-        // Wait up to 20s for the auto-loaded cards to appear in the data array.
-        let autoLoadDeadline = Date(timeIntervalSinceNow: 20)
-        var finalCount = rowCount()
-        while Date() < autoLoadDeadline {
-            finalCount = rowCount()
-            if finalCount > initialCount { break }
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-
-        let afterShot = XCTAttachment(screenshot: app.screenshot())
-        afterShot.name = "After 20 fast swipes: initial=\(initialCount) final=\(finalCount)"
-        afterShot.lifetime = .keepAlways
-        add(afterShot)
-
-        XCTAssertGreaterThan(
-            finalCount, initialCount,
-            "Scrolling to the last Short must auto-load more cards via loadNextShortsPage; "
-                + "count did not grow (initial: \(initialCount), after swipes: \(finalCount)). "
-                + "Phase 2 (subs) fired but the new Short may be a duplicate. Check subsShorts dedup."
-        )
+    func testLaterShortsRowsShowNewShorts() {
+        let firstRow = app.scrollViews[AccessibilityID.homeShortsRow(0)]
+        XCTAssertTrue(scrollDown(until: firstRow), "Initial Shorts row never became visible")
+        assertContinuationCard("page-1-short-0", inRow: 1)
+        // Go beyond both the initial supply and the first continuation page.
+        assertContinuationCard("page-2-short-0", inRow: 2)
     }
 }

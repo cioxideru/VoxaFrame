@@ -169,3 +169,12 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   [privacy policy](../PRIVACY_POLICY.md). Server-side state was **NOT CHECKED**.
 - Acceptance: a clean checkout (no DerivedData, no `GoogleService-Info.plist`) builds iOS, tvOS and
   the UI-test targets, and the built app contains no `Firebase_*` bundles.
+
+## OQ-0015 — Home feed review acceptance
+
+- Status: awaiting verification; owner: coordinator; basis: [PLAN-0005](exec-plans/active/home-review-fixes.md).
+- Six review findings have source fixes and regression coverage. Builds and tests were **NOT RUN**
+  by the implementing agent, as instructed. Commit hooks were skipped to honor that restriction.
+- Next step: compile under Swift 6 strict concurrency; run HomeRequestGenerationTests,
+  HomeViewModelTests, HomeFeedSegmentTests, and HomeShortsEndlessUITests (Debug fixture).
+  Verify refresh while switching chips, gesture arbitration, and tvOS focus separately.

@@ -49,6 +49,11 @@ extension InnerTubeAPI {
     /// Returns one VideoGroup per shelf; each has layout == .row.
     /// Falls back to a single flat VideoGroup if no shelves are found.
     public func fetchHomeRows(continuationToken: String? = nil) async throws -> [VideoGroup] {
+        #if DEBUG
+        if HomePaginationUITestFixture.isEnabled {
+            return [HomePaginationUITestFixture.regularPage(subscriptions: false, continuationToken: continuationToken)]
+        }
+        #endif
         let isAuth = authToken != nil
         var body = makeBody(
             client: isAuth ? tvClientContext : webClientContext,
@@ -78,6 +83,11 @@ extension InnerTubeAPI {
     /// Uses TVHTML5 client on youtubei.googleapis.com — the only endpoint that accepts
     /// the OAuth token issued by the TV device-code flow.
     public func fetchSubscriptions(continuationToken: String? = nil) async throws -> VideoGroup {
+        #if DEBUG
+        if HomePaginationUITestFixture.isEnabled {
+            return HomePaginationUITestFixture.regularPage(subscriptions: true, continuationToken: continuationToken)
+        }
+        #endif
         var body = makeBody(client: tvClientContext, continuationToken: continuationToken)
         if continuationToken == nil {
             body["browseId"] = "FEsubscriptions"
@@ -208,6 +218,11 @@ extension InnerTubeAPI {
     // MARK: - Shorts
 
     public func fetchShorts() async throws -> VideoGroup {
+        #if DEBUG
+        if HomePaginationUITestFixture.isEnabled {
+            return HomePaginationUITestFixture.shortsPage(continuationToken: nil)
+        }
+        #endif
         // NOTE (2026-05-24): Strategies 1–3 (FEshorts via postTV, postTVCategory, WEB)
         // were removed because YouTube deprecated the FEshorts browseId — all three
         // returned HTTP 400 on every client (TV+auth, TV-category, WEB). Confirmed via
@@ -246,6 +261,11 @@ extension InnerTubeAPI {
     }
 
     public func fetchShortsMore(continuationToken: String) async throws -> VideoGroup {
+        #if DEBUG
+        if HomePaginationUITestFixture.isEnabled {
+            return HomePaginationUITestFixture.shortsPage(continuationToken: continuationToken)
+        }
+        #endif
         // InnerTube continuation tokens are client-specific: a token issued by one
         // client (e.g. postTV) returns HTTP 400 when sent to a different client
         // (e.g. WEB). fetchShorts() embeds a source prefix in every token it returns
@@ -318,66 +338,70 @@ extension InnerTubeAPI {
             return VideoGroup(title: "Shorts", videos: shorts, nextPageToken: group.nextPageToken.map { "srch:" + $0 })
 
         default:
-            // Legacy un-prefixed token (from older app versions): try all clients as before.
-            if isAuth {
-                do {
-                    let body = makeBody(client: tvClientContext, continuationToken: rawToken)
-                    let data = try await postTV(endpoint: "browse", body: body)
-                    let group = try parseVideoGroup(from: data, title: "Shorts")
-                    let shorts = group.videos.filter { $0.isShort }
-                    let token = group.nextPageToken.map { String($0.prefix(16)) + "…" } ?? "nil"
-                    tubeLog.notice(
-                        "fetchShortsMore postTV → \(group.videos.count, privacy: .public) videos, \(shorts.count, privacy: .public) shorts, token=\(token, privacy: .public)"
-                    )
-                    if !group.videos.isEmpty {
-                        return VideoGroup(title: "Shorts", videos: shorts, nextPageToken: group.nextPageToken)
-                    }
-                } catch {
-                    tubeLog.notice("fetchShortsMore postTV failed (\(error, privacy: .public)) — trying postTVCategory")
-                }
-            }
+            return try await fetchLegacyShortsMore(rawToken: rawToken, isAuth: isAuth)
+        }
+    }
 
+    private func fetchLegacyShortsMore(rawToken: String, isAuth: Bool) async throws -> VideoGroup {
+        // Legacy un-prefixed token (from older app versions): try all clients as before.
+        if isAuth {
             do {
                 let body = makeBody(client: tvClientContext, continuationToken: rawToken)
-                let data = try await postTVCategory(endpoint: "browse", body: body)
+                let data = try await postTV(endpoint: "browse", body: body)
                 let group = try parseVideoGroup(from: data, title: "Shorts")
                 let shorts = group.videos.filter { $0.isShort }
                 let token = group.nextPageToken.map { String($0.prefix(16)) + "…" } ?? "nil"
                 tubeLog.notice(
-                    "fetchShortsMore postTVCategory → \(group.videos.count, privacy: .public) videos, \(shorts.count, privacy: .public) shorts, token=\(token, privacy: .public)"
+                    "fetchShortsMore postTV → \(group.videos.count, privacy: .public) videos, \(shorts.count, privacy: .public) shorts, token=\(token, privacy: .public)"
                 )
                 if !group.videos.isEmpty {
                     return VideoGroup(title: "Shorts", videos: shorts, nextPageToken: group.nextPageToken)
                 }
             } catch {
-                tubeLog.notice("fetchShortsMore postTVCategory failed (\(error, privacy: .public)) — trying WEB")
+                tubeLog.notice("fetchShortsMore postTV failed (\(error, privacy: .public)) — trying postTVCategory")
             }
-
-            do {
-                let body = makeBody(client: webClientContext, continuationToken: rawToken)
-                let data = try await post(endpoint: "browse", body: body)
-                let group = try parseVideoGroup(from: data, title: "Shorts")
-                let shorts = group.videos.filter { $0.isShort }
-                let token = group.nextPageToken.map { String($0.prefix(16)) + "\u{2026}" } ?? "nil"
-                tubeLog.notice(
-                    "fetchShortsMore WEB → \(group.videos.count, privacy: .public) videos, \(shorts.count, privacy: .public) shorts, token=\(token, privacy: .public)"
-                )
-                if !group.videos.isEmpty {
-                    return VideoGroup(title: "Shorts", videos: shorts, nextPageToken: group.nextPageToken)
-                }
-            } catch {
-                tubeLog.notice("fetchShortsMore WEB failed (\(error, privacy: .public)) — trying search continuation")
-            }
-
-            // Last resort: search continuation token.
-            let searchGroup = try await search(query: "#shorts", continuationToken: rawToken)
-            let searchShorts = searchGroup.videos.filter { $0.isShort }
-            let searchToken = searchGroup.nextPageToken.map { String($0.prefix(16)) + "\u{2026}" } ?? "nil"
-            tubeLog.notice(
-                "fetchShortsMore search → \(searchGroup.videos.count, privacy: .public) total, \(searchShorts.count, privacy: .public) shorts, token=\(searchToken, privacy: .public)"
-            )
-            return VideoGroup(title: "Shorts", videos: searchShorts, nextPageToken: searchGroup.nextPageToken)
         }
+
+        do {
+            let body = makeBody(client: tvClientContext, continuationToken: rawToken)
+            let data = try await postTVCategory(endpoint: "browse", body: body)
+            let group = try parseVideoGroup(from: data, title: "Shorts")
+            let shorts = group.videos.filter { $0.isShort }
+            let token = group.nextPageToken.map { String($0.prefix(16)) + "…" } ?? "nil"
+            tubeLog.notice(
+                "fetchShortsMore postTVCategory → \(group.videos.count, privacy: .public) videos, \(shorts.count, privacy: .public) shorts, token=\(token, privacy: .public)"
+            )
+            if !group.videos.isEmpty {
+                return VideoGroup(title: "Shorts", videos: shorts, nextPageToken: group.nextPageToken)
+            }
+        } catch {
+            tubeLog.notice("fetchShortsMore postTVCategory failed (\(error, privacy: .public)) — trying WEB")
+        }
+
+        do {
+            let body = makeBody(client: webClientContext, continuationToken: rawToken)
+            let data = try await post(endpoint: "browse", body: body)
+            let group = try parseVideoGroup(from: data, title: "Shorts")
+            let shorts = group.videos.filter { $0.isShort }
+            let token = group.nextPageToken.map { String($0.prefix(16)) + "\u{2026}" } ?? "nil"
+            tubeLog.notice(
+                "fetchShortsMore WEB → \(group.videos.count, privacy: .public) videos, \(shorts.count, privacy: .public) shorts, token=\(token, privacy: .public)"
+            )
+            if !group.videos.isEmpty {
+                return VideoGroup(title: "Shorts", videos: shorts, nextPageToken: group.nextPageToken)
+            }
+        } catch {
+            tubeLog.notice("fetchShortsMore WEB failed (\(error, privacy: .public)) — trying search continuation")
+        }
+
+        // Last resort: search continuation token.
+        let searchGroup = try await search(query: "#shorts", continuationToken: rawToken)
+        let searchShorts = searchGroup.videos.filter { $0.isShort }
+        let searchToken = searchGroup.nextPageToken.map { String($0.prefix(16)) + "\u{2026}" } ?? "nil"
+        tubeLog.notice(
+            "fetchShortsMore search → \(searchGroup.videos.count, privacy: .public) total, \(searchShorts.count, privacy: .public) shorts, token=\(searchToken, privacy: .public)"
+        )
+        return VideoGroup(title: "Shorts", videos: searchShorts, nextPageToken: searchGroup.nextPageToken)
     }
 
     // MARK: - Category sections
