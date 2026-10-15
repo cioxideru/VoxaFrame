@@ -11,7 +11,7 @@ import Testing
 private func waitForSubsTasks(until condition: @MainActor () -> Bool) async {
     let deadline = Date().addingTimeInterval(2)
     while Date() < deadline, !condition() {
-        try? await Task.sleep(for: .milliseconds(10))
+        await Task.yield()
     }
 }
 

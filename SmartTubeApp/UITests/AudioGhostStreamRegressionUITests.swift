@@ -47,11 +47,11 @@ final class PlayerGhostStreamRegressionUITests: XCTestCase {
     // MARK: - Helpers
 
     private var backButton: XCUIElement {
-        app.buttons["player.backButton"].firstMatch
+        app.buttons[AccessibilityID.playerBackButton].firstMatch
     }
 
     private var titleLabel: XCUIElement {
-        app.staticTexts["player.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
     }
 
     /// Opens the player from the first Home video card.
@@ -151,7 +151,7 @@ final class PlayerGhostStreamRegressionUITests: XCTestCase {
         nextButton.tap()
 
         // Wait for the second video to start loading.
-        let secondTitle = app.staticTexts["player.titleLabel"].firstMatch
+        let secondTitle = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard secondTitle.waitForExistence(timeout: 15) else {
             XCTFail("Second video title did not appear after tapping next")
             return

@@ -46,7 +46,7 @@ final class PlayerDoubleTapUITests: XCTestCase {
     /// get a clear "video failed to load" failure rather than a confusing
     /// toast-not-found failure later when the gesture fires on an errored player.
     private func openPlayer() {
-        let title = app.staticTexts["player.titleLabel"].firstMatch
+        let title = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard title.waitForExistence(timeout: 15) else {
             XCTFail("player.titleLabel did not appear — deep-link did not open player")
             return

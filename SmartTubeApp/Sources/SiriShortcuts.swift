@@ -141,6 +141,7 @@ struct PlayPauseVideoIntent: AppIntent {
     static let description = IntentDescription("Plays or pauses the video playing in SmartTube.")
 
     @MainActor
+    // Keep the async protocol witness signature. swiftlint:disable:next async_without_await
     func perform() async throws -> some IntentResult {
         guard PlayerRemote.togglePlayPause() else { throw SmartTubeIntentError.nothingPlaying }
         return .result()
@@ -155,6 +156,7 @@ struct SkipForwardIntent: AppIntent {
     var seconds: Int
 
     @MainActor
+    // Keep the async protocol witness signature. swiftlint:disable:next async_without_await
     func perform() async throws -> some IntentResult {
         guard PlayerRemote.skip(by: TimeInterval(seconds)) else { throw SmartTubeIntentError.nothingPlaying }
         return .result()
@@ -169,6 +171,7 @@ struct SkipBackwardIntent: AppIntent {
     var seconds: Int
 
     @MainActor
+    // Keep the async protocol witness signature. swiftlint:disable:next async_without_await
     func perform() async throws -> some IntentResult {
         guard PlayerRemote.skip(by: -TimeInterval(seconds)) else { throw SmartTubeIntentError.nothingPlaying }
         return .result()
@@ -180,6 +183,7 @@ struct NextVideoIntent: AppIntent {
     static let description = IntentDescription("Plays the next video in SmartTube.")
 
     @MainActor
+    // Keep the async protocol witness signature. swiftlint:disable:next async_without_await
     func perform() async throws -> some IntentResult {
         guard PlayerRemote.playNext() else { throw SmartTubeIntentError.nothingPlaying }
         return .result()

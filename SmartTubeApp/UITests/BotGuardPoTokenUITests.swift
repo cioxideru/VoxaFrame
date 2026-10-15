@@ -74,7 +74,7 @@ final class BotGuardPoTokenUITests: XCTestCase {
         sharedApp = app
 
         // Wait for the player to open.
-        guard app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: 20) else {
+        guard app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 20) else {
             skipAllTests = true
             return
         }

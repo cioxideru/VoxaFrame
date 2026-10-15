@@ -35,7 +35,10 @@ public struct HomeWidgetSnapshot: Codable, Equatable, Sendable {
             components.scheme = "smarttube"
             components.host = "watch"
             components.queryItems = [URLQueryItem(name: "v", value: id)]
-            return components.url!
+            guard let url = components.url else {
+                preconditionFailure("A widget video must form a valid SmartTube URL")
+            }
+            return url
         }
     }
 

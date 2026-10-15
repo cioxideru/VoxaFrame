@@ -270,7 +270,7 @@ final class TVAudioAndCaptionPickerUITests: XCTestCase {
             element(identifier: "player.captionPicker").exists,
             "player.captionPicker must dismiss after one Menu press")
         XCTAssertTrue(
-            element(identifier: "player.titleLabel").exists,
+            element(identifier: AccessibilityID.playerTitleLabel).exists,
             "player.titleLabel must still exist after dismissing caption picker")
     }
 
@@ -305,7 +305,7 @@ final class TVAudioAndCaptionPickerUITests: XCTestCase {
             element(identifier: "player.captionPicker").exists,
             "Selecting a caption track must close the picker")
         XCTAssertTrue(
-            element(identifier: "player.titleLabel").exists,
+            element(identifier: AccessibilityID.playerTitleLabel).exists,
             "Player must remain open after enabling captions")
         let cue = element(identifier: "player.captionCue")
         XCTAssertTrue(
@@ -370,7 +370,7 @@ final class TVAudioAndCaptionPickerUITests: XCTestCase {
         guard picker.waitForExistence(timeout: 8) else {
             try captureAndSkip("player.audioTrackPicker did not appear — cannot test dismissal", in: app)
         }
-        let autoRow = element(identifier: "player.audioTrackPicker.auto")
+        let autoRow = element(identifier: AccessibilityID.playerAudioTrackPickerAuto)
         XCTAssertTrue(autoRow.waitForExistence(timeout: 5), "Audio Auto row must exist")
         XCTAssertTrue(autoRow.hasFocus, "Audio picker must route initial focus to Auto")
         remote.press(.menu)
@@ -379,7 +379,7 @@ final class TVAudioAndCaptionPickerUITests: XCTestCase {
             element(identifier: "player.audioTrackPicker").exists,
             "player.audioTrackPicker must dismiss after one Menu press")
         XCTAssertTrue(
-            element(identifier: "player.titleLabel").exists,
+            element(identifier: AccessibilityID.playerTitleLabel).exists,
             "player.titleLabel must still exist after dismissing audio-track picker")
     }
 }

@@ -15,7 +15,7 @@ public struct CrashlyticsLogger: Sendable {
     /// DNS-blocked) — which means every method below must skip touching
     /// `Crashlytics.crashlytics()` too, since calling it without a configured FirebaseApp
     /// is a fatal error, not a silent no-op.
-    public nonisolated(unsafe) static var isEnabled = true
+    nonisolated(unsafe) public static var isEnabled = true
 
     /// Short identifier (8 hex chars) generated once per app session, independent of
     /// `isEnabled` — it's shown in the Stats for Nerds debug overlay purely as a local

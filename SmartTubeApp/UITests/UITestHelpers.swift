@@ -1,5 +1,72 @@
 import XCTest
 
+// UI-test targets do not link SmartTubeIOSCore. Keep these values in sync with its AccessibilityID.
+enum AccessibilityID {
+    static var homeSubscriptionsChannelFilter: String { "home.subscriptionsChannelFilter" }
+    static var parentalControlsConfirmNew: String { "parentalControls.confirmNew" }
+    static var parentalControlsEnterNew: String { "parentalControls.enterNew" }
+    static var parentalControlsVerifyCurrent: String { "parentalControls.verifyCurrent" }
+    static var pinKeypadDelete: String { "pinKeypad.delete" }
+
+    static func pinKeypadDigit(_ digit: Int) -> String {
+        "pinKeypad.digit\(digit)"
+    }
+    static var pinKeypadDots: String { "pinKeypad.dots" }
+    static var pinKeypadErrorMessage: String { "pinKeypad.errorMessage" }
+    static var playerAudioTrackPickerAuto: String { "player.audioTrackPicker.auto" }
+    static var playerAudioKeepOriginalAudioToggle: String { "player.audioTrackPicker.keepOriginalAudioToggle" }
+    static var playerAudioTrackPickerLivelyVoiceToggle: String { "player.audioTrackPicker.livelyVoiceToggle" }
+
+    static func playerAudioTrack(_ id: String) -> String {
+        "player.audioTrackPicker.track.\(id)"
+    }
+    static var playerAudioTrackPickerVoiceOverToggle: String { "player.audioTrackPicker.voiceOverToggle" }
+    static var playerVoiceOverCancelButton: String { "player.voiceOver.cancelButton" }
+    static var settingsAccentColorPicker: String { "settings.accentColorPicker" }
+    static var settingsChangePINButton: String { "settings.changePINButton" }
+    static var settingsClearLocalHistoryButton: String { "settings.clearLocalHistoryButton" }
+    static var settingsDisableAnalyticsToggle: String { "settings.disableAnalyticsToggle" }
+    static var settingsDisableLiquidGlassToggle: String { "settings.disableLiquidGlassToggle" }
+    static var settingsGridColumnsLandscapePicker: String { "settings.gridColumnsLandscapePicker" }
+    static var settingsGridColumnsPortraitPicker: String { "settings.gridColumnsPortraitPicker" }
+    static var settingsH264Toggle: String { "settings.h264Toggle" }
+    static var settingsHideWatchedThresholdStepper: String { "settings.hideWatchedThresholdStepper" }
+    static var settingsHideWatchedVideosToggle: String { "settings.hideWatchedVideosToggle" }
+    static var settingsRemovePINButton: String { "settings.removePINButton" }
+    static var settingsSetPINButton: String { "settings.setPINButton" }
+    static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }
+    static var settingsUseTOSPlayerOnIOSToggle: String { "settings.useTOSPlayerOnIOSToggle" }
+    static var settingsVp9Toggle: String { "settings.vp9Toggle" }
+    static var settingsYandexVOTKeepOriginalAudioToggle: String { "settings.yandexVOTKeepOriginalAudioToggle" }
+    static var settingsYandexVOTLivelyVoiceToggle: String { "settings.yandexVOTLivelyVoiceToggle" }
+    static var settingsYandexVOTToggle: String { "settings.yandexVOTToggle" }
+    static var settingsYandexVOTTokenField: String { "settings.yandexVOTTokenField" }
+    static var settingsPINLock: String { "settingsPINLock" }
+
+    static func tosPlayerChapter(_ id: UUID) -> String {
+        "tosPlayer.chaptersOverlay.chapter.\(id)"
+    }
+    static var tosPlayerMoreMenuChaptersRow: String { "tosPlayer.moreMenu.chaptersRow" }
+    static var tosPlayerMoreMenuLoopRow: String { "tosPlayer.moreMenu.loopRow" }
+    static var tosPlayerNextButton: String { "tosPlayer.nextButton" }
+    static var tosPlayerPreviousButton: String { "tosPlayer.previousButton" }
+    static var tosPlayerReportSegmentButton: String { "tosPlayer.reportSegmentButton" }
+    static var tosPlayerSeekBackButton: String { "tosPlayer.seekBackButton" }
+    static var tosPlayerSeekForwardButton: String { "tosPlayer.seekForwardButton" }
+    static var tosPlayerUndoAutoSkipToast: String { "tosPlayer.undoAutoSkipToast" }
+    static var homeCurrentQueueRow: String { "home.currentQueueRow" }
+    static var homeSectionFeed: String { "home.sectionFeed" }
+    static var playerBackButton: String { "player.backButton" }
+    static var playerProbeStreamResult: String { "player.probeStreamResult" }
+    static var playerQuickAccessRow: String { "player.quickAccessRow" }
+    static var playerRetryButton: String { "player.retryButton" }
+    static var playerSignInButton: String { "player.signInButton" }
+    static var playerTitleLabel: String { "player.titleLabel" }
+    static var tosPlayerMoreMenuSleepTimerRow: String { "tosPlayer.moreMenu.sleepTimerRow" }
+    static var tosPlayerSkipToast: String { "tosPlayer.skipToast" }
+
+}
+
 // MARK: - UITestHelpers
 //
 // Shared utilities reused across all UI test suites.
@@ -78,7 +145,7 @@ enum UITestHelpers {
     @discardableResult
     static func openPlayer(from card: XCUIElement, in app: XCUIApplication, timeout: TimeInterval = 15) -> Bool {
         card.tap()
-        return app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: timeout)
+        return app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: timeout)
     }
 
     // MARK: - Scroll helpers

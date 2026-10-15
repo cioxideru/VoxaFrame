@@ -123,6 +123,21 @@ struct DownloadAlertItem: Identifiable {
 // Use these constants instead of raw strings in Image(systemName:) and Label(..., systemImage:).
 
 enum AppSymbol {
+    // MARK: - Feed, player menus and settings
+    static let channelFilter = "line.3.horizontal.decrease.circle"
+    static let queue = "list.number"
+    static let chevronRight = "chevron.right"
+    static let speedometer = "speedometer"
+    static let videoQuality = "film.stack"
+    static let audioTrack = "waveform"
+    static let sleepTimer = "moon.zzz"
+    static let skipForward = "forward.fill"
+    static let undo = "arrow.uturn.backward"
+    static let reportFlag = "flag"
+    static let removeCircle = "minus.circle.fill"
+    static let addCircle = "plus.circle.fill"
+    static let personCircleMinus = "person.crop.circle.badge.minus"
+
     // MARK: - Navigation tabs
     static let home = "house.fill"
     static let search = "magnifyingglass"

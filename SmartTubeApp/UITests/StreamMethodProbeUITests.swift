@@ -118,7 +118,7 @@ final class StreamMethodProbeUITests: XCTestCase {
 
         defer { app.terminate() }
 
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         let errorBanner = app.otherElements["player.errorBanner"].firstMatch
         let playPause = app.buttons["player.playPauseButton"].firstMatch
 
@@ -159,7 +159,7 @@ final class StreamMethodProbeUITests: XCTestCase {
         // probeStreamResult is set slightly after playPauseButton becomes enabled
         // (set by probeStreamMethod after tryAllStreams returns), so wait up to 8s
         // for it to appear rather than checking immediately.
-        let probeResultEl = app.staticTexts["player.probeStreamResult"].firstMatch
+        let probeResultEl = app.staticTexts[AccessibilityID.playerProbeStreamResult].firstMatch
         let _ = probeResultEl.waitForExistence(timeout: 8)
         let resolution = probeResultEl.exists ? probeResultEl.label : "?"
         print("[probe-result] \(method)/\(videoId): \(resolution)")

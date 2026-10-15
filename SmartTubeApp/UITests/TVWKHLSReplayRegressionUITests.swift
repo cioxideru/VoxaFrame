@@ -107,7 +107,7 @@ final class TVWKHLSReplayRegressionUITests: XCTestCase {
                 notificationName: "com.void.smarttube.player.ready"
             )
 
-            let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+            let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
             let tapTime = Date()
             // Navigate: tab bar → chip bar (↓) → video list (↓) → select first card.
             remote.press(.down)
@@ -160,7 +160,7 @@ final class TVWKHLSReplayRegressionUITests: XCTestCase {
             remote.press(.menu)
             Thread.sleep(forTimeInterval: 0.6)
             // If still in player (title label still present), press Menu again.
-            if app.staticTexts["player.titleLabel"].exists {
+            if app.staticTexts[AccessibilityID.playerTitleLabel].exists {
                 remote.press(.menu)
                 Thread.sleep(forTimeInterval: 0.6)
             }

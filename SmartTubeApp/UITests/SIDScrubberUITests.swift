@@ -62,7 +62,7 @@ final class SIDScrubberUITests: XCTestCase {
     /// AVFoundation delivers it asynchronously after readyToPlay.
     func testScrubBarShowsNonZeroDurationAndSeekWorks() throws {
         // 1. Wait for player to open (title label proves PlayerView is displayed).
-        guard app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: 30) else {
+        guard app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 30) else {
             try captureAndSkip(
                 "player.titleLabel not found — video \(Self.targetVideoID) did not open (network?)", in: app)
         }

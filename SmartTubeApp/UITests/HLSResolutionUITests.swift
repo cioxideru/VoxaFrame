@@ -74,7 +74,7 @@ final class HLSResolutionUITests: XCTestCase {
     ///   - [Android[1]] All adaptive failed — trying muxed → WebCreator path exhausted
     func testAutoQualityAbove360p() throws {
         // ── Step 1: Wait for player to open ──────────────────────────────────
-        guard app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: 25) else {
+        guard app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 25) else {
             try captureAndSkip("Player did not open within 25 s — network unavailable", in: app)
         }
 

@@ -34,7 +34,7 @@ public final class SpotlightIndexer {
     // MARK: Routing
 
     /// The route for a tapped Spotlight result, from its unique identifier.
-    public nonisolated static func route(forIdentifier identifier: String) -> SmartTubeRoute? {
+    nonisolated public static func route(forIdentifier identifier: String) -> SmartTubeRoute? {
         let parts = identifier.split(separator: ":", maxSplits: 1).map(String.init)
         guard parts.count == 2, !parts[1].isEmpty else { return nil }
         switch parts[0] {

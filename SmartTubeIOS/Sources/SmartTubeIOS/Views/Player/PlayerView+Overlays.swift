@@ -6,7 +6,7 @@ import os
 import UIKit
 #endif
 
-private let menuLog = CrashlyticsLogger(category: "PlayerMenu")
+let playerMenuLog = CrashlyticsLogger(category: "PlayerMenu")
 
 // Measures the natural height of moreMenuItems so the sheet hugs its content
 // instead of always expanding to moreMenuMaxHeight.
@@ -86,14 +86,14 @@ extension PlayerView {
     /// fires onDisappear and teardowns the action sheet mid-animation.
     var moreMenuOverlay: some View {
         let currentVideo = vm.playerInfo?.video ?? video
-        menuLog.notice(
+        playerMenuLog.notice(
             "[moreMenu] rendering — video=\(currentVideo.id) availableFormats=\(vm.availableFormats.count) isSignedIn=\(authService.isSignedIn)"
         )
         return ZStack(alignment: .bottom) {
             Color.black.opacity(0.5)
                 .ignoresSafeArea()
                 .onTapGesture {
-                    menuLog.notice("[moreMenu] background tap — dismissing")
+                    playerMenuLog.notice("[moreMenu] background tap — dismissing")
                     showMoreMenu = false
                 }
 
@@ -133,14 +133,14 @@ extension PlayerView {
             // bug: both onMoveCommand and the native focus engine responded to the same
             // D-pad event, advancing focus twice per press.
             .onExitCommand {
-                menuLog.notice("[moreMenu] onExitCommand fired — dismissing via Menu button")
+                playerMenuLog.notice("[moreMenu] onExitCommand fired — dismissing via Menu button")
                 showMoreMenu = false
             }
             .onAppear {
-                menuLog.notice("[moreMenu] overlay appeared — native tvOS focus via .focused() bindings")
+                playerMenuLog.notice("[moreMenu] overlay appeared — native tvOS focus via .focused() bindings")
             }
             .onDisappear {
-                menuLog.notice("[moreMenu] overlay disappeared")
+                playerMenuLog.notice("[moreMenu] overlay disappeared")
             }
             #endif
             .padding(.horizontal, 8)
@@ -224,121 +224,6 @@ extension PlayerView {
         #endif
     }
 
-    // MARK: - Description overlay
-
-    var descriptionOverlay: some View {
-        let currentVideo = vm.playerInfo?.video ?? video
-        let description = currentVideo.description ?? ""
-        return ZStack(alignment: .bottom) {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { showDescriptionSheet = false }
-
-            VStack(spacing: 0) {
-                HStack {
-                    Button {
-                        showDescriptionSheet = false
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .semibold))
-                            .padding(12)
-                    }
-                    .buttonStyle(.plain)
-                    Spacer()
-                    Text("Description")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Color.clear.frame(width: 44, height: 44)
-                }
-                .padding(.horizontal, 4)
-                Divider()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(currentVideo.title)
-                            .font(.headline)
-                        if !currentVideo.channelTitle.isEmpty {
-                            Text(currentVideo.channelTitle)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        if !description.isEmpty {
-                            Text(descriptionAttributedString(description))
-                                .font(.body)
-                        } else {
-                            Text("No description available.")
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                }
-                .frame(maxHeight: 400)
-            }
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            #if os(tvOS)
-            .focusScope(descriptionOverlayNamespace)
-            .onExitCommand { showDescriptionSheet = false }
-            #endif
-            .padding(.horizontal, 8)
-            .safeAreaPadding(.horizontal)
-            .padding(.bottom, 8)
-        }
-        .ignoresSafeArea()
-    }
-
-    func descriptionAttributedString(_ string: String) -> AttributedString {
-        var attributed = AttributedString(string)
-        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
-            return attributed
-        }
-        let nsString = string as NSString
-        let matches = detector.matches(in: string, range: NSRange(location: 0, length: nsString.length))
-        for match in matches {
-            guard let range = Range(match.range, in: string),
-                let url = match.url,
-                let attrRange = Range(range, in: attributed)
-            else { continue }
-            attributed[attrRange].link = url
-        }
-        // Timestamp linkification: add smarttube://seek/<seconds> links for MM:SS / HH:MM:SS spans.
-        // Only applied where NSDataDetector has not already set a link (URLs take precedence).
-        for (range, seconds) in findTimestamps(in: string) {
-            guard let attrRange = Range(range, in: attributed) else { continue }
-            if attributed[attrRange].link == nil {
-                attributed[attrRange].link = URL(string: "smarttube://seek/\(Int(seconds))")
-            }
-        }
-        return attributed
-    }
-
-    // MARK: - Comments overlay
-
-    var commentsOverlay: some View {
-        #if os(tvOS)
-        CommentsOverlayView(
-            comments: vm.comments.comments,
-            isLoading: vm.comments.isLoading,
-            onDismiss: { showCommentsSheet = false },
-            focusNamespace: commentsOverlayNamespace
-        )
-        #else
-        CommentsOverlayView(
-            comments: vm.comments.comments,
-            isLoading: vm.comments.isLoading,
-            onDismiss: { showCommentsSheet = false }
-        )
-        #endif
-    }
-
-    // MARK: - Comments loading
-
-    func loadComments() {
-        let videoId = (vm.playerInfo?.video ?? video).id
-        vm.comments.load(videoId: videoId)
-    }
-
     // MARK: - More menu rows
     //
     // Each row is a @ViewBuilder var so its type tree is a separate compiled function,
@@ -346,7 +231,7 @@ extension PlayerView {
 
     @ViewBuilder private var moreMenuSpeedRow: some View {
         Button {
-            menuLog.notice("[moreMenu] Speed row tapped — closing moreMenu, opening speedPicker")
+            playerMenuLog.notice("[moreMenu] Speed row tapped — closing moreMenu, opening speedPicker")
             showMoreMenu = false
             showSpeedPicker = true
         } label: {
@@ -379,7 +264,7 @@ extension PlayerView {
     @ViewBuilder private var moreMenuQualityRow: some View {
         if !vm.availableFormats.isEmpty {
             Button {
-                menuLog.notice("[moreMenu] Quality row tapped — closing moreMenu, opening qualityPicker")
+                playerMenuLog.notice("[moreMenu] Quality row tapped — closing moreMenu, opening qualityPicker")
                 showMoreMenu = false
                 showQualityPicker = true
             } label: {
@@ -489,7 +374,7 @@ extension PlayerView {
 
     @ViewBuilder private var moreMenuSleepTimerRow: some View {
         Button {
-            menuLog.notice("[moreMenu] Sleep Timer row tapped — closing moreMenu, opening sleepTimerPicker")
+            playerMenuLog.notice("[moreMenu] Sleep Timer row tapped — closing moreMenu, opening sleepTimerPicker")
             showMoreMenu = false
             showSleepTimerPicker = true
         } label: {
@@ -520,7 +405,7 @@ extension PlayerView {
 
     @ViewBuilder private var moreMenuAudioOnlyRow: some View {
         Button {
-            menuLog.notice(
+            playerMenuLog.notice(
                 "[moreMenu] Audio-Only row tapped — toggling audioOnlyMode: \(store.settings.audioOnlyMode) → \(!store.settings.audioOnlyMode)"
             )
             vm.toggleAudioOnlyLive()
@@ -557,7 +442,7 @@ extension PlayerView {
     @ViewBuilder private var moreMenuQueueShuffleRow: some View {
         if (vm.playerInfo?.video ?? video).playlistId == CurrentQueueStore.playlistID {
             Button {
-                menuLog.notice(
+                playerMenuLog.notice(
                     "[moreMenu] Queue Shuffle row tapped — toggling queueShuffleEnabled: \(store.settings.queueShuffleEnabled) → \(!store.settings.queueShuffleEnabled)"
                 )
                 store.settings.queueShuffleEnabled.toggle()

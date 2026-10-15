@@ -9,10 +9,16 @@ import Testing
 @Suite("LocalWatchHistoryStore (#150)")
 struct LocalWatchHistoryStoreTests {
 
-    private func makeStore() -> (LocalWatchHistoryStore, UserDefaults, String) {
+    private struct StoreContext {
+        let store: LocalWatchHistoryStore
+        let defaults: UserDefaults
+        let suite: String
+    }
+
+    private func makeStore() throws -> StoreContext {
         let suite = "LocalWatchHistoryStoreTests-\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suite)!
-        return (LocalWatchHistoryStore(defaults: defaults), defaults, suite)
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        return StoreContext(store: LocalWatchHistoryStore(defaults: defaults), defaults: defaults, suite: suite)
     }
 
     private func video(_ id: String) -> Video {
@@ -20,61 +26,61 @@ struct LocalWatchHistoryStoreTests {
     }
 
     @Test("records most recent first")
-    func mostRecentFirst() {
-        let (store, defaults, suite) = makeStore()
-        defer { defaults.removePersistentDomain(forName: suite) }
-        store.record(video("a"), at: Date(timeIntervalSince1970: 1))
-        store.record(video("b"), at: Date(timeIntervalSince1970: 2))
-        #expect(store.videos.map(\.id) == ["b", "a"])
+    func mostRecentFirst() throws {
+        let context = try makeStore()
+        defer { context.defaults.removePersistentDomain(forName: context.suite) }
+        context.store.record(video("a"), at: Date(timeIntervalSince1970: 1))
+        context.store.record(video("b"), at: Date(timeIntervalSince1970: 2))
+        #expect(context.store.videos.map(\.id) == ["b", "a"])
     }
 
     @Test("re-watching a video moves it to the front without duplicating")
-    func dedupeMovesToFront() {
-        let (store, defaults, suite) = makeStore()
-        defer { defaults.removePersistentDomain(forName: suite) }
-        store.record(video("a"))
-        store.record(video("b"))
-        store.record(video("a"))
-        #expect(store.videos.map(\.id) == ["a", "b"])
+    func dedupeMovesToFront() throws {
+        let context = try makeStore()
+        defer { context.defaults.removePersistentDomain(forName: context.suite) }
+        context.store.record(video("a"))
+        context.store.record(video("b"))
+        context.store.record(video("a"))
+        #expect(context.store.videos.map(\.id) == ["a", "b"])
     }
 
     @Test("caps at maxEntries, evicting the oldest")
-    func capsEntries() {
-        let (store, defaults, suite) = makeStore()
-        defer { defaults.removePersistentDomain(forName: suite) }
-        for i in 0..<(LocalWatchHistoryStore.maxEntries + 5) { store.record(video("v\(i)")) }
-        #expect(store.entries.count == LocalWatchHistoryStore.maxEntries)
-        #expect(store.videos.first?.id == "v\(LocalWatchHistoryStore.maxEntries + 4)")
-        #expect(!store.videos.contains { $0.id == "v0" })
+    func capsEntries() throws {
+        let context = try makeStore()
+        defer { context.defaults.removePersistentDomain(forName: context.suite) }
+        for index in 0..<(LocalWatchHistoryStore.maxEntries + 5) { context.store.record(video("v\(index)")) }
+        #expect(context.store.entries.count == LocalWatchHistoryStore.maxEntries)
+        #expect(context.store.videos.first?.id == "v\(LocalWatchHistoryStore.maxEntries + 4)")
+        #expect(!context.store.videos.contains { $0.id == "v0" })
     }
 
     @Test("persists across instances sharing the same defaults")
-    func persists() {
-        let (store, defaults, suite) = makeStore()
-        defer { defaults.removePersistentDomain(forName: suite) }
-        store.record(video("a"))
-        let reloaded = LocalWatchHistoryStore(defaults: defaults)
+    func persists() throws {
+        let context = try makeStore()
+        defer { context.defaults.removePersistentDomain(forName: context.suite) }
+        context.store.record(video("a"))
+        let reloaded = LocalWatchHistoryStore(defaults: context.defaults)
         #expect(reloaded.videos.map(\.id) == ["a"])
     }
 
     @Test("clear removes everything, including from disk")
-    func clearEmpties() {
-        let (store, defaults, suite) = makeStore()
-        defer { defaults.removePersistentDomain(forName: suite) }
-        store.record(video("a"))
-        store.clear()
-        #expect(store.videos.isEmpty)
-        #expect(LocalWatchHistoryStore(defaults: defaults).videos.isEmpty)
+    func clearEmpties() throws {
+        let context = try makeStore()
+        defer { context.defaults.removePersistentDomain(forName: context.suite) }
+        context.store.record(video("a"))
+        context.store.clear()
+        #expect(context.store.videos.isEmpty)
+        #expect(LocalWatchHistoryStore(defaults: context.defaults).videos.isEmpty)
     }
 
     @Test("stored entries keep display fields but drop per-fetch tokens")
-    func slimsVideo() {
-        let (store, defaults, suite) = makeStore()
-        defer { defaults.removePersistentDomain(forName: suite) }
-        var v = video("a")
-        v.notInterestedToken = "secret-token"
-        store.record(v)
-        #expect(store.videos.first?.title == "Title a")
-        #expect(store.videos.first?.notInterestedToken == nil)
+    func slimsVideo() throws {
+        let context = try makeStore()
+        defer { context.defaults.removePersistentDomain(forName: context.suite) }
+        var storedVideo = video("a")
+        storedVideo.notInterestedToken = "secret-token"
+        context.store.record(storedVideo)
+        #expect(context.store.videos.first?.title == "Title a")
+        #expect(context.store.videos.first?.notInterestedToken == nil)
     }
 }

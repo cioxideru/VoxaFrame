@@ -16,7 +16,7 @@ public enum SmartTubeURLScheme {
         let videoID: String?
         switch url.host?.lowercased() {
         case "video":
-            videoID = url.pathComponents.filter { $0 != "/" }.first
+            videoID = url.pathComponents.first { $0 != "/" }
         case "watch":
             videoID =
                 URLComponents(url: url, resolvingAgainstBaseURL: false)?
@@ -102,6 +102,9 @@ public enum SmartTubeRoute: Equatable, Sendable {
             components.host = "channel"
             components.path = "/\(id)"
         }
-        return components.url!
+        guard let url = components.url else {
+            preconditionFailure("A SmartTube route must form a valid URL")
+        }
+        return url
     }
 }

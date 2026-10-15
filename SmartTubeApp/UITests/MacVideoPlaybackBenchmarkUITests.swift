@@ -84,7 +84,7 @@ final class MacVideoPlaybackBenchmarkUITests: XCTestCase {
 
     func testSequentialPerVideoPlaybackTimes() throws {
         let videoIDs = orderedVideoIDs
-        let playerTitle = app.staticTexts["player.titleLabel"].firstMatch
+        let playerTitle = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
 
         // ── Video 0: cold start ───────────────────────────────────────────────
         // Allow 4 s after launch for BotGuardWebViewRunner to begin pre-warming.

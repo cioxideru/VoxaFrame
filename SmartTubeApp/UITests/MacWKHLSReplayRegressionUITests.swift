@@ -111,7 +111,7 @@ final class MacWKHLSReplayRegressionUITests: XCTestCase {
                 notificationName: "com.void.smarttube.player.ready"
             )
 
-            let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+            let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
             let tapTime = Date()
             card.click()
 
@@ -160,7 +160,7 @@ final class MacWKHLSReplayRegressionUITests: XCTestCase {
             )
 
             // Tap back — on macOS this calls vm.stop() + dismiss(), no mini-player.
-            let backButton = app.buttons["player.backButton"].firstMatch
+            let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
             XCTAssertTrue(
                 backButton.waitForExistence(timeout: 5),
                 "Cycle \(cycle): player.backButton not found"

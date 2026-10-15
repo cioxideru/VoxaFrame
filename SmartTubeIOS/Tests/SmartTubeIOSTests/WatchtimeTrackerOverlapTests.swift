@@ -19,12 +19,17 @@ private final class StatsCountingURLProtocol: URLProtocol, @unchecked Sendable {
         lock.withLock { urls.filter { $0.path.hasSuffix("/api/stats/watchtime") } }
     }
 
-    override class func canInit(with request: URLRequest) -> Bool { true }
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override static func canInit(with request: URLRequest) -> Bool { true }
+    override static func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
         if let url = request.url { Self.lock.withLock { Self.urls.append(url) } }
-        let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)!
+        guard let requestURL = request.url,
+            let response = HTTPURLResponse(url: requestURL, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)
+        else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Data())
         client?.urlProtocolDidFinishLoading(self)
@@ -63,9 +68,9 @@ struct WatchtimeTrackerOverlapTests {
         await tracker.checkpoint(position: 10, duration: 1000)  // opens the record: [0, 10]
         let afterFirst = StatsCountingURLProtocol.watchtimePings().count
 
-        async let a: Void = tracker.checkpoint(position: 20, duration: 1000)
-        async let b: Void = tracker.checkpoint(position: 20, duration: 1000)
-        _ = await (a, b)
+        async let firstCheckpoint: Void = tracker.checkpoint(position: 20, duration: 1000)
+        async let secondCheckpoint: Void = tracker.checkpoint(position: 20, duration: 1000)
+        _ = await (firstCheckpoint, secondCheckpoint)
 
         #expect(StatsCountingURLProtocol.watchtimePings().count - afterFirst == 1)
     }
@@ -76,9 +81,9 @@ struct WatchtimeTrackerOverlapTests {
         let tracker = makeTracker()
         await tracker.checkpoint(position: 10, duration: 1000)
 
-        async let a: Void = tracker.checkpoint(position: 990, duration: 1000)
-        async let b: Void = tracker.checkpoint(position: 991, duration: 1000)
-        _ = await (a, b)
+        async let firstCheckpoint: Void = tracker.checkpoint(position: 990, duration: 1000)
+        async let secondCheckpoint: Void = tracker.checkpoint(position: 991, duration: 1000)
+        _ = await (firstCheckpoint, secondCheckpoint)
 
         #expect(finalFlags(StatsCountingURLProtocol.watchtimePings()).filter { $0 }.count == 1)
     }

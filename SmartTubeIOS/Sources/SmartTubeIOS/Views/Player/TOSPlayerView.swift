@@ -8,7 +8,7 @@ import UIKit
 import AVFoundation
 #endif
 
-private let tosViewLog = Logger(subsystem: "com.void.smarttube.app", category: "TOSPlayer")
+let tosPlayerViewLog = Logger(subsystem: "com.void.smarttube.app", category: "TOSPlayer")
 
 // MARK: - TOSPlayerView
 //
@@ -67,12 +67,12 @@ public struct TOSPlayerView: View {
     /// Drives `commentsOverlay` (see moreButton's Comments row). Plain view state —
     /// mirrors PlayerView.showCommentsSheet, but doesn't need to survive
     /// minimize-to-mini-player like the vm-owned properties above.
-    @State private var showCommentsSheet = false
+    @State var showCommentsSheet = false
     /// Drives `chaptersOverlay` (see moreButton's Chapters row) — same rationale as
     /// showCommentsSheet above (#10).
-    @State private var showChaptersSheet = false
+    @State var showChaptersSheet = false
     /// Feedback alert for "Report Incorrect Segment" (#67) on either SponsorBlock toast.
-    @State private var reportSegmentAlert: DownloadAlertItem?
+    @State var reportSegmentAlert: DownloadAlertItem?
 
     #if os(iOS)
     // MARK: - Brightness/volume drag gesture state (#19)
@@ -421,17 +421,17 @@ public struct TOSPlayerView: View {
                 // TOSPlayerStateStore.stop() already calls vm.pause() + vm.saveProgress()
                 // before releasing the vm, so we only log here in that case.
                 guard tosState.presentation == .hidden else {
-                    tosViewLog.notice(
+                    tosPlayerViewLog.notice(
                         "[TOSPlayerView] onDisappear — minimizing to mini-player, audio continues (videoId=\(self.video.id, privacy: .public))"
                     )
                     return
                 }
                 vm.cancel()
-                tosViewLog.notice(
+                tosPlayerViewLog.notice(
                     "[TOSPlayerView] onDisappear — fully stopped (videoId=\(self.video.id, privacy: .public)) — stop() already paused & checkpointed"
                 )
                 #else
-                tosViewLog.notice(
+                tosPlayerViewLog.notice(
                     "[TOSPlayerView] onDisappear — videoId=\(self.video.id, privacy: .public) playerState=\(String(describing: vm.playerState), privacy: .public) currentTime=\(vm.currentTime, format: .fixed(precision: 1))s — pausing & checkpointing"
                 )
                 vm.pause()
@@ -475,9 +475,10 @@ public struct TOSPlayerView: View {
             // keeping deepLinkedVideo set so the standard player can open the same video.
             .onChange(of: vm.playerError) { _, error in
                 guard let error else { return }
-                tosViewLog.notice("[TOSPlayerView] playerError=\(String(describing: error)) isFatal=\(error.isFatal)")
+                tosPlayerViewLog.notice(
+                    "[TOSPlayerView] playerError=\(String(describing: error)) isFatal=\(error.isFatal)")
                 guard error.isFatal else { return }
-                tosViewLog.notice("[TOSPlayerView] ⚠️ fatal error — triggering fallback to standard player")
+                tosPlayerViewLog.notice("[TOSPlayerView] ⚠️ fatal error — triggering fallback to standard player")
                 onFallback()
             }
             #if os(iOS)
@@ -519,7 +520,11 @@ public struct TOSPlayerView: View {
         )
     }
 
+}
+
+extension TOSPlayerView {
     #if os(iOS)
+
     // MARK: - Back button (iOS only)
     //
     // Calls tosState.minimize() so audio continues in TOSMiniPlayerView —
@@ -597,22 +602,22 @@ public struct TOSPlayerView: View {
                 secondaryControlButton(symbol: "gobackward.\(store.settings.seekBackSeconds)") {
                     vm.seekRelative(-Double(store.settings.seekBackSeconds))
                 }
-                .accessibilityIdentifier("tosPlayer.seekBackButton")
+                .accessibilityIdentifier(AccessibilityID.tosPlayerSeekBackButton)
 
                 secondaryControlButton(symbol: "backward.end.fill", isEnabled: vm.hasPrevious) {
                     vm.playPrevious()
                 }
-                .accessibilityIdentifier("tosPlayer.previousButton")
+                .accessibilityIdentifier(AccessibilityID.tosPlayerPreviousButton)
 
                 secondaryControlButton(symbol: "forward.end.fill", isEnabled: vm.hasNext) {
                     vm.playNext()
                 }
-                .accessibilityIdentifier("tosPlayer.nextButton")
+                .accessibilityIdentifier(AccessibilityID.tosPlayerNextButton)
 
                 secondaryControlButton(symbol: "goforward.\(store.settings.seekForwardSeconds)") {
                     vm.seekRelative(Double(store.settings.seekForwardSeconds))
                 }
-                .accessibilityIdentifier("tosPlayer.seekForwardButton")
+                .accessibilityIdentifier(AccessibilityID.tosPlayerSeekForwardButton)
 
                 Spacer()
             }
@@ -736,31 +741,7 @@ public struct TOSPlayerView: View {
                 Divider()
             }
 
-            Menu {
-                Button {
-                    vm.setSleepTimer(minutes: nil)
-                } label: {
-                    if vm.sleepTimerMinutes == nil {
-                        Label("Off", systemImage: "checkmark")
-                    } else {
-                        Text("Off")
-                    }
-                }
-                ForEach(PlaybackViewModel.sleepTimerOptions, id: \.self) { mins in
-                    Button {
-                        vm.setSleepTimer(minutes: mins)
-                    } label: {
-                        if vm.sleepTimerMinutes == mins {
-                            Label("\(mins) minutes", systemImage: "checkmark")
-                        } else {
-                            Text("\(mins) minutes")
-                        }
-                    }
-                }
-            } label: {
-                Label(sleepTimerLabel(vm: vm), systemImage: "moon.zzz")
-            }
-            .accessibilityIdentifier("tosPlayer.moreMenu.sleepTimerRow")
+            sleepTimerMenu(vm: vm)
 
             if let url = video.shareURL {
                 ShareLink(item: url) {
@@ -783,7 +764,7 @@ public struct TOSPlayerView: View {
                 } label: {
                     Label("Chapters", systemImage: "list.bullet.rectangle")
                 }
-                .accessibilityIdentifier("tosPlayer.moreMenu.chaptersRow")
+                .accessibilityIdentifier(AccessibilityID.tosPlayerMoreMenuChaptersRow)
             }
 
             Button {
@@ -795,7 +776,7 @@ public struct TOSPlayerView: View {
                     Text("Loop")
                 }
             }
-            .accessibilityIdentifier("tosPlayer.moreMenu.loopRow")
+            .accessibilityIdentifier(AccessibilityID.tosPlayerMoreMenuLoopRow)
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 14, weight: .semibold))
@@ -809,163 +790,39 @@ public struct TOSPlayerView: View {
         .accessibilityLabel("More")
     }
 
+    private func sleepTimerMenu(vm: TOSPlayerViewModel) -> some View {
+        Menu {
+            Button {
+                vm.setSleepTimer(minutes: nil)
+            } label: {
+                if vm.sleepTimerMinutes == nil {
+                    Label("Off", systemImage: AppSymbol.checkmark)
+                } else {
+                    Text("Off")
+                }
+            }
+            ForEach(PlaybackViewModel.sleepTimerOptions, id: \.self) { mins in
+                Button {
+                    vm.setSleepTimer(minutes: mins)
+                } label: {
+                    if vm.sleepTimerMinutes == mins {
+                        Label("\(mins) minutes", systemImage: AppSymbol.checkmark)
+                    } else {
+                        Text("\(mins) minutes")
+                    }
+                }
+            }
+        } label: {
+            Label(sleepTimerLabel(vm: vm), systemImage: AppSymbol.sleepTimer)
+        }
+        .accessibilityIdentifier(AccessibilityID.tosPlayerMoreMenuSleepTimerRow)
+    }
+
     private func sleepTimerLabel(vm: TOSPlayerViewModel) -> String {
         guard let minutes = vm.sleepTimerMinutes else { return "Sleep Timer" }
         return "Sleep Timer (\(minutes)m)"
     }
 
-    // MARK: - Comments overlay
-    //
-    // Transferred from PlayerView+Overlays.commentsOverlay — same dim-backdrop +
-    // bottom-sheet layout and the same shared CommentRowView. tvOS-only bits
-    // (focusScope/.onExitCommand) are dropped: TOSPlayerView is `!os(tvOS)`.
-    private func commentsOverlay(vm: TOSPlayerViewModel) -> some View {
-        CommentsOverlayView(
-            comments: vm.comments.comments,
-            isLoading: vm.comments.isLoading,
-            onDismiss: { showCommentsSheet = false },
-            accessibilityId: "tosPlayer.commentsOverlay"
-        )
-    }
-
-    // MARK: - Chapters overlay
-    //
-    // #10 (closes #68, #105): the TOS player embeds YouTube's own IFrame page
-    // directly rather than the IFrame JS API, so SmartTube has no control over —
-    // and can't add markers to — the embed's own scrub bar. This overlay is the
-    // native equivalent: a tap-to-jump list, seeking via vm.seekTo (a plain
-    // `video.currentTime = X` JS assignment, not a user-activation-gated API).
-    private func chaptersOverlay(vm: TOSPlayerViewModel) -> some View {
-        ChaptersOverlayView(
-            chapters: vm.chapters,
-            onSelect: { chapter in
-                vm.seekTo(chapter.startTime)
-                showChaptersSheet = false
-            },
-            onDismiss: { showChaptersSheet = false },
-            accessibilityId: "tosPlayer.chaptersOverlay"
-        )
-    }
-
-    // MARK: - SponsorBlock toast
-
-    private func sponsorToast(for segment: SponsorSegment, vm: TOSPlayerViewModel) -> some View {
-        VStack {
-            Spacer()
-            HStack(spacing: 8) {
-                Spacer()
-                reportSegmentButton(segment, vm: vm)
-                Button {
-                    vm.seekTo(segment.end)
-                    vm.currentToastSegment = nil
-                } label: {
-                    Label(skipLabel(for: segment.category), systemImage: "forward.fill")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(.thinMaterial, in: Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.trailing, 20)
-            .padding(.bottom, 60)
-        }
-        .accessibilityIdentifier("tosPlayer.skipToast")
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-        .animation(.easeInOut(duration: 0.2), value: vm.currentToastSegment?.start)
-    }
-
-    /// #20: shown briefly after an auto-skip (as opposed to `sponsorToast`, which is
-    /// the manual tap-to-skip prompt for showToast-configured categories). Tapping
-    /// seeks back into the segment via `vm.undoAutoSkip()`.
-    private func undoAutoSkipToast(for segment: SponsorSegment, vm: TOSPlayerViewModel) -> some View {
-        VStack {
-            Spacer()
-            HStack(spacing: 8) {
-                Spacer()
-                reportSegmentButton(segment, vm: vm)
-                Button {
-                    vm.undoAutoSkip()
-                } label: {
-                    Label("\(skippedLabel(for: segment.category)) — Undo", systemImage: "arrow.uturn.backward")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(.thinMaterial, in: Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.trailing, 20)
-            .padding(.bottom, 60)
-        }
-        .accessibilityIdentifier("tosPlayer.undoAutoSkipToast")
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-        .animation(.easeInOut(duration: 0.2), value: vm.recentAutoSkip?.start)
-    }
-
-    /// Small "flag" icon button shared by both SponsorBlock toasts (#67).
-    private func reportSegmentButton(_ segment: SponsorSegment, vm: TOSPlayerViewModel) -> some View {
-        Button {
-            reportSegment(segment, vm: vm)
-        } label: {
-            Image(systemName: "flag")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white)
-                .padding(8)
-                .background(.thinMaterial, in: Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text("Report Incorrect Segment", bundle: .module))
-        .accessibilityIdentifier("tosPlayer.reportSegmentButton")
-    }
-
-    /// #67: submits a downvote to SponsorBlock for this segment and shows a brief
-    /// confirmation. Wired from both sponsorToast and undoAutoSkipToast's report button.
-    private func reportSegment(_ segment: SponsorSegment, vm: TOSPlayerViewModel) {
-        Task {
-            let ok = await vm.reportIncorrectSegment(segment)
-            reportSegmentAlert = DownloadAlertItem(
-                title: ok
-                    ? String(localized: "Reported", bundle: .module)
-                    : String(localized: "Could Not Report", bundle: .module),
-                message: ok
-                    ? String(
-                        localized: "Thanks for the feedback — this segment has been reported to SponsorBlock.",
-                        bundle: .module)
-                    : String(localized: "The report couldn't be sent. Please try again later.", bundle: .module)
-            )
-        }
-    }
-
-    private func skippedLabel(for category: SponsorSegment.Category) -> String {
-        switch category {
-        case .sponsor: return "Skipped Sponsor"
-        case .selfPromo: return "Skipped Self-Promo"
-        case .interaction: return "Skipped Interaction"
-        case .intro: return "Skipped Intro"
-        case .outro: return "Skipped Outro"
-        case .preview: return "Skipped Preview"
-        case .filler: return "Skipped Filler"
-        case .musicOfftopic: return "Skipped Music"
-        case .poiHighlight: return "Skipped to Highlight"
-        }
-    }
-
-    private func skipLabel(for category: SponsorSegment.Category) -> String {
-        switch category {
-        case .sponsor: return "Skip Sponsor"
-        case .selfPromo: return "Skip Self-Promo"
-        case .interaction: return "Skip Interaction"
-        case .intro: return "Skip Intro"
-        case .outro: return "Skip Outro"
-        case .preview: return "Skip Preview"
-        case .filler: return "Skip Filler"
-        case .musicOfftopic: return "Skip Music"
-        case .poiHighlight: return "Skip to Highlight"
-        }
-    }
 }
 
 // MARK: - YouTubeWebPlayerView (NSViewRepresentable)
@@ -1055,7 +912,7 @@ private struct YouTubeWebPlayerView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UIView {
-        tosViewLog.notice("[TOSView] YouTubeWebPlayerView.makeUIView called")
+        tosPlayerViewLog.notice("[TOSView] YouTubeWebPlayerView.makeUIView called")
         let container = UIView()
         container.backgroundColor = .black
         attach(to: container)

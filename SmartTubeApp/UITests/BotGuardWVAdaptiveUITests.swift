@@ -94,7 +94,7 @@ final class BotGuardWVAdaptiveUITests: XCTestCase {
 
         // Navigate back to Home and wait for cards.
         UITestHelpers.tapTab(named: "Home", in: app)
-        let backBtn = app.buttons["player.backButton"].firstMatch
+        let backBtn = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if backBtn.waitForExistence(timeout: 2) { backBtn.tap() }
         UITestHelpers.tapTab(named: "Home", in: app)
 
@@ -118,7 +118,7 @@ final class BotGuardWVAdaptiveUITests: XCTestCase {
             "[\(id)] App crashed during BotGuard pipeline")
 
         // Navigate back for next test.
-        let back = app.buttons["player.backButton"].firstMatch
+        let back = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if back.waitForExistence(timeout: 5) { back.tap() }
     }
 

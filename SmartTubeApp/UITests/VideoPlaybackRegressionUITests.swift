@@ -74,7 +74,7 @@ final class VideoPlaybackRegressionUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 5)
 
         // 3. Tap back button — minimises to mini-player.
-        let backButton = homeApp.buttons["player.backButton"].firstMatch
+        let backButton = homeApp.buttons[AccessibilityID.playerBackButton].firstMatch
         if !backButton.exists {
             homeApp.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
             Thread.sleep(forTimeInterval: 1.0)
@@ -107,7 +107,7 @@ final class VideoPlaybackRegressionUITests: XCTestCase {
         sameCard.tap()
 
         // 6. Assert the player reopens.
-        let titleLabel = homeApp.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = homeApp.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard titleLabel.waitForExistence(timeout: 20) else {
             XCTFail(
                 "player.titleLabel did not appear on second open from Home — "
@@ -146,7 +146,7 @@ final class VideoPlaybackRegressionUITests: XCTestCase {
     /// Fix: also reload when `vm.player.currentItem == nil` (stop cleared it).
     func testSecondOpenAfterStopPlays() throws {
         // 1. Wait for the deeplink player to open.
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard titleLabel.waitForExistence(timeout: 20) else {
             try captureAndSkip(
                 "player.titleLabel did not appear within 20 s — network unavailable or deeplink did not fire", in: app)
@@ -157,7 +157,7 @@ final class VideoPlaybackRegressionUITests: XCTestCase {
 
         // 3. Tap the back button — with miniPlayerEnabled=true (the default) this
         //    minimizes the player rather than stopping it outright.
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         XCTAssertTrue(backButton.exists, "player.backButton not found — cannot dismiss player")
         backButton.tap()
 

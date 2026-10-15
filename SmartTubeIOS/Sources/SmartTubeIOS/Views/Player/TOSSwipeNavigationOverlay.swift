@@ -31,16 +31,16 @@ struct TOSSwipeNavigationOverlay: UIViewRepresentable {
     /// in the middle 60% never call this.
     /// `translationY`/`viewHeight` let the caller compute a delta-from-gesture-start value
     /// itself (this view holds no brightness/volume state of its own).
-    var onVerticalDragChanged: ((_ isLeftHalf: Bool, _ translationY: CGFloat, _ viewHeight: CGFloat) -> Void)? = nil
+    var onVerticalDragChanged: ((_ isLeftHalf: Bool, _ translationY: CGFloat, _ viewHeight: CGFloat) -> Void)?
     /// Fired once when a vertical drag ends (or is cancelled) — lets the caller reset its
     /// per-gesture start value and dismiss any on-screen brightness/volume indicator.
-    var onVerticalDragEnded: (() -> Void)? = nil
+    var onVerticalDragEnded: (() -> Void)?
     /// #328: fired instead of `onSwipeRight` when the confirmed rightward swipe's touch
     /// began within `edgeSwipeActivationWidth` of the left screen edge — mirrors iOS's
     /// own edge-swipe-back affordance. Distinguishing by start position (not just
     /// direction) is what lets this coexist with the existing swipe-right = playPrevious
     /// gesture instead of replacing it everywhere.
-    var onEdgeSwipeExit: (() -> Void)? = nil
+    var onEdgeSwipeExit: (() -> Void)?
     var isEnabled: Bool = true
     /// Touches below this fraction of the screen height are ignored, leaving
     /// YouTube's bottom scrubber/control-bar free to handle horizontal drags.

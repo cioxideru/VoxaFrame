@@ -300,8 +300,8 @@ public func filterHLSMasterManifest(
 
 /// The original-language audio rendition of a YouTube HLS master (the first one, which is
 /// also the lowest-bitrate group), else the first audio rendition.
-public func hlsOriginalAudioPlaylistURL(in master: String, baseURL: URL) -> URL? {
-    let audio = master.components(separatedBy: .newlines)
+public func hlsOriginalAudioPlaylistURL(in manifest: String, baseURL: URL) -> URL? {
+    let audio = manifest.components(separatedBy: .newlines)
         .map { $0.trimmingCharacters(in: .whitespaces) }
         .filter { $0.hasPrefix("#EXT-X-MEDIA:") && $0.contains("TYPE=AUDIO") }
     guard let line = audio.first(where: hlsMediaLineIsOriginalAudio) ?? audio.first,

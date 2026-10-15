@@ -17,17 +17,22 @@ import Testing
 private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var responses: [String: (statusCode: Int, body: Data)] = [:]
 
-    override class func canInit(with request: URLRequest) -> Bool { true }
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override static func canInit(with request: URLRequest) -> Bool { true }
+    override static func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
         let url = request.url?.absoluteString ?? ""
         let match = Self.responses.filter { url.contains($0.key) }.max(by: { $0.key.count < $1.key.count })
         let (statusCode, body) = match.map { ($0.value.statusCode, $0.value.body) } ?? (200, Data("{}".utf8))
-        let httpResponse = HTTPURLResponse(
-            url: request.url!, statusCode: statusCode, httpVersion: "HTTP/1.1",
-            headerFields: ["Content-Type": "application/json"]
-        )!
+        guard let requestURL = request.url,
+            let httpResponse = HTTPURLResponse(
+                url: requestURL, statusCode: statusCode, httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+        else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
         client?.urlProtocol(self, didReceive: httpResponse, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: body)
         client?.urlProtocolDidFinishLoading(self)
@@ -40,7 +45,7 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
 @MainActor
 struct TOSPlayerChaptersTests {
 
-    private func nextResponseWithChapters() -> Data {
+    private func nextResponseWithChapters() throws -> Data {
         let json: [String: Any] = [
             "engagementPanels": [
                 [
@@ -67,12 +72,12 @@ struct TOSPlayerChaptersTests {
                 ]
             ]
         ]
-        return try! JSONSerialization.data(withJSONObject: json)
+        return try JSONSerialization.data(withJSONObject: json)
     }
 
     @Test("fetchRelatedVideos populates vm.chapters from the same /next response")
     func fetchRelatedVideosPopulatesChapters() async throws {
-        StubURLProtocol.responses = ["next": (200, nextResponseWithChapters())]
+        StubURLProtocol.responses = ["next": (200, try nextResponseWithChapters())]
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubURLProtocol.self]
         let session = URLSession(configuration: config)

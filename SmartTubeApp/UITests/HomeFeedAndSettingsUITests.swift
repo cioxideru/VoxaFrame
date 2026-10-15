@@ -51,7 +51,7 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         #endif
         // Close full-screen player if a previous test left it open.
-        let playerBack = app.buttons["player.backButton"].firstMatch
+        let playerBack = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if playerBack.waitForExistence(timeout: 2), playerBack.isHittable {
             playerBack.tap()
             Thread.sleep(forTimeInterval: 1.0)

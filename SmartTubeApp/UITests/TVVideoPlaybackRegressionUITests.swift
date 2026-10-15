@@ -38,7 +38,7 @@ final class TVVideoPlaybackRegressionUITests: XCTestCase {
     }
 
     private var titleLabel: XCUIElement {
-        app.staticTexts["player.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
     }
 
     private var chipBar: XCUIElement {

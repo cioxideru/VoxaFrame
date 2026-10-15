@@ -29,24 +29,19 @@ private func postHideChannel(id: String) {
     )
 }
 
-/// Polls until `condition` holds (up to 2 s). Without one, gives the observer task 100 ms —
-/// enough to show that an unknown id changes nothing.
+/// Yields until the observer has processed the expected change, with a failure deadline.
 @MainActor
-private func waitForObserver(until condition: (@MainActor () -> Bool)?) async {
-    guard let condition else {
-        try? await Task.sleep(for: .milliseconds(100))
-        return
-    }
+private func waitForObserver(until condition: @MainActor () -> Bool) async {
     let deadline = Date().addingTimeInterval(2)
     while !condition(), Date() < deadline {
-        try? await Task.sleep(for: .milliseconds(10))
+        await Task.yield()
     }
 }
 
 /// Posts `.hideVideoFromFeed` and waits for the ViewModel's notification
 /// observer task to process it before returning.
 @MainActor
-private func postHideVideoAndWait(id: String, until removed: (@MainActor () -> Bool)? = nil) async {
+private func postHideVideoAndWait(id: String, until removed: @MainActor () -> Bool) async {
     postHideVideo(id: id)
     await waitForObserver(until: removed)
 }
@@ -54,7 +49,7 @@ private func postHideVideoAndWait(id: String, until removed: (@MainActor () -> B
 /// Posts `.hideChannelFromFeed` and waits for the ViewModel's notification
 /// observer task to process it before returning.
 @MainActor
-private func postHideChannelAndWait(id: String, until removed: (@MainActor () -> Bool)? = nil) async {
+private func postHideChannelAndWait(id: String, until removed: @MainActor () -> Bool) async {
     postHideChannel(id: id)
     await waitForObserver(until: removed)
 }
@@ -80,7 +75,7 @@ struct SearchViewModelFeedHideTests {
         vm.search()
         let deadline = Date().addingTimeInterval(2)
         while vm.results.isEmpty && Date() < deadline {
-            try await Task.sleep(for: .milliseconds(50))
+            await Task.yield()
         }
         return vm
     }
@@ -104,11 +99,14 @@ struct SearchViewModelFeedHideTests {
     @Test("hideVideoFromFeed with unknown id does not change results")
     func hideVideoUnknownIdNoChange() async throws {
         let id = "search-no-change-\(UUID().uuidString)"
-        let vm = try await loadedVM(videos: [makeVideo(id: id)])
+        let marker = "search-marker-\(UUID().uuidString)"
+        let vm = try await loadedVM(videos: [makeVideo(id: id), makeVideo(id: marker)])
 
-        await postHideVideoAndWait(id: "search-unknown-\(UUID().uuidString)")
+        postHideVideo(id: "search-unknown-\(UUID().uuidString)")
+        // The same observer processes the marker after the unknown ID.
+        await postHideVideoAndWait(id: marker) { !vm.results.contains { $0.id == marker } }
 
-        #expect(vm.results.count == 1)
+        #expect(vm.results.map(\.id) == [id])
     }
 
     @Test("hideChannelFromFeed removes all videos from that channel")
@@ -131,11 +129,17 @@ struct SearchViewModelFeedHideTests {
     @Test("hideChannelFromFeed with unknown channelId does not change results")
     func hideChannelUnknownIdNoChange() async throws {
         let channel = "search-ch-safe-\(UUID().uuidString)"
-        let vm = try await loadedVM(videos: [makeVideo(id: "vd-\(UUID().uuidString)", channelId: channel)])
+        let markerChannel = "search-marker-channel-\(UUID().uuidString)"
+        let vm = try await loadedVM(videos: [
+            makeVideo(id: "vd-\(UUID().uuidString)", channelId: channel),
+            makeVideo(id: "marker-\(UUID().uuidString)", channelId: markerChannel),
+        ])
 
-        await postHideChannelAndWait(id: "search-unknown-ch-\(UUID().uuidString)")
+        postHideChannel(id: "search-unknown-ch-\(UUID().uuidString)")
+        // Wait for a following notification on the same observer.
+        await postHideChannelAndWait(id: markerChannel) { !vm.results.contains { $0.channelId == markerChannel } }
 
-        #expect(vm.results.count == 1)
+        #expect(vm.results.map(\.channelId) == [channel])
     }
 }
 
@@ -155,7 +159,7 @@ struct ChannelViewModelFeedHideTests {
         vm.load(channelId: "ch_root")
         let deadline = Date().addingTimeInterval(2)
         while vm.videos.isEmpty && Date() < deadline {
-            try await Task.sleep(for: .milliseconds(50))
+            await Task.yield()
         }
         return vm
     }
@@ -210,7 +214,7 @@ struct PlaylistViewModelFeedHideTests {
         vm.load(playlistId: "pl_test_123")
         let deadline = Date().addingTimeInterval(2)
         while vm.videos.isEmpty && Date() < deadline {
-            try await Task.sleep(for: .milliseconds(50))
+            await Task.yield()
         }
         return vm
     }

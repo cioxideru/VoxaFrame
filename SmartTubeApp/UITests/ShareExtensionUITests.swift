@@ -64,12 +64,12 @@ final class ShareExtensionUITests: XCTestCase {
     /// Returns `true` if it appeared, `false` otherwise.
     @discardableResult
     private func waitForPlayer(timeout: TimeInterval = 20) -> Bool {
-        app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: timeout)
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: timeout)
     }
 
     /// Dismisses the player by tapping the back button.
     private func dismissPlayer() {
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if backButton.waitForExistence(timeout: 5) {
             backButton.tap()
         }
@@ -90,7 +90,7 @@ final class ShareExtensionUITests: XCTestCase {
     func testDeeplinkPlayerTitleIsPopulated() throws {
         launch(extraArgs: ["--uitesting-deeplink-video=\(kTestVideoID)"])
 
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard titleLabel.waitForExistence(timeout: 20) else {
             XCTFail("player.titleLabel did not appear within 20 s — network may be unavailable")
             return
@@ -137,7 +137,7 @@ final class ShareExtensionUITests: XCTestCase {
         app.activate()
 
         // Allow a brief window — if the player reappears the test fails.
-        let playerAfterReforeground = app.staticTexts["player.titleLabel"].firstMatch
+        let playerAfterReforeground = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         XCTAssertFalse(
             playerAfterReforeground.waitForExistence(timeout: 5),
             "player.titleLabel reappeared after re-foregrounding — deeplink was consumed more than once"
@@ -148,7 +148,7 @@ final class ShareExtensionUITests: XCTestCase {
     func testDeeplinkWithEmptyVideoIDDoesNotOpenPlayer() {
         launch(extraArgs: ["--uitesting-deeplink-video="])
 
-        let playerLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let playerLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         XCTAssertFalse(
             playerLabel.waitForExistence(timeout: 5),
             "player.titleLabel appeared for an empty video ID — guard in consumeDeepLinkFromLaunchArgs failed"
@@ -159,7 +159,7 @@ final class ShareExtensionUITests: XCTestCase {
     func testPendingVideoWithEmptyIDDoesNotOpenPlayer() {
         launch(extraArgs: ["--uitesting-pending-video="])
 
-        let playerLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let playerLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         XCTAssertFalse(
             playerLabel.waitForExistence(timeout: 5),
             "player.titleLabel appeared for an empty pending video ID — guard in consumePendingVideoFromLaunchArgs failed"

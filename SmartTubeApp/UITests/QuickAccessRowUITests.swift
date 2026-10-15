@@ -68,7 +68,7 @@ final class QuickAccessRowUITests: XCTestCase {
         guard UITestHelpers.openPlayer(from: card, in: app) else {
             try captureAndSkip("Player did not open within 15 s — network unavailable or timing-dependent", in: app)
         }
-        _ = app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: 5)
+        _ = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 5)
     }
 
     /// Taps the player center to reveal controls, retrying up to 5 times.
@@ -120,7 +120,7 @@ final class QuickAccessRowUITests: XCTestCase {
         try openPlayerFromHome()
         showControls()
         XCTAssertTrue(
-            app.otherElements["player.quickAccessRow"].waitForExistence(timeout: 10),
+            app.otherElements[AccessibilityID.playerQuickAccessRow].waitForExistence(timeout: 10),
             "Quick-access row should have accessibility identifier 'player.quickAccessRow'")
     }
 

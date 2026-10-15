@@ -432,7 +432,7 @@ extension PlayerView {
                                 .padding(.vertical, 12)
                             }
                             .buttonStyle(.plain)
-                            .accessibilityIdentifier("player.audioTrackPicker.auto")
+                            .accessibilityIdentifier(AccessibilityID.playerAudioTrackPickerAuto)
                             #if os(tvOS)
                             .prefersDefaultFocus(in: audioTrackPickerNamespace)
                             #endif
@@ -467,7 +467,7 @@ extension PlayerView {
                                     .padding(.vertical, 12)
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityIdentifier("player.audioTrackPicker.track.\(track.id)")
+                                .accessibilityIdentifier(AccessibilityID.playerAudioTrack(track.id))
                                 .id(track.id)
                                 Divider()
                             }
@@ -513,7 +513,7 @@ extension PlayerView {
                     set: { vm.setVoiceOverForCurrentVideo($0) }
                 )
             )
-            .accessibilityIdentifier("player.audioTrackPicker.voiceOverToggle")
+            .accessibilityIdentifier(AccessibilityID.playerAudioTrackPickerVoiceOverToggle)
             if target == "ru" {
                 Toggle(
                     "Lively Voices",
@@ -526,7 +526,7 @@ extension PlayerView {
                         }
                     )
                 )
-                .accessibilityIdentifier("player.audioTrackPicker.livelyVoiceToggle")
+                .accessibilityIdentifier(AccessibilityID.playerAudioTrackPickerLivelyVoiceToggle)
             }
             Toggle(
                 "Original Audio in Background",
@@ -539,7 +539,7 @@ extension PlayerView {
                     }
                 )
             )
-            .accessibilityIdentifier("player.audioTrackPicker.keepOriginalAudioToggle")
+            .accessibilityIdentifier(AccessibilityID.playerAudioKeepOriginalAudioToggle)
             if let status = voiceOverStatus {
                 Text(status)
                     .font(.caption)

@@ -8,26 +8,27 @@ import UniformTypeIdentifiers
 
 // MARK: - HomeWidgetSnapshotTests (task #353)
 
-private func makePNG(width: Int, height: Int) -> Data {
-    let context = CGContext(
-        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+private func makePNG(width: Int, height: Int) throws -> Data {
+    let context = try #require(
+        CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
     context.setFillColor(CGColor(red: 1, green: 0, blue: 0, alpha: 1))
     context.fill(CGRect(x: 0, y: 0, width: width, height: height))
     let output = NSMutableData()
-    let destination = CGImageDestinationCreateWithData(output, UTType.png.identifier as CFString, 1, nil)!
-    CGImageDestinationAddImage(destination, context.makeImage()!, nil)
+    let destination = try #require(CGImageDestinationCreateWithData(output, UTType.png.identifier as CFString, 1, nil))
+    CGImageDestinationAddImage(destination, try #require(context.makeImage()), nil)
     CGImageDestinationFinalize(destination)
     return output as Data
 }
 
 private func video(_ id: String, isShort: Bool = false, isUpcoming: Bool = false) -> Video {
-    var v = Video(
+    var fixture = Video(
         id: id, title: "Title \(id)", channelTitle: "Channel",
         thumbnailURL: URL(string: "https://i.ytimg.com/vi/\(id)/hqdefault.jpg"))
-    v.isShort = isShort
-    v.isUpcoming = isUpcoming
-    return v
+    fixture.isShort = isShort
+    fixture.isUpcoming = isUpcoming
+    return fixture
 }
 
 private func tempStore() -> HomeWidgetStore {
@@ -53,7 +54,7 @@ struct HomeWidgetSnapshotTests {
     func saveAndLoad() async throws {
         let store = tempStore()
         defer { store.clear() }
-        let png = makePNG(width: 1280, height: 720)
+        let png = try makePNG(width: 1280, height: 720)
         let changed = try await store.save([video("a"), video("b")], fetch: { _ in png })
         #expect(changed)
 
@@ -75,9 +76,11 @@ struct HomeWidgetSnapshotTests {
             let props = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
             return (props[kCGImagePropertyPixelWidth] as? Int ?? 0, props[kCGImagePropertyPixelHeight] as? Int ?? 0)
         }
-        let fourThree = try #require(HomeWidgetStore.downscaledJPEG(makePNG(width: 480, height: 360), maxWidth: 400))
+        let fourThree = try #require(
+            HomeWidgetStore.downscaledJPEG(try makePNG(width: 480, height: 360), maxWidth: 400))
         #expect(try size(fourThree) == (400, 225))
-        let sixteenNine = try #require(HomeWidgetStore.downscaledJPEG(makePNG(width: 1280, height: 720), maxWidth: 400))
+        let sixteenNine = try #require(
+            HomeWidgetStore.downscaledJPEG(try makePNG(width: 1280, height: 720), maxWidth: 400))
         #expect(try size(sixteenNine) == (400, 225))
     }
 
@@ -85,7 +88,7 @@ struct HomeWidgetSnapshotTests {
     func unchangedSaveIsNoOp() async throws {
         let store = tempStore()
         defer { store.clear() }
-        let png = makePNG(width: 64, height: 36)
+        let png = try makePNG(width: 64, height: 36)
         try await store.save([video("a")], fetch: { _ in png })
         let changed = try await store.save(
             [video("a")],
@@ -100,7 +103,7 @@ struct HomeWidgetSnapshotTests {
     func staleThumbnailsRemoved() async throws {
         let store = tempStore()
         defer { store.clear() }
-        let png = makePNG(width: 64, height: 36)
+        let png = try makePNG(width: 64, height: 36)
         try await store.save([video("a"), video("b")], fetch: { _ in png })
         try await store.save([video("b"), video("c")], fetch: { _ in png })
         let fm = FileManager.default

@@ -114,7 +114,7 @@ final class VideoDownloadUITests: XCTestCase {
     /// Waits for `player.titleLabel` to appear within `timeout`.
     @discardableResult
     private func waitForPlayer(timeout: TimeInterval = 20) -> Bool {
-        app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: timeout)
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: timeout)
     }
 
     /// Taps the player until the controls overlay (play/pause button) is visible.

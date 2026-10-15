@@ -40,7 +40,7 @@ final class SiriShortcutsUITests: XCTestCase {
     // MARK: - Helpers
 
     private var playerTitleLabel: XCUIElement {
-        app.staticTexts["player.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
     }
 
     /// Launches the app with the deep-link launch argument for `videoID`.
@@ -95,7 +95,7 @@ final class SiriShortcutsUITests: XCTestCase {
         }
 
         // Dismiss the player (back gesture or system back).
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if backButton.waitForExistence(timeout: 3) {
             backButton.tap()
         } else {

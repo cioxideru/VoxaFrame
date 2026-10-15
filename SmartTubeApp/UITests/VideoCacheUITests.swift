@@ -63,7 +63,7 @@ final class VideoCacheUITests: XCTestCase {
     }
 
     private var titleLabel: XCUIElement {
-        app.staticTexts["player.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
     }
 
     private func swipeLeft() {

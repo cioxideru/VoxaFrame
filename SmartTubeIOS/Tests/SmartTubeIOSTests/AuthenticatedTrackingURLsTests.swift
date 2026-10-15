@@ -279,9 +279,9 @@ struct AuthenticatedTrackingURLsTests {
     }
 
     @Test("stats pings carry ns, ver and the ei/vm/of session params")
-    func statsURLCarriesSessionParams() {
+    func statsURLCarriesSessionParams() throws {
         let url = InnerTubeAPI.statsURLForTesting("playback", session: Self.session(), params: ["docid": "abc123"])
-        let items = URLComponents(url: url!, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let items = URLComponents(url: try #require(url), resolvingAgainstBaseURL: false)?.queryItems ?? []
         func value(_ name: String) -> String? { items.first { $0.name == name }?.value }
         #expect(value("ns") == "yt")
         #expect(value("ver") == "2")
@@ -292,16 +292,16 @@ struct AuthenticatedTrackingURLsTests {
     }
 
     @Test("tracking session is only derived when ei, vm and of are all present")
-    func trackingSessionRequiresAllParams() {
-        func urls(_ query: String) -> PlaybackTrackingURLs {
+    func trackingSessionRequiresAllParams() throws {
+        func urls(_ query: String) throws -> PlaybackTrackingURLs {
             PlaybackTrackingURLs(
-                playbackURL: URL(string: "https://s.youtube.com/api/stats/playback?\(query)")!,
-                watchtimeURL: URL(string: "https://s.youtube.com/api/stats/watchtime?\(query)")!)
+                playbackURL: try #require(URL(string: "https://s.youtube.com/api/stats/playback?\(query)")),
+                watchtimeURL: try #require(URL(string: "https://s.youtube.com/api/stats/watchtime?\(query)")))
         }
-        #expect(InnerTubeAPI.trackingSession(from: urls("ei=E&vm=V&of=O")) != nil)
-        #expect(InnerTubeAPI.trackingSession(from: urls("ei=E&vm=V")) == nil, "Missing of must bail out")
-        #expect(InnerTubeAPI.trackingSession(from: urls("vm=V&of=O")) == nil, "Missing ei must bail out")
-        #expect(InnerTubeAPI.trackingSession(from: urls("ei=E&vm=&of=O")) == nil, "Empty vm must bail out")
+        #expect(InnerTubeAPI.trackingSession(from: try urls("ei=E&vm=V&of=O")) != nil)
+        #expect(InnerTubeAPI.trackingSession(from: try urls("ei=E&vm=V")) == nil, "Missing of must bail out")
+        #expect(InnerTubeAPI.trackingSession(from: try urls("vm=V&of=O")) == nil, "Missing ei must bail out")
+        #expect(InnerTubeAPI.trackingSession(from: try urls("ei=E&vm=&of=O")) == nil, "Empty vm must bail out")
         #expect(InnerTubeAPI.trackingSession(from: nil) == nil)
     }
 

@@ -40,12 +40,12 @@ it without more RAM.
 ## Commands
 
 - `cd SmartTubeIOS && swift test --parallel` (`--filter <Name>` for one suite) — Swift Testing package tests, no simulator.
-- Smoke plan (hermetic): `VERIFY_SCOPE=full scripts/verify.sh` runs it after the gate and builds, or directly:
+- UI tests (`SmartTube.xctestplan`, the scheme's only plan; `Smoke`/`Live` plans land with WS3-T3.4):
 
   ```bash
-  xcodebuild test -workspace SmartTube.xcworkspace -scheme SmartTube -testPlan Smoke -destination 'platform=iOS Simulator,name=iPhone 17' -parallel-testing-enabled YES -maximum-parallel-testing-workers 3 CODE_SIGNING_ALLOWED=NO
+  xcodebuild test -workspace SmartTube.xcworkspace -scheme SmartTube -destination 'platform=iOS Simulator,name=iPhone 17' -parallel-testing-enabled YES -maximum-parallel-testing-workers 3 -only-testing:SmartTubeUITests/<Suite>/<testMethod>
   ```
 
-- Live plan (needs a signed-in simulator): the same command with `-testPlan Live` and without `CODE_SIGNING_ALLOWED=NO`.
-- A single UI test: add `-only-testing:SmartTubeUITests/<Suite>/<testMethod>` and drop `-testPlan`.
+  Drop `-only-testing` for the whole UI suite (many suites need a signed-in simulator and network).
+- Compile the apps with all UI-test targets without running them: `scripts/build-for-testing.sh`.
 - Device/app log capture during a test run: `docs/how-to/device-logs.md`.

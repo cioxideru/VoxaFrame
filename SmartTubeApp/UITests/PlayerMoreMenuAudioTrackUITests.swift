@@ -59,7 +59,7 @@ final class PlayerMoreMenuAudioTrackUITests: XCTestCase {
         ]
         app.launch()
 
-        guard app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: 20) else {
+        guard app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 20) else {
             try captureAndSkip(
                 "Player did not open for \(Self.multiTrackVideoID) within 20s — "
                     + "network unavailable or YouTube blocked the request",
@@ -101,7 +101,7 @@ final class PlayerMoreMenuAudioTrackUITests: XCTestCase {
         ]
         app.launch()
 
-        guard app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: 20) else {
+        guard app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 20) else {
             try captureAndSkip(
                 "Player did not open for \(Self.singleTrackVideoID) within 20s — " + "network unavailable",
                 in: app
@@ -148,7 +148,7 @@ final class PlayerMoreMenuAudioTrackUITests: XCTestCase {
         ]
         app.launch()
 
-        guard app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: 20) else {
+        guard app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 20) else {
             try captureAndSkip(
                 "Player did not open for \(Self.multiTrackVideoID) within 20s — " + "network unavailable",
                 in: app

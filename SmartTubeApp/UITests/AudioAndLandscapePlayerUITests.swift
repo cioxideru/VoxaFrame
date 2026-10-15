@@ -75,7 +75,7 @@ final class AudioAndLandscapePlayerUITests: XCTestCase {
 
     /// Waits for the player to be ready (title label visible).
     private func waitForPlayer(timeout: TimeInterval = 20) throws {
-        let playerTitle = app.staticTexts["player.titleLabel"].firstMatch
+        let playerTitle = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard playerTitle.waitForExistence(timeout: timeout) else {
             try captureAndSkip(
                 "Player did not open within \(timeout) s — network unavailable or video inaccessible", in: app)

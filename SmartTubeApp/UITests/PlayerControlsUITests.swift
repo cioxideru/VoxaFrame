@@ -34,7 +34,7 @@ final class PlayerControlsUITests: XCTestCase {
         guard UITestHelpers.openPlayer(from: card, in: app) else {
             try captureAndSkip("Player did not open within 15 s — network unavailable or timing-dependent", in: app)
         }
-        return app.staticTexts["player.titleLabel"].firstMatch.label
+        return app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.label
     }
 
     private var playPauseButton: XCUIElement {

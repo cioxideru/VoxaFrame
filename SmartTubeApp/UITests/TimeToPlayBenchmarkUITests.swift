@@ -322,7 +322,7 @@ final class TimeToPlayBenchmarkUITests: XCTestCase {
         print("[bench] \(videoId) card tapped — waiting for player.titleLabel")
 
         // ── 4. Wait for player ready (proxy: title label appears) ────────────
-        let playerTitle = app.staticTexts["player.titleLabel"].firstMatch
+        let playerTitle = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         let didPlay = playerTitle.waitForExistence(timeout: 30)
 
         let ttpMs = Int(Date().timeIntervalSince(tapStart) * 1000)

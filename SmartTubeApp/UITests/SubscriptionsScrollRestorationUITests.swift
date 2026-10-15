@@ -98,14 +98,14 @@ final class SubscriptionsScrollRestorationUITests: XCTestCase {
         tapPoint.tap()
 
         // 7. Wait for PlayerView to open.
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         XCTAssertTrue(
             titleLabel.waitForExistence(timeout: 15),
             "player.titleLabel must appear — PlayerView did not open")
 
         // 8. Navigate back via the always-accessible (but visually invisible) back
         //    button in the player's top-left overlay.
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         XCTAssertTrue(backButton.waitForExistence(timeout: 5), "player.backButton must be present")
         backButton.tap()
 

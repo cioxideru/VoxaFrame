@@ -68,14 +68,14 @@ extension CurrentQueueStoreSuites {
 
         @Test("videoAt(index+2) returns the video after next for a three-video queue")
         func videoAtTwoBeyondCurrentReturnsThird() async {
-            let a = Video(id: "aaaaaaaaaa1", title: "A", channelTitle: "C")
+            let firstVideo = Video(id: "aaaaaaaaaa1", title: "A", channelTitle: "C")
                 .withPlaylistId(CurrentQueueStore.playlistID, index: 0)
-            let b = Video(id: "bbbbbbbbbb2", title: "B", channelTitle: "C")
+            let secondVideo = Video(id: "bbbbbbbbbb2", title: "B", channelTitle: "C")
                 .withPlaylistId(CurrentQueueStore.playlistID, index: 1)
-            let c = Video(id: "cccccccccc3", title: "C", channelTitle: "C")
+            let thirdVideo = Video(id: "cccccccccc3", title: "C", channelTitle: "C")
                 .withPlaylistId(CurrentQueueStore.playlistID, index: 2)
 
-            await CurrentQueueStore.shared.replaceAll(with: [a, b, c])
+            await CurrentQueueStore.shared.replaceAll(with: [firstVideo, secondVideo, thirdVideo])
 
             // When current is index 0, prefetchQueueVideo(at: 2) should warm up C.
             let afterNext = await CurrentQueueStore.shared.videoAt(index: 2)

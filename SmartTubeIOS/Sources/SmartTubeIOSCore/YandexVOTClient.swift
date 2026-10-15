@@ -61,7 +61,13 @@ public actor YandexVOTClient {
     private static let hmacKey = SymmetricKey(data: Data("bt8xH3VOlb4mqf0nqAibnDOoiPlXsisf".utf8))
 
     private let session: URLSession
-    private var yandexSession: (uuid: String, secretKey: String, expiresAt: Date)?
+    private struct Session {
+        let uuid: String
+        let secretKey: String
+        let expiresAt: Date
+    }
+
+    private var yandexSession: Session?
 
     public init(session: URLSession = .shared) {
         self.session = session
@@ -151,8 +157,9 @@ public actor YandexVOTClient {
     }
 
     private func currentSession() async throws -> (uuid: String, secretKey: String) {
-        if let s = yandexSession, s.expiresAt > Date() { return (s.uuid, s.secretKey) }
-        let uuid = (0..<32).map { _ in String("0123456789ABCDEF".randomElement()!) }.joined()
+        if let cached = yandexSession, cached.expiresAt > Date() { return (cached.uuid, cached.secretKey) }
+        let alphabet = Array("0123456789ABCDEF")
+        let uuid = String((0..<32).map { _ in alphabet[Int.random(in: alphabet.indices)] })
         var body = ProtoWriter()
         body.string(1, uuid)
         body.string(2, "video-translation")
@@ -161,7 +168,7 @@ public actor YandexVOTClient {
             headers: ["Vtrans-Signature": Self.signature(body.data)])
         guard let secretKey = fields[1]?.string else { throw VOTError.malformedResponse }
         let expires = TimeInterval(fields[2]?.int ?? 3600)
-        yandexSession = (uuid, secretKey, Date().addingTimeInterval(expires - 60))
+        yandexSession = Session(uuid: uuid, secretKey: secretKey, expiresAt: Date().addingTimeInterval(expires - 60))
         return (uuid, secretKey)
     }
 
@@ -182,7 +189,10 @@ public actor YandexVOTClient {
     ) async throws
         -> [Int: ProtoValue]
     {
-        var request = URLRequest(url: URL(string: Self.host + path)!, timeoutInterval: 60)
+        guard let url = URL(string: Self.host + path) else {
+            preconditionFailure("A Yandex API path must form a valid URL")
+        }
+        var request = URLRequest(url: url, timeoutInterval: 60)
         request.httpMethod = method
         request.httpBody = body
         request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
@@ -210,15 +220,15 @@ enum ProtoValue: Equatable, Sendable {
     case bytes(Data)
 
     var int: Int? {
-        if case .varint(let v) = self { return Int(truncatingIfNeeded: v) }
+        if case .varint(let value) = self { return Int(truncatingIfNeeded: value) }
         return nil
     }
     var string: String? {
-        if case .bytes(let d) = self { return String(data: d, encoding: .utf8) }
+        if case .bytes(let data) = self { return String(data: data, encoding: .utf8) }
         return nil
     }
     var double: Double? {
-        if case .fixed64(let v) = self { return Double(bitPattern: v) }
+        if case .fixed64(let value) = self { return Double(bitPattern: value) }
         return nil
     }
 }
@@ -250,12 +260,12 @@ struct ProtoWriter {
 
     private mutating func key(_ field: Int, wireType: UInt64) { varint(UInt64(field) << 3 | wireType) }
     private mutating func varint(_ value: UInt64) {
-        var v = value
-        while v >= 0x80 {
-            data.append(UInt8(v & 0x7F) | 0x80)
-            v >>= 7
+        var remaining = value
+        while remaining >= 0x80 {
+            data.append(UInt8(remaining & 0x7F) | 0x80)
+            remaining >>= 7
         }
-        data.append(UInt8(v))
+        data.append(UInt8(remaining))
     }
 }
 
@@ -264,26 +274,26 @@ enum ProtoReader {
     static func decode(_ data: Data) throws -> [Int: ProtoValue] {
         let bytes = [UInt8](data)
         var fields: [Int: ProtoValue] = [:]
-        var i = 0
+        var offset = 0
         func varint() throws -> UInt64 {
             var result: UInt64 = 0
             var shift: UInt64 = 0
             while true {
-                guard i < bytes.count, shift < 64 else { throw YandexVOTClient.VOTError.malformedResponse }
-                let b = bytes[i]
-                i += 1
-                result |= UInt64(b & 0x7F) << shift
-                if b < 0x80 { return result }
+                guard offset < bytes.count, shift < 64 else { throw YandexVOTClient.VOTError.malformedResponse }
+                let byte = bytes[offset]
+                offset += 1
+                result |= UInt64(byte & 0x7F) << shift
+                if byte < 0x80 { return result }
                 shift += 7
             }
         }
         func fixed(_ count: Int) throws -> UInt64 {
-            guard i + count <= bytes.count else { throw YandexVOTClient.VOTError.malformedResponse }
-            let value = bytes[i..<i + count].reversed().reduce(UInt64(0)) { $0 << 8 | UInt64($1) }
-            i += count
+            guard offset + count <= bytes.count else { throw YandexVOTClient.VOTError.malformedResponse }
+            let value = bytes[offset..<offset + count].reversed().reduce(UInt64(0)) { $0 << 8 | UInt64($1) }
+            offset += count
             return value
         }
-        while i < bytes.count {
+        while offset < bytes.count {
             let key = try varint()
             let field = Int(key >> 3)
             switch key & 7 {
@@ -291,11 +301,11 @@ enum ProtoReader {
             case 1: fields[field] = .fixed64(try fixed(8))
             case 5: fields[field] = .fixed32(UInt32(try fixed(4)))
             case 2:
-                guard let length = Int(exactly: try varint()), length <= bytes.count - i else {
+                guard let length = Int(exactly: try varint()), length <= bytes.count - offset else {
                     throw YandexVOTClient.VOTError.malformedResponse
                 }
-                fields[field] = .bytes(Data(bytes[i..<i + length]))
-                i += length
+                fields[field] = .bytes(Data(bytes[offset..<offset + length]))
+                offset += length
             default: throw YandexVOTClient.VOTError.malformedResponse
             }
         }

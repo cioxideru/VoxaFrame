@@ -20,8 +20,8 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var responses: [String: (statusCode: Int, body: Data)] = [:]
     nonisolated(unsafe) static var capturedBodies: [String: Data] = [:]
 
-    override class func canInit(with request: URLRequest) -> Bool { true }
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override static func canInit(with request: URLRequest) -> Bool { true }
+    override static func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
         let url = request.url?.absoluteString ?? ""
@@ -32,10 +32,15 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         }
         let match = Self.responses.filter { url.contains($0.key) }.max(by: { $0.key.count < $1.key.count })
         let (statusCode, body) = match.map { ($0.value.statusCode, $0.value.body) } ?? (200, Data("{}".utf8))
-        let httpResponse = HTTPURLResponse(
-            url: request.url!, statusCode: statusCode, httpVersion: "HTTP/1.1",
-            headerFields: ["Content-Type": "application/json"]
-        )!
+        guard let requestURL = request.url,
+            let httpResponse = HTTPURLResponse(
+                url: requestURL, statusCode: statusCode, httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+        else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
         client?.urlProtocol(self, didReceive: httpResponse, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: body)
         client?.urlProtocolDidFinishLoading(self)

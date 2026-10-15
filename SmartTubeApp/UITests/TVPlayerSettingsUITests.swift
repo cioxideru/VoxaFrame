@@ -51,7 +51,7 @@ final class TVPlayerSettingsUITests: XCTestCase {
     }
 
     private var titleLabel: XCUIElement {
-        app.staticTexts["player.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
     }
 
     /// Detects the more menu by the presence of the speed row — the VStack container

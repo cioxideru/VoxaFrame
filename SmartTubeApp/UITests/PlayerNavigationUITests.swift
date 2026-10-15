@@ -79,7 +79,7 @@ final class PlayerLiveSwipeUITests: XCTestCase {
 
     /// Always-visible title label on `PlayerView`.
     private var titleLabel: XCUIElement {
-        app.staticTexts["player.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
     }
 
     /// Swipe left (advance to next video).

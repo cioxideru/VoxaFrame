@@ -45,7 +45,7 @@ struct SettingsPINHashSettingTests {
 
     @Test("old JSON missing this field decodes to nil instead of failing")
     func missingFieldDecodesToDefault() throws {
-        let json = "{}".data(using: .utf8)!
+        let json = Data("{}".utf8)
         let settings = try JSONDecoder().decode(AppSettings.self, from: json)
 
         #expect(settings.settingsPINHash == nil)

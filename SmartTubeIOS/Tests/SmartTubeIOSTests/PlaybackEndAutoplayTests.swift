@@ -46,12 +46,13 @@ extension CurrentQueueStoreSuites {
 
             // handlePlaybackEnd() spawns a Task that awaits CurrentQueueStore — poll for the result.
             var loadedRecommended = false
-            for _ in 0..<50 {
+            let deadline = Date().addingTimeInterval(2)
+            while Date() < deadline {
                 if vm.currentVideo?.id == recommended.id {
                     loadedRecommended = true
                     break
                 }
-                try? await Task.sleep(for: .milliseconds(10))
+                await Task.yield()
             }
 
             #expect(
@@ -80,12 +81,13 @@ extension CurrentQueueStoreSuites {
             vm.handlePlaybackEnd()
 
             var ended = false
-            for _ in 0..<50 {
+            let deadline = Date().addingTimeInterval(2)
+            while Date() < deadline {
                 if vm.videoEnded {
                     ended = true
                     break
                 }
-                try? await Task.sleep(for: .milliseconds(10))
+                await Task.yield()
             }
 
             #expect(ended, "videoEnded should become true when the queue is exhausted and there is nothing to autoplay")

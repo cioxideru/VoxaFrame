@@ -172,8 +172,8 @@ struct SearchFilterCombinedParamsTests {
         for order in nonDefault {
             var filter = SearchFilter()
             filter.sortOrder = order
-            if let p = filter.encodedParams() {
-                seen.insert(p)
+            if let params = filter.encodedParams() {
+                seen.insert(params)
             }
         }
         #expect(seen.count == nonDefault.count, "Each sort order should produce unique params")

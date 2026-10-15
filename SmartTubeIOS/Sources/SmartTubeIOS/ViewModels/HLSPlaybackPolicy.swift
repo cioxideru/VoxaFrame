@@ -5,6 +5,7 @@ import VideoToolbox
 struct HLSPlaybackPolicy: Equatable, Sendable {
     let userAgent: String
     let maximumHeight: Int?
+    // HLS specification names the multivariant playlist a master playlist. swiftlint:disable:next inclusive_language
     let filtersMasterManifest: Bool
     /// Video codecs the master manifest is filtered to (`Self.vp9`, `Self.h264`); empty keeps it as is.
     let videoCodecs: [String]

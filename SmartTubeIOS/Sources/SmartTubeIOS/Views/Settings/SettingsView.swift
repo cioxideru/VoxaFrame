@@ -87,12 +87,12 @@ public struct SettingsView: View {
         Section {
             if store.settings.settingsPINHash == nil {
                 Button("Set PIN") { parentalControlsSheetMode = .set }
-                    .accessibilityIdentifier("settings.setPINButton")
+                    .accessibilityIdentifier(AccessibilityID.settingsSetPINButton)
             } else {
                 Button("Change PIN") { parentalControlsSheetMode = .change }
-                    .accessibilityIdentifier("settings.changePINButton")
+                    .accessibilityIdentifier(AccessibilityID.settingsChangePINButton)
                 Button("Remove PIN", role: .destructive) { parentalControlsSheetMode = .remove }
-                    .accessibilityIdentifier("settings.removePINButton")
+                    .accessibilityIdentifier(AccessibilityID.settingsRemovePINButton)
             }
         } header: {
             Text("Parental Controls")
@@ -227,7 +227,7 @@ public struct SettingsView: View {
                 Button("Clear Watch History on This Device", role: .destructive) {
                     LocalWatchHistoryStore.shared.clear()
                 }
-                .accessibilityIdentifier("settings.clearLocalHistoryButton")
+                .accessibilityIdentifier(AccessibilityID.settingsClearLocalHistoryButton)
             }
             Toggle("Sync to iCloud", isOn: $store.settings.iCloudSyncEnabled)
                 .accessibilityIdentifier("settings.iCloudSyncToggle")
@@ -279,24 +279,24 @@ public struct SettingsView: View {
                     .tag(choice)
                 }
             }
-            .accessibilityIdentifier("settings.accentColorPicker")
+            .accessibilityIdentifier(AccessibilityID.settingsAccentColorPicker)
             Picker("Thumbnails", selection: thumbnailStyle) {
                 Text("Standard").tag(ThumbnailStyle.standard)
                 Text("High Resolution").tag(ThumbnailStyle.highResolution)
                 Text("Compact").tag(ThumbnailStyle.compact)
             }
-            .accessibilityIdentifier("settings.thumbnailStylePicker")
+            .accessibilityIdentifier(AccessibilityID.settingsThumbnailStylePicker)
             #if !os(tvOS)
             Picker("Columns (Portrait)", selection: $store.settings.gridColumnsPortrait) {
                 ForEach(AppSettings.availableGridColumnCounts, id: \.self) { Text("\($0)").tag($0) }
             }
             .disabled(store.settings.compactThumbnails)
-            .accessibilityIdentifier("settings.gridColumnsPortraitPicker")
+            .accessibilityIdentifier(AccessibilityID.settingsGridColumnsPortraitPicker)
             Picker("Columns (Landscape)", selection: $store.settings.gridColumnsLandscape) {
                 ForEach(AppSettings.availableGridColumnCounts, id: \.self) { Text("\($0)").tag($0) }
             }
             .disabled(store.settings.compactThumbnails)
-            .accessibilityIdentifier("settings.gridColumnsLandscapePicker")
+            .accessibilityIdentifier(AccessibilityID.settingsGridColumnsLandscapePicker)
             #endif
             Toggle("Hide Shorts", isOn: $store.settings.hideShorts)
                 .accessibilityIdentifier("settings.hideShortsToggle")
@@ -307,7 +307,7 @@ public struct SettingsView: View {
             Toggle("Per-Device Recommendations", isOn: $store.settings.perDeviceRecommendationsEnabled)
                 .accessibilityIdentifier("settings.perDeviceRecommendationsToggle")
             Toggle("Hide Watched Videos", isOn: $store.settings.hideWatchedVideos)
-                .accessibilityIdentifier("settings.hideWatchedVideosToggle")
+                .accessibilityIdentifier(AccessibilityID.settingsHideWatchedVideosToggle)
             if store.settings.hideWatchedVideos {
                 #if os(tvOS)
                 // tvOS has no Stepper.
@@ -316,19 +316,19 @@ public struct SettingsView: View {
                         Text("\(percent)%").tag(Double(percent) / 100)
                     }
                 }
-                .accessibilityIdentifier("settings.hideWatchedThresholdStepper")
+                .accessibilityIdentifier(AccessibilityID.settingsHideWatchedThresholdStepper)
                 #else
                 Stepper(
                     "Watched threshold: \(Int(store.settings.hideWatchedThreshold * 100))%",
                     value: $store.settings.hideWatchedThreshold, in: 0.5...1.0, step: 0.05
                 )
-                .accessibilityIdentifier("settings.hideWatchedThresholdStepper")
+                .accessibilityIdentifier(AccessibilityID.settingsHideWatchedThresholdStepper)
                 #endif
             }
             #if os(iOS)
             if #available(iOS 26.0, *) {
                 Toggle("Disable Liquid Glass", isOn: $store.settings.disableLiquidGlass)
-                    .accessibilityIdentifier("settings.disableLiquidGlassToggle")
+                    .accessibilityIdentifier(AccessibilityID.settingsDisableLiquidGlassToggle)
             }
             #endif
             NavigationLink("Visible Sections") {
@@ -338,6 +338,10 @@ public struct SettingsView: View {
             .accessibilityIdentifier("settings.visibleSectionsLink")
         }
     }
+
+}
+
+extension SettingsView {
 
     // MARK: - SponsorBlock
 
@@ -455,12 +459,12 @@ public struct SettingsView: View {
             }
             .accessibilityIdentifier("settings.preferredAudioLanguageRow")
             Toggle("Yandex Voice-Over Translation", isOn: $store.settings.yandexVOTEnabled)
-                .accessibilityIdentifier("settings.yandexVOTToggle")
+                .accessibilityIdentifier(AccessibilityID.settingsYandexVOTToggle)
             if store.settings.yandexVOTEnabled {
                 Toggle("Lively Voices", isOn: $store.settings.yandexVOTLivelyVoice)
-                    .accessibilityIdentifier("settings.yandexVOTLivelyVoiceToggle")
+                    .accessibilityIdentifier(AccessibilityID.settingsYandexVOTLivelyVoiceToggle)
                 Toggle("Original Audio in Background", isOn: $store.settings.yandexVOTKeepOriginalAudio)
-                    .accessibilityIdentifier("settings.yandexVOTKeepOriginalAudioToggle")
+                    .accessibilityIdentifier(AccessibilityID.settingsYandexVOTKeepOriginalAudioToggle)
             }
             if store.settings.yandexVOTEnabled, store.settings.yandexVOTLivelyVoice {
                 SecureField("Yandex OAuth Token", text: $yandexToken)
@@ -469,7 +473,7 @@ public struct SettingsView: View {
                     .onChange(of: yandexToken) { _, token in
                         if token != TokenManager.yandexVOTToken() ?? "" { TokenManager.setYandexVOTToken(token) }
                     }
-                    .accessibilityIdentifier("settings.yandexVOTTokenField")
+                    .accessibilityIdentifier(AccessibilityID.settingsYandexVOTTokenField)
                 Button("How to Get a Token") { showYandexTokenHelp = true }
                     .alert("Yandex OAuth Token", isPresented: $showYandexTokenHelp) {
                         Button("OK", role: .cancel) {}
@@ -505,10 +509,10 @@ public struct SettingsView: View {
             // At least one codec stays on: the last one enabled can't be switched off.
             Toggle("VP9 (up to 4K)", isOn: $store.settings.vp9Enabled)
                 .disabled(settings.vp9Enabled && !settings.h264Enabled)
-                .accessibilityIdentifier("settings.vp9Toggle")
+                .accessibilityIdentifier(AccessibilityID.settingsVp9Toggle)
             Toggle("H.264 (up to 1080p)", isOn: $store.settings.h264Enabled)
                 .disabled(settings.h264Enabled && !settings.vp9Enabled)
-                .accessibilityIdentifier("settings.h264Toggle")
+                .accessibilityIdentifier(AccessibilityID.settingsH264Toggle)
         } header: {
             Text("Video Codecs")
         } footer: {
@@ -527,7 +531,7 @@ public struct SettingsView: View {
         @Bindable var store = store
         return Section {
             Toggle("IFrame Player (TOS-compliant, shows ads)", isOn: $store.settings.useTOSPlayerOnIOS)
-                .accessibilityIdentifier("settings.useTOSPlayerOnIOSToggle")
+                .accessibilityIdentifier(AccessibilityID.settingsUseTOSPlayerOnIOSToggle)
         } header: {
             Text("Player")
         } footer: {
@@ -545,7 +549,7 @@ public struct SettingsView: View {
         return Section {
             LabeledContent("Version", value: appVersion)
             Toggle("Disable Analytics & Crash Reporting", isOn: $store.settings.disableAnalytics)
-                .accessibilityIdentifier("settings.disableAnalyticsToggle")
+                .accessibilityIdentifier(AccessibilityID.settingsDisableAnalyticsToggle)
             Text("Restart the app for this to take effect.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -640,119 +644,3 @@ private struct GitHubQRView: View {
     }
 }
 #endif
-
-// MARK: - SectionsSettingsView
-
-/// Lets the user configure which sections appear in the sidebar / tab bar.
-/// Mirrors Android's `MainUIData` section ordering/enabling UI.
-struct SectionsSettingsView: View {
-    @Environment(SettingsStore.self) private var store
-
-    private let allSections = BrowseSection.allSections
-
-    /// #156: visible sections in the user's own order (drag-to-reorder below), each
-    /// resolved back to its `BrowseSection` for a title/icon.
-    private var visibleSections: [BrowseSection] {
-        store.settings.enabledSections.compactMap { type in allSections.first { $0.type == type } }
-    }
-
-    private var hiddenSections: [BrowseSection] {
-        allSections.filter { !store.settings.enabledSections.contains($0.type) }
-    }
-
-    var body: some View {
-        @Bindable var store = store
-        List {
-            Section {
-                ForEach(visibleSections) { section in
-                    HStack {
-                        Text(section.title)
-                        Spacer()
-                        Button {
-                            // Don't allow disabling the last section.
-                            guard store.settings.enabledSections.count > 1 else { return }
-                            store.settings.enabledSections.removeAll { $0 == section.type }
-                        } label: {
-                            Image(systemName: "minus.circle.fill")
-                                .foregroundStyle(.red)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(store.settings.enabledSections.count <= 1)
-                    }
-                }
-                .onMove { offsets, destination in
-                    store.settings.enabledSections.move(fromOffsets: offsets, toOffset: destination)
-                }
-            } header: {
-                Text("Visible — drag to reorder")
-            }
-
-            if !hiddenSections.isEmpty {
-                Section("Hidden") {
-                    ForEach(hiddenSections) { section in
-                        Button {
-                            // Append to the end of the user's current order, rather than
-                            // recomputing from canonical order, so re-enabling a section
-                            // doesn't discard any reordering already done above.
-                            store.settings.enabledSections.append(section.type)
-                        } label: {
-                            HStack {
-                                Text(section.title).foregroundStyle(.primary)
-                                Spacer()
-                                Image(systemName: "plus.circle.fill").foregroundStyle(.green)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-        .navigationTitle("Visible Sections")
-        #if os(iOS)
-        .toolbar(.visible, for: .navigationBar)
-        #endif
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
-    }
-}
-
-// MARK: - SponsorBlockExcludedChannelsView
-
-/// Lists channels excluded from SponsorBlock processing.
-/// Channels can be added from ChannelView and removed here via swipe-to-delete.
-struct SponsorBlockExcludedChannelsView: View {
-    @Environment(SettingsStore.self) private var store
-
-    var body: some View {
-        @Bindable var store = store
-        let sortedChannels = store.settings.sponsorBlockExcludedChannels
-            .sorted { $0.value.localizedCompare($1.value) == .orderedAscending }
-        return List {
-            if sortedChannels.isEmpty {
-                ContentUnavailableView(
-                    "No Excluded Channels",
-                    systemImage: "person.crop.circle.badge.minus",
-                    description: Text(
-                        "Open a channel and tap \u{201C}Exclude from SponsorBlock\u{201D} to add it here.")
-                )
-            } else {
-                ForEach(sortedChannels, id: \.key) { channelId, title in
-                    Text(title)
-                }
-                .onDelete { indices in
-                    let ids = indices.map { sortedChannels[$0].key }
-                    ids.forEach { store.settings.sponsorBlockExcludedChannels.removeValue(forKey: $0) }
-                }
-            }
-        }
-        .navigationTitle("Excluded Channels")
-        #if os(iOS)
-        .toolbar(.visible, for: .navigationBar)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            EditButton()
-        }
-        #endif
-    }
-}

@@ -94,34 +94,7 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
             return false
         }
 
-        var request = URLRequest(url: realURL, timeoutInterval: 30)
-        request.setValue(ua, forHTTPHeaderField: "User-Agent")
-        // All googlevideo.com requests (both manifest and segment CDN) need Origin/Referer
-        // matching youtube.com so the CDN accepts the cross-origin request.
-        // Exact domain match: `contains` would also accept e.g. googlevideo.com.attacker.example.
-        let isGoogleVideo = realURL.host.map { $0 == "googlevideo.com" || $0.hasSuffix(".googlevideo.com") } ?? false
-        if isGoogleVideo {
-            request.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
-            request.setValue("https://www.youtube.com/", forHTTPHeaderField: "Referer")
-        }
-        // For googlevideo.com segment CDN requests, attach all cookies extracted from the
-        // WKWebView at proxy creation time (webViewCookies). This includes both youtube.com
-        // and googlevideo.com cookies needed for rqh=1-enforced content.
-        // Falls back to HTTPCookieStorage.shared when webViewCookies was not provided.
-        if isGoogleVideo {
-            let cookies: [HTTPCookie] =
-                webViewCookies.isEmpty
-                ? (HTTPCookieStorage.shared.cookies(for: URL(string: "https://www.youtube.com")!) ?? [])
-                : webViewCookies
-            if !cookies.isEmpty {
-                let cookieHeader = cookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
-                request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
-                let gvCount = cookies.filter { $0.domain.contains("googlevideo") }.count
-                proxyLog.notice(
-                    "[HLSProxy] attaching \(cookies.count) cookies (\(gvCount) googlevideo) to segment request")
-            }
-        }
-        proxyLog.notice("[HLSProxy] GET \(realURL.absoluteString.prefix(200))")
+        let request = makeRequest(realURL: realURL)
 
         let key = ObjectIdentifier(loadingRequest)
         let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
@@ -217,6 +190,39 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
         task?.cancel()
     }
 
+    private func makeRequest(realURL: URL) -> URLRequest {
+        var request = URLRequest(url: realURL, timeoutInterval: 30)
+        request.setValue(ua, forHTTPHeaderField: "User-Agent")
+        // All googlevideo.com requests (both manifest and segment CDN) need Origin/Referer
+        // matching youtube.com so the CDN accepts the cross-origin request.
+        // Exact domain match: `contains` would also accept e.g. googlevideo.com.attacker.example.
+        let isGoogleVideo = realURL.host.map { $0 == "googlevideo.com" || $0.hasSuffix(".googlevideo.com") } ?? false
+        if isGoogleVideo {
+            request.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
+            request.setValue("https://www.youtube.com/", forHTTPHeaderField: "Referer")
+        }
+        // For googlevideo.com segment CDN requests, attach all cookies extracted from the
+        // WKWebView at proxy creation time (webViewCookies). This includes both youtube.com
+        // and googlevideo.com cookies needed for rqh=1-enforced content.
+        // Falls back to HTTPCookieStorage.shared when webViewCookies was not provided.
+        if isGoogleVideo {
+            let cookies: [HTTPCookie] =
+                webViewCookies.isEmpty
+                ? (HTTPCookieStorage.shared.cookies(for: URL(string: "https://www.youtube.com")!) ?? [])
+                : webViewCookies
+            if !cookies.isEmpty {
+                let cookieHeader = cookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
+                request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+                let gvCount = cookies.filter { $0.domain.contains("googlevideo") }.count
+                proxyLog.notice(
+                    "[HLSProxy] attaching \(cookies.count) cookies (\(gvCount) googlevideo) to segment request")
+            }
+        }
+        proxyLog.notice("[HLSProxy] GET \(realURL.absoluteString.prefix(200))")
+
+        return request
+    }
+
     // MARK: Playlist rewriting
 
     /// Rewrites all URI lines in an HLS M3U8 to use our proxy scheme so that
@@ -256,57 +262,7 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
             proxyLog.notice("[HLSProxy] filtered master to \(codecs, privacy: .public) <= \(cap, privacy: .public)")
         }
         if !text.contains("#EXTINF") && !isMasterManifest {
-            let rawLines = text.components(separatedBy: "\n")
-            var fixedLines: [String] = []
-            var maxDurationSecs: Double = 4.0
-            var segmentCount = 0
-            var hasEndlist = false
-
-            for rawLine in rawLines {
-                let trimmed = rawLine.trimmingCharacters(in: .whitespaces)
-                if trimmed == "#EXTM3U" {
-                    fixedLines.append(rawLine)
-                    // Inject required header tags immediately after #EXTM3U.
-                    // We'll fill in EXT-X-TARGETDURATION after the first pass.
-                    fixedLines.append("__TARGETDURATION_PLACEHOLDER__")
-                    fixedLines.append("#EXT-X-VERSION:3")
-                    fixedLines.append("#EXT-X-MEDIA-SEQUENCE:0")
-                    fixedLines.append("#EXT-X-ALLOW-CACHE:NO")
-                } else if trimmed.isEmpty || trimmed.hasPrefix("#") {
-                    if trimmed == "#EXT-X-ENDLIST" { hasEndlist = true }
-                    fixedLines.append(rawLine)
-                } else {
-                    // URL line — extract segment duration from /len/{ms}/ path component.
-                    var durationSecs: Double = 4.0
-                    if let lenStart = trimmed.range(of: "/len/") {
-                        let after = trimmed[lenStart.upperBound...]
-                        if let lenEnd = after.firstIndex(of: "/") {
-                            let msString = String(after[after.startIndex..<lenEnd])
-                            if let ms = Double(msString), ms > 0 {
-                                durationSecs = ms / 1000.0
-                            }
-                        }
-                    }
-                    maxDurationSecs = max(maxDurationSecs, durationSecs)
-                    fixedLines.append("#EXTINF:\(String(format: "%.6f", durationSecs)),")
-                    fixedLines.append(rawLine)
-                    segmentCount += 1
-                }
-            }
-
-            if !hasEndlist {
-                fixedLines.append("#EXT-X-ENDLIST")
-            }
-
-            let targetDurationTag = "#EXT-X-TARGETDURATION:\(Int(ceil(maxDurationSecs)))"
-            let result =
-                fixedLines
-                .map { $0 == "__TARGETDURATION_PLACEHOLDER__" ? targetDurationTag : $0 }
-                .joined(separator: "\n")
-            text = result
-            proxyLog.notice(
-                "[HLSProxy] synthesized #EXTINF for \(segmentCount) segments; targetDuration=\(Int(ceil(maxDurationSecs)))s"
-            )
+            text = synthesizingDurations(in: text)
         }
 
         // Step 2: For master manifests, rewrite #EXT-X-MEDIA URI attributes so that audio
@@ -330,102 +286,13 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
         // regardless of whether a poToken is available. When poToken is also set, Step 4
         // additionally injects pot= into every segment URL within those variant playlists.
         if isMasterManifest {
-            let lines = text.components(separatedBy: "\n")
-            // Diagnostic: log first #EXT-X-MEDIA:TYPE=AUDIO line to verify URI quote format.
-            if let sample = lines.first(where: { $0.hasPrefix("#EXT-X-MEDIA:") && $0.contains("TYPE=AUDIO") }) {
-                proxyLog.notice("[HLSProxy] first AUDIO EXT-X-MEDIA sample: \(sample.prefix(300))")
-            }
-            var audioGroupCount = 0
-            var variantCount = 0
-            let rewrittenLines: [String] = lines.map { line in
-                guard line.hasPrefix("#EXT-X-MEDIA:") || !line.hasPrefix("#") else { return line }
-                // Rewrite #EXT-X-MEDIA playlist URIs to proxy scheme (audio renditions).
-                if line.hasPrefix("#EXT-X-MEDIA:") {
-                    if line.contains("URI=\"https://") {
-                        audioGroupCount += 1
-                        return line.replacingOccurrences(of: "URI=\"https://", with: "URI=\"\(proxyScheme)://")
-                    } else if line.contains("URI=https://") {
-                        audioGroupCount += 1
-                        return line.replacingOccurrences(of: "URI=https://", with: "URI=\(proxyScheme)://")
-                    }
-                    return line
-                }
-                // fix22: Always rewrite #EXT-X-STREAM-INF variant URLs to proxy scheme so that
-                // AVFoundation fetches variant playlists via the proxy with desktop-Safari UA.
-                // Without this, AVFoundation uses iOS UA and manifest.googlevideo.com rejects
-                // the request with 403 when no poToken is available. When poToken is set,
-                // Step 4 additionally injects pot= into segment URLs within the variant playlist.
-                let trimmed = line.trimmingCharacters(in: .whitespaces)
-                if !trimmed.isEmpty && trimmed.hasPrefix("https://") {
-                    variantCount += 1
-                    return trimmed.replacingOccurrences(of: "https://", with: "\(proxyScheme)://")
-                }
-                return line
-            }
-            if audioGroupCount > 0 || variantCount > 0 {
-                proxyLog.notice(
-                    "[HLSProxy] rewrote \(audioGroupCount) #EXT-X-MEDIA + \(variantCount) variant URIs to \(proxyScheme)://"
-                )
-                text = rewrittenLines.joined(separator: "\n")
-            } else {
-                let extMediaCount = lines.filter { $0.hasPrefix("#EXT-X-MEDIA:") }.count
-                proxyLog.notice(
-                    "[HLSProxy] 0 #EXT-X-MEDIA URIs rewritten; total EXT-X-MEDIA lines=\(extMediaCount); checking YT-EXT-AUDIO-CONTENT-ID variants"
-                )
-            }
+            text = rewriteMultivariantURIs(in: text)
 
             // Step 3: Filter #EXT-X-STREAM-INF variants by selected dubbed-audio language.
             // IMPORTANT: use the CURRENT `text` (after Step 2 URL rewrites), not the original
             // `lines` variable. If we iterated `lines` here, Step 2's ytwebhls:// rewrites would
             // be overwritten with the original https:// URLs — AVFoundation would bypass the proxy.
-            let currentLines = text.components(separatedBy: "\n")
-            let hasVariants = currentLines.contains {
-                $0.trimmingCharacters(in: .whitespaces).hasPrefix("#EXT-X-STREAM-INF:")
-            }
-            if hasVariants {
-                let selectedLang = selectedLanguageContentID
-                var filteredLines: [String] = []
-                var pendingKeep: Bool? = nil
-                var keptVariantCount = 0
-
-                for line in currentLines {
-                    let trimmed = line.trimmingCharacters(in: .whitespaces)
-                    if trimmed.hasPrefix("#EXT-X-STREAM-INF:") {
-                        let hasContentID = trimmed.contains("YT-EXT-AUDIO-CONTENT-ID=")
-                        if let lang = selectedLang {
-                            // Keep only the variant matching the selected language
-                            pendingKeep =
-                                trimmed.contains("YT-EXT-AUDIO-CONTENT-ID=\"\(lang)\"")
-                                || trimmed.contains("YT-EXT-AUDIO-CONTENT-ID=\(lang)")
-                        } else {
-                            // No language selected → original (no content ID)
-                            pendingKeep = !hasContentID
-                        }
-                        if pendingKeep == true { filteredLines.append(line) }
-                    } else if let keep = pendingKeep, !trimmed.isEmpty, !trimmed.hasPrefix("#") {
-                        // URL line immediately following a #EXT-X-STREAM-INF
-                        if keep {
-                            filteredLines.append(line)
-                            keptVariantCount += 1
-                        }
-                        pendingKeep = nil
-                    } else {
-                        filteredLines.append(line)
-                    }
-                }
-
-                let langDisplay = selectedLang ?? "original"
-                if keptVariantCount > 0 {
-                    proxyLog.notice(
-                        "[HLSProxy] language filter: lang=\(langDisplay) kept \(keptVariantCount) variant(s)")
-                    text = filteredLines.joined(separator: "\n")
-                } else {
-                    // No variants matched — serve unfiltered manifest so AVPlayer can always load.
-                    proxyLog.notice(
-                        "[HLSProxy] language filter: lang=\(langDisplay) matched 0 variants — serving unfiltered manifest"
-                    )
-                }
-            }
+            text = filterLanguageVariants(in: text)
         }
 
         // Step 4: For variant quality playlists (non-master), inject pot= into segment URLs.
@@ -460,4 +327,160 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
 
         return text
     }
+    private func rewriteMultivariantURIs(in source: String) -> String {
+        var text = source
+        let lines = text.components(separatedBy: "\n")
+        // Diagnostic: log first #EXT-X-MEDIA:TYPE=AUDIO line to verify URI quote format.
+        if let sample = lines.first(where: { $0.hasPrefix("#EXT-X-MEDIA:") && $0.contains("TYPE=AUDIO") }) {
+            proxyLog.notice("[HLSProxy] first AUDIO EXT-X-MEDIA sample: \(sample.prefix(300))")
+        }
+        var audioGroupCount = 0
+        var variantCount = 0
+        let rewrittenLines: [String] = lines.map { line in
+            guard line.hasPrefix("#EXT-X-MEDIA:") || !line.hasPrefix("#") else { return line }
+            // Rewrite #EXT-X-MEDIA playlist URIs to proxy scheme (audio renditions).
+            if line.hasPrefix("#EXT-X-MEDIA:") {
+                if line.contains("URI=\"https://") {
+                    audioGroupCount += 1
+                    return line.replacingOccurrences(of: "URI=\"https://", with: "URI=\"\(proxyScheme)://")
+                } else if line.contains("URI=https://") {
+                    audioGroupCount += 1
+                    return line.replacingOccurrences(of: "URI=https://", with: "URI=\(proxyScheme)://")
+                }
+                return line
+            }
+            // fix22: Always rewrite #EXT-X-STREAM-INF variant URLs to proxy scheme so that
+            // AVFoundation fetches variant playlists via the proxy with desktop-Safari UA.
+            // Without this, AVFoundation uses iOS UA and manifest.googlevideo.com rejects
+            // the request with 403 when no poToken is available. When poToken is set,
+            // Step 4 additionally injects pot= into segment URLs within the variant playlist.
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if !trimmed.isEmpty && trimmed.hasPrefix("https://") {
+                variantCount += 1
+                return trimmed.replacingOccurrences(of: "https://", with: "\(proxyScheme)://")
+            }
+            return line
+        }
+        if audioGroupCount > 0 || variantCount > 0 {
+            proxyLog.notice(
+                "[HLSProxy] rewrote \(audioGroupCount) #EXT-X-MEDIA + \(variantCount) variant URIs to \(proxyScheme)://"
+            )
+            text = rewrittenLines.joined(separator: "\n")
+        } else {
+            let extMediaCount = lines.filter { $0.hasPrefix("#EXT-X-MEDIA:") }.count
+            proxyLog.notice(
+                "[HLSProxy] 0 #EXT-X-MEDIA URIs rewritten; total EXT-X-MEDIA lines=\(extMediaCount); checking YT-EXT-AUDIO-CONTENT-ID variants"
+            )
+        }
+
+        return text
+    }
+
+    private func filterLanguageVariants(in source: String) -> String {
+        var text = source
+        let currentLines = text.components(separatedBy: "\n")
+        let hasVariants = currentLines.contains {
+            $0.trimmingCharacters(in: .whitespaces).hasPrefix("#EXT-X-STREAM-INF:")
+        }
+        if hasVariants {
+            let selectedLang = selectedLanguageContentID
+            var filteredLines: [String] = []
+            var pendingKeep: Bool?
+            var keptVariantCount = 0
+
+            for line in currentLines {
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                if trimmed.hasPrefix("#EXT-X-STREAM-INF:") {
+                    let hasContentID = trimmed.contains("YT-EXT-AUDIO-CONTENT-ID=")
+                    if let lang = selectedLang {
+                        // Keep only the variant matching the selected language
+                        pendingKeep =
+                            trimmed.contains("YT-EXT-AUDIO-CONTENT-ID=\"\(lang)\"")
+                            || trimmed.contains("YT-EXT-AUDIO-CONTENT-ID=\(lang)")
+                    } else {
+                        // No language selected → original (no content ID)
+                        pendingKeep = !hasContentID
+                    }
+                    if pendingKeep == true { filteredLines.append(line) }
+                } else if let keep = pendingKeep, !trimmed.isEmpty, !trimmed.hasPrefix("#") {
+                    // URL line immediately following a #EXT-X-STREAM-INF
+                    if keep {
+                        filteredLines.append(line)
+                        keptVariantCount += 1
+                    }
+                    pendingKeep = nil
+                } else {
+                    filteredLines.append(line)
+                }
+            }
+
+            let langDisplay = selectedLang ?? "original"
+            if keptVariantCount > 0 {
+                proxyLog.notice(
+                    "[HLSProxy] language filter: lang=\(langDisplay) kept \(keptVariantCount) variant(s)")
+                text = filteredLines.joined(separator: "\n")
+            } else {
+                // No variants matched — serve unfiltered manifest so AVPlayer can always load.
+                proxyLog.notice(
+                    "[HLSProxy] language filter: lang=\(langDisplay) matched 0 variants — serving unfiltered manifest"
+                )
+            }
+        }
+        return text
+    }
+
+    private func synthesizingDurations(in text: String) -> String {
+        let rawLines = text.components(separatedBy: "\n")
+        var fixedLines: [String] = []
+        var maxDurationSecs: Double = 4.0
+        var segmentCount = 0
+        var hasEndlist = false
+
+        for rawLine in rawLines {
+            let trimmed = rawLine.trimmingCharacters(in: .whitespaces)
+            if trimmed == "#EXTM3U" {
+                fixedLines.append(rawLine)
+                // Inject required header tags immediately after #EXTM3U.
+                // We'll fill in EXT-X-TARGETDURATION after the first pass.
+                fixedLines.append("__TARGETDURATION_PLACEHOLDER__")
+                fixedLines.append("#EXT-X-VERSION:3")
+                fixedLines.append("#EXT-X-MEDIA-SEQUENCE:0")
+                fixedLines.append("#EXT-X-ALLOW-CACHE:NO")
+            } else if trimmed.isEmpty || trimmed.hasPrefix("#") {
+                if trimmed == "#EXT-X-ENDLIST" { hasEndlist = true }
+                fixedLines.append(rawLine)
+            } else {
+                // URL line — extract segment duration from /len/{ms}/ path component.
+                var durationSecs: Double = 4.0
+                if let lenStart = trimmed.range(of: "/len/") {
+                    let after = trimmed[lenStart.upperBound...]
+                    if let lenEnd = after.firstIndex(of: "/") {
+                        let msString = String(after[after.startIndex..<lenEnd])
+                        if let ms = Double(msString), ms > 0 {
+                            durationSecs = ms / 1000.0
+                        }
+                    }
+                }
+                maxDurationSecs = max(maxDurationSecs, durationSecs)
+                fixedLines.append("#EXTINF:\(String(format: "%.6f", durationSecs)),")
+                fixedLines.append(rawLine)
+                segmentCount += 1
+            }
+        }
+
+        if !hasEndlist {
+            fixedLines.append("#EXT-X-ENDLIST")
+        }
+
+        let targetDurationTag = "#EXT-X-TARGETDURATION:\(Int(ceil(maxDurationSecs)))"
+        let result =
+            fixedLines
+            .map { $0 == "__TARGETDURATION_PLACEHOLDER__" ? targetDurationTag : $0 }
+            .joined(separator: "\n")
+        proxyLog.notice(
+            "[HLSProxy] synthesized #EXTINF for \(segmentCount) segments; targetDuration=\(Int(ceil(maxDurationSecs)))s"
+        )
+        return result
+    }
+
 }

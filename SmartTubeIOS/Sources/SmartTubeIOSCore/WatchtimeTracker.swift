@@ -28,9 +28,9 @@ private let trackerLog = Logger(subsystem: appSubsystem, category: "WatchtimeTra
 public final class WatchtimeTracker {
 
     /// Android marks a video fully watched once less than 5% remains.
-    private nonisolated static let endThresholdFraction = 0.05
+    nonisolated private static let endThresholdFraction = 0.05
     /// Android starts the watch record at 0 for anything below this position.
-    private nonisolated static let startThreshold: TimeInterval = 180
+    nonisolated private static let startThreshold: TimeInterval = 180
     /// Android opens a fresh watch record when the previous one is older than this.
     private static let recordRenewInterval: TimeInterval = 30 * 60
     /// Minimum spacing between periodic checkpoints driven by the players' time observers.
@@ -265,11 +265,11 @@ public final class WatchtimeTracker {
 
     // MARK: - Android parity helpers
 
-    private nonisolated static func isNearEnd(position: TimeInterval, duration: TimeInterval) -> Bool {
+    nonisolated private static func isNearEnd(position: TimeInterval, duration: TimeInterval) -> Bool {
         duration > 0 && duration - position < duration * endThresholdFraction
     }
 
-    private nonisolated static func initialSegmentStart(for position: TimeInterval) -> TimeInterval {
+    nonisolated private static func initialSegmentStart(for position: TimeInterval) -> TimeInterval {
         position < startThreshold ? 0 : position
     }
 }

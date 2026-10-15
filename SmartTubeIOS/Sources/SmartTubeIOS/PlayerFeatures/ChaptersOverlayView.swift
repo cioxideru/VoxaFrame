@@ -12,7 +12,7 @@ struct ChaptersOverlayView: View {
     let chapters: [Chapter]
     let onSelect: (Chapter) -> Void
     let onDismiss: () -> Void
-    var accessibilityId: String? = nil
+    var accessibilityId: String?
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -62,7 +62,7 @@ struct ChaptersOverlayView: View {
                                     .padding(.horizontal, 4)
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityIdentifier("tosPlayer.chaptersOverlay.chapter.\(chapter.id)")
+                                .accessibilityIdentifier(AccessibilityID.tosPlayerChapter(chapter.id))
                                 if chapter.id != chapters.last?.id {
                                     Divider()
                                 }

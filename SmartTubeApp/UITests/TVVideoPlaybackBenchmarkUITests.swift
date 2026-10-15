@@ -65,7 +65,7 @@ final class TVVideoPlaybackBenchmarkUITests: XCTestCase {
 
     func testSequentialPerVideoPlaybackTimes() throws {
         let videoIDs = orderedVideoIDs
-        let playerTitle = app.staticTexts["player.titleLabel"].firstMatch
+        let playerTitle = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
 
         // ── Navigate to Home feed ─────────────────────────────────────────────
         let chipBar = app.descendants(matching: .any)

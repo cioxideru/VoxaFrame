@@ -219,12 +219,15 @@ final class VoiceOverTranslationController {
 
     /// The HLS audio rendition (what AVPlayer plays) as one ADTS AAC stream.
     private func downloadHLSAudio(_ request: Request) async throws -> Data {
+        // HLS specification names the multivariant playlist a master playlist. swiftlint:disable:next inclusive_language
         guard let masterURL = request.originalAudioHLSURL else { throw YandexVOTClient.VOTError.malformedResponse }
         let userAgent = request.originalAudioUserAgent
+        // HLS term; preserve lossy UTF-8 decoding. swiftlint:disable:next inclusive_language optional_data_string_conversion
         let master = String(decoding: try await Self.fetch(masterURL, userAgent: userAgent), as: UTF8.self)
         guard let playlistURL = hlsOriginalAudioPlaylistURL(in: master, baseURL: masterURL) else {
             throw YandexVOTClient.VOTError.malformedResponse
         }
+        // Decode malformed UTF-8 lossily, preserving replacement characters. swiftlint:disable:next optional_data_string_conversion
         let playlist = String(decoding: try await Self.fetch(playlistURL, userAgent: userAgent), as: UTF8.self)
         let segments = hlsSegmentURLs(in: playlist, baseURL: playlistURL)
         // Hundreds of ~4 s segments: a few in flight at once, reassembled in playlist order.
@@ -242,7 +245,7 @@ final class VoiceOverTranslationController {
         return parts.reduce(into: Data()) { $0.append($1) }
     }
 
-    private nonisolated static func fetch(_ url: URL, userAgent: String) async throws -> Data {
+    nonisolated private static func fetch(_ url: URL, userAgent: String) async throws -> Data {
         var urlRequest = URLRequest(url: url, timeoutInterval: 60)
         urlRequest.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: urlRequest)

@@ -28,7 +28,7 @@ struct DisableAnalyticsSettingTests {
     func missingFieldDecodesToDefault() throws {
         // Mirrors AppSettingsMigrationTests' pattern: a field added after some users
         // already had settings stored must not cause the whole decode to fail.
-        let json = "{}".data(using: .utf8)!
+        let json = Data("{}".utf8)
         let settings = try JSONDecoder().decode(AppSettings.self, from: json)
 
         #expect(settings.disableAnalytics == false)

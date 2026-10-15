@@ -71,7 +71,7 @@ struct HideWatchedVideosSettingTests {
 
     @Test("old JSON missing these fields decodes to defaults instead of failing")
     func missingFieldsDecodeToDefaults() throws {
-        let json = "{}".data(using: .utf8)!
+        let json = Data("{}".utf8)
         let settings = try JSONDecoder().decode(AppSettings.self, from: json)
 
         #expect(settings.hideWatchedVideos == false)

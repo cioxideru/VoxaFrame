@@ -64,7 +64,7 @@ public struct BrowseSection: Identifiable, Hashable, Sendable {
         case gaming = "gaming"
         case live = "live"
         case sports = "sports"
-        case watchLater = "watchLater"
+        case watchLater
         case settings = "settings"
 
         /// Canonical display title — single source of truth used by defaultSections,

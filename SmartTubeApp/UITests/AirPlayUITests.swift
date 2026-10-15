@@ -141,7 +141,7 @@ final class AirPlayUITests: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
         Thread.sleep(forTimeInterval: 1.0)
         // Player title must still be present — player did not close or error.
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         XCTAssertTrue(
             titleLabel.exists,
             "player.titleLabel should still be visible after dismissing the AirPlay picker")

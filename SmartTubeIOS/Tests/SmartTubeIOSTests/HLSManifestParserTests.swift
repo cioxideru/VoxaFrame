@@ -268,6 +268,7 @@ struct HLSManifestParserTests {
 
     @Test("original audio rendition is preferred over a dub, URIs resolve against the master")
     func originalAudioPlaylist() {
+        // HLS specification names the multivariant playlist a master playlist. swiftlint:disable:next inclusive_language
         let master = """
             #EXTM3U
             #EXT-X-MEDIA:URI="dub.m3u8",TYPE=AUDIO,GROUP-ID="233",NAME="Español - dubbed",DEFAULT=NO

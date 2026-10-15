@@ -70,7 +70,7 @@ struct ParentalControlsSheet: View {
                     break  // unreachable — .set starts at .enterNew
                 }
             }
-            .accessibilityIdentifier("parentalControls.verifyCurrent")
+            .accessibilityIdentifier(AccessibilityID.parentalControlsVerifyCurrent)
 
         case .enterNew:
             PINKeypadView(
@@ -80,7 +80,7 @@ struct ParentalControlsSheet: View {
                 errorMessage = nil
                 step = .confirmNew(firstPIN: pin)
             }
-            .accessibilityIdentifier("parentalControls.enterNew")
+            .accessibilityIdentifier(AccessibilityID.parentalControlsEnterNew)
 
         case .confirmNew(let firstPIN):
             PINKeypadView(
@@ -95,7 +95,7 @@ struct ParentalControlsSheet: View {
                 store.settings.settingsPINHash = SettingsPINHasher.hash(pin)
                 dismiss()
             }
-            .accessibilityIdentifier("parentalControls.confirmNew")
+            .accessibilityIdentifier(AccessibilityID.parentalControlsConfirmNew)
         }
     }
 }

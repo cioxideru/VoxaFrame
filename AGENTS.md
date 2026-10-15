@@ -10,9 +10,10 @@ Overview: [README.md](README.md) · [CHANGELOG.md](CHANGELOG.md) · [PRIVACY_POL
 ## Commands (scripts in `scripts/`, safe from any cwd)
 - `scripts/ci.sh` — secrets + doc links + swift-format check + package unit tests. Run before every commit, with SwiftLint:
   `swiftlint lint --strict --baseline .swiftlint.baseline --config .swiftlint.yml` (fails only on new violations).
-- `scripts/verify.sh` — ci + SwiftLint + iOS/tvOS simulator builds + Smoke UI plan; `VERIFY_SCOPE=fast|build` stop earlier.
+- `scripts/verify.sh` — ci + SwiftLint + iOS/tvOS simulator builds (+ Smoke UI plan once it exists); `VERIFY_SCOPE=fast|build` stop earlier.
+- `scripts/build-for-testing.sh` — compile iOS/tvOS apps with their UI-test targets, no run.
 - `cd SmartTubeIOS && swift test --filter <Name>` — one Swift Testing suite (no simulator).
-- Smoke/Live UI plans and single UI tests: docs/how-to/run-tests.md (needs a signed-in simulator for Live; 3 workers max).
+- UI tests: docs/how-to/run-tests.md (many suites need a signed-in simulator; 3 workers max).
 - `xcrun swift-format format --in-place --recursive --configuration .swift-format <paths from scripts/ci.sh>` — format.
 
 ## Rules that differ from defaults

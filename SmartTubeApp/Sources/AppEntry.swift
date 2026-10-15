@@ -350,6 +350,10 @@ struct AppEntry: App {
         #endif
     }
 
+}
+
+extension AppEntry {
+
     // MARK: - URL handling
 
     @MainActor

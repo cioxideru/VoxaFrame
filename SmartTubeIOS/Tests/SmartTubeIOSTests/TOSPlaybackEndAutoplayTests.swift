@@ -48,12 +48,13 @@ extension CurrentQueueStoreSuites {
 
             // playNext()'s queue path spawns a Task that awaits CurrentQueueStore — poll.
             var fired = false
-            for _ in 0..<50 {
+            let deadline = Date().addingTimeInterval(2)
+            while Date() < deadline {
                 if advancedTo != nil {
                     fired = true
                     break
                 }
-                try? await Task.sleep(for: .milliseconds(10))
+                await Task.yield()
             }
 
             #expect(fired, "Queue continuation must happen even when Autoplay is disabled")

@@ -51,7 +51,7 @@ final class ChannelViewUITests: XCTestCase {
         super.setUp()
         continueAfterFailure = false
         // Dismiss player if a previous test opened it.
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if backButton.waitForExistence(timeout: 2) {
             backButton.tap()
         }

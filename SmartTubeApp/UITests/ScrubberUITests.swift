@@ -56,7 +56,7 @@ final class ScrubberUITests: XCTestCase {
         app = appUnderTest
 
         // Wait for the player title to appear.
-        guard appUnderTest.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: 20) else {
+        guard appUnderTest.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 20) else {
             skipThisTest = true
             return
         }
@@ -276,7 +276,7 @@ final class ScrubberUITests: XCTestCase {
                     + "Before: '\(timeBefore)', After: '\(timeAfter)'. " + "Drag geometry: \(dragInfo)"
             )
             XCTAssertFalse(
-                app.staticTexts["player.titleLabel"].firstMatch.label.isEmpty,
+                app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.label.isEmpty,
                 "player.titleLabel is empty after scrub to \(label) — player dismissed or crashed"
             )
         }

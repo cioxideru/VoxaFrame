@@ -40,7 +40,7 @@ final class HomeInteractionsUITests: XCTestCase {
             if okButton.exists { okButton.tap() } else { alert.buttons.firstMatch.tap() }
         }
         // Dismiss player if open.
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if backButton.waitForExistence(timeout: 2) {
             backButton.tap()
             _ = app.buttons["Home"].waitForExistence(timeout: 3)

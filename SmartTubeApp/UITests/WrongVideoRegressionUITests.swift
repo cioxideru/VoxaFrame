@@ -94,7 +94,7 @@ final class WrongVideoRegressionUITests: XCTestCase {
     /// mini-player if it appears. Waits for `home.chipBar` to confirm the feed
     /// is fully visible before returning.
     private func dismissPlayerAndReturnToHome() {
-        let backBtn = app.buttons["player.backButton"].firstMatch
+        let backBtn = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if backBtn.waitForExistence(timeout: 5) {
             backBtn.tap()
         }
@@ -131,7 +131,7 @@ final class WrongVideoRegressionUITests: XCTestCase {
         let tapStart = Date()
         card.tap()
 
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard titleLabel.waitForExistence(timeout: 30) else {
             captureState("timeout-play\(playNumber)-\(videoId)", in: app)
             XCTFail("play#\(playNumber) [\(videoId)]: player.titleLabel never appeared within 30 s")

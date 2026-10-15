@@ -45,7 +45,7 @@ final class LibraryUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         #endif
         // Close full-screen player if open.
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if backButton.waitForExistence(timeout: 2) {
             backButton.tap()
             _ = app.buttons["Home"].waitForExistence(timeout: 3)
@@ -195,12 +195,12 @@ final class LibraryUITests: XCTestCase {
         let tapPoint = feed.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         tapPoint.tap()
 
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard titleLabel.waitForExistence(timeout: 15) else {
             try captureAndSkip("PlayerView did not open within 15 s — network unavailable or timing-dependent", in: app)
         }
 
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         guard backButton.waitForExistence(timeout: 5) else {
             try captureAndSkip("player.backButton not found after player opened", in: app)
         }
@@ -317,12 +317,12 @@ final class LibraryUITests: XCTestCase {
         let tapPoint = feed.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         tapPoint.tap()
 
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard titleLabel.waitForExistence(timeout: 15) else {
             try captureAndSkip("PlayerView did not open within 15 s — network unavailable or timing-dependent", in: app)
         }
 
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         guard backButton.waitForExistence(timeout: 5) else {
             try captureAndSkip("player.backButton not found after player opened", in: app)
         }
@@ -477,12 +477,12 @@ final class LibraryUITests: XCTestCase {
         let tapPoint = feed.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         tapPoint.tap()
 
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard titleLabel.waitForExistence(timeout: 15) else {
             try captureAndSkip("PlayerView did not open within 15 s — network unavailable or timing-dependent", in: app)
         }
 
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         guard backButton.waitForExistence(timeout: 5) else {
             try captureAndSkip("player.backButton not found after player opened", in: app)
         }

@@ -62,13 +62,15 @@ final class ShareExtensionE2EUITests: XCTestCase {
     /// (TOS pipeline) to appear — both are always-visible AX labels present once their
     /// respective player view appears.
     private func waitForPlayerToOpen(in app: XCUIApplication, timeout: TimeInterval) -> Bool {
-        let predicate = NSPredicate(format: "identifier == 'player.titleLabel' OR identifier == 'tosPlayer.stateLabel'")
+        let predicate = NSPredicate(
+            format: "identifier == %@ OR identifier == %@", AccessibilityID.playerTitleLabel, "tosPlayer.stateLabel")
         return app.staticTexts.matching(predicate).firstMatch.waitForExistence(timeout: timeout)
     }
 
     /// The back/dismiss button for whichever player backend is active.
     private func playerBackButton(in app: XCUIApplication) -> XCUIElement {
-        let predicate = NSPredicate(format: "identifier == 'player.backButton' OR identifier == 'tosPlayer.backButton'")
+        let predicate = NSPredicate(
+            format: "identifier == %@ OR identifier == %@", AccessibilityID.playerBackButton, "tosPlayer.backButton")
         return app.buttons.matching(predicate).firstMatch
     }
 

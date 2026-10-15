@@ -35,7 +35,7 @@ final class TVFocusChainUITests: XCTestCase {
     }
 
     private var titleLabel: XCUIElement {
-        app.staticTexts["player.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
     }
 
     /// Waits up to `timeout` seconds for at least one video card to appear.

@@ -108,113 +108,8 @@ final class AudioTrackManager {
         let groupDesc = group.map { "\($0.options.count) option(s)" } ?? "nil"
         playerLog.notice("AudioTrackManager: loadMediaSelectionGroup=\(groupDesc)")
         guard let group, !group.options.isEmpty else { return }
-        var tracks: [AudioTrack] = []
-        var optionMap: [String: AVMediaSelectionOption] = [:]
-
-        // Pre-compute which options carry isMainProgramContent so we can decide
-        // whether Phase 1 is discriminating before iterating.
-        let mainContentOptions = group.options.filter {
-            $0.hasMediaCharacteristic(.isMainProgramContent)
-        }
-        // Phase 1 is only useful when it discriminates: some (but not all) options
-        // carry the characteristic. YouTube sometimes sets isMainProgramContent on
-        // EVERY dubbed track, causing all to appear as "Original". In that case we
-        // fall through to Phase 2 (HLS DEFAULT=YES identity check).
-        let phase1Discriminates =
-            !mainContentOptions.isEmpty
-            && mainContentOptions.count < group.options.count
-
-        let defaultLocale =
-            group.defaultOption?.locale?.identifier
-            ?? group.defaultOption?.extendedLanguageTag
-            ?? (group.defaultOption != nil ? "present/no-locale" : "nil")
-        // Verify defaultOption identity: it must be one of the options in group.options.
-        // If not, the === comparison will always return false and phase-2 will silently fail.
-        let defaultFoundInOptions =
-            group.defaultOption.map { def in
-                group.options.contains { $0 === def }
-            } ?? true  // nil defaultOption is fine (phase-2 simply marks none as original)
-        playerLog.notice(
-            "AudioTrackManager: \(group.options.count) option(s), phase1Discriminates=\(phase1Discriminates) (mainContent=\(mainContentOptions.count)) defaultOption=\(defaultLocale) defaultInOptions=\(defaultFoundInOptions)"
-        )
-
-        for (_, option) in group.options.enumerated() {
-            let locale =
-                option.locale?.identifier
-                ?? option.extendedLanguageTag
-                ?? "unknown"
-            let displayName =
-                option.locale.flatMap { loc -> String? in
-                    let name = Locale.current.localizedString(forLanguageCode: loc.identifier)
-                    if let name, !name.isEmpty { return name }
-                    // Fall back to English locale when the device locale cannot resolve the code.
-                    return Locale(identifier: "en_US").localizedString(forLanguageCode: loc.identifier)
-                } ?? locale
-            let isMainContent = option.hasMediaCharacteristic(.isMainProgramContent)
-            let isAuxiliary = option.hasMediaCharacteristic(.isAuxiliaryContent)
-            // Phase 2: HLS DEFAULT=YES. Use locale/tag equality as fallback to ===
-            // because some AVFoundation versions return a different instance for defaultOption.
-            let isDefault =
-                group.defaultOption.map { def in
-                    def === option
-                        || (def.locale != nil && def.locale == option.locale)
-                        || (def.extendedLanguageTag != nil && def.extendedLanguageTag == option.extendedLanguageTag)
-                } ?? false
-            // Phase 1: use AVFoundation's authoritative "main program content" characteristic,
-            // but ONLY when it discriminates (not all tracks carry it).
-            // Phase 2: fall back to HLS DEFAULT=YES identity check.
-            let isOriginal: Bool = phase1Discriminates ? isMainContent : isDefault
-            playerLog.notice(
-                "  AudioOption: locale=\(locale) isMainContent=\(isMainContent) isAuxiliary=\(isAuxiliary) isDefault=\(isDefault) isOriginal=\(isOriginal) displayName=\(displayName)"
-            )
-            let track = AudioTrack(
-                id: locale, name: displayName,
-                languageCode: locale, isOriginal: isOriginal)
-            tracks.append(track)
-            optionMap[locale] = option
-        }
-        var originalCount = tracks.filter(\.isOriginal).count
-        playerLog.notice(
-            "AudioTrackManager: \(originalCount)/\(tracks.count) track(s) marked isOriginal=true after phase1/2")
-
-        // Phase 3: when phase 1 and 2 both miss (YouTube sometimes omits DEFAULT=YES
-        // and doesn't set isMainProgramContent distinctly), fall back to isAuxiliaryContent.
-        // Dubbed tracks carry this characteristic; the creator's original does not.
-        if originalCount == 0, tracks.count > 1 {
-            let nonAuxiliaryLocales = optionMap.filter { _, opt in
-                !opt.hasMediaCharacteristic(.isAuxiliaryContent)
-            }.map(\.key)
-            playerLog.notice(
-                "AudioTrackManager: Phase 3 — \(nonAuxiliaryLocales.count) non-auxiliary track(s): \(nonAuxiliaryLocales.joined(separator: ", "))"
-            )
-            if nonAuxiliaryLocales.count == 1, let locale = nonAuxiliaryLocales.first {
-                tracks = tracks.map { t in
-                    AudioTrack(
-                        id: t.id, name: t.name, languageCode: t.languageCode,
-                        isOriginal: t.id == locale)
-                }
-                originalCount = 1
-                playerLog.notice("AudioTrackManager: Phase 3 — marked \(locale) as original")
-            }
-        }
-
-        // Phase 4: last resort — YouTube consistently appends the creator's original
-        // audio LAST in the HLS manifest when other tracks are AI dubs. Confirmed in
-        // logs: all 13 tracks had isMainProgramContent=true, defaultOption=nil, and
-        // the original English (en-US) was the final option.
-        if originalCount == 0, let lastTrack = tracks.last {
-            playerLog.notice(
-                "AudioTrackManager: Phase 4 — marking last track (\(lastTrack.id)) as original (YouTube puts creator audio last)"
-            )
-            tracks = tracks.map { t in
-                AudioTrack(
-                    id: t.id, name: t.name, languageCode: t.languageCode,
-                    isOriginal: t.id == lastTrack.id)
-            }
-            originalCount = 1
-        }
-
-        playerLog.notice("AudioTrackManager: final \(originalCount)/\(tracks.count) isOriginal=true")
+        let (initialTracks, optionMap) = audioTracks(in: group)
+        let tracks = markingOriginalTracks(initialTracks, optionMap: optionMap)
         self.audioSelectionGroup = group
         self.audioOptionsByID = optionMap
 
@@ -278,4 +173,122 @@ final class AudioTrackManager {
             "Audio tracks: \(tracks.map(\.name).joined(separator: ", ")) — auto-selected: \(autoSelect?.name ?? "default")"
         )
     }
+    private func audioTracks(in group: AVMediaSelectionGroup) -> ([AudioTrack], [String: AVMediaSelectionOption]) {
+        var tracks: [AudioTrack] = []
+        var optionMap: [String: AVMediaSelectionOption] = [:]
+
+        // Pre-compute which options carry isMainProgramContent so we can decide
+        // whether Phase 1 is discriminating before iterating.
+        let mainContentOptions = group.options.filter {
+            $0.hasMediaCharacteristic(.isMainProgramContent)
+        }
+        // Phase 1 is only useful when it discriminates: some (but not all) options
+        // carry the characteristic. YouTube sometimes sets isMainProgramContent on
+        // EVERY dubbed track, causing all to appear as "Original". In that case we
+        // fall through to Phase 2 (HLS DEFAULT=YES identity check).
+        let phase1Discriminates =
+            !mainContentOptions.isEmpty
+            && mainContentOptions.count < group.options.count
+
+        let defaultLocale =
+            group.defaultOption?.locale?.identifier
+            ?? group.defaultOption?.extendedLanguageTag
+            ?? (group.defaultOption != nil ? "present/no-locale" : "nil")
+        // Verify defaultOption identity: it must be one of the options in group.options.
+        // If not, the === comparison will always return false and phase-2 will silently fail.
+        let defaultFoundInOptions =
+            group.defaultOption.map { def in
+                group.options.contains { $0 === def }
+            } ?? true  // nil defaultOption is fine (phase-2 simply marks none as original)
+        playerLog.notice(
+            "AudioTrackManager: \(group.options.count) option(s), phase1Discriminates=\(phase1Discriminates) (mainContent=\(mainContentOptions.count)) defaultOption=\(defaultLocale) defaultInOptions=\(defaultFoundInOptions)"
+        )
+
+        for option in group.options {
+            let locale =
+                option.locale?.identifier
+                ?? option.extendedLanguageTag
+                ?? "unknown"
+            let displayName =
+                option.locale.flatMap { loc -> String? in
+                    let name = Locale.current.localizedString(forLanguageCode: loc.identifier)
+                    if let name, !name.isEmpty { return name }
+                    // Fall back to English locale when the device locale cannot resolve the code.
+                    return Locale(identifier: "en_US").localizedString(forLanguageCode: loc.identifier)
+                } ?? locale
+            let isMainContent = option.hasMediaCharacteristic(.isMainProgramContent)
+            let isAuxiliary = option.hasMediaCharacteristic(.isAuxiliaryContent)
+            // Phase 2: HLS DEFAULT=YES. Use locale/tag equality as fallback to ===
+            // because some AVFoundation versions return a different instance for defaultOption.
+            let isDefault =
+                group.defaultOption.map { def in
+                    def === option
+                        || (def.locale != nil && def.locale == option.locale)
+                        || (def.extendedLanguageTag != nil && def.extendedLanguageTag == option.extendedLanguageTag)
+                } ?? false
+            // Phase 1: use AVFoundation's authoritative "main program content" characteristic,
+            // but ONLY when it discriminates (not all tracks carry it).
+            // Phase 2: fall back to HLS DEFAULT=YES identity check.
+            let isOriginal: Bool = phase1Discriminates ? isMainContent : isDefault
+            playerLog.notice(
+                "  AudioOption: locale=\(locale) isMainContent=\(isMainContent) isAuxiliary=\(isAuxiliary) isDefault=\(isDefault) isOriginal=\(isOriginal) displayName=\(displayName)"
+            )
+            let track = AudioTrack(
+                id: locale, name: displayName,
+                languageCode: locale, isOriginal: isOriginal)
+            tracks.append(track)
+            optionMap[locale] = option
+        }
+        return (tracks, optionMap)
+    }
+
+    private func markingOriginalTracks(
+        _ initialTracks: [AudioTrack], optionMap: [String: AVMediaSelectionOption]
+    ) -> [AudioTrack] {
+        var tracks = initialTracks
+        var originalCount = tracks.filter(\.isOriginal).count
+        playerLog.notice(
+            "AudioTrackManager: \(originalCount)/\(tracks.count) track(s) marked isOriginal=true after phase1/2")
+
+        // Phase 3: when phase 1 and 2 both miss (YouTube sometimes omits DEFAULT=YES
+        // and doesn't set isMainProgramContent distinctly), fall back to isAuxiliaryContent.
+        // Dubbed tracks carry this characteristic; the creator's original does not.
+        if originalCount == 0, tracks.count > 1 {
+            let nonAuxiliaryLocales = optionMap.filter { _, opt in
+                !opt.hasMediaCharacteristic(.isAuxiliaryContent)
+            }.map(\.key)
+            playerLog.notice(
+                "AudioTrackManager: Phase 3 — \(nonAuxiliaryLocales.count) non-auxiliary track(s): \(nonAuxiliaryLocales.joined(separator: ", "))"
+            )
+            if nonAuxiliaryLocales.count == 1, let locale = nonAuxiliaryLocales.first {
+                tracks = tracks.map { track in
+                    AudioTrack(
+                        id: track.id, name: track.name, languageCode: track.languageCode,
+                        isOriginal: track.id == locale)
+                }
+                originalCount = 1
+                playerLog.notice("AudioTrackManager: Phase 3 — marked \(locale) as original")
+            }
+        }
+
+        // Phase 4: last resort — YouTube consistently appends the creator's original
+        // audio LAST in the HLS manifest when other tracks are AI dubs. Confirmed in
+        // logs: all 13 tracks had isMainProgramContent=true, defaultOption=nil, and
+        // the original English (en-US) was the final option.
+        if originalCount == 0, let lastTrack = tracks.last {
+            playerLog.notice(
+                "AudioTrackManager: Phase 4 — marking last track (\(lastTrack.id)) as original (YouTube puts creator audio last)"
+            )
+            tracks = tracks.map { track in
+                AudioTrack(
+                    id: track.id, name: track.name, languageCode: track.languageCode,
+                    isOriginal: track.id == lastTrack.id)
+            }
+            originalCount = 1
+        }
+
+        playerLog.notice("AudioTrackManager: final \(originalCount)/\(tracks.count) isOriginal=true")
+        return tracks
+    }
+
 }

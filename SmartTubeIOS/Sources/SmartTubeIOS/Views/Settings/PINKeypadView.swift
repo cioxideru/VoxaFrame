@@ -1,3 +1,4 @@
+import SmartTubeIOSCore
 import SwiftUI
 
 // MARK: - PINKeypadView (#126)
@@ -11,8 +12,8 @@ import SwiftUI
 
 struct PINKeypadView: View {
     let title: String
-    var subtitle: String? = nil
-    var errorMessage: String? = nil
+    var subtitle: String?
+    var errorMessage: String?
     /// Fired once exactly `pinLength` digits have been entered. The caller is
     /// responsible for calling `clear()` (via the returned reset) if the PIN was wrong.
     let onSubmit: (String) -> Void
@@ -35,7 +36,7 @@ struct PINKeypadView: View {
                     Text(errorMessage)
                         .font(.subheadline)
                         .foregroundStyle(.red)
-                        .accessibilityIdentifier("pinKeypad.errorMessage")
+                        .accessibilityIdentifier(AccessibilityID.pinKeypadErrorMessage)
                 }
             }
             .multilineTextAlignment(.center)
@@ -48,7 +49,7 @@ struct PINKeypadView: View {
                         .frame(width: 16, height: 16)
                 }
             }
-            .accessibilityIdentifier("pinKeypad.dots")
+            .accessibilityIdentifier(AccessibilityID.pinKeypadDots)
 
             keypad
         }
@@ -90,7 +91,7 @@ struct PINKeypadView: View {
                     .font(.title2)
                     .frame(width: 64, height: 64)
             }
-            .accessibilityIdentifier("pinKeypad.delete")
+            .accessibilityIdentifier(AccessibilityID.pinKeypadDelete)
         case .some(let digit):
             Button {
                 appendDigit(digit)
@@ -100,7 +101,7 @@ struct PINKeypadView: View {
                     .frame(width: 64, height: 64)
                     .background(Circle().fill(.secondary.opacity(0.15)))
             }
-            .accessibilityIdentifier("pinKeypad.digit\(digit)")
+            .accessibilityIdentifier(AccessibilityID.pinKeypadDigit(digit))
         }
     }
 

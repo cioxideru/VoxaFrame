@@ -28,6 +28,6 @@ struct SettingsPINLockView: View {
                 errorMessage = "Incorrect PIN"
             }
         }
-        .accessibilityIdentifier("settingsPINLock")
+        .accessibilityIdentifier(AccessibilityID.settingsPINLock)
     }
 }

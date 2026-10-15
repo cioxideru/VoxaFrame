@@ -350,6 +350,10 @@ final class PlaybackQualityManager {
         return asset
     }
 
+}
+
+extension PlaybackQualityManager {
+
     /// Switches quality for a DASH/MP4-only video (no HLS URL) by rebuilding the composition
     /// from the selected format's video URL and the best available adaptive audio URL.
     private func reloadDASHItem(seekTo time: TimeInterval, format: VideoFormat?) async {

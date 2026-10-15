@@ -160,7 +160,7 @@ final class WKHLSReplayRegressionUITests: XCTestCase {
                 notificationName: "com.void.smarttube.player.ready"
             )
 
-            let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+            let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
             let tapTime = Date()
             card.tap()
 
@@ -216,12 +216,12 @@ final class WKHLSReplayRegressionUITests: XCTestCase {
             )
 
             // 7. Tap back → minimize to mini-player.
-            var backButton = app.buttons["player.backButton"].firstMatch
+            var backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
             if !backButton.waitForExistence(timeout: 3) {
                 // Controls may be hidden — tap to reveal.
                 app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 Thread.sleep(forTimeInterval: 0.5)
-                backButton = app.buttons["player.backButton"].firstMatch
+                backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
             }
             XCTAssertTrue(
                 backButton.waitForExistence(timeout: 5),

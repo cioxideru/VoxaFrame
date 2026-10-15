@@ -142,7 +142,7 @@ private struct DownloadedVideoRow: View {
             AsyncImage(url: entry.thumbnailURL) { phase in
                 switch phase {
                 case .success(let image):
-                    image.resizable().aspectRatio(contentMode: .fill)
+                    image.resizable().scaledToFill()
                 default:
                     Rectangle().foregroundStyle(.secondary.opacity(0.3))
                 }

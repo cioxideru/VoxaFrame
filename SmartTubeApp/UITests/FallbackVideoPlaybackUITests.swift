@@ -48,7 +48,7 @@ final class FallbackVideoPlaybackUITests: XCTestCase {
         sharedApp = app
 
         // Wait for player to open.
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard titleLabel.waitForExistence(timeout: 20) else {
             skipAllTests = true
             return
@@ -90,7 +90,7 @@ final class FallbackVideoPlaybackUITests: XCTestCase {
     }
 
     private var titleLabel: XCUIElement {
-        app.staticTexts["player.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
     }
 
     /// Taps the player surface to reveal the controls overlay.

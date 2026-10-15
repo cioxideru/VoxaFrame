@@ -111,7 +111,7 @@ final class SIDPlaybackStallingUITests: XCTestCase {
     ///      is enabled — stalled players leave the button disabled or non-hittable).
     func testNoStallingDuringFiveMinutePlayback() throws {
         // ── Step 1: Wait for the player title to confirm the deep-link opened. ──
-        guard app.staticTexts["player.titleLabel"].firstMatch.waitForExistence(timeout: 20) else {
+        guard app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 20) else {
             throw XCTSkip(
                 "Player title did not appear within 20 s — "
                     + "network unavailable or deep-link broken for \(Self.videoID)")

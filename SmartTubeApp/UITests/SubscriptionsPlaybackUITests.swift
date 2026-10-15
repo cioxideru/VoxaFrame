@@ -76,7 +76,7 @@ final class SubscriptionsPlaybackUITests: XCTestCase {
         firstCard.tap()
 
         // 5. Wait for PlayerView to open — the always-visible title label is the signal.
-        let titleLabel = app.staticTexts["player.titleLabel"].firstMatch
+        let titleLabel = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         XCTAssertTrue(
             titleLabel.waitForExistence(timeout: 15),
             "player.titleLabel must appear after tapping a video — PlayerView did not open")

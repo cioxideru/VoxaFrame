@@ -81,7 +81,7 @@ private struct ChannelListRow: View {
                 switch phase {
                 case .success(let img):
                     img.resizable()
-                        .aspectRatio(contentMode: .fill)
+                        .scaledToFill()
                         .frame(width: 48, height: 48)
                         .clipShape(Circle())
                 default:

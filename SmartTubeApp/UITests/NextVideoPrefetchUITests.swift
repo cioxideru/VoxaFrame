@@ -77,7 +77,7 @@ final class NextVideoPrefetchUITests: XCTestCase {
     /// queue video was loaded.
     func testPrefetchEnqueuedForNextQueueVideo() throws {
         // Wait for the player to show the title label — confirms first video loaded.
-        let playerTitle = app.staticTexts["player.titleLabel"].firstMatch
+        let playerTitle = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard playerTitle.waitForExistence(timeout: 25) else {
             try captureAndSkip("Player did not load — network unavailable or video inaccessible", in: app)
         }
@@ -94,7 +94,7 @@ final class NextVideoPrefetchUITests: XCTestCase {
         XCTAssertEqual(app.state, .runningForeground, "App must remain running while prefetch runs in background")
 
         // Verify the quick-access row is present (controls are up via --uitesting-show-controls).
-        let quickAccessRow = app.otherElements["player.quickAccessRow"].firstMatch
+        let quickAccessRow = app.otherElements[AccessibilityID.playerQuickAccessRow].firstMatch
         XCTAssertTrue(
             quickAccessRow.waitForExistence(timeout: 10),
             "Quick-access row should be visible — confirms first queue video loaded and controls are showing"
@@ -112,7 +112,7 @@ final class NextVideoPrefetchUITests: XCTestCase {
     /// the prefetch ample time to complete before we advance.
     func testCacheHitOnQueueAdvance() throws {
         // Step 1: Wait for first video player to be ready.
-        let playerTitle = app.staticTexts["player.titleLabel"].firstMatch
+        let playerTitle = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
         guard playerTitle.waitForExistence(timeout: 30) else {
             try captureAndSkip("Player did not load — network unavailable or video inaccessible", in: app)
         }
@@ -161,7 +161,7 @@ final class NextVideoPrefetchUITests: XCTestCase {
     }
 
     func testPlayerReadyTimeFromQueueLaunch() throws {
-        let playerTitle = app.staticTexts["player.titleLabel"].firstMatch
+        let playerTitle = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
 
         measure(metrics: [XCTClockMetric()]) {
             // The app is already launched in setUp. Measure how long until

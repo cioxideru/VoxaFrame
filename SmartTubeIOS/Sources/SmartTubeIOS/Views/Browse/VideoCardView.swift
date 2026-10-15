@@ -337,6 +337,10 @@ public struct VideoCardView: View {
         #endif
     }
 
+}
+
+extension VideoCardView {
+
     // MARK: - Body
 
     public var body: some View {

@@ -64,11 +64,11 @@ final class PlayerAndMiniPlayerUITests: XCTestCase {
     }
 
     private var backButton: XCUIElement {
-        app.buttons["player.backButton"].firstMatch
+        app.buttons[AccessibilityID.playerBackButton].firstMatch
     }
 
     private var playerTitle: XCUIElement {
-        app.staticTexts["player.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
     }
 
     private var playPauseButton: XCUIElement {
@@ -83,7 +83,7 @@ final class PlayerAndMiniPlayerUITests: XCTestCase {
     private func returnToHome() {
         let a = app
         // Dismiss full-screen player if open.
-        let back = a.buttons["player.backButton"].firstMatch
+        let back = a.buttons[AccessibilityID.playerBackButton].firstMatch
         if back.waitForExistence(timeout: 2), back.isHittable {
             back.tap()
             Thread.sleep(forTimeInterval: 1.0)

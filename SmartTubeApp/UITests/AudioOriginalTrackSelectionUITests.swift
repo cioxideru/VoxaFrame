@@ -170,7 +170,7 @@ final class AudioOriginalTrackSelectionUITests: XCTestCase {
     }
 
     private func navigateBack() {
-        let backButton = app.buttons["player.backButton"].firstMatch
+        let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
         if backButton.waitForExistence(timeout: 3) {
             backButton.tap()
         }
