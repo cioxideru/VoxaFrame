@@ -2,7 +2,7 @@ import AVFoundation
 import SmartTubeIOSCore
 import os
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Stats for Nerds
 
@@ -73,9 +73,8 @@ extension PlaybackViewModel {
         let stalls = logEvent.map { $0.numberOfStalls } ?? 0
 
         let resSource = selectedFormat != nil ? "selectedFormat(\(selectedFormat!.qualityLabel))" : "presentationSize"
-        // Only forward to Crashlytics breadcrumbs when something meaningful changed.
-        // Silent 0.5 s ticks otherwise saturate the 64 KB breadcrumb buffer and push
-        // critical events (load, quality switch, errors) out of the window.
+        // Only log when something meaningful changed — silent 0.5 s ticks would
+        // otherwise flood the log.
         let prevSnap = statsSnapshot
         let codecChanged = codec != prevSnap.codec && prevSnap.codec != "—"
         let resChanged = res != prevSnap.displayResolution && prevSnap.displayResolution != "—"
@@ -98,7 +97,6 @@ extension PlaybackViewModel {
             droppedFrames: droppedFrames,
             stalls: stalls,
             pendingQualityLabel: qualityManager.pendingQualityLabel,
-            reportID: CrashlyticsLogger.sessionReportID,
             timeToPlayMs: timeToPlayMs,
             timeToHighQualityMs: timeToHighQualityMs,
             cacheStatus: cacheStatusSummary,
@@ -152,10 +150,6 @@ public struct StatsForNerdsSnapshot: Sendable {
     /// Quality label most recently selected by the user — persists after CDN failures
     /// so Stats for Nerds can show user intent vs actual delivery.
     public var pendingQualityLabel: String
-    /// Session report ID — matches the `report_id` custom key stamped on Crashlytics
-    /// reports. Quote this when sending a diagnostic report so the developer can
-    /// locate the exact session in Firebase.
-    public var reportID: String
     /// Elapsed ms from `load()` to the first `readyToPlay` (low-quality fast-start frame). 0 = not yet measured.
     public var timeToPlayMs: Int
     /// Elapsed ms from `load()` to the quality-ramp task firing (~readyToPlay + 800 ms). 0 = not yet measured.
@@ -177,7 +171,6 @@ public struct StatsForNerdsSnapshot: Sendable {
         droppedFrames: 0,
         stalls: 0,
         pendingQualityLabel: "",
-        reportID: CrashlyticsLogger.sessionReportID,
         timeToPlayMs: 0,
         timeToHighQualityMs: 0,
         cacheStatus: "",

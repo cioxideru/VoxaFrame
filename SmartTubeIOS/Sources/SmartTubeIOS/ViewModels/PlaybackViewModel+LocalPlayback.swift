@@ -7,7 +7,7 @@ import UIKit
 import MediaPlayer
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Local Video Playback
 
@@ -35,7 +35,8 @@ extension PlaybackViewModel {
                 do {
                     try AVAudioSession.sharedInstance().setActive(true)
                 } catch {
-                    playerLog.error("[loadAsync] local: AVAudioSession setActive failed: \(error.localizedDescription)")
+                    playerLog.error(
+                        "[loadAsync] local: AVAudioSession setActive failed: \(ViewModelLogger.errorSummary(error))")
                 }
                 #endif
                 player.rate = Float(settings.playbackSpeed)
@@ -49,11 +50,13 @@ extension PlaybackViewModel {
                 UIApplication.shared.isIdleTimerDisabled = true
                 updateNowPlayingInfo()
                 #endif
-                playerLog.notice("[loadAsync] local-file fast path: playing \(localURL.lastPathComponent)")
+                playerLog.notice("[loadAsync] local-file fast path: playing host=\(ViewModelLogger.urlHost(localURL))")
                 return true
             }
             // File missing or path invalid — fall through to network re-stream.
-            playerLog.notice("[loadAsync] localFileURL set but file not accessible, falling through: \(localURL.path)")
+            playerLog.notice(
+                "[loadAsync] localFileURL set but file not accessible, falling through: host=\(ViewModelLogger.urlHost(localURL))"
+            )
         }
 
         return false
@@ -71,7 +74,7 @@ extension PlaybackViewModel {
                     self.loadAudioTracks(from: item)
                     self.isLoading = false
                 case .failed:
-                    playerLog.error("❌ local-file AVPlayerItem failed: \(String(describing: item.error))")
+                    playerLog.error("❌ local-file AVPlayerItem failed: \(ViewModelLogger.errorSummary(item.error))")
                     self.error = item.error
                 case .unknown:
                     break

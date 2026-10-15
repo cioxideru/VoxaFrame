@@ -7,7 +7,7 @@ import UIKit
 import MediaPlayer
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // File-scope factory — deliberately nonisolated so MPMediaItemArtwork can invoke the
 // returned closure from MediaPlayer's internal serial queue without triggering the
@@ -58,7 +58,7 @@ extension PlaybackViewModel {
                     do {
                         try AVAudioSession.sharedInstance().setActive(true)
                     } catch {
-                        playerLog.error("[interruption] setActive failed: \(error.localizedDescription)")
+                        playerLog.error("[interruption] setActive failed: \(ViewModelLogger.errorSummary(error))")
                     }
                     if options.contains(.shouldResume) && self.wasPlayingBeforeInterruption {
                         self.player.rate = Float(self.settings.playbackSpeed)

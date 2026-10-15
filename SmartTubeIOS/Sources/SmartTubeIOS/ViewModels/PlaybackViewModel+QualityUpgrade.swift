@@ -9,7 +9,7 @@ import UIKit
 import WebKit
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Playback Quality Upgrades
 
@@ -86,7 +86,7 @@ extension PlaybackViewModel {
             )
             await prefetchPreferredQualityTracks(info: vrInfo)
         } catch {
-            playerLog.notice("[prefetch] background AndroidVR fetch failed: \(error)")
+            playerLog.notice("[prefetch] background AndroidVR fetch failed: \(ViewModelLogger.errorSummary(error))")
         }
     }
 
@@ -244,7 +244,9 @@ extension PlaybackViewModel {
 
             await observeQualityComposition(compositeItem, seekTo: seekTo)
         } catch {
-            playerLog.error("❌ [quality/DASH] composition build error: \(error) — triggering 403 recovery retry")
+            playerLog.error(
+                "❌ [quality/DASH] composition build error: \(ViewModelLogger.errorSummary(error)) — triggering 403 recovery retry"
+            )
             selectedFormat = nil
             if statsForNerdsVisible { updateStatsSnapshot() }
             if let video = currentVideo {
@@ -321,7 +323,7 @@ extension PlaybackViewModel {
                 return
             case .failed:
                 let itemError = compositeItem.error
-                let errStr = itemError.map { "\($0)" } ?? "nil"
+                let errStr = ViewModelLogger.errorSummary(itemError)
                 playerLog.error("❌ [quality/DASH] AVPlayerItem failed: \(errStr) — triggering 403 recovery retry")
                 selectedFormat = nil
                 if statsForNerdsVisible { updateStatsSnapshot() }

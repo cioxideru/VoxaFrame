@@ -1,5 +1,3 @@
-import FirebaseCore
-import FirebaseCrashlytics
 import SmartTubeIOS
 import SmartTubeIOSCore
 import SwiftUI
@@ -9,8 +7,7 @@ import SwiftUI
 /// the user reads a code on screen and activates on their phone at yt.be/activate.
 @main
 struct SmartTubeTVApp: App {
-    // Declared without default values so that init() can call FirebaseApp.configure()
-    // before any of these objects are instantiated.
+    // Declared without default values so that init() can build them from settingsStore.
     @State private var api: InnerTubeAPI
     @State private var authService: AuthService
     @State private var browseViewModel: BrowseViewModel
@@ -24,13 +21,7 @@ struct SmartTubeTVApp: App {
     #endif
 
     init() {
-        // #92: see AppEntry.swift's init() for why order matters here — settingsStore
-        // must exist before deciding whether to configure Firebase at all.
         let settingsStore = SettingsStore()
-        CrashlyticsLogger.isEnabled = !settingsStore.settings.disableAnalytics
-        if CrashlyticsLogger.isEnabled {
-            FirebaseApp.configure()
-        }
         let poTokenProvider: (any PoTokenProvider)? = {
             if let url = settingsStore.settings.poTokenServiceURL {
                 return ServerPoTokenProvider(serviceURL: url)

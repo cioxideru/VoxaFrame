@@ -6,7 +6,7 @@ import os
 import MediaPlayer
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - AVPlayer Observers
 
@@ -70,24 +70,9 @@ extension PlaybackViewModel {
                     playerLog.notice("[rateObserver] player.rate→0 while isPlaying=true — syncing isPlaying=false")
                     let stalledItem = self.player.currentItem
                     self.registerStall(on: stalledItem)
-                    let t = Int(self.currentTime)
-                    let stallError = NSError(
-                        domain: "SmartTube.PlaybackStall",
-                        code: 1,
-                        userInfo: [
-                            NSLocalizedDescriptionKey:
-                                "player.rate→0 while isPlaying=true at t=\(t)s (stall #\(self.stallCount))"
-                        ]
+                    playerLog.error(
+                        "[stall] rateObserver at t=\(Int(self.currentTime))s stall#\(self.stallCount) video=\(self.currentVideo?.id ?? "unknown") duration=\(Int(self.duration))s"
                     )
-                    playerLog.recordNonFatal(
-                        stallError,
-                        userInfo: [
-                            "video_id": self.currentVideo?.id ?? "unknown",
-                            "stall_at_time": String(t),
-                            "stall_count": String(self.stallCount),
-                            "video_duration": String(Int(self.duration)),
-                            "stall_trigger": "rateObserver",
-                        ])
                     #if canImport(UIKit)
                     self.updateNowPlayingPlayback()
                     #endif

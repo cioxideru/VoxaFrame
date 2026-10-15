@@ -42,7 +42,7 @@ final class LikeDislikeController {
                 }
             } catch {
                 self.likeStatus = prev
-                logError("like failed: \(String(describing: error))")
+                logError("like failed: \(ViewModelLogger.errorSummary(error))")
             }
         }
     }
@@ -62,7 +62,7 @@ final class LikeDislikeController {
                 }
             } catch {
                 self.likeStatus = prev
-                logError("dislike failed: \(String(describing: error))")
+                logError("dislike failed: \(ViewModelLogger.errorSummary(error))")
             }
         }
     }

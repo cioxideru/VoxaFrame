@@ -342,7 +342,7 @@ extension BrowseViewModel {
                     if case BrowseError.timeout = error {
                         browseLog.error("⏱ \(section.title) timed out after \(Int(Self.fetchTimeoutSeconds))s")
                     } else {
-                        browseLog.error("❌ \(section.title) error: \(String(describing: error))")
+                        browseLog.error("❌ \(section.title) error: \(ViewModelLogger.errorSummary(error))")
                     }
                     self.error = error
                 }
@@ -609,7 +609,7 @@ extension BrowseViewModel {
             }
         } catch {
             if !Task.isCancelled {
-                browseLog.error("fetchNextPage failed: section=\(section.title) error=\(String(describing: error))")
+                browseLog.error("fetchNextPage \(section.title): \(ViewModelLogger.errorSummary(error))")
                 self.error = error
             }
         }

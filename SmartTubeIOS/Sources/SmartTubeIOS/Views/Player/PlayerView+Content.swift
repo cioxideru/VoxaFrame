@@ -332,7 +332,6 @@ extension PlayerView {
                                 channelTitle: "",
                                 thumbnailURL: card.thumbnailURL
                             )
-                            CrashlyticsLogger.setIntendedVideo(id: videoId, title: card.title)
                             vm.load(video: video)
                         }
                     )

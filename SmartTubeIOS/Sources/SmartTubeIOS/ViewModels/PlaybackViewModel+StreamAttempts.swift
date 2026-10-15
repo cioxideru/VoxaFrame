@@ -9,7 +9,7 @@ import UIKit
 import WebKit
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Stream Playback Attempts
 
@@ -135,7 +135,7 @@ extension PlaybackViewModel {
                 let muxedBitrate =
                     info.formats.first(where: { $0.url == muxedURL })?.bitrate.map { "\($0/1000)kbps" } ?? "?"
                 playerLog.notice(
-                    "[\(label)] muxed candidate: itag=\(muxedItag) bitrate=\(muxedBitrate) url=\(muxedURL.absoluteString.prefix(100))"
+                    "[\(label)] muxed candidate: itag=\(muxedItag) bitrate=\(muxedBitrate) host=\(ViewModelLogger.urlHost(muxedURL))"
                 )
                 if await attemptURL(muxedURL, for: video, info: info, label: "\(label)/muxed") { return true }
                 playerLog.notice("[\(label)] Muxed failed — no more alternatives for this client")
@@ -151,13 +151,13 @@ extension PlaybackViewModel {
         let hasAdaptiveVideo = qualityCapVideoURL(from: info.formats) != nil
         let hasAdaptiveAudio = info.bestAdaptiveAudioURL != nil
         let hasMuxed = info.bestMuxedDownloadURL != nil
-        // Diagnostic: show first adaptive video URL prefix to detect SABR (c=TVHTML5) vs standard
-        let firstAdaptiveURL =
+        // Log only the host; stream URLs contain signed paths and query parameters.
+        let firstAdaptiveHost =
             info.formats.first(where: {
                 $0.mimeType.hasPrefix("video/mp4") && !$0.mimeType.contains(", ") && $0.url != nil
-            })?.url?.absoluteString.prefix(200) ?? "none"
+            })?.url?.host() ?? "none"
         playerLog.notice(
-            "[\(label)] streams: HLS=\(hasHLS) DASH=\(hasDASH) adaptiveVideo=\(hasAdaptiveVideo) adaptiveAudio=\(hasAdaptiveAudio) muxed=\(hasMuxed) skipMuxed=\(skipMuxed) firstAdaptiveURL=\(firstAdaptiveURL)"
+            "[\(label)] streams: HLS=\(hasHLS) DASH=\(hasDASH) adaptiveVideo=\(hasAdaptiveVideo) adaptiveAudio=\(hasAdaptiveAudio) muxed=\(hasMuxed) skipMuxed=\(skipMuxed) firstAdaptiveHost=\(firstAdaptiveHost)"
         )
 
     }
@@ -167,7 +167,7 @@ extension PlaybackViewModel {
     /// Tries a single URL in AVPlayer. Returns true if `.readyToPlay` is received.
     /// `statusStream` finishes after `.readyToPlay` or `.failed`, making it safe to await inline.
     func attemptURL(_ url: URL, for video: Video, info: PlayerInfo, label: String) async -> Bool {
-        playerLog.notice("[\(label)]: \(url.absoluteString.prefix(120))")
+        playerLog.notice("[\(label)]: \(ViewModelLogger.urlHost(url))")
 
         playerInfo = info
         let isHLSManifest = label.contains("/HLS")
@@ -221,15 +221,8 @@ extension PlaybackViewModel {
                 attemptItemBecameReady(item, video: video, info: info, label: label, isMuxedFallback: isMuxedFallback)
                 return true
             case .failed:
-                let err = item.error.map { "\($0)" } ?? "nil"
-                let nsErr = item.error as? NSError
-                let failURL =
-                    nsErr?.userInfo[NSURLErrorFailingURLStringErrorKey] as? String
-                    ?? nsErr?.userInfo["NSErrorFailingURLKey"] as? String
+                let err = ViewModelLogger.errorSummary(item.error)
                 playerLog.error("❌ [\(label)] AVPlayerItem failed: \(err)")
-                if let failURL {
-                    playerLog.error("❌ [\(label)] failing URL: \(failURL.prefix(200))")
-                }
                 return false
             case .unknown:
                 continue
@@ -308,7 +301,7 @@ extension PlaybackViewModel {
                     // DIAGNOSTIC D-14: probe variant playlist + first segment before handing to AVPlayer.
                     // Ephemeral session → no cookies, no shared state.
                     // 200 → URL is publicly accessible; 403 → YouTube session (SAPISID) required.
-                    // Also logs first segment URL to determine if rqh=1 is enforced at segment level.
+                    // Log the segment host and whether rqh=1 is enforced at segment level.
                     probeHLSVariant(chosen.value, label: label)
                 }
             } else {
@@ -358,16 +351,8 @@ extension PlaybackViewModel {
                 firstSegURL.contains("/rqh/1") || firstSegURL.contains("rqh=1")
                 || firstSegURL.contains("rqh%3D1")
             playerLog.notice(
-                "[\(label)] D-14 HLS variant probe: HTTP \(http.statusCode) bytes=\(diagData.count) firstSeg_rqh=\(hasRqh) firstSeg=\(firstSegURL.prefix(600))"
+                "[\(label)] D-14 HLS variant probe: HTTP \(http.statusCode) bytes=\(diagData.count) firstSeg_rqh=\(hasRqh) firstSegHost=\(ViewModelLogger.urlHost(URL(string: firstSegURL)))"
             )
-            // If no absolute URL, log the first non-comment line to see relative segment format
-            if !firstSegURL.hasPrefix("https://") {
-                let firstNonComment =
-                    playlistText.components(separatedBy: "\n")
-                    .first { !$0.hasPrefix("#") && !$0.isEmpty } ?? "(empty)"
-                playerLog.notice(
-                    "[\(label)] D-14 first non-comment line: \(firstNonComment.prefix(200))")
-            }
             // Also test first segment URL (if absolute) to see if segments need auth
             if firstSegURL.hasPrefix("https://"), let segURL = URL(string: firstSegURL) {
                 var segReq = URLRequest(url: segURL)
@@ -439,7 +424,7 @@ extension PlaybackViewModel {
             // fail regardless of the io_open callback approach.
             let uaOpts: [String: Any] = ["AVURLAssetHTTPHeaderFieldsKey": hlsHeaders]
             let asset = qualityManager.makeHLSAsset(url: url, options: uaOpts)
-            playerLog.notice("[\(label)] HLS via AVURLAsset (native stack) url=\(url.lastPathComponent)")
+            playerLog.notice("[\(label)] HLS via AVURLAsset (native stack) host=\(ViewModelLogger.urlHost(url))")
             item = AVPlayerItem(asset: asset)
         } else {
             // Non-HLS (muxed / DASH): direct AVURLAsset with iOS UA headers.
@@ -507,14 +492,6 @@ extension PlaybackViewModel {
         isLoading = false
         timeToPlayMs = Int(Date().timeIntervalSince(videoLoadStartedAt) * 1000)
         lastSuccessfulStreamType = label
-        if timeToPlayMs > PlaybackTuning.slowVideoLoadMilliseconds {
-            CrashlyticsLogger.recordSlowVideoLoad(
-                videoId: video.id,
-                elapsedMs: timeToPlayMs,
-                streamType: label,
-                hasError: false
-            )
-        }
         player.rate = Float(settings.playbackSpeed)
         isPlaying = true
         launchPhase2(video: video, info: info)

@@ -112,7 +112,7 @@ Structure preserved, engine swapped:
 
 - **Per-Short load failure** (`"error"` message — YouTube codes 100 *not found*, 101/150 *embedding disabled*, 153 *config error*, etc.): show the existing error banner (`ShortsPlayerView+Overlay.swift:182-190`) for ~1-2s, then auto-advance to the next Short via the same path as swipe-up. Most of these errors are permanent for that video, so skipping is the correct recovery for a continuous feed.
 - **`"ready"` timeout** (~8-10s without a `"ready"` after an iframe-src-swap — covers network failures, slow connections, or silent embed failures with no `.ytp-error` overlay): treated identically to a load failure — error banner, then auto-advance.
-- **Logging**: log these failures via Crashlytics (video id + error code/timeout), mirroring the existing stall-logging pattern at `PlaybackViewModel+Loading.swift:938` (bug #193) — gives visibility into real-world embed failure rates.
+- **Logging**: log these failures locally with `os.Logger` using the `AppSubsystem` subsystem (error domain/code or timeout; URL host only when needed). Keep raw errors and full URLs out of logs. Logs stay on the device; no crash reporting or telemetry is sent.
 - **Out of scope for v1**: mid-playback stall detection (e.g. `playerState` stuck at `.buffering`). The regular TOS player doesn't have this either.
 
 ## Testing Strategy

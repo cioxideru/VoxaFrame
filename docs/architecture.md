@@ -23,7 +23,7 @@ graph TD
     subgraph Ext["External systems"]
         InnerTube["InnerTube endpoints<br/>(youtubei.googleapis.com, www.youtube.com)"]
         SponsorBlock["SponsorBlock / DeArrow APIs"]
-        Firebase["Firebase (Crashlytics, Analytics)"]
+        Yandex["Yandex voice-over translation"]
         iCloudKVS["iCloud Key-Value Store"]
         WebPlayer["WKWebView-hosted YouTube pages<br/>(BotGuard, N-descrambling, HLS extraction)"]
     end
@@ -36,7 +36,7 @@ graph TD
     UI --> Core
     Core --> InnerTube
     Core --> SponsorBlock
-    UI --> Firebase
+    Core --> Yandex
     Core --> iCloudKVS
     UI --> WebPlayer
     WebPlayer --> InnerTube

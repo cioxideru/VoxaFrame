@@ -7,7 +7,7 @@ import UIKit
 import MediaPlayer
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Load Video Lifecycle
 
@@ -31,12 +31,11 @@ extension PlaybackViewModel {
         // If the exact same video is already being loaded, ignore the duplicate call.
         // SwiftUI can trigger load() multiple times during a single navigation (e.g.
         // selectedVideo binding re-evaluated while a queue autoplay is in flight).
-        // Each duplicate spawns its own loadAsync → its own Crashlytics event storm.
+        // Each duplicate spawns its own loadAsync → its own duplicate request storm.
         if currentVideo?.id == video.id, isIncognito == incognito, isLoading {
             playerLog.notice("[load] already loading \(video.id) — ignoring duplicate call")
             return
         }
-        CrashlyticsLogger.setVideoContext(id: video.id, title: video.title)
         // Cancel any previous in-flight load so we never have two concurrent API
         // fetches for the same (or different) video running at the same time.
         loadTask?.cancel()
@@ -163,7 +162,7 @@ extension PlaybackViewModel {
         do {
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            playerLog.error("[fix12] AVAudioSession setActive failed: \(error.localizedDescription)")
+            playerLog.error("[fix12] AVAudioSession setActive failed: \(ViewModelLogger.errorSummary(error))")
         }
         setupRemoteCommandCenter()
         UIApplication.shared.isIdleTimerDisabled = true
@@ -224,7 +223,6 @@ extension PlaybackViewModel {
         // fix236: Record the intended video at load() time so checkWrongVideoOnFirstPlay()
         // can detect if a stale task swaps currentVideo before readyToPlay fires.
         intendedVideoId = video.id
-        intendedVideoTitle = video.title
         pendingWrongVideoCheck = true
         hasPrevious = !history.isEmpty
         retryAttempts = 0
@@ -270,7 +268,7 @@ extension PlaybackViewModel {
         do {
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            playerLog.error("AVAudioSession reactivation failed: \(error.localizedDescription)")
+            playerLog.error("AVAudioSession reactivation failed: \(ViewModelLogger.errorSummary(error))")
         }
         #endif
         // Resume only if we consider ourselves to be in playing state.
@@ -320,7 +318,7 @@ extension PlaybackViewModel {
         // fire after the PlayerView has been removed from the SwiftUI hierarchy.
         // Without this, exhaustiveRetry callbacks crash with "No Observable object of
         // type SettingsStore found" when a sub-view rebuilds after dismiss.
-        // Firebase: a013be1c (EXC_BREAKPOINT in EnvironmentValues.subscript.getter).
+        // Reported issue: a013be1c (EXC_BREAKPOINT in EnvironmentValues.subscript.getter).
         loadTask?.cancel()
         loadTask = nil
         exhaustiveRetryTask?.cancel()
@@ -330,7 +328,7 @@ extension PlaybackViewModel {
         // escalation) — it was never invalidated outside deinit, so it kept firing
         // after suspend() and undoing the cancellation above, recreating the same
         // crash task-190 was supposed to have fixed. Re-established in resume().
-        // Firebase: a013be1c, regressed June 8 in 4.4(2) — still happening in 4.6.
+        // Reported issue: a013be1c, regressed June 8 in 4.4(2) — still happening in 4.6.
         rateObserver?.invalidate()
         rateObserver = nil
         #if canImport(WebKit)
@@ -414,7 +412,7 @@ extension PlaybackViewModel {
         do {
             try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         } catch {
-            playerLog.error("AVAudioSession deactivation failed: \(error.localizedDescription)")
+            playerLog.error("AVAudioSession deactivation failed: \(ViewModelLogger.errorSummary(error))")
         }
         #endif
         loadTask?.cancel()
@@ -652,7 +650,7 @@ extension PlaybackViewModel {
                 playerLog.notice("endCards: \(webCards.count) from web client fallback")
                 await VideoPreloadCache.shared.store(endCards: webCards, for: video.id)
             } catch {
-                playerLog.error("endCards fetch failed: \(error.localizedDescription)")
+                playerLog.error("endCards fetch failed: \(ViewModelLogger.errorSummary(error))")
                 endCards = []
             }
         }

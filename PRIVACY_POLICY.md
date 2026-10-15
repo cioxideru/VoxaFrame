@@ -1,10 +1,10 @@
 # Privacy Policy
 
-Last updated: May 03, 2026
+Last updated: October 15, 2026
 
 This Privacy Policy describes Our policies and procedures regarding Your use of the Service and tells You about Your privacy rights and how the law protects You.
 
-We believe in full transparency: **Smart Tube does not collect, store, transmit, or share any personal data or usage data whatsoever.** This document exists to formally state that commitment and explain what it means for You.
+We believe in full transparency: **Smart Tube does not collect any personal data or usage data for Us.** The app contains no analytics, crash reporting, or telemetry. It talks directly to the services that provide the content You ask for, as described below.
 
 ## Interpretation and Definitions
 
@@ -29,28 +29,33 @@ For the purposes of this Privacy Policy:
 
 **We do not collect any personal data.**
 
-Smart Tube does not collect, store, transmit, or share any personal information or usage data. Specifically:
-
 - We do **not** collect Personal Data (such as names, email addresses, phone numbers, or any other identifiable information).
 - We do **not** collect Usage Data (such as IP addresses, device identifiers, browser type, browser version, or diagnostic data).
-- We do **not** use analytics, tracking, or telemetry of any kind.
-- We do **not** use third-party Service Providers that collect data on Our behalf.
-- We do **not** require account creation or login.
+- We do **not** use analytics, crash reporting, tracking, or telemetry of any kind. The app contains no analytics or crash-reporting SDK.
+- We do **not** operate any server that receives data from the app.
 - We do **not** serve advertisements or use advertising identifiers.
 
-The Service operates entirely on Your Device. No information about You or Your usage is ever sent to Us or any third party.
+## Services the App Connects To
+
+To browse and play videos, the app sends requests directly from Your Device to these third parties. Their own privacy policies apply to those requests:
+
+- **YouTube / Google** — pages, streams, thumbnails, search suggestions and, if You sign in, Google sign-in and Your account's subscriptions, history and playlists.
+- **SponsorBlock** (sponsor.ajay.app) — the ID of the video You open, to fetch skip segments and community titles, when these features are on.
+- **Yandex** — the video's address, only when You use voice-over translation. If Yandex requests the original audio to prepare the translation, the app downloads that audio and uploads it directly from Your Device to Yandex's audio translation service (`api.browser.yandex.ru/video-translation/audio`). The app also connects to Yandex sign-in if You connect a Yandex account.
+- **A PO-token server You configure yourself**, only if You enter one in Settings.
+- **Apple iCloud** — if You turn on iCloud sync, Your subscriptions, watch state, queue and RSS feeds are stored in Your own iCloud account.
+
+## Data Stored on Your Device
+
+Settings, watch progress, local history and queues are stored on Your Device. Sign-in tokens for Google and Yandex are stored in the system Keychain. None of this is sent to Us.
 
 ### No Retention of Personal Data
 
-Because We do not collect any Personal Data, there is nothing to retain, transfer, or delete. You do not need to submit a data deletion request — there is simply no data held about You.
-
-### No Transfer of Personal Data
-
-Since no Personal Data is collected, no transfer of Your Personal Data to any country, organization, or third party ever occurs.
+Because We do not collect any Personal Data, there is nothing for Us to retain, transfer, or delete. Data held by YouTube/Google, SponsorBlock or Yandex is governed by their policies.
 
 ### Security
 
-The Service does not transmit any data over the Internet on Your behalf. All processing occurs locally on Your Device.
+Requests to the services above use HTTPS. Sign-in tokens are kept in the Keychain and are never written to logs or settings files.
 
 ## Children's Privacy
 

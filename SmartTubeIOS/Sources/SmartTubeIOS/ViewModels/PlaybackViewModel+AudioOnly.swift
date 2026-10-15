@@ -2,7 +2,7 @@ import AVFoundation
 import SmartTubeIOSCore
 import os
 
-private let audioOnlyLog = CrashlyticsLogger(category: "AudioOnly")
+private let audioOnlyLog = ViewModelLogger(category: "AudioOnly")
 
 // MARK: - Audio-Only Playback Mode
 
@@ -126,7 +126,7 @@ extension PlaybackViewModel {
                     // Dismiss the spinner — audio item is buffered and playing.
                     self.isLoading = false
                 case .failed:
-                    let err = item.error.map { "\($0)" } ?? "nil"
+                    let err = ViewModelLogger.errorSummary(item.error)
                     audioOnlyLog.error("❌ Audio-only AVPlayerItem failed: \(err)")
                     self.audioOnlyItemActive = false
                     // BUG-008 fix: only reset isAudioOnlyMode when this is NOT a live toggle.
@@ -159,7 +159,7 @@ extension PlaybackViewModel {
             }
         }
 
-        audioOnlyLog.notice("Audio-only: loaded \(url.absoluteString.prefix(80))")
+        audioOnlyLog.notice("Audio-only: loaded \(ViewModelLogger.urlHost(url))")
         return true
     }
 
@@ -178,7 +178,7 @@ extension PlaybackViewModel {
                 if success { return }
             }
         } catch {
-            audioOnlyLog.error("Audio-only: android_vr fetch failed: \(error)")
+            audioOnlyLog.error("Audio-only: android_vr fetch failed: \(ViewModelLogger.errorSummary(error))")
         }
 
         guard audioOnlySwapStillWanted(for: videoId) else { return }

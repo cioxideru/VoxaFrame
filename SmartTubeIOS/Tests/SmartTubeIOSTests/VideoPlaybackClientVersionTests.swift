@@ -45,7 +45,7 @@ struct InnerTubeAPINetworkConfigTests {
 
     @Test("NW-4-FIX: requestTimeoutInterval is 30 seconds")
     func requestTimeoutIntervalIs30Seconds() {
-        // Firebase issue 709b3e91: a 2m48s hang occurred because the OS default (60 s)
+        // Reported issue 709b3e91: a 2m48s hang occurred because the OS default (60 s)
         // was too permissive for slow/throttled youtubei.googleapis.com requests.
         // This constant is used directly in URLSessionConfiguration.timeoutIntervalForRequest.
         #expect(

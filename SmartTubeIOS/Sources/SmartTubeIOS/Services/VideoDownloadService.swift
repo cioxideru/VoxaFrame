@@ -13,7 +13,7 @@ import Photos
 @preconcurrency import ActivityKit
 #endif
 
-private let downloadLog = CrashlyticsLogger(category: "Download")
+private let downloadLog = ViewModelLogger(category: "Download")
 
 // MARK: - VideoDownloadService
 //
@@ -122,7 +122,7 @@ public final class VideoDownloadService {
                 pushType: nil
             )
         } catch {
-            downloadLog.notice("[download] Live Activity unavailable: \(error.localizedDescription)")
+            downloadLog.notice("[download] Live Activity unavailable: \(ViewModelLogger.errorSummary(error))")
         }
     }
 
@@ -218,8 +218,8 @@ public final class VideoDownloadService {
                 #endif
                 return
             }
-            downloadLog.notice("[download] merging adaptive videoURL prefix=\(videoURL.absoluteString.prefix(60))")
-            downloadLog.notice("[download] merging adaptive audioURL prefix=\(audioURL.absoluteString.prefix(60))")
+            downloadLog.notice("[download] merging adaptive videoHost=\(ViewModelLogger.urlHost(videoURL))")
+            downloadLog.notice("[download] merging adaptive audioHost=\(ViewModelLogger.urlHost(audioURL))")
             state = .downloading(progress: 0)
             let mergedURL = try await mergeAdaptiveStreams(
                 videoURL: videoURL, audioURL: audioURL, videoId: video.id,
@@ -244,7 +244,7 @@ public final class VideoDownloadService {
         } catch {
             let nsErr = error as NSError
             downloadLog.error(
-                "[download] ❌ failed: domain=\(nsErr.domain) code=\(nsErr.code) desc=\(nsErr.localizedDescription)")
+                "[download] ❌ failed: \(ViewModelLogger.errorSummary(nsErr))")
             let userMessage: String
             if nsErr.domain == "PHPhotosErrorDomain" {
                 userMessage =
@@ -324,7 +324,7 @@ public final class VideoDownloadService {
         session.outputFileType = .mp4
         await session.export()
         if let error = session.error {
-            downloadLog.error("[download] passthrough remux error: \(error.localizedDescription)")
+            downloadLog.error("[download] passthrough remux error: \(ViewModelLogger.errorSummary(error))")
             throw error
         }
         let size = (try? FileManager.default.attributesOfItem(atPath: destURL.path)[.size] as? Int) ?? 0
@@ -502,7 +502,7 @@ public final class VideoDownloadService {
             try? fm.removeItem(at: destURL)
             try fm.copyItem(at: mergedFileURL, to: destURL)
         } catch {
-            downloadLog.notice("[download] DownloadStore copy failed for \(video.id): \(error.localizedDescription)")
+            downloadLog.notice("[download] copy failed for \(video.id): \(ViewModelLogger.errorSummary(error))")
             return
         }
         DownloadStore.shared.add(
@@ -540,7 +540,7 @@ public final class VideoDownloadService {
         #if os(iOS)
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             let desc = "Video file was removed before saving to Photos: \(fileURL.lastPathComponent)"
-            downloadLog.error("[download] ❌ \(desc)")
+            downloadLog.error("[download] ❌ Video file was removed before saving to Photos")
             throw URLError(.fileDoesNotExist, userInfo: [NSLocalizedDescriptionKey: desc])
         }
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -552,7 +552,7 @@ public final class VideoDownloadService {
                     if let error {
                         let nsErr = error as NSError
                         downloadLog.error(
-                            "[download] ❌ PHPhotoLibrary save error: domain=\(nsErr.domain) code=\(nsErr.code) desc=\(nsErr.localizedDescription)"
+                            "[download] ❌ PHPhotoLibrary save error: \(ViewModelLogger.errorSummary(nsErr))"
                         )
                         continuation.resume(throwing: error)
                     } else if success {

@@ -9,7 +9,7 @@ import UIKit
 import WebKit
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - HLS and Adaptive Stream Selection
 
@@ -169,7 +169,7 @@ extension PlaybackViewModel {
             return (variantURL, nil)
         }
         let descrambledN = descParts[dIdx + 1]
-        playerLog.notice("[\(label)] n-probe: segment n: \(scrambledN) → \(descrambledN)")
+        playerLog.notice("[\(label)] n-probe: segment n descrambled")
 
         // 6. Rewrite ALL n occurrences in the playlist (path + query-string formats).
         //    All segments in a YouTube HLS playlist share the same n value, so a single
@@ -181,7 +181,7 @@ extension PlaybackViewModel {
 
         // 6b. Verify the rewrite: probe the first rewritten segment to confirm 200.
         //     If still 403, the descrambled n is wrong (solver/player.js mismatch).
-        guard await verifyDescrambledPlaylist(rewritten, descrambledN: descrambledN, userAgent: ua, label: label) else {
+        guard await verifyDescrambledPlaylist(rewritten, userAgent: ua, label: label) else {
             return (variantURL, nil)
         }
 
@@ -199,7 +199,7 @@ extension PlaybackViewModel {
         return (proxyURL, proxy)
     }
     private func verifyDescrambledPlaylist(
-        _ rewritten: String, descrambledN: String, userAgent ua: String, label: String
+        _ rewritten: String, userAgent ua: String, label: String
     ) async -> Bool {
         let rewrittenLines = rewritten.components(separatedBy: .newlines)
         if let firstRewrittenSeg = rewrittenLines.first(where: {
@@ -207,7 +207,8 @@ extension PlaybackViewModel {
         }),
             let verifyURL = URL(string: firstRewrittenSeg)
         {
-            playerLog.notice("[\(label)] n-probe: verifying rewritten seg n=\(descrambledN)")
+            playerLog.notice(
+                "[\(label)] n-probe: verifying rewritten segment host=\(ViewModelLogger.urlHost(verifyURL))")
             var verifyReq = URLRequest(url: verifyURL)
             verifyReq.httpMethod = "HEAD"
             verifyReq.setValue(ua, forHTTPHeaderField: "User-Agent")

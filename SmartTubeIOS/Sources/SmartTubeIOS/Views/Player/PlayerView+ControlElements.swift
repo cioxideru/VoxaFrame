@@ -7,7 +7,7 @@ import SwiftUI
 import UIKit
 #endif
 
-private let controlsLog = CrashlyticsLogger(category: "Player")
+private let controlsLog = ViewModelLogger(category: "Player")
 
 // MARK: - PlayerControlsOverlay
 //

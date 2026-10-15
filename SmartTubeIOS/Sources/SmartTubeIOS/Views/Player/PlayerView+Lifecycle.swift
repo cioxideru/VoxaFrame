@@ -8,7 +8,7 @@ import os
 import UIKit
 #endif
 
-let playerLifecycleLog = CrashlyticsLogger(category: "Player")
+let playerLifecycleLog = ViewModelLogger(category: "Player")
 
 // MARK: - PlayerView Lifecycle
 extension PlayerView {

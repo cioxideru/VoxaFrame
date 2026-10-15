@@ -392,7 +392,7 @@ public final class HomeViewModel {
                 }
                 // Search page returned 0 new Shorts — fall through to Phase 2
             } catch {
-                homeLog.error("fetchOneShortsPage search: failed: \(error.localizedDescription)")
+                homeLog.error("fetchOneShortsPage search: failed: \(ViewModelLogger.errorSummary(error))")
                 shortsNextPageToken = nil
             }
         }
@@ -491,7 +491,7 @@ public final class HomeViewModel {
             homeLog.notice("fetchShortsVideos → \(group.videos.count) shorts hasToken=\(hasToken)")
             return (group.videos, group.nextPageToken)
         } catch {
-            homeLog.error("fetchShortsVideos failed: \(error.localizedDescription)")
+            homeLog.error("fetchShortsVideos failed: \(ViewModelLogger.errorSummary(error))")
             return ([], nil)
         }
     }
@@ -529,7 +529,7 @@ public final class HomeViewModel {
                 return ([], nil)
             }
         } catch {
-            homeLog.error("HomeViewModel fetch \(String(describing: type)): \(error.localizedDescription)")
+            homeLog.error("HomeViewModel fetch \(String(describing: type)): \(ViewModelLogger.errorSummary(error))")
             return ([], nil)
         }
     }
@@ -562,7 +562,7 @@ public final class HomeViewModel {
                 return ([], nil)
             }
         } catch {
-            homeLog.error("HomeViewModel loadMore \(String(describing: type)): \(error.localizedDescription)")
+            homeLog.error("HomeViewModel loadMore \(String(describing: type)): \(ViewModelLogger.errorSummary(error))")
             return ([], nil)
         }
     }

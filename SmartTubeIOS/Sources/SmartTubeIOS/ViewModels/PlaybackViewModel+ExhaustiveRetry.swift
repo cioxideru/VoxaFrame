@@ -9,7 +9,7 @@ import UIKit
 import WebKit
 #endif
 
-private let playerLog = CrashlyticsLogger(category: "Player")
+private let playerLog = ViewModelLogger(category: "Player")
 
 // MARK: - Exhaustive Playback Retry
 
@@ -79,7 +79,9 @@ extension PlaybackViewModel {
             }
             playerLog.notice("[VisionOS] HLS/adaptive playback failed — continuing legacy fallbacks")
         } catch {
-            playerLog.notice("[VisionOS] player request failed: \(error) — continuing legacy fallbacks")
+            playerLog.notice(
+                "[VisionOS] player request failed: \(ViewModelLogger.errorSummary(error)) — continuing legacy fallbacks"
+            )
         }
         return false
     }
@@ -489,7 +491,8 @@ extension PlaybackViewModel {
         if parallelPlaySucceeded { return true }
 
         if let ipErr = fetchIPBlockError {
-            playerLog.error("❌ IP blocked during parallel fetch (attempt \(attempt)) — \(ipErr)")
+            playerLog.error(
+                "❌ IP blocked during parallel fetch (attempt \(attempt)) — \(ViewModelLogger.errorSummary(ipErr))")
             self.error = ipErr
             return true
         }
@@ -559,7 +562,9 @@ extension PlaybackViewModel {
                     }
                 }
             } catch {
-                playerLog.error("Web client muxed fallback fetch failed (attempt \(attempt)): \(error)")
+                playerLog.error(
+                    "Web client muxed fallback fetch failed (attempt \(attempt)): \(ViewModelLogger.errorSummary(error))"
+                )
             }
         }
         return false

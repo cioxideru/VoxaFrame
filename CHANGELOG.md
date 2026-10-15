@@ -33,6 +33,22 @@ All notable changes to SmartTube are documented here.
 - **End of a Short** replays, advances to the next Short or freezes (`ShortsEndOfVideoDecision`,
   via `PlaybackViewModel.onPlaybackEnd`) instead of autoplaying an unrelated video in the Shorts player.
 
+### Removed
+
+- The Send Diagnostic Report button in Settings and the Report ID row in Stats for Nerds.
+- Firebase (Crashlytics and Analytics): no crash reports, breadcrumbs, non-fatal events
+  (slow load, playback stalls/errors, wrong video, Shorts embed failures) or analytics leave the
+  device. Logging stays in `os.Logger`. The "Disable Analytics & Crash Reporting" setting and
+  the "Wrong video loaded — report sent" toast are gone; saved settings with the old key still
+  load. `PrivacyInfo.xcprivacy` no longer declares crash data. Xcode project cleanup and the
+  App Store privacy answers are tracked in OQ-0014.
+
+### Documentation
+
+- Privacy policy rewritten to list the services the app contacts (YouTube/Google, SponsorBlock,
+  Yandex voice-over, an optional user PO-token server, optional iCloud sync) and local/Keychain
+  storage. Closed OQ-0004 (privacy statements vs. Crashlytics and data flows).
+
 ### Documentation — 2026-10-15
 
 - Added the [execution-plan lifecycle](docs/exec-plans/README.md) and [open-question register](docs/OPEN_QUESTIONS.md);
