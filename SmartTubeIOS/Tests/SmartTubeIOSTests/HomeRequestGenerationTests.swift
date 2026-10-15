@@ -82,7 +82,8 @@ struct HomeRequestGenerationTests {
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         await vm.refresh()
-        let sectionID = subscriptions ? BrowseSection.SectionType.subscriptions.rawValue : BrowseSection.SectionType.home.rawValue
+        let sectionID =
+            subscriptions ? BrowseSection.SectionType.subscriptions.rawValue : BrowseSection.SectionType.home.rawValue
         mock.homeRowsHandler = { token in token == nil ? [fresh] : [await oldPage.value()] }
         mock.subscriptionsHandler = { token in token == nil ? fresh : await oldPage.value() }
         let oldTask = try #require(vm.loadMore(sectionId: sectionID))
@@ -136,7 +137,8 @@ struct HomeRequestGenerationTests {
         }
         let freshLoad = Task { await vm.refresh() }
         await waitForTasks { freshPage.started }
-        oldPage.resolve(VideoGroup(title: "Stale", videos: [short("stale"), makeVideo("stale-regular")], nextPageToken: "stale"))
+        oldPage.resolve(
+            VideoGroup(title: "Stale", videos: [short("stale"), makeVideo("stale-regular")], nextPageToken: "stale"))
         await oldLoad.value
         #expect(vm.isRefreshing)
         #expect(vm.homeShortsVideos.isEmpty)
@@ -151,6 +153,81 @@ struct HomeRequestGenerationTests {
         freshPage.resolve(VideoGroup(title: "Fresh", videos: [short("fresh-short")]))
         await freshLoad.value
         #expect(vm.homeShortsVideos.map(\.id) == ["fresh-short"])
+        #expect(!vm.isRefreshing)
+    }
+
+    @Test("A larger Shorts target arriving during a page is retained")
+    func increasingShortsDemand() async {
+        let mock = MockInnerTubeAPI()
+        mock.homeRowsResult = [VideoGroup(title: "Home", videos: [makeVideo("home")])]
+        mock.shortsResult = VideoGroup(
+            title: "Shorts", videos: (0..<8).map { short("initial-\($0)") }, nextPageToken: "page-1")
+        let firstPage = HomeResponseGate<VideoGroup>()
+        mock.shortsMoreAsyncHandler = { token in
+            if token == "page-1" { return await firstPage.value() }
+            return VideoGroup(title: "More", videos: (10..<16).map { short("short-\($0)") })
+        }
+        let vm = HomeViewModel(api: mock)
+        defer { vm.cancel() }
+        await vm.refresh()
+        vm.loadShorts(atLeast: 10)
+        await waitForTasks { firstPage.started }
+        vm.loadShorts(atLeast: 16)
+        vm.loadShorts(atLeast: 11)
+        firstPage.resolve(
+            VideoGroup(title: "More", videos: [short("short-8"), short("short-9")], nextPageToken: "page-2"))
+        await waitForTasks { vm.homeShortsVideos.count == 16 }
+        #expect(mock.calls.filter { $0.method == "fetchShortsMore" }.map(\.args) == [["page-1"], ["page-2"]])
+    }
+
+    @Test("Outstanding Shorts demand resumes after ordinary subscriptions paging", arguments: [false, true])
+    func subscriptionsPagingResumesDemand(searchFinishesWhileBusy: Bool) async throws {
+        let mock = MockInnerTubeAPI()
+        let subscriptionsPage = HomeResponseGate<VideoGroup>()
+        let searchPage = HomeResponseGate<VideoGroup>()
+        mock.homeRowsResult = [VideoGroup(title: "Home", videos: [makeVideo("home")])]
+        mock.subscriptionsResult = VideoGroup(title: "Subs", videos: [], nextPageToken: "subs-1")
+        mock.shortsResult = VideoGroup(
+            title: "Shorts", videos: (0..<8).map { short("initial-\($0)") },
+            nextPageToken: searchFinishesWhileBusy ? "search-1" : nil)
+        mock.shortsMoreAsyncHandler = { _ in await searchPage.value() }
+        let vm = HomeViewModel(api: mock)
+        defer { vm.cancel() }
+        await vm.refresh()
+        mock.subscriptionsHandler = { token in
+            if token == "subs-1" { return await subscriptionsPage.value() }
+            return VideoGroup(title: "More", videos: [short("from-subs")])
+        }
+        let pageTask = try #require(vm.loadMore(sectionId: BrowseSection.SectionType.subscriptions.rawValue))
+        await waitForTasks { subscriptionsPage.started }
+        vm.loadShorts(atLeast: searchFinishesWhileBusy ? 10 : 9)
+        if searchFinishesWhileBusy {
+            await waitForTasks { searchPage.started }
+            searchPage.resolve(VideoGroup(title: "Last search", videos: [short("from-search")]))
+            await waitForTasks { vm.homeShortsVideos.count == 9 }
+        }
+        subscriptionsPage.resolve(
+            VideoGroup(title: "Regular only", videos: [makeVideo("regular-page")], nextPageToken: "subs-2"))
+        await pageTask.value
+        await waitForTasks { vm.homeShortsVideos.contains { $0.id == "from-subs" } }
+        #expect(
+            mock.calls.filter { $0.method == "fetchSubscriptions" }.map(\.args) == [["nil"], ["subs-1"], ["subs-2"]])
+        #expect(vm.homeRegularVideos.contains { $0.id == "regular-page" })
+    }
+
+    @Test("Empty advancing pages preserve demand and a repeated empty token stops it")
+    func emptyShortsPages() async {
+        let mock = MockInnerTubeAPI()
+        mock.homeRowsResult = [VideoGroup(title: "Home", videos: [makeVideo("home")])]
+        mock.shortsResult = VideoGroup(title: "Shorts", videos: [], nextPageToken: "empty-1")
+        mock.shortsMoreHandler = { token in
+            VideoGroup(title: "Empty", videos: [], nextPageToken: token == "empty-1" ? "empty-2" : token)
+        }
+        let vm = HomeViewModel(api: mock)
+        defer { vm.cancel() }
+        await vm.refresh()
+        #expect(mock.calls.filter { $0.method == "fetchShortsMore" }.map(\.args) == [["empty-1"], ["empty-2"]])
+        #expect(vm.homeShortsVideos.isEmpty)
         #expect(!vm.isRefreshing)
     }
 
