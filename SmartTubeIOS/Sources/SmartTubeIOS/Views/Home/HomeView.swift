@@ -137,6 +137,7 @@ public struct HomeView: View {
                 ?? BrowseSection(id: type.rawValue, title: type.defaultTitle, type: type)
         }
         #endif
+        .onChange(of: homeVM.feedGeneration) { homeLayout = HomeFeedLayout() }
         .onChange(of: visibleSections) { _, newSections in
             if !newSections.contains(selectedSection), let first = newSections.first {
                 selectedSection = first
@@ -400,7 +401,6 @@ extension HomeView {
                     homeFeedHeight = $0
                 }
                 .refreshable { await homeVM.refresh() }
-                .onChange(of: homeVM.feedGeneration) { homeLayout = HomeFeedLayout() }
                 .onChange(of: homeVM.loadedAt) { requestHomeShorts(through: homeLayout.laidOutThrough + 3) }
                 #if os(tvOS)
                 feed.focusSection()
