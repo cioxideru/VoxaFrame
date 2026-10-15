@@ -149,6 +149,7 @@ public final class HomeViewModel {
 
     private let api: any InnerTubeAPIProtocol
     private var loadTask: Task<Void, Never>?
+    private var loadGeneration = 0
     private var hideObserverTasks: [Task<Void, Never>] = []
     /// Tracks whether a non-nil auth token has been set. Used to distinguish a
     /// sign-in event (nil → non-nil) from a token refresh (non-nil → new non-nil)
@@ -199,6 +200,7 @@ public final class HomeViewModel {
     /// that create short-lived `HomeViewModel` instances — e.g. tests — should
     /// call this when done to avoid orphaned tasks bleeding state into later use.
     public func cancel() {
+        loadGeneration += 1
         loadTask?.cancel()
         shortsPreloadTask?.cancel()
         hideObserverTasks.forEach { $0.cancel() }
@@ -218,6 +220,8 @@ public final class HomeViewModel {
     }
 
     private func startLoad(keepingContent: Bool) {
+        loadGeneration += 1
+        let generation = loadGeneration
         loadTask?.cancel()
         shortsPreloadTask?.cancel()
         loadedAt = nil
@@ -236,6 +240,7 @@ public final class HomeViewModel {
         }
 
         loadTask = Task {
+            guard isCurrentLoad(generation) else { return }
             // Fetch shorts via FEshorts in parallel with the home/subs feed.
             // The TV home feed (FEwhat_to_watch) never includes a Shorts shelf.
             async let fetchedShortsResult: ([Video], String?) = HomeViewModel.fetchShortsVideos(api: self.api)
@@ -251,7 +256,7 @@ public final class HomeViewModel {
                     }
                 }
                 for await (sectionId, videos, token) in group {
-                    guard !Task.isCancelled else { break }
+                    guard isCurrentLoad(generation) else { break }
                     if let idx = sections.firstIndex(where: { $0.id == sectionId }) {
                         sections[idx].videos = videos
                         sections[idx].nextPageToken = token
@@ -266,15 +271,19 @@ public final class HomeViewModel {
                     }
                 }
             }
+            guard isCurrentLoad(generation) else { return }
             // Both sections are now loaded. Rebuild the full interleaved list once,
             // replacing the partial first-arrived list. This is a single atomic swap
             // rather than incremental insertions, so existing card positions don't jump.
             rebuildMergedVideos()
-            shortsVideos = await fetchedShortsResult.0
-            shortsNextPageToken = await fetchedShortsResult.1
+            let (fetchedShorts, nextToken) = await fetchedShortsResult
+            guard isCurrentLoad(generation) else { return }
+            shortsVideos = fetchedShorts
+            shortsNextPageToken = nextToken
             // Fill the initial threshold (6 iOS / 8 tvOS) quickly.
             // Further pages load as the Home feed's video blocks scroll into view (loadShorts).
             await loadMoreShortsIfNeeded()
+            guard isCurrentLoad(generation) else { return }
             isRefreshing = false
             loadedAt = Date()
             let merged = self.mergedVideos
@@ -283,6 +292,10 @@ public final class HomeViewModel {
                 "load complete: merged=\(merged.count) regular=\(merged.count - mergedShorts) mergedShorts=\(mergedShorts) shortsSection=\(shortsVideos.count)"
             )
         }
+    }
+
+    private func isCurrentLoad(_ generation: Int) -> Bool {
+        generation == loadGeneration && !Task.isCancelled
     }
 
     public func updateAuthToken(_ token: String?) async {

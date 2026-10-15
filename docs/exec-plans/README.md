@@ -19,6 +19,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
+- [PLAN-0004: Home feed review fixes](active/home-review-fixes.md) — implementation and coordinator acceptance.
+
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed

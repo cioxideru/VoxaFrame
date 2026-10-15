@@ -59,3 +59,4 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [adr/0009-docs-live-with-code.md](adr/0009-docs-live-with-code.md) | 0009 — Non-secret docs live in the public repo, with code; accepted | current | 2026-10-15 |
 | [../.github/copilot-instructions.md](../.github/copilot-instructions.md) | Assistant entry point delegating to AGENTS.md | current | 2026-10-15 |
 | [../.github/PULL_REQUEST_TEMPLATE.md](../.github/PULL_REQUEST_TEMPLATE.md) | Pull-request acceptance checklist | current | 2026-10-15 |
+| [exec-plans/active/home-review-fixes.md](exec-plans/active/home-review-fixes.md) | PLAN-0004: Home review fixes; coordinator acceptance pending | current | 2026-10-15 |

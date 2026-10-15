@@ -22,6 +22,10 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
 
     // MARK: - Configurable return values
 
+    var homeRowsHandler: (@MainActor (String?) async -> [VideoGroup])?
+    var subscriptionsHandler: (@MainActor (String?) async -> VideoGroup)?
+    var shortsHandler: (@MainActor () async -> VideoGroup)?
+    var shortsMoreAsyncHandler: (@MainActor (String) async throws -> VideoGroup)?
     var homeResult: VideoGroup = VideoGroup(title: "Home", videos: [])
     var homeRowsResult: [VideoGroup] = []
     var subscriptionsResult: VideoGroup = VideoGroup(title: "Subs", videos: [])
@@ -68,12 +72,14 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
     func fetchHomeRows(continuationToken: String?) async throws -> [VideoGroup] {
         calls.append(Call(method: "fetchHomeRows", args: [continuationToken ?? "nil"]))
         if let error = errorToThrow { throw error }
+        if let homeRowsHandler { return await homeRowsHandler(continuationToken) }
         return homeRowsResult
     }
 
     func fetchSubscriptions(continuationToken: String?) async throws -> VideoGroup {
         calls.append(Call(method: "fetchSubscriptions", args: [continuationToken ?? "nil"]))
         if let error = errorToThrow { throw error }
+        if let subscriptionsHandler { return await subscriptionsHandler(continuationToken) }
         return subscriptionsResult
     }
 
@@ -86,12 +92,14 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
     func fetchShorts() async throws -> VideoGroup {
         calls.append(Call(method: "fetchShorts", args: []))
         if let error = errorToThrow { throw error }
+        if let shortsHandler { return await shortsHandler() }
         return shortsResult
     }
 
     func fetchShortsMore(continuationToken: String) async throws -> VideoGroup {
         calls.append(Call(method: "fetchShortsMore", args: [continuationToken]))
         if let error = errorToThrow { throw error }
+        if let shortsMoreAsyncHandler { return try await shortsMoreAsyncHandler(continuationToken) }
         if let handler = shortsMoreHandler { return handler(continuationToken) }
         return shortsMoreResult
     }
