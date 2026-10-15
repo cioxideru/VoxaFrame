@@ -34,6 +34,8 @@ already used). Reversal means restoring the deleted files from git history.
   BotGuard/PO-token churn); the AVPlayer fallback cascade (ADR-0005) carries that load.
 - "Play Incognito" (#94), previously honored only by the embed player, is wired into
   `PlaybackViewModel` (`load(video:incognito:)`).
+- Bad: iOS loses the embed player's brightness/volume edge-swipe gestures and its chapters
+  overlay; `PlayerView` has no equivalent (deferred, [OQ-0012](../OPEN_QUESTIONS.md#oq-0012--ios-player-gestures-lost-with-the-embed-player)).
 - Device playback of iOS Shorts through AVPlayer has not been re-verified.
 
 ## Alternatives considered

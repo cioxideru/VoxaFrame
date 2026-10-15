@@ -15,7 +15,8 @@ All notable changes to SmartTube are documented here.
   `TOSPlayerStateStore` and the TOS mini player, the WKWebView embed views/scripts, the Shorts
   src-swap spike, the `--uitesting-*-tos-player-on-ios` launch arguments, and their unit/UI tests.
   The quality picker, captions, PiP and Yandex voice-over are always available again; iOS HLS
-  pre-warming on card appearance is re-enabled.
+  pre-warming on card appearance is re-enabled. Lost on iOS with the embed player: the
+  brightness/volume edge-swipe gestures and the chapters overlay (not ported; see open questions).
 - **Play Incognito (#94) on the AVPlayer path**: `PlayerRouter` → `PlayerStateStore.play` →
   `PlaybackViewModel.load(video:incognito:)`; the video is not recorded to local history,
   watchtime or resume position. Autoplay after it records normally.

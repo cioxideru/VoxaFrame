@@ -131,3 +131,12 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Next step: classify untranslated keys (including intentionally skipped format-only keys),
   fill required UI translations, and review them before release. Preserve existing/plural entries
   when using forced retranslation; `extractionState: manual` alone does not protect them.
+
+## OQ-0012 — iOS player gestures lost with the embed player
+
+- Status: deferred; owner: playback maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
+- The removed TOS player had left/right edge swipes for screen brightness and system volume
+  (`GestureAdjustmentHUD`, `SystemVolumeControl`) and a chapters overlay (`ChaptersOverlayView`).
+  `PlayerView` has none of these, so iOS users lost them. The code is in git history before ADR-0010.
+- Next step: decide whether `PlayerView` should get them; if so, port with tests rather than
+  restoring the embed-player wiring.
