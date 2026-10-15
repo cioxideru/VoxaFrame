@@ -1,16 +1,16 @@
-> status: current (2026-09-11)
+> Status: current — command/configuration review 2026-10-15; tests not rerun.
 
 # How to run tests
 
 **When to use:** running unit or UI tests locally, or setting up a fresh simulator.
 
-Run the commands below from the repo root. Don't use
-`mcp_xcode_RunAllTests`/`mcp_xcode_RunSomeTests` or any other `mcp_xcode_*` tool to run tests.
+Run the commands below from the repository root.
 
 ## Target simulator
 
-Single source of truth for the iOS/Catalyst target simulator — don't copy this UDID into other
-docs, link here instead.
+The following is the previously recorded development destination, not a portable requirement.
+Its current availability was not checked. Select an installed iOS Simulator with
+`xcrun simctl list devices available`; substitute its name or UDID in the commands below.
 
 | Property | Value |
 |---|---|
@@ -40,7 +40,7 @@ it without more RAM.
 ## Commands
 
 - `cd SmartTubeIOS && swift test --parallel` (`--filter <Name>` for one suite) — Swift Testing package tests, no simulator.
-- UI tests (`SmartTube.xctestplan`, the scheme's only plan; `Smoke`/`Live` plans land with WS3-T3.4):
+- UI tests (`SmartTube.xctestplan`, the scheme's only plan; `Smoke`/`Live` plans are absent; [OQ-0003](../OPEN_QUESTIONS.md#oq-0003--smokelive-test-plans-and-nightly)):
 
   ```bash
   xcodebuild test -workspace SmartTube.xcworkspace -scheme SmartTube -destination 'platform=iOS Simulator,name=iPhone 17' -parallel-testing-enabled YES -maximum-parallel-testing-workers 3 -only-testing:SmartTubeUITests/<Suite>/<testMethod>
@@ -48,4 +48,11 @@ it without more RAM.
 
   Drop `-only-testing` for the whole UI suite (many suites need a signed-in simulator and network).
 - Compile the apps with all UI-test targets without running them: `scripts/build-for-testing.sh`.
-- Device/app log capture during a test run: `docs/how-to/device-logs.md`.
+- Device/app log capture during a test run: [device logs](device-logs.md).
+- Without `SmartTubeApp/Smoke.xctestplan`, `scripts/verify.sh` skips the UI stage after
+  successful checks and simulator builds and exits successfully, even with the default full scope.
+  No UI tests run on that path; this is the open gap in [OQ-0003](../OPEN_QUESTIONS.md#oq-0003--smokelive-test-plans-and-nightly).
+  `VERIFY_SCOPE=fast` stops after CI/lint; `VERIFY_SCOPE=build` stops after simulator builds.
+  None of these paths proves UI acceptance. Nightly Live remains disabled pending the plans and runner.
+- Record `NOT RUN` with a reason and platform in the task evidence. Simulator checks do not
+  establish physical-device decoding, PiP, or background-audio behavior; see [OQ-0005](../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).

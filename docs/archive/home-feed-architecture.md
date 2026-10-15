@@ -1,4 +1,6 @@
-> status: unverified — moved from private repo agent-notes, not re-audited (2026-09-11)
+> Status: archived — classified from code on 2026-10-15.
+> The current HomeViewModel merges dedicated Shorts data and HomeView has pinned Shorts rows; this older two-shelf/no-separation description is superseded by the current source and architecture map.
+> Current references: [architecture](../architecture.md), [open questions](../OPEN_QUESTIONS.md).
 
 # SmartTubeIOS Home Feed & Shorts Architecture
 

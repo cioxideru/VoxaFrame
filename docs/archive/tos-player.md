@@ -1,4 +1,6 @@
-> status: implemented (2026-06)
+> Status: archived — classified from code on 2026-10-15.
+> Historical development worklog, not an implementation plan or current macOS-only architecture. The player now has iOS support; old machine-specific destinations and pass counts are evidence only for the recorded runs.
+> Current references: [architecture](../architecture.md), [open questions](../OPEN_QUESTIONS.md).
 
 # TOS Player — Development Worklog
 

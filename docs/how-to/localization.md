@@ -1,34 +1,34 @@
-> status: current (2026-09-11)
+> Status: current — catalog and script inspected 2026-10-15; translation quality not reviewed.
 
 # Localisation
 
-## Current State (as of May 2026)
+## Catalog state (2026-10-15)
 
 ### Languages
 | Code | Language | Coverage |
 |------|----------|----------|
-| `ar` | Arabic | 99% |
-| `de` | German | 99% |
+| `ar` | Arabic | 275/345 |
+| `de` | German | 275/345 |
 | `en` | English (source) | — |
-| `es` | Spanish | 99% |
-| `fr` | French | 99% |
-| `hi` | Hindi | 99% |
-| `id` | Indonesian | 99% |
-| `it` | Italian | 99% |
-| `ja` | Japanese | 99% |
-| `ko` | Korean | 99% |
-| `pt-BR` | Portuguese (Brazil) | 99% |
-| `ru` | Russian | 99% |
-| `sr` | Serbian | 99% |
-| `hr` | Croatian | 99% |
-| `tr` | Turkish | 99% |
-| `zh-Hans` | Chinese (Simplified) | 99% |
+| `es` | Spanish | 275/345 |
+| `fr` | French | 275/345 |
+| `hi` | Hindi | 275/345 |
+| `id` | Indonesian | 275/345 |
+| `it` | Italian | 275/345 |
+| `ja` | Japanese | 275/345 |
+| `ko` | Korean | 275/345 |
+| `pt-BR` | Portuguese (Brazil) | 275/345 |
+| `ru` | Russian | 275/345 |
+| `sr` | Serbian | 275/345 |
+| `hr` | Croatian | 275/345 |
+| `tr` | Turkish | 275/345 |
+| `zh-Hans` | Chinese (Simplified) | 275/345 |
 
-**Total keys: 261.** The 3 intentionally untranslated keys are the empty key, `%lld`, and `%lld s` — these are format-specifier-only strings that need no translation.
+**Total keys: 345.** Coverage counts existing locale entries, not reviewed translation quality. The 3 intentionally untranslated keys are the empty key, `%lld`, and `%lld s` — these are format-specifier-only strings that need no translation.
 
 The strings file lives at:
 ```
-SmartTube/SmartTubeIOS/Sources/SmartTubeIOS/Localizable.xcstrings
+SmartTubeIOS/Sources/SmartTubeIOS/Localizable.xcstrings
 ```
 
 ---
@@ -37,7 +37,7 @@ SmartTube/SmartTubeIOS/Sources/SmartTubeIOS/Localizable.xcstrings
 
 The automation script lives alongside the strings file:
 ```
-SmartTube/SmartTubeIOS/Sources/SmartTubeIOS/translate_strings.py
+SmartTubeIOS/Sources/SmartTubeIOS/translate_strings.py
 ```
 
 It uses Google Translate (via `deep-translator`, no API key required) and correctly protects `%@`, `%lld`, `%d`, `%.2g` format specifiers from being translated or transliterated.
@@ -56,7 +56,7 @@ The venv lives in `/tmp/` so it is wiped on reboot. Re-run the two commands abov
 ### Dry run — preview what would be translated without writing anything
 
 ```bash
-cd SmartTube/SmartTubeIOS/Sources/SmartTubeIOS
+cd SmartTubeIOS/Sources/SmartTubeIOS
 /tmp/loctranslate_venv/bin/python3 translate_strings.py --dry-run
 ```
 
@@ -67,7 +67,7 @@ cd SmartTube/SmartTubeIOS/Sources/SmartTubeIOS
 Run with no flags. The script is **additive only** — it skips any key/language pair that already has a translation.
 
 ```bash
-cd SmartTube/SmartTubeIOS/Sources/SmartTubeIOS
+cd SmartTubeIOS/Sources/SmartTubeIOS
 /tmp/loctranslate_venv/bin/python3 translate_strings.py
 ```
 
@@ -95,24 +95,12 @@ Overwrites every entry for that language, even ones that already exist.
    ```
    Use the [xcstrings language code](https://developer.apple.com/documentation/xcode/choosing-localization-regions-and-scripts) as the key and the [Google Translate language code](https://py-googletrans.readthedocs.io/en/latest/#googletrans-languages) as the value. Usually they match; notable exceptions are `pt-BR → pt` and `zh-Hans → zh-CN`.
 
-2. Add the language to `knownRegions` in the Xcode project file:
-   ```
-   SmartTube/SmartTubeApp/SmartTubeApp.xcodeproj/project.pbxproj
-   ```
-   Find the `knownRegions` block and add the new code:
-   ```
-   knownRegions = (
-       Base,
-       en,
-       sr,
-       hr,
-       nl,   ← add here
-   );
-   ```
+2. Add the language through the Xcode project's localization settings. Do not hand-edit
+   `project.pbxproj`; Xcode owns project changes (see [ADR-0003](../adr/0003-no-project-generation.md)).
 
 3. Run the script:
    ```bash
-   cd SmartTube/SmartTubeIOS/Sources/SmartTubeIOS
+   cd SmartTubeIOS/Sources/SmartTubeIOS
    /tmp/loctranslate_venv/bin/python3 translate_strings.py
    ```
 
@@ -139,7 +127,7 @@ Xcode will extract it into `Localizable.xcstrings` with an empty `localizations`
 ## Checking coverage
 
 ```bash
-cd SmartTube/SmartTubeIOS/Sources/SmartTubeIOS
+cd SmartTubeIOS/Sources/SmartTubeIOS
 python3 - <<'EOF'
 import json
 with open('Localizable.xcstrings') as f:
@@ -160,5 +148,5 @@ EOF
 
 - **Machine translation quality** — Google Translate is used for all strings. Translations are generally good for UI labels and short phrases, but long or idiomatic strings may need native review before a public release.
 - **Cyrillic/non-Latin script caution** — Format specifiers (`%@`, `%lld`, etc.) are protected by `⟪0⟫` / `⟪1⟫` symbol brackets before translation and restored afterwards. This avoids the transliteration bug where Cyrillic engines turned `FMTSPEC0END` into `ФМТСПЕЦ0ЕНД`.
-- **Plural forms** — The xcstrings file currently has no plural entries (all entries are `stringUnit`). If a string needs plural handling (e.g. "1 video / 2 videos"), add it manually in Xcode using the plural editor, then mark it `extractionState: manual` so the script does not overwrite it.
-- **The `en` column shows 1%** — This is expected. In xcstrings, English strings are the *key*, so they are not duplicated in a `localizations.en` entry. The 3 explicit `en` entries in the file are Xcode-managed stubs.
+- **Plural forms** — The xcstrings file currently has no plural entries (all entries are `stringUnit`). If a string needs plural handling (e.g. "1 video / 2 videos"), add it manually in Xcode using the plural editor, and preserve that locale entry. The script skips existing locales by default, but `--fix-lang` replaces them with `stringUnit` values regardless of `extractionState`; do not force-retranslate plural entries.
+- **English coverage** — English source text is usually the key rather than a `localizations.en` entry; a low explicit-entry count is expected.

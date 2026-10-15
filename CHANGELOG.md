@@ -4,6 +4,35 @@ All notable changes to SmartTube are documented here.
 
 ---
 
+## [Unreleased]
+
+### Documentation — 2026-10-15
+
+- Added the [execution-plan lifecycle](docs/exec-plans/README.md) and [open-question register](docs/OPEN_QUESTIONS.md);
+  normalized ADR metadata without changing decision meaning or numbers. Recorded implementation
+  drift separately, including ADR-0006's exclusive-player wording versus the current engine setting.
+- Classified the TOS iOS port and #89 as completed from release/source evidence; #89 already has
+  the duration guard, long-video/180-second tests and duration logging. Removed its obsolete open-bug
+  status; this is recognition of existing code, not a new fix or fresh test pass.
+- Retained the Shorts document as design, with a current implementation note. Its src-swap spike
+  and URL/end-decision helpers exist; removed their pending-implementation status. Device evidence
+  remains separate. BotGuard's implemented pieces and remaining verification now have one active plan.
+- Archived stale home-feed, playback-method, DASH-test, no-BotGuard, reviewer and TOS-worklog notes.
+  Retired the no-BotGuard prohibition: adoption was already recorded in 4.1 and is wired in source.
+  Historic playback pass counts are not current acceptance. Reviewer claims require reconciliation
+  with actual data flows before reuse.
+- Removed `docs/explanation/changelog-unreleased.md`: every entry already exists in release 2.6.
+  Removed identical repeated 2.6 bullets without dropping unique release history.
+- Removed the stale "AGENTS not yet created" task from current work tracking (the original ADR
+  baseline remains historical), retired the package README's obsolete UserDefaults-token warning
+  (TokenManager owns Keychain storage), and consolidated the index's missing/deferred-document
+  lists into open questions. The private migration itself is not claimed complete.
+- Corrected localization paths, catalog counts and the Xcode-only project-editing procedure;
+  removed the unsupported claim that `extractionState: manual` protects forced retranslation.
+  Corrected the device-log command continuation. Translation quality and device runs were not checked.
+
+---
+
 ## [4.5] – 2026-06-11
 
 ### Added
@@ -126,11 +155,6 @@ All notable changes to SmartTube are documented here.
 - **Quality picker showing 144p/240p only for DASH videos** — TVAuth adaptive format entries had `height = 0` because TVHTML5 SABR responses omit the `height` field; `parseFormats` now extracts the height from the `qualityLabel` string (e.g. `"720p"` → 720) when `height == 0`, so all adaptive tiers appear correctly in the picker
 - **AndroidVR client returning `LOGIN_REQUIRED` bot-detection error** — `postAndroidVR` now includes the `X-Goog-Visitor-Id` header populated from the `visitorData` field of the preceding TVAuth `/player` response; the shared `URLSession` (carrying YouTube authentication cookies from TV sign-in) is used instead of an ephemeral session; together these signals satisfy YouTube's bot-detection check for the AndroidVR client
 - **Crash on age-restricted / region-locked videos** (1,048 iOS + 130 tvOS events, issue NW-3) — TV authenticated client sometimes returns a `PlayerInfo` with `hlsURL = nil` and no usable adaptive streams (muxed-only TVHTML5 URL); `PlaybackViewModel+Loading` now checks `tvInfo.hlsURL == nil && bestAdaptiveVideoURL == nil` immediately after the TV fetch and falls straight to `fetchPlayerInfoAndroid` before creating an `AVPlayerItem`, eliminating the `AVFoundationErrorDomain -11828` crash; `TVClientHLSNilFallbackTests` (8 tests) added
-- **Audio-only mode silently stalling on playback start** — `tryLoadAudioURL(_:userAgent:)` now calls `setupAudioItemObserver(_:)` before `player.replaceCurrentItem(with:)`, wiring up `itemObserverTask` to catch `.failed` status (resets `isAudioOnlyMode = false` and propagates the error) and `.readyToPlay` (calls `loadAudioTracks(from:)`); previously a failed audio item had no observer and the player hung silently; `AudioOnlyModeUITests` (`testAudioOnlyModeOpensVideoWithoutError`) added
-- **Mini player X button sometimes restoring fullscreen** — `fullScreenBinding` setter in `RootView` was calling `playerState.minimize()` whenever `currentVideo` cleared to `nil`; because `stop()` sets `presentation = .hidden` asynchronously, the setter raced and re-promoted state to `.miniPlayer`; setter is now a no-op (the `LandscapeFullScreenCover` UIKit coordinator already manages dismissal)
-- **Audio track selection not working after fallback recovery** — `audioSelectionGroup` and `audioOptionsByID` were never refreshed when the Android fallback player, adaptive composition fallback, or 403-recovery path created a new `AVPlayerItem`; `retryWithFallbackPlayer`, `retryWithAdaptiveComposition`, and `retryWith403Recovery` in `PlaybackViewModel+Fallback` now call `loadAudioTracks(from:)` in their `.readyToPlay` observers, matching the existing pattern in the normal load and quality-change paths
-- **More menu overflowing and unusable in landscape mode** (GitHub issue #45, contributor say4n) — `.frame(maxHeight: 520)` was too tall for compact vertical size class; `moreMenuOverlay` now uses 320 pt max-height in `verticalSizeClass == .compact`, adds `.safeAreaPadding(.horizontal)` plus 36 pt extra horizontal padding when landscape, keeping the menu within the live area and scrollable to the Cancel row; `player.moreMenu.scrollView` accessibility identifier added
-- **"Hide Shorts" setting not filtering Shorts in Search, Library, and Channel views** (GitHub issue #41) — `AppSettings.hideShorts` was applied only in `HomeView` and `BrowseView`; `SearchView` and `LibraryView` now inject `SettingsStore` via `@Environment` and filter results before passing to `VideoGridSection`; `ChannelView.filteredVideos` extended to apply the same predicate; `RSSFeedsView.videoList` also updated for consistency; `HideShortsFilterTests` (6 tests) added
 - **Audio-only mode silently stalling on playback start** — `tryLoadAudioURL(_:userAgent:)` now calls `setupAudioItemObserver(_:)` before `player.replaceCurrentItem(with:)`, wiring up `itemObserverTask` to catch `.failed` status (resets `isAudioOnlyMode = false` and propagates the error) and `.readyToPlay` (calls `loadAudioTracks(from:)`); previously a failed audio item had no observer and the player hung silently; `AudioOnlyModeUITests` (`testAudioOnlyModeOpensVideoWithoutError`) added
 - **Mini player X button sometimes restoring fullscreen** — `fullScreenBinding` setter in `RootView` was calling `playerState.minimize()` whenever `currentVideo` cleared to `nil`; because `stop()` sets `presentation = .hidden` asynchronously, the setter raced and re-promoted state to `.miniPlayer`; setter is now a no-op (the `LandscapeFullScreenCover` UIKit coordinator already manages dismissal)
 - **Audio track selection not working after fallback recovery** — `audioSelectionGroup` and `audioOptionsByID` were never refreshed when the Android fallback player, adaptive composition fallback, or 403-recovery path created a new `AVPlayerItem`; `retryWithFallbackPlayer`, `retryWithAdaptiveComposition`, and `retryWith403Recovery` in `PlaybackViewModel+Fallback` now call `loadAudioTracks(from:)` in their `.readyToPlay` observers, matching the existing pattern in the normal load and quality-change paths

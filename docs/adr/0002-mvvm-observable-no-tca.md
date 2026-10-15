@@ -1,11 +1,13 @@
----
-status: accepted
-date: 2026-09-10
-deciders: maintainer
----
-# 0002. MVVM with `@Observable`, no TCA
+# 0002 — MVVM with `@Observable`, no TCA
 
-## Context and problem statement
+- ID: ADR-0002
+- Status: accepted
+- Date: 2026-09-10
+- Deciders: maintainer
+
+<a id="context-and-problem-statement"></a>
+
+## Context
 
 The codebase needs one state-management approach agents and contributors can rely on without
 re-deriving it per file. Swift has several viable options as of 2024-2026: `ObservableObject`
@@ -36,3 +38,7 @@ out of scope).
   ("without a rewrite and without breaking shipping behaviour").
 - **Keep `ObservableObject`/Combine**: rejected — already fully migrated away from; reverting
   would be pure churn.
+
+## Implementation check — 2026-10-15
+
+View models use `@MainActor` / `@Observable`; the package has no TCA dependency. Historical line counts above are not current measurements.

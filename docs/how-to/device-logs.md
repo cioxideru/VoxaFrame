@@ -1,4 +1,4 @@
-> status: current (2026-09-11)
+> Status: current — documentation reviewed 2026-10-15; capture commands not rerun.
 
 # How to capture device/app logs
 
@@ -15,7 +15,7 @@ logged, not just whether an assertion passed.
 RESULT=/tmp/smarttube-test-$(date +%s).xcresult
 xcodebuild test \
   -workspace SmartTube.xcworkspace -scheme SmartTube \
-  -destination "id=<SIMULATOR_UDID>" \  # see docs/how-to/run-tests.md#target-simulator
+  -destination "id=<SIMULATOR_UDID>" \
   -only-testing:SmartTubeUITests/<SuiteClass>/<testMethod> \
   -resultBundlePath "$RESULT" 2>&1 | tee /tmp/smarttube-test-xcodebuild.log
 
@@ -28,8 +28,9 @@ wc -l "$APP_LOG"
 **Do NOT use `log stream`** for this — it's unreliable (the simulator can be shut down before the
 stream starts, timing races cause truncation). `-resultBundlePath` is atomic and reliable.
 
-Full grep patterns for quality-switch events, network/playback events, and skip classification:
-`.github/skills/ui-tests-with-logs/SKILL.md` (private repo).
+Use the [test guide](run-tests.md#target-simulator) to choose the destination.
+Record executed test counts and classify each skip from assertions plus app logs. Missing
+private log-pattern guidance is tracked in [OQ-0001](../OPEN_QUESTIONS.md#oq-0001--public-documentation-migration).
 
 ## From a physical device (live, manual reproduction)
 
@@ -54,5 +55,5 @@ physical device.
 
 Tests that require log inspection after every run carry a structured comment block at the top of
 their file (`// AGENT-POST-RUN-CHECK: ui-tests-with-logs`). When running such a test, always
-extract the device log and classify every skip before considering the task done — see
-`.github/skills/ui-tests-with-logs/SKILL.md` (private repo) for the marker standard.
+extract the device log and classify every skip before considering the task done. Include
+the exact revision, platform, result bundle, and any checks not run in the task evidence.

@@ -2,7 +2,7 @@
 
 One line per term, with rejected synonyms in parens where a wrong word has been used before.
 Naming a new module after a concept not listed here requires adding the term in the same PR
-(`docs/README.md`).
+([document index](docs/README.md)).
 
 ## Domain terms
 
@@ -23,7 +23,7 @@ Naming a new module after a concept not listed here requires adding the term in 
   default on iOS since ADR-0006. "TOS" = terms-of-service-compliant (YouTube's own player, not a
   stream-extraction pipeline).
 - **AVPlayer path** — the non-TOS playback path: resolve a raw stream URL, hand it to AVPlayer.
-  Still used on tvOS and for some iOS Shorts cases.
+  Used on tvOS and when AVPlayer is selected or a regular-video embed fails on iOS; iOS Shorts use the embed player.
 - **Shorts embed player** — the WKWebView/iframe pipeline specifically for Shorts
   (`ShortsEmbedPlayerViewModel`), distinct from the TOS player though architecturally similar.
 - **Playback session** — planned (WS5, not yet implemented): one interface shared by AVPlayer,
@@ -56,7 +56,7 @@ Naming a new module after a concept not listed here requires adding the term in 
 
 ## Architecture vocabulary
 
-From the `improve-codebase-architecture` skill's `LANGUAGE.md` — use these exactly; never
+Use these terms consistently; do not automatically
 substitute "component," "service," "API," or "boundary."
 
 - **Module** — anything with an interface and an implementation (function, class, package, or a

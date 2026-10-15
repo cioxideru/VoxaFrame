@@ -1,6 +1,8 @@
 @AGENTS.md
 
-## Claude Code specifics
-- Use `superpowers:brainstorming` before new features and `superpowers:writing-plans` before multi-step work; plans go to docs/superpowers/plans/.
-- For concurrency questions load the `swift-concurrency` skill; for architecture work load `improve-codebase-architecture`.
-- Machine-specific paths and simulator names live in CLAUDE.local.md (gitignored), not here.
+# Agent workflow
+
+Read the shared [agent guide](AGENTS.md) and [document index](docs/README.md).
+For multi-step implementation, record the plan in [docs/exec-plans/active](docs/exec-plans/active/)
+using the [plan lifecycle](docs/exec-plans/README.md). Keep decisions in [ADRs](docs/adr/README.md)
+and unfinished work or missing evidence in [open questions](docs/OPEN_QUESTIONS.md).

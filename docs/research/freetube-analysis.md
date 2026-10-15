@@ -1,4 +1,5 @@
-> status: research reference, not re-verified against current code (2026-09-11)
+> Status: current — retained research reference; classification reviewed 2026-10-15.
+> External repository details are historical snapshots, not verified-current upstream facts.
 
 # FreeTube — Reference Analysis
 

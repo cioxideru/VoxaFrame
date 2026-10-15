@@ -1,11 +1,13 @@
----
-status: accepted
-date: 2026-09-10
-deciders: maintainer
----
-# 0004. Plain protocol + initializer injection, no DI framework
+# 0004 — Plain protocol + initializer injection, no DI framework
 
-## Context and problem statement
+- ID: ADR-0004
+- Status: accepted
+- Date: 2026-09-10
+- Deciders: maintainer
+
+<a id="context-and-problem-statement"></a>
+
+## Context
 
 `docs/modernization/PLAN.md` DEC-7 asks whether to adopt a DI helper library (e.g. Factory) or
 keep plain `init` injection as seams get added across WS4/WS6/WS7. Today, dependency injection
@@ -36,3 +38,7 @@ reconsidering, at WS8).
   layer before there's evidence plain injection can't scale to this codebase's needs. The
   duplicated-composition-root problem is about discipline (one root, not three copies), which a
   DI framework doesn't inherently fix.
+
+## Implementation check — 2026-10-15
+
+The app entry points still construct dependencies directly and the package has no DI framework. Consolidating composition roots is unfinished; see [OQ-0009](../OPEN_QUESTIONS.md#oq-0009--architecture-debt).

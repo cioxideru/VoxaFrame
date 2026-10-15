@@ -1,11 +1,13 @@
----
-status: accepted
-date: 2026-06-11
-deciders: maintainer
----
-# 0006. TOS-compliant WKWebView player is the default player on iOS
+# 0006 — TOS-compliant WKWebView player is the default player on iOS
 
-## Context and problem statement
+- ID: ADR-0006
+- Status: accepted
+- Date: 2026-06-11
+- Deciders: maintainer
+
+<a id="context-and-problem-statement"></a>
+
+## Context
 
 The original iOS playback pipeline resolved raw HLS/DASH streams and fed them to AVPlayer,
 inheriting the whole class of failures documented in `docs/modernization/AUDIT.md` §2.2:
@@ -39,3 +41,7 @@ DEC-3 keeps this unchanged and out of scope for the modernization program.
   effectively what WS4/WS5 now do, but only for the *remaining* non-TOS uses (tvOS, Shorts) — the
   TOS-as-default decision for the main iOS video player predates the modernization program and
   is not being revisited by it.
+
+## Implementation check — 2026-10-15
+
+The default remains `useTOSPlayerOnIOS = true` in `AppSettings`, but `SettingsStore` now reads the persisted setting (with a test override), `SettingsView.playerEngineSection` exposes a toggle, and `PlayerRouter.open` permits AVPlayer selection and per-video fatal-embed fallback. iOS Shorts use `ShortsEmbedPlayerViewModel`. The accepted text above records the original decision; the exclusive-player statement no longer matches implementation. A replacement decision requires reconciliation in [OQ-0010](../OPEN_QUESTIONS.md#oq-0010--ios-player-choice-decision).

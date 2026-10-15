@@ -1,6 +1,49 @@
-> status: research reference, not re-verified against current code (2026-09-11)
-
 # BotGuard / PoToken — State and Migration Plan
+
+- ID: PLAN-0003
+- Status: active
+- Owner: maintainer; no new executor assigned by this documentation review
+- Reviewed: 2026-10-15
+- Git boundary: `master`, HEAD `23284b15d990607bbfcab0f7db1cf6d978229149`; working tree has existing uncommitted source changes. Evidence below refers to that tree, not a new commit or release.
+- Scope: the original objective and tasks below; documentation reconciliation only on this date.
+- Constraints: preserve existing playback behavior and platform boundaries; no source changes in this review.
+- Basis: [architecture](../../architecture.md), [decisions](../../adr/README.md), [open questions](../../OPEN_QUESTIONS.md).
+
+Current state: parsing and WebKit minting/injection exist; the original plan mixes implemented
+work with unverified CDN, client/session binding, dubbed-audio, and latency claims. Those claims
+are not accepted by source inspection. [OQ-0006](../../OPEN_QUESTIONS.md#oq-0006--botguard-acceptance)
+owns the remaining conditions.
+Next slice: define a reproducible signed-in/out live matrix and record token availability,
+client/session binding, segment response, audio tracks, and timing without logging credentials.
+Blockers: suitable authenticated test sessions and live execution are not supplied by this review.
+Alternatives C/D remain unselected options, not authorized work.
+
+## Acceptance and evidence
+
+The checkpoint outcomes below define the reconciled scope. Expected new implementation commit:
+none assigned in this review. The Git boundary above is the inspection baseline; it is not an
+acceptance commit for the original work. Independent review of these documentation changes is
+pending coordinator review. An active checkpoint closes only after its relevant checks and review.
+
+## Reconciliation checkpoints
+
+| Checkpoint | Scope / observable result | Evidence | Status |
+|---|---|---|---|
+| PLAN-0003.CP1 | Scrambled WAA challenge parsing | `BotGuardClient.swift`, `BotGuardClientTests.swift` | implemented; not rerun |
+| PLAN-0003.CP2 | WebKit minting and token application | `BotGuardWebViewRunner`, `PlaybackViewModel+FallbackRace.racePathA`, `InnerTubeAPI` token methods | implemented; not rerun |
+| PLAN-0003.CP3 | Token lifetime and client/session behavior | `poTokenExpiry` is declared but unused; token checks are keyed by video ID | open |
+| PLAN-0003.CP4 | Adaptive playback, dubbed audio, timing and monitoring | live matrix and monitoring evidence absent from this checkout | open / NOT RUN |
+
+Implementation order and dependencies are retained in the original record below.
+No new implementation commit or independent runtime acceptance is claimed. Historical results
+belong to their original revisions. Current builds, unit tests, UI tests, and device checks:
+`NOT RUN` in this documentation-only review. Next steps and remaining conditions are in
+[open questions](../../OPEN_QUESTIONS.md).
+
+## Original record
+
+The following is the original analysis and task sequence, retained for history. Its future
+tense, line numbers, and example code are not instructions to undo the current implementation.
 
 > **What it unlocks:** native adaptive streaming at any quality without the WKWebView extraction layer — the same CDN access Android has.
 

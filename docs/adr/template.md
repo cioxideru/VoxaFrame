@@ -1,16 +1,25 @@
----
-status: proposed | accepted | deprecated | superseded by ADR-NNNN
-date: YYYY-MM-DD
-deciders:
----
-# NNNN. Title
+# NNNN — Decision title
 
-## Context and problem statement
+- ID: ADR-NNNN
+- Status: proposed
+- Date: YYYY-MM-DD
+- Deciders: owner and decision date
+- Basis: links to requirements, related tasks and plans
+- Supersedes: none
+- Superseded-by: none
+
+## Context
+
+Confirmed facts, constraints, and the problem. Separate evidence from assumptions.
 
 ## Decision
 
+The choice and its reason; scope, compatibility, and how it can be reversed.
+
 ## Consequences
-- Good:
-- Bad:
+
+Benefits, costs, risks, and remaining work (link to [open questions](../OPEN_QUESTIONS.md)).
 
 ## Alternatives considered
+
+Options and the reasons for choosing or rejecting each.

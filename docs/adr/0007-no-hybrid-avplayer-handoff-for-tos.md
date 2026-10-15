@@ -1,11 +1,13 @@
----
-status: accepted
-date: 2026-06
-deciders: maintainer
----
-# 0007. No hybrid AVPlayer handoff for TOS background play / PiP
+# 0007 — No hybrid AVPlayer handoff for TOS background play / PiP
 
-## Context and problem statement
+- ID: ADR-0007
+- Status: accepted
+- Date: 2026-06
+- Deciders: maintainer
+
+<a id="context-and-problem-statement"></a>
+
+## Context
 
 The TOS player (ADR-0006) is a WKWebView-hosted IFrame; simple JS-triggered native WebKit PiP
 does not work (confirmed across 5 live-device experiments while investigating background
@@ -37,3 +39,7 @@ Rejected immediately and without a design review when proposed.
   maintainer's stated reasoning was that a second playback engine plus a handoff layer was too
   risky for a player still being stabilized, even to gain background/PiP support. Do not
   re-propose this without being asked again.
+
+## Implementation check — 2026-10-15
+
+No TOS-to-AVPlayer handoff for background/PiP is implemented. `PlayerRouter` selecting AVPlayer at video open or after a fatal embed error is a different mechanism, not a background handoff. Device behavior was not rerun; see [OQ-0005](../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).

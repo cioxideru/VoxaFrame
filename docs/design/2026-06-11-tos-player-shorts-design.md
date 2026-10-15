@@ -1,5 +1,26 @@
 # TOS Player for Shorts (iOS) — Design
 
+Status: current
+Reviewed: 2026-10-15 (source inspection; no runtime acceptance)
+
+## Implementation reconciliation
+
+This is a design description, not an open execution plan. Its iOS embed replacement is present:
+`ShortsPlayerView` selects `ShortsEmbedPlayerViewModel` on iOS, while other platforms retain
+`PlaybackViewModel`. `ShortsEmbedURL` and `ShortsEndOfVideoDecision` have unit tests; the
+src-swap spike and swipe UI suites exist. SponsorBlock, watch-history, sleep-timer, fatal-error
+advance, and ready timeout handling are implemented. Existing test code is not proof of a current run.
+
+Later behavior: standby promotion is disabled under [ADR-0008](../adr/0008-standby-swap-disabled.md);
+background transitions call `handleBackground` / `handleForeground` rather than always stopping.
+The historical "validate first" spike is implemented, so it is no longer pending implementation.
+Current device verification and deferred design choices are in [OQ-0005](../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance)
+and [OQ-0008](../OPEN_QUESTIONS.md#oq-0008--shorts-follow-ups).
+
+## Original design — 2026-06-11
+
+The following records the design baseline; the reconciliation above identifies later changes.
+
 ## Context
 
 The TOS player (YouTube's official IFrame/embed player rendered in a `WKWebView`, with native SwiftUI controls overlaid) became the iOS default for regular videos in v4.5. It eliminates an entire class of failures inherent to the AVPlayer-based stream-extraction pipeline: BotGuard/PO-token requirements, CDN/geo-block issues, multi-client fallback chains, and HLS/DASH manifest parsing.

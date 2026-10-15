@@ -1,11 +1,13 @@
----
-status: accepted
-date: 2026-06
-deciders: maintainer
----
-# 0008. Shorts standby-swap "instant swipe" promotion is permanently disabled
+# 0008 — Shorts standby-swap "instant swipe" promotion is permanently disabled
 
-## Context and problem statement
+- ID: ADR-0008
+- Status: accepted
+- Date: 2026-06
+- Deciders: maintainer
+
+<a id="context-and-problem-statement"></a>
+
+## Context
 
 `ShortsEmbedPlayerViewModel`'s "instant swipe" mechanism pre-warmed the next Short in a hidden
 `WKWebView`, then promoted it by moving it from the hidden container into the visible one
@@ -53,3 +55,7 @@ Root-causing the WKWebView reparenting bug (#279) first — it reliably reproduc
 on both Simulator and device, independent of the fixes above. Check `git log` on
 `ShortsPlayerView+Navigation.swift`/`ShortsTOSWebView.swift` to confirm this path is still
 disabled before assuming a new Shorts report is a regression of something else.
+
+## Implementation check — 2026-10-15
+
+`ShortsPlayerView+Navigation.goTo` still calls `loadVideo(at:)` and does not invoke `prewarmStandby(for:)`; standby hosts remain unreachable. Historical passing runs above were not repeated. Re-enabling promotion still requires root-causing issue #279.

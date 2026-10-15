@@ -1,7 +1,17 @@
 # Architecture Decision Records
 
 Before proposing an architecture change, read this folder; a rejected idea is re-proposed only
-with new evidence. Each ADR is ≤ 40 lines and uses `template.md`'s MADR-minimal format.
+with new evidence. Use the [template](template.md), with a permanent `ADR-NNNN` ID and the existing numbered
+filename. Status is one of `proposed`, `accepted`, `rejected`, or `superseded`; use a separate
+`Superseded-by` link for a replacement. Preserve accepted Context, Decision, and Consequences:
+new decisions get new numbers. Metadata and dated implementation notes may identify drift
+without silently rewriting the original decision. Keep records concise; do not omit evidence
+to meet an arbitrary line limit.
+
+Code reconciliation: 2026-10-15. `accepted` records a decision, not a passing runtime test.
+ADR 0005 remains proposed: the cascade is split across files but no `StreamSource` or
+`ResolutionPipeline` exists. ADR 0006's default remains, but its exclusive-player wording
+conflicts with the current setting; see its implementation note and [open questions](../OPEN_QUESTIONS.md).
 
 | ADR | Title | Status |
 |---|---|---|

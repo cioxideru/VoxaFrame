@@ -1,3 +1,9 @@
+> Status: archived — not adopted; classification checked on 2026-10-15.
+> This mixed proposal/worklog is historical, not an active implementation plan.
+> Old cancelled runs, missing-token conditions and suggested changes below belong to that
+> investigation; they do not establish current defects or pending authorized work.
+> See the [non-adoption summary](../../research/AetherEngine.md) and [open questions](../../OPEN_QUESTIONS.md).
+
 # AetherEngine Integration Plan
 
 **Date:** 2026-05-23  

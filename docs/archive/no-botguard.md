@@ -1,4 +1,6 @@
-> status: unverified — moved from private repo agent-notes, not re-audited (2026-09-11)
+> Status: archived — classified from code on 2026-10-15.
+> The prohibition is obsolete: the current fallback race invokes BotGuardWebViewRunner and injects minted tokens. The 4.1 changelog records adoption; PLAN-0003 tracks remaining acceptance. Do not follow the old prohibition.
+> Current references: [architecture](../architecture.md), [open questions](../OPEN_QUESTIONS.md).
 
 # Do NOT use BotGuard / PoToken / rqh=1 streams
 

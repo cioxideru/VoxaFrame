@@ -1,11 +1,13 @@
----
-status: accepted
-date: 2026-09-10
-deciders: maintainer
----
-# 0003. No Tuist/XcodeGen — the `.xcodeproj` is the source of truth
+# 0003 — No Tuist/XcodeGen — the `.xcodeproj` is the source of truth
 
-## Context and problem statement
+- ID: ADR-0003
+- Status: accepted
+- Date: 2026-09-10
+- Deciders: maintainer
+
+<a id="context-and-problem-statement"></a>
+
+## Context
 
 Before this ADR, private-repo docs (`docs/RULES.md`) claimed the project used XcodeGen with a
 `project.yml` source of truth and forbade `xcodebuild`, while other private docs
@@ -39,3 +41,7 @@ through `xcodebuild`/`swift test`, wrapped by `scripts/` (WS1-T1.1; originally a
   reverse-engineering into `project.yml` with real risk of silently dropping a build setting;
   no maintainer request to take on that risk.
 - **Adopt Tuist**: same objection, plus a new dependency and DSL to learn.
+
+## Implementation check — 2026-10-15
+
+The Xcode project remains the source of truth; no project generator configuration is present. Version-setting wiring is still incomplete; see [OQ-0007](../OPEN_QUESTIONS.md#oq-0007--release-runbook-and-version-settings).

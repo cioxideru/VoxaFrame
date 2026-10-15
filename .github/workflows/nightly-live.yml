@@ -7,7 +7,7 @@ jobs:
   live:
     # No self-hosted runner is registered yet (verify with the maintainer / repo
     # Settings > Actions > Runners before flipping this on). Until one exists,
-    # this job is disabled and Live UI runs stay manual — see docs/running-tests.md.
+    # this job is disabled and Live UI runs stay manual — see docs/how-to/run-tests.md.
     if: false
     runs-on: [self-hosted, macOS, smarttube]
     timeout-minutes: 90

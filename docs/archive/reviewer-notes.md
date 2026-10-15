@@ -1,4 +1,6 @@
-> status: unverified — moved from private repo agent-notes, not re-audited (2026-09-11)
+> Status: archived — classified from code on 2026-10-15.
+> Do not submit this text for review. Its no-storage/no-sharing statements conflict with TokenManager, local stores, network APIs and optional Crashlytics. OQ-0004 tracks replacement and reconciliation with the privacy policy.
+> Current references: [architecture](../architecture.md), [open questions](../OPEN_QUESTIONS.md).
 
 # Reviewer Notes
 

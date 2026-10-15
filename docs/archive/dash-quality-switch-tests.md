@@ -1,4 +1,6 @@
-> status: unverified — moved from private repo agent-notes, not re-audited (2026-09-11)
+> Status: archived — classified from code on 2026-10-15.
+> The named ytDlpHLSVariantURL entry point no longer exists (the helper is ytDlpHLSPlaylistURL), fallback code has moved, and the May pass/client-availability claims are historical. Current live acceptance is OQ-0005.
+> Current references: [architecture](../architecture.md), [open questions](../OPEN_QUESTIONS.md).
 
 # HLS Quality / testAutoQualityAbove360p
 

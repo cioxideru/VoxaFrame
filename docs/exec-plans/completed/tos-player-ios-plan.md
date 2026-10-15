@@ -1,6 +1,47 @@
-> status: implemented (2026-06)
-
 # TOS Player → iOS — Deep Analysis & Implementation Plan
+
+- ID: PLAN-0001
+- Status: completed
+- Owner: maintainer; no new executor assigned by this documentation review
+- Reviewed: 2026-10-15
+- Git boundary: `master`, HEAD `23284b15d990607bbfcab0f7db1cf6d978229149`; working tree has existing uncommitted source changes. Evidence below refers to that tree, not a new commit or release.
+- Scope: the original objective and tasks below; documentation reconciliation only on this date.
+- Constraints: preserve existing playback behavior and platform boundaries; no source changes in this review.
+- Blockers: none for historical implementation closure; current verification gaps are tracked separately.
+- Basis: [architecture](../../architecture.md), [decisions](../../adr/README.md), [open questions](../../OPEN_QUESTIONS.md).
+
+Resolution: delivered, with the original opt-in experiment replaced by the default-player
+release in [4.5](../../../CHANGELOG.md#45--2026-06-11) and [ADR-0006](../../adr/0006-tos-player-default-on-ios.md).
+The current selectable-engine implementation differs from that ADR's exclusive-player wording;
+[OQ-0010](../../OPEN_QUESTIONS.md#oq-0010--ios-player-choice-decision) tracks reconciliation.
+Remaining background/PiP acceptance is [OQ-0005](../../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance), not an unfinished port.
+Next slice: no port implementation remains; retain the historical tasks and verify device behavior separately.
+
+## Acceptance and evidence
+
+The checkpoint outcomes below define the reconciled scope. Expected new implementation commit:
+none assigned in this review. The Git boundary above is the inspection baseline; it is not an
+acceptance commit for the original work. Independent review of these documentation changes is
+pending coordinator review. An active checkpoint closes only after its relevant checks and review.
+
+## Reconciliation checkpoints
+
+| Checkpoint | Scope / observable result | Evidence | Status |
+|---|---|---|---|
+| PLAN-0001.CP1 | iOS WebKit configuration and shared player | `TOSPlayerViewModel.swift` has iOS setup and non-tvOS guards | implemented |
+| PLAN-0001.CP2 | Store, mini-player, presentation and routing | `TOSPlayerStateStore`, `TOSMiniPlayerView`, `RootView`, `PlayerRouter` | implemented |
+| PLAN-0001.CP3 | Settings and regression coverage | `AppSettings`, `SettingsView`, `TOSPlayerIOSUITests`, `TOSPlayerStateStoreTests`; 4.5 release record | delivered; tests not rerun |
+
+Implementation order and dependencies are retained in the original record below.
+No new implementation commit or independent runtime acceptance is claimed. Historical results
+belong to their original revisions. Current builds, unit tests, UI tests, and device checks:
+`NOT RUN` in this documentation-only review. Next steps and remaining conditions are in
+[open questions](../../OPEN_QUESTIONS.md).
+
+## Original record
+
+The following is the original analysis and task sequence, retained for history. Its future
+tense, line numbers, and example code are not instructions to undo the current implementation.
 
 Porting the TOS-compliant YouTube IFrame player (`TOSPlayerView` / `TOSPlayerViewModel`)
 from macOS to iOS. All TOS files are currently guarded by `#if os(macOS)`. This document

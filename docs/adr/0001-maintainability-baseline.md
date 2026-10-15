@@ -1,5 +1,6 @@
 # 0001 — Maintainability baseline
 
+- ID: ADR-0001
 - Status: accepted
 - Date: 2026-09-10
 
@@ -55,3 +56,7 @@ the two documents agree on the starting line.
 - Deleting a violation from a file removes its baseline entry the next time `swiftlint lint --write-baseline .swiftlint.baseline --config .swiftlint.yml`
   is regenerated (not automatic) — regenerate deliberately, not to hide new violations.
 - The metrics above are a snapshot, not a target. Targets are in `docs/modernization/PLAN.md` §3.
+
+## Implementation check — 2026-10-15
+
+The baseline is a historical snapshot. `AGENTS.md` now exists; the table does not describe current file sizes or test counts. The current scripts and lint baseline are present; no lint/test result was regenerated in this documentation pass.

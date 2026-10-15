@@ -1,4 +1,6 @@
-> status: research reference, not re-verified against current code (2026-09-11)
+> Status: archived — classified from code on 2026-10-15.
+> This June snapshot predates the VISIONOS-first path and current fallback file decomposition. Use the architecture map and source for current ordering; live success claims require a new run.
+> Current references: [architecture](../architecture.md), [open questions](../OPEN_QUESTIONS.md).
 
 # Video Stream Playing Methods
 
@@ -172,14 +174,11 @@ Notes:
 
 Cell format: `✅ PASS (resolution)` / `❌ FAIL` / `⏱ TIMEOUT`
 
-To re-run and extract resolutions with the timing fix applied:
+The resolution data above was extracted outside this repository. To re-run the probe with the timing fix applied:
 ```bash
 # Run
 xcodebuild test -workspace SmartTube.xcworkspace -scheme "SmartTube" \
   -destination "id=6CEE2FAC-7D50-4BD0-95E2-1361EDD7FAF6" \
   -only-testing:SmartTubeUITests/StreamMethodProbeUITests \
   -parallel-testing-enabled NO -resultBundlePath /tmp/probe-full.xcresult
-
-# Extract resolutions via Python script
-python3 SmartTubeIOSPrivate/.github/scripts/extract_probe_resolutions.py /tmp/probe-full.xcresult
 ```

@@ -1,19 +1,24 @@
 # SmartTube — agent guide
 
 Native Swift/SwiftUI YouTube client for iOS/iPadOS (17+), macOS Catalyst (14+) and tvOS (17+).
-Package `SmartTubeIOS/` (targets `SmartTubeIOSCore` = Foundation-only models/API/stores,
+Package `SmartTubeIOS/` (targets `SmartTubeIOSCore` = models/API/stores (Foundation-only boundary is the target),
 `SmartTubeIOS` = SwiftUI views, view models, services) + Xcode project `SmartTubeApp/`
 (iOS+Catalyst app, tvOS app, Share/Safari extensions, Download widget, UI-test targets).
-Architecture map: [docs/architecture.md](docs/architecture.md) · Glossary: [CONTEXT.md](CONTEXT.md) · Decisions: [docs/adr/](docs/adr/) · Docs index: [docs/README.md](docs/README.md)
-Overview: [README.md](README.md) · [CHANGELOG.md](CHANGELOG.md) · [PRIVACY_POLICY.md](PRIVACY_POLICY.md) · Claude Code: [CLAUDE.md](CLAUDE.md)
+Architecture map: [docs/architecture.md](docs/architecture.md) · Glossary: [CONTEXT.md](CONTEXT.md) · Decisions: [decisions](docs/adr/README.md) · Docs index: [docs/README.md](docs/README.md)
+Overview: [README.md](README.md) · [CHANGELOG.md](CHANGELOG.md) · [PRIVACY_POLICY.md](PRIVACY_POLICY.md) · Workflow: [CLAUDE.md](CLAUDE.md)
+
+Plans: [execution plans](docs/exec-plans/README.md) · Gaps and acceptance: [open questions](docs/OPEN_QUESTIONS.md).
+Keep this map under 200 lines. Every Markdown document must be linked from this guide through the
+[document index](docs/README.md); update links and the index when moving files. Keep accepted ADR
+text and IDs; put unresolved work in the register, and closed outcomes in the changelog or an ADR.
 
 ## Commands (scripts in `scripts/`, safe from any cwd)
 - `scripts/ci.sh` — secrets + doc links + swift-format check + package unit tests. Run before every commit, with SwiftLint:
   `swiftlint lint --strict --baseline .swiftlint.baseline --config .swiftlint.yml` (fails only on new violations).
-- `scripts/verify.sh` — ci + SwiftLint + iOS/tvOS simulator builds (+ Smoke UI plan once it exists); `VERIFY_SCOPE=fast|build` stop earlier.
+- `scripts/verify.sh` — ci + SwiftLint + iOS/tvOS simulator builds (Smoke stage currently blocked: [OQ-0003](docs/OPEN_QUESTIONS.md#oq-0003--smokelive-test-plans-and-nightly)); `VERIFY_SCOPE=fast|build` stop earlier.
 - `scripts/build-for-testing.sh` — compile iOS/tvOS apps with their UI-test targets, no run.
 - `cd SmartTubeIOS && swift test --filter <Name>` — one Swift Testing suite (no simulator).
-- UI tests: docs/how-to/run-tests.md (many suites need a signed-in simulator; 3 workers max).
+- UI tests: [test guide](docs/how-to/run-tests.md) (many suites need a signed-in simulator; 3 workers max).
 - `xcrun swift-format format --in-place --recursive --configuration .swift-format <paths from scripts/ci.sh>` — format.
 
 ## Rules that differ from defaults
@@ -31,7 +36,7 @@ Overview: [README.md](README.md) · [CHANGELOG.md](CHANGELOG.md) · [PRIVACY_POL
 - WKWebView `evaluateJavaScript` has no user activation: PiP/fullscreen cannot be triggered from Swift.
 - Authenticated InnerTube calls use the TVHTML5 client on youtubei.googleapis.com with a Bearer token and no API key; the WEB client rejects Bearer tokens. Never call `/oauth2/v3/userinfo` for account info (the TV OAuth client isn't Data-API-v3-enabled) — use `account/accounts` with the TVHTML5 context instead.
 - The 16 GB build Mac stalls with > 3 parallel simulator clones; the scripts cap UI workers at 3.
-- Playback fallback code (`PlaybackViewModel+Fallback.swift`) is under active decomposition (WS4). Do not add branches there; add a `StreamSource`.
+- Playback fallback code (`PlaybackViewModel+Fallback.swift`) is under active decomposition (WS4). Do not add branches to the legacy cascade; the proposed adapter boundary is [ADR-0005](docs/adr/0005-stream-source-pipeline.md) and is not implemented yet.
 - Package tests run on native macOS: code under `#if !os(tvOS)` must also compile for AppKit (`TOSPlayerView` has an `NSViewRepresentable` branch; `NSImage.pngData()` is a local shim).
 - `swift test --parallel` runs suites concurrently. Tests touching a shared static (`CurrentQueueStore.shared`, a test `URLProtocol`'s routes) must be `.serialized` — nest suites sharing the same global under one serialized parent (e.g. `CurrentQueueStoreSuites`). Poll for the expected state with a deadline instead of a fixed sleep.
 - AVPlayer playback tries the VISIONOS client's HLS first (H.264-filtered master, 1080p cap, visionOS User-Agent); its responses are recognised by `c=VISIONOS` in format URLs (`PlayerInfo.isFromVisionOSClient`).

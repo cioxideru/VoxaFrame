@@ -1,24 +1,20 @@
-> status: current (2026-09-11), partial — see "Not yet documented" below
+# How to prepare a release
 
-# How to cut a release
+Status: current
+Reviewed: 2026-10-15 (source/configuration inspection)
 
-**When to use:** bumping the version and preparing a changelog entry before shipping a build.
+This guide covers version and changelog preparation. Signing, archiving and upload still need
+a project-specific runbook; [OQ-0007](../OPEN_QUESTIONS.md#oq-0007--release-runbook-and-version-settings)
+tracks that gap and incomplete version-setting centralization.
 
-## What's actually automated today
+1. Review `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in
+   [Base.xcconfig](../../SmartTubeApp/Config/Base.xcconfig). The Xcode project still has hardcoded
+   versions and is not wired to that file through base configuration references. Use Xcode to
+   reconcile all shipping targets/configurations and verify resolved build settings; editing
+   the config alone does not establish the built version.
+2. Run `git-cliff --config cliff.toml --unreleased --prepend CHANGELOG.md` to draft release notes
+   from Conventional Commits. Review the generated text and any existing Unreleased entries.
+3. Run `scripts/ci.sh` and the SwiftLint command in the [agent guide](../../AGENTS.md) before tagging.
+   Follow the [test guide](run-tests.md) for platform acceptance and record checks not run.
 
-1. Bump the version in `SmartTubeApp/Config/Base.xcconfig` — `MARKETING_VERSION` (user-facing,
-   e.g. `5.1`) and `CURRENT_PROJECT_VERSION` (build number, monotonic integer). These are single
-   source of truth once WS1-T1.4's pbxproj wiring lands (see `docs/adr/0001-maintainability-baseline.md`
-   for status); until then also check `project.pbxproj` doesn't have a stale hardcoded value.
-2. `git-cliff --config cliff.toml --unreleased --prepend CHANGELOG.md` regenerates the `Unreleased` section of `CHANGELOG.md` from Conventional
-   Commits since the last tag (`cliff.toml`, WS1-T1.7). Review and edit before committing — it's a
-   draft, not a final copy-paste.
-3. `scripts/ci.sh` and SwiftLint — must pass before tagging.
-
-## Not yet documented
-
-Signing, archiving (`xcodebuild archive`), and TestFlight/App Store Connect upload steps are
-currently done by hand and have no written runbook anywhere in either repo (checked: no
-`archive`/`TestFlight`/`App Store Connect` process doc exists). Whoever runs a release should
-write down the actual steps here the next time they do one, rather than this doc guessing at a
-generic Apple process that might not match how this project actually ships.
+No signing, archive, upload, or release validation was run during this documentation review.

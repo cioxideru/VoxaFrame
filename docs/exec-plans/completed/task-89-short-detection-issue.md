@@ -1,6 +1,44 @@
-> status: unverified — moved from private repo agent-notes, not re-audited (2026-09-11)
-
 # Task #89: Fix video wrongly detected as short
+
+- ID: PLAN-0002
+- Status: completed
+- Owner: maintainer; no new executor assigned by this documentation review
+- Reviewed: 2026-10-15
+- Git boundary: `master`, HEAD `23284b15d990607bbfcab0f7db1cf6d978229149`; working tree has existing uncommitted source changes. Evidence below refers to that tree, not a new commit or release.
+- Scope: the original objective and tasks below; documentation reconciliation only on this date.
+- Constraints: preserve existing playback behavior and platform boundaries; no source changes in this review.
+- Blockers: none for historical implementation closure; current verification gaps are tracked separately.
+- Basis: [architecture](../../architecture.md), [decisions](../../adr/README.md), [open questions](../../OPEN_QUESTIONS.md).
+
+Resolution: task #89's duration guard, regression tests, and duration logging are implemented.
+The obsolete open-bug wording is retired in [Unreleased](../../../CHANGELOG.md#unreleased).
+Next slice: none for #89; a new regression needs new evidence, not reopening the historical diagnosis.
+
+## Acceptance and evidence
+
+The checkpoint outcomes below define the reconciled scope. Expected new implementation commit:
+none assigned in this review. The Git boundary above is the inspection baseline; it is not an
+acceptance commit for the original work. Independent review of these documentation changes is
+pending coordinator review. An active checkpoint closes only after its relevant checks and review.
+
+## Reconciliation checkpoints
+
+| Checkpoint | Scope / observable result | Evidence | Status |
+|---|---|---|---|
+| #89 / PLAN-0002.CP1 | Reject long videoRenderer SHORTS overlays | `InnerTubeAPI+VideoRenderers.parseVideoRenderer`: duration ≤ 180 guard | implemented |
+| #89 / PLAN-0002.CP2 | Long-video and exact-180-second regression cases | `SmartTubeIOSTests.swift`: tests for `vkUokV3Xwp8` scenario and 180-second boundary | present; not rerun |
+| #89 / PLAN-0002.CP3 | Duration included in detection diagnostics | `parseVideoRenderer` logs signal and duration | implemented |
+
+Implementation order and dependencies are retained in the original record below.
+No new implementation commit or independent runtime acceptance is claimed. Historical results
+belong to their original revisions. Current builds, unit tests, UI tests, and device checks:
+`NOT RUN` in this documentation-only review. Next steps and remaining conditions are in
+[open questions](../../OPEN_QUESTIONS.md).
+
+## Original record
+
+The following is the original analysis and task sequence, retained for history. Its future
+tense, line numbers, and example code are not instructions to undo the current implementation.
 
 ## Issue
 Video `vkUokV3Xwp8` (regular YouTube video) is incorrectly classified as a Short.
@@ -79,8 +117,8 @@ if isShort {
 ```
 
 ## Files to Modify
-1. [InnerTubeAPI+VideoRenderers.swift](../../SmartTubeIOS/Sources/SmartTubeIOSCore/InnerTubeAPI+VideoRenderers.swift) — parseVideoRenderer function
-2. [SmartTubeIOSTests.swift](../../SmartTubeIOS/Tests/SmartTubeIOSTests/SmartTubeIOSTests.swift) — add regression test case
+1. [InnerTubeAPI+VideoRenderers.swift](../../../SmartTubeIOS/Sources/SmartTubeIOSCore/InnerTubeAPI+VideoRenderers.swift) — parseVideoRenderer function
+2. [SmartTubeIOSTests.swift](../../../SmartTubeIOS/Tests/SmartTubeIOSTests/SmartTubeIOSTests.swift) — add regression test case
 
 ## Why This Works
 - Shorts have a hard max-length of 180s (YouTube's official limit)

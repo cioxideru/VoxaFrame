@@ -1,4 +1,5 @@
-> status: research reference, not re-verified against current code (2026-09-11)
+> Status: current — retained research reference; classification reviewed 2026-10-15.
+> External repository details are historical snapshots, not verified-current upstream facts.
 
 # yt-dlp — Knowledge Reference for SmartTubeIOS
 
@@ -285,7 +286,7 @@ yt-dlp detects when YouTube rotates auth cookies mid-session (login info cleared
 | File | Why it's useful |
 |---|---|
 | [`yt_dlp/extractor/youtube/_base.py`](https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/extractor/youtube/_base.py) | All client contexts, API call patterns, header generation |
-| [`yt_dlp/extractor/youtube/tab.py`](https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/extractor/youtube/tab.py) | Browse/feed parsing (shelf, continuation tokens) |
+| [`yt_dlp/extractor/youtube/_tab.py`](https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/extractor/youtube/_tab.py) | Browse/feed parsing (shelf, continuation tokens) |
 | [`yt_dlp/extractor/youtube/pot/`](https://github.com/yt-dlp/yt-dlp/tree/master/yt_dlp/extractor/youtube/pot) | PO Token providers architecture |
 | [`yt_dlp/extractor/youtube/_video.py`](https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/extractor/youtube/_video.py) | Full player response parsing, format extraction |
 

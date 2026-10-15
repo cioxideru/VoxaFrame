@@ -1,21 +1,30 @@
-> status: unverified — moved from private repo agent-notes, not re-audited (2026-09-11)
+# HLS n-parameter descrambling
 
-# HLS n-parameter descrambling — SOLVED
+Status: current
+Reviewed: 2026-10-15 (source inspection)
 
-## testAutoQualityAbove360p — PASSING (16s)
-- Video: `Wu8xNx4njoM`, minimumHeight=720, plays at 1080p
-- WebSafari client (WEB nameID=1 + macOS Safari UA) → `hlsManifestUrl` with 6 HLS variants → descramble n → AVPlayer plays 1080p
+[YouTubeNDescrambler.swift](../../SmartTubeIOS/Sources/SmartTubeIOS/Services/YouTubeNDescrambler.swift)
+is compiled for Simulator and exposes `descrambleURL` and `ytDlpHLSPlaylistURL`. It downloads
+and caches player JavaScript, solves the n parameter, and replaces `/n/SCRAMBLED/` in stream URLs.
+The playlist helper also supports a seeded playlist and cookie-seeding fallback. These are
+Simulator diagnostics; they do not establish physical-device playback support.
 
-## YouTubeNDescrambler.swift
-- Location: `SmartTubeIOS/Sources/SmartTubeIOS/Services/`
-- Simulator-only (`#if targetEnvironment(simulator)`)
-- Downloads player.js (version from youtube.com homepage), cached to `/tmp/yt_player_VERSION.js`
-- Finds yt-dlp EJS solver scripts via `posix_spawn`+`/usr/bin/find`
-- Runs Deno solver script from temp file via `posix_spawn`, reads stdout pipe
-- `posix_spawn_file_actions_adddup2` / `Darwin.pipe()` / `Darwin.read/close/waitpid` all available in iOS SDK
+Implementation constraints retained from the original investigation:
 
-## Critical pitfalls
-- `Process` / `popen` / `pclose` — NOT in iOS SDK, even in simulator target; use `posix_spawn`
-- `NSJSONSerialization.data(withJSONObject: String)` — throws NSException (NOT Swift Error), crashes app; use `JSONEncoder().encode(value: String)` instead
-- n is in URL path: `/n/SCRAMBLED/` → replace with `/n/DESCRAMBLED/`
-- AVPlayer gets 403 on segments if n is scrambled; 200 if descrambled
+- iOS SDK code uses `posix_spawn` and pipe/file actions instead of `Process` or `popen`;
+  the tvOS branch returns without spawning.
+- Encode a standalone JavaScript string with `JSONEncoder`; serializing it as a top-level
+  JSON object can raise an Objective-C exception.
+- A usable manifest alone does not prove its media segments can be fetched or decoded.
+
+The old `testAutoQualityAbove360p` 1080p/16-second result belongs to a historical run and is
+not current acceptance. No live test was rerun here; [OQ-0005](../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance)
+tracks current playback verification.
+
+## Historical observation (not rerun)
+
+The original note recorded `testAutoQualityAbove360p` passing in 16 seconds for
+`Wu8xNx4njoM` with minimum height 720 and observed playback at 1080p. It used the WebSafari
+client (WEB name ID 1, macOS Safari user agent), a six-variant HLS manifest and n descrambling.
+The investigation observed HTTP 403 for scrambled segment URLs and 200 after descrambling;
+this is historical evidence, not a general guarantee for current sessions or clients.

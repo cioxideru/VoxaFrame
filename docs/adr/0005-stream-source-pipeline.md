@@ -1,11 +1,13 @@
----
-status: proposed
-date: 2026-09-10
-deciders: maintainer
----
-# 0005. `StreamSource` + `ResolutionPipeline` replace the `exhaustiveRetry` cascade
+# 0005 — `StreamSource` + `ResolutionPipeline` replace the `exhaustiveRetry` cascade
 
-## Context and problem statement
+- ID: ADR-0005
+- Status: proposed
+- Date: 2026-09-10
+- Deciders: maintainer
+
+<a id="context-and-problem-statement"></a>
+
+## Context
 
 `exhaustiveRetry` (`PlaybackViewModel+Fallback.swift:88-528`) is a 440-line hand-written cascade
 of ~20 ordered branches trying 13 named stream methods plus 6 unnamed ones, with a 7-InnerTube-
@@ -47,3 +49,7 @@ The legacy path stays reachable until parity is proven. This is WS4's central pi
 
 Kept `proposed` until WS4-T4.6 actually lands the pipeline and proves parity — this ADR records
 the decision to attempt it, not a completed migration.
+
+## Implementation check — 2026-10-15
+
+Status remains `proposed`. The current tree splits the cascade into `PlaybackViewModel+ExhaustiveRetry.swift`, `+FallbackRace.swift`, and stream helpers, but defines neither `StreamSource` nor `ResolutionPipeline`. File decomposition is not pipeline parity. See [OQ-0002](../OPEN_QUESTIONS.md#oq-0002--stream-pipeline-and-contributor-guide).
