@@ -298,7 +298,7 @@ extension PlaybackViewModel {
             let (raceStream, raceCont) = AsyncStream<CompositionTracks?>.makeStream()
 
             // Asynchronous track loading yields result or nil on error.
-            Task {
+            let loaderTask = Task {
                 do {
                     async let videoTracks = videoAsset.loadTracks(withMediaType: .video)
                     async let audioTracks = audioAsset.loadTracks(withMediaType: .audio)
@@ -349,6 +349,9 @@ extension PlaybackViewModel {
                 let timeoutSec = isVRAttempt ? 2 : (needsQuickStartup ? 1 : 8)
                 #endif
                 let reason = "timed out after \(timeoutSec)s or loadTracks failed"
+                loaderTask.cancel()
+                videoAsset.cancelLoading()
+                audioAsset.cancelLoading()
                 playerLog.error("❌ [\(label)/adaptive] loadTracks \(reason) (rqh=\(videoRqh))")
                 return nil
             }
@@ -375,9 +378,9 @@ extension PlaybackViewModel {
                 } else if self.duration == 0 {
                     durationObserverTask?.cancel()
                     durationObserverTask = Task { [weak self, weak compositeItem] in
-                        guard let self, let compositeItem else { return }
+                        guard let compositeItem else { return }
                         for await seconds in compositeItem.firstValidDurationStream {
-                            guard !Task.isCancelled else { return }
+                            guard !Task.isCancelled, let self else { return }
                             let prev = self.duration
                             self.duration = seconds
                             playerLog.notice(
@@ -707,9 +710,9 @@ extension PlaybackViewModel {
         } else if self.duration == 0 {
             durationObserverTask?.cancel()
             durationObserverTask = Task { [weak self, weak item] in
-                guard let self, let item else { return }
+                guard let item else { return }
                 for await seconds in item.firstValidDurationStream {
-                    guard !Task.isCancelled else { return }
+                    guard !Task.isCancelled, let self else { return }
                     let prev = self.duration
                     self.duration = seconds
                     playerLog.notice(
