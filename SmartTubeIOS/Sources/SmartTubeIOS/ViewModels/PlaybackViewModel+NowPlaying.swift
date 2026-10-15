@@ -90,6 +90,7 @@ extension PlaybackViewModel {
         center.playCommand.addTarget { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
+                parkedVideoId = nil
                 player.rate = Float(settings.playbackSpeed)
                 isPlaying = true
                 updateNowPlayingPlayback()

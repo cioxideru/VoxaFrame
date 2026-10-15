@@ -347,9 +347,10 @@ extension PlaybackViewModel {
 
     /// Resumes playback after a `suspend()`. If the player has no current item
     /// (e.g. `stop()` was called), this is a no-op — use `load(video:)` instead.
+    /// `stop()` keeps its item parked (fix12), so a parked item also means stopped.
     public func resume() {
-        guard player.currentItem != nil else {
-            playerLog.notice("[resume] no item — skipping resume")
+        guard player.currentItem != nil, parkedVideoId == nil else {
+            playerLog.notice("[resume] no item or stopped (parked) — skipping resume")
             return
         }
         playerLog.notice("[resume] resume() called — currentVideo=\(self.currentVideo?.id ?? "nil")")
@@ -393,6 +394,8 @@ extension PlaybackViewModel {
         parkedVideoId = currentVideo?.id
         voiceOver.stop()
         isPlaying = false
+        wasPlayingBeforeSuspend = false
+        wasPlayingBeforeInterruption = false
         #if canImport(UIKit)
         do {
             try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
