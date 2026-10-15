@@ -211,52 +211,21 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
 
 // MARK: - Helpers
 
-/// Yields control enough times so internal @MainActor Tasks spawned by
-/// the ViewModel can complete against an immediately-returning mock API.
-///
-/// Without `until:`, this is a fixed delay (3 yields + 50ms) — fine when the
-/// global executor is lightly loaded, but flaky under heavy parallel test
-/// contention (confirmed: running the full `swift test` suite reliably
-/// produced failures here that a `--filter ViewModelTests --no-parallel` run
-/// never does — the underlying async work just hadn't completed yet when the
-/// fixed delay elapsed). Pass `until:` for any assertion that depends on a
-/// specific condition to poll for it directly instead of guessing a delay.
+/// Polls an explicit completion condition; elapsed time or idle yields do not prove completion.
 @MainActor
-func waitForTasks(timeout: TimeInterval = 2, until condition: (@MainActor () -> Bool)? = nil) async {
-    guard let condition else {
-        for _ in 0..<3 { await Task.yield() }
-        try? await Task.sleep(for: .milliseconds(50))
-        return
-    }
-    let deadline = Date().addingTimeInterval(timeout)
-    while Date() < deadline {
-        await Task.yield()
-        if condition() { return }
-        try? await Task.sleep(for: .milliseconds(10))
-    }
-}
-
-/// Waits for the background `shortsPreloadTask` (spawned at the end of
-/// `load()`) to finish its multi-iteration loop. `waitForTasks()` is sized
-/// for a single async fetch and returns long before the preload loop's
-/// later iterations complete, so a left-running task can bleed mock call
-/// counts into whichever test runs next. Polls until `homeShortsVideos`
-/// stops growing for a few consecutive yields, or a timeout is reached.
-@MainActor
-private func waitForShortPreloadCompletion(_ vm: HomeViewModel) async {
-    var lastCount = vm.homeShortsVideos.count
-    var unchangedYields = 0
-    let deadline = Date().addingTimeInterval(2)
-    while Date() < deadline {
-        await Task.yield()
-        let newCount = vm.homeShortsVideos.count
-        if newCount == lastCount {
-            unchangedYields += 1
-            if unchangedYields >= 3 { break }
-        } else {
-            unchangedYields = 0
+func waitForTasks(
+    timeout: TimeInterval = 2,
+    until condition: @MainActor () -> Bool,
+    sourceLocation: SourceLocation = #_sourceLocation
+) async {
+    let clock = ContinuousClock()
+    let deadline = clock.now.advanced(by: .seconds(timeout))
+    while !condition() {
+        guard clock.now < deadline else {
+            Issue.record("Timed out waiting for the expected ViewModel state", sourceLocation: sourceLocation)
+            return
         }
-        lastCount = newCount
+        await Task.yield()
     }
 }
 
@@ -306,7 +275,7 @@ struct HomeViewModelTests {
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         vm.load()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isRefreshing })
 
         #expect(!vm.isRefreshing)
     }
@@ -340,7 +309,7 @@ struct HomeViewModelTests {
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         vm.load()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isRefreshing })
 
         // mergedVideos inserts 1 sub every 4 recs; total should be > 8
         #expect(vm.mergedVideos.count > 8)
@@ -358,7 +327,7 @@ struct HomeViewModelTests {
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         vm.load()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isRefreshing })
 
         let recs = vm.sections.first { $0.section.type == .home }?.videos ?? []
         #expect(vm.mergedVideos == recs)
@@ -375,7 +344,7 @@ struct HomeViewModelTests {
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         vm.load()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isRefreshing })
 
         #expect(vm.homeRegularVideos.allSatisfy { !$0.isShort })
         #expect(vm.homeShortsVideos.allSatisfy { $0.isShort })
@@ -402,7 +371,7 @@ struct HomeViewModelTests {
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         vm.load()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isRefreshing })
 
         // fetchShortsMore must have been called
         #expect(mock.calls.contains(where: { $0.method == "fetchShortsMore" }))
@@ -424,7 +393,7 @@ struct HomeViewModelTests {
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         vm.load()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isRefreshing })
 
         // fetchShortsMore must NOT have been called
         #expect(!mock.calls.contains(where: { $0.method == "fetchShortsMore" }))
@@ -488,8 +457,8 @@ struct HomeViewModelTests {
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         vm.load()
-        await waitForTasks()
-        await waitForShortPreloadCompletion(vm)
+        await waitForTasks(until: { !vm.isRefreshing })
+        await waitForTasks(until: { vm.homeShortsVideos.count >= 40 })
 
         // 3 initial + repeated pages of 5 must reach the 40-item preload threshold.
         #expect(vm.homeShortsVideos.count >= 40)
@@ -515,8 +484,7 @@ struct HomeViewModelTests {
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         vm.load()
-        await waitForTasks()
-        await waitForShortPreloadCompletion(vm)
+        await waitForTasks(until: { !vm.isRefreshing && vm.homeShortsVideos == initialShorts })
 
         // Below the 40-item threshold, but with no tokens left preload must
         // not call fetchShortsMore at all.
@@ -539,21 +507,20 @@ struct SearchViewModelTests {
         let vm = makeSearchViewModel(api: mock)
         vm.query = "swift programming"
         vm.search()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isLoading && mock.calls.contains { $0.method == "search" } })
 
         #expect(!vm.results.isEmpty)
         #expect(vm.results[0].id == "result_AAAAA")
     }
 
     @Test("search() with whitespace-only query is a no-op")
-    func searchWithWhitespaceOnlyIsNoOp() async {
+    func searchWithWhitespaceOnlyIsNoOp() {
         let mock = MockInnerTubeAPI()
         mock.searchResult = VideoGroup(title: "Results", videos: [makeVideo("result_AAAAA")])
 
         let vm = makeSearchViewModel(api: mock)
         vm.query = "   "
         vm.search()
-        await waitForTasks()
 
         #expect(vm.results.isEmpty)
         #expect(!mock.calls.contains { $0.method == "search" })
@@ -569,12 +536,12 @@ struct SearchViewModelTests {
         let vm = makeSearchViewModel(api: mock)
         vm.query = "test"
         vm.search()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isLoading && mock.calls.contains { $0.method == "search" } })
 
         // Now set up page 2 and trigger loadMore
         mock.searchResult = page2
         vm.loadMore()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isLoading && vm.results.count == 2 })
 
         #expect(vm.results.count == 2)
         let ids = vm.results.map(\.id)
@@ -590,7 +557,7 @@ struct SearchViewModelTests {
         let vm = makeSearchViewModel(api: mock)
         vm.query = "query"
         vm.search()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isLoading && mock.calls.contains { $0.method == "search" } })
 
         #expect(!vm.isLoading)
     }
@@ -603,13 +570,15 @@ struct SearchViewModelTests {
         let vm = makeSearchViewModel(api: mock)
         vm.query = "swift"
         vm.search()
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isLoading && mock.calls.contains { $0.method == "search" } })
 
         let beforeCount = mock.calls.filter { $0.method == "search" }.count
         var filter = SearchFilter()
         filter.sortOrder = .viewCount
         vm.applyFilter(filter)
-        await waitForTasks()
+        await waitForTasks(until: {
+            !vm.isLoading && mock.calls.filter { $0.method == "search" }.count > beforeCount
+        })
 
         let afterCount = mock.calls.filter { $0.method == "search" }.count
         #expect(afterCount > beforeCount)
@@ -659,12 +628,12 @@ struct PlaylistViewModelTests {
 
         let vm = PlaylistViewModel(api: mock)
         vm.load(playlistId: "PLtest1234567")
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isLoading && vm.videos.count == 1 })
 
         // Refresh — should clear and re-fetch
         mock.playlistVideosResult = VideoGroup(title: "PL", videos: [makeVideo("vid_BBBBBBB")])
         vm.load(playlistId: "PLtest1234567", refresh: true)
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isLoading && vm.videos.first?.id == "vid_BBBBBBB" })
 
         #expect(vm.videos.count == 1)
         #expect(vm.videos[0].id == "vid_BBBBBBB")
@@ -680,12 +649,12 @@ struct PlaylistViewModelTests {
 
         let vm = PlaylistViewModel(api: mock)
         vm.load(playlistId: "PLtest1234567")
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isLoading && vm.videos.count == 1 })
 
         // Set up page 2
         mock.playlistVideosResult = VideoGroup(title: "PL", videos: [makeVideo("page2_BBBBB")])
         vm.loadMoreIfNeeded(lastVideo: page1Video)
-        await waitForTasks()
+        await waitForTasks(until: { !vm.isLoading && vm.videos.count == 2 })
 
         #expect(vm.videos.count == 2)
     }

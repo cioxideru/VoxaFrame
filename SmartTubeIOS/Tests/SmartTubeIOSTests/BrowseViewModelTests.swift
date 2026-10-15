@@ -111,7 +111,7 @@ struct BrowseViewModelTests {
         let section = BrowseSection(id: "subscriptions", title: "Subscriptions", type: .subscriptions)
         let vm = BrowseViewModel(api: mock, initialSection: section)
         vm.loadContent(for: section, refresh: true, source: "test")
-        await waitForTasks()
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
 
         // Local path never gates on auth — empty means "no follows yet", not "sign in"
         #expect(!vm.isAuthRequired)
@@ -138,7 +138,7 @@ struct BrowseViewModelTests {
         let section = BrowseSection(id: "shorts", title: "Shorts", type: .shorts)
         let vm = BrowseViewModel(api: mock, initialSection: section)
         vm.loadContent(for: section, refresh: true, source: "test")
-        await waitForTasks()
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
 
         // videoGroups must be [] (not [VideoGroup(videos: [])]) so the Home
         // Shorts chip's empty state ("Nothing here yet") can render — a
@@ -249,7 +249,8 @@ struct BrowseViewModelTests {
         let section = BrowseSection(id: "watchLater", title: "Watch Later", type: .watchLater)
         let vm = BrowseViewModel(api: mock, initialSection: section, watchLaterMembership: membership)
         await vm.updateAuthToken("fake-token")
-        await waitForTasks()  // updateAuthToken reloads the section; measure only the load below
+        // updateAuthToken reloads the section; measure only the load below.
+        await waitForTasks(timeout: 5, until: { vm.loadedAt != nil && !vm.isLoading })
         mock.calls.removeAll()
         vm.loadContent(for: section, refresh: true, source: "test")
         await waitForTasks(until: { mock.calls.contains { $0.method == "fetchPlaylistVideos" } })
@@ -269,7 +270,8 @@ struct BrowseViewModelTests {
         let section = BrowseSection(id: "watchLater", title: "Watch Later", type: .watchLater)
         let vm = BrowseViewModel(api: mock, initialSection: section, watchLaterMembership: membership)
         await vm.updateAuthToken("fake-token")
-        await waitForTasks()  // updateAuthToken reloads the section; measure only the load below
+        // updateAuthToken reloads the section; measure only the load below.
+        await waitForTasks(timeout: 5, until: { vm.loadedAt != nil && !vm.isLoading })
         mock.calls.removeAll()
         vm.loadContent(for: section, refresh: true, source: "test")
         await waitForTasks(timeout: 5, until: { mock.calls.filter { $0.method == "fetchPlaylistVideos" }.count == 2 })
@@ -285,7 +287,7 @@ struct BrowseViewModelTests {
         let section = BrowseSection(id: "watchLater", title: "Watch Later", type: .watchLater)
         let vm = BrowseViewModel(api: mock, initialSection: section)
         vm.loadContent(for: section, refresh: true, source: "test")
-        await waitForTasks()
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
 
         #expect(vm.isAuthRequired)
         #expect(!mock.calls.contains { $0.method == "fetchPlaylistVideos" })
