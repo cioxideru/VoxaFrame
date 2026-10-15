@@ -68,8 +68,8 @@ extension PlaybackViewModel {
                 if playerWentSilent {
                     self.isPlaying = false
                     playerLog.notice("[rateObserver] player.rate→0 while isPlaying=true — syncing isPlaying=false")
-                    self.stallCount += 1
-                    if self.firstRapidStallTime == nil { self.firstRapidStallTime = Date() }
+                    let stalledItem = self.player.currentItem
+                    self.registerStall(on: stalledItem)
                     let t = Int(self.currentTime)
                     let stallError = NSError(
                         domain: "SmartTube.PlaybackStall",
@@ -99,7 +99,7 @@ extension PlaybackViewModel {
                     // Capped at 3 attempts per item, same as the notification-based path.
                     let recoveryCount = self.stallCount
                     let elapsed = self.firstRapidStallTime.map { Date().timeIntervalSince($0) } ?? 0
-                    let isRapidRepeat = elapsed < 30
+                    let isRapidRepeat = elapsed < PlaybackTuning.rapidStallWindow
                     if recoveryCount >= 3 && isRapidRepeat && self.exhaustiveRetryTask == nil {
                         // Rapid stall loop: seeks are re-stalling immediately because the
                         // format URL is expired or rate-limited (CDN returns the same broken
@@ -118,36 +118,72 @@ extension PlaybackViewModel {
                                         "Stall loop \(recoveryCount)× in \(Int(elapsed))s — format unrecoverable, escalating"
                                 ]
                             )
-                            self.exhaustiveRetryTask = Task {
-                                await self.exhaustiveRetry(video: video, originalError: loopError)
-                            }
+                            self.startExhaustiveRetry(video: video, item: stalledItem, originalError: loopError)
                         }
                     } else if recoveryCount <= 3 {
-                        Task { @MainActor [weak self] in
-                            try? await Task.sleep(nanoseconds: 2_000_000_000)
-                            guard let self, !self.isPlaying, self.player.rate == 0,
-                                !self.isQualityChangePending, !self.isSwappingItem
-                            else { return }
-                            let seekT = self.currentTime
-                            playerLog.notice(
-                                "[rateObserver] recovery#\(recoveryCount): seeking to \(seekT)s to flush pipeline")
-                            self.player.seek(
-                                to: CMTime(seconds: seekT, preferredTimescale: 600),
-                                toleranceBefore: .zero,
-                                toleranceAfter: CMTime(seconds: 1, preferredTimescale: 600)
-                            ) { [weak self] _ in
-                                Task { @MainActor [weak self] in
-                                    guard let self, !self.isPlaying, self.player.rate == 0 else { return }
-                                    self.player.rate = Float(self.settings.playbackSpeed)
-                                    self.isPlaying = true
-                                    playerLog.notice(
-                                        "[rateObserver] recovery#\(recoveryCount): rate restored, isPlaying=true")
-                                }
-                            }
-                        }
+                        self.scheduleStallRecovery(item: stalledItem, recoveryCount: recoveryCount)
                     }
                 }
             }
+        }
+    }
+
+    /// After a rate→0 stall, waits for the system to self-heal, then seeks in place to flush
+    /// the pipeline. Does nothing if the video or item changed in the meantime.
+    func scheduleStallRecovery(item: AVPlayerItem?, recoveryCount: Int) {
+        let videoId = currentVideo?.id
+        stallRecoveryTask?.cancel()
+        stallRecoveryTask = Task { @MainActor [weak self, weak item] in
+            try? await Task.sleep(nanoseconds: PlaybackTuning.stallRecoveryDelayNanoseconds)
+            guard let self, !Task.isCancelled, let item,
+                self.player.currentItem === item, self.currentVideo?.id == videoId,
+                !self.isPlaying, self.player.rate == 0,
+                !self.isQualityChangePending, !self.isSwappingItem
+            else { return }
+            let seekT = self.currentTime
+            playerLog.notice("[rateObserver] recovery#\(recoveryCount): seeking to \(seekT)s to flush pipeline")
+            self.player.seek(
+                to: CMTime(seconds: seekT, preferredTimescale: 600),
+                toleranceBefore: .zero,
+                toleranceAfter: CMTime(seconds: 1, preferredTimescale: 600)
+            ) { [weak self, weak item] _ in
+                Task { @MainActor [weak self, weak item] in
+                    guard let self, let item, self.player.currentItem === item,
+                        !self.isPlaying, self.player.rate == 0
+                    else { return }
+                    self.player.rate = Float(self.settings.playbackSpeed)
+                    self.isPlaying = true
+                    playerLog.notice("[rateObserver] recovery#\(recoveryCount): rate restored, isPlaying=true")
+                }
+            }
+        }
+    }
+
+    /// Counts one stall on `item`. A stall on a different item, or after the rapid-stall
+    /// window has elapsed, starts a new sequence so recovery is not capped forever.
+    func registerStall(on item: AVPlayerItem?, now: Date = Date()) {
+        let windowExpired =
+            firstRapidStallTime.map { now.timeIntervalSince($0) >= PlaybackTuning.rapidStallWindow } ?? false
+        if item !== stallItem || windowExpired {
+            stallCount = 0
+            firstRapidStallTime = nil
+            stallItem = item
+        }
+        stallCount += 1
+        if firstRapidStallTime == nil { firstRapidStallTime = now }
+    }
+
+    /// Starts `exhaustiveRetry` for the video that owned `item`. Skips it when `item` is no
+    /// longer current, and clears `exhaustiveRetryTask` when it finishes so later stall loops
+    /// can escalate again.
+    func startExhaustiveRetry(video: Video, item: AVPlayerItem?, originalError: Error?) {
+        exhaustiveRetryTask?.cancel()
+        exhaustiveRetryTask = Task { [weak self, weak item] in
+            guard let self else { return }
+            if let item, self.player.currentItem === item {
+                await self.exhaustiveRetry(video: video, originalError: originalError)
+            }
+            if !Task.isCancelled { self.exhaustiveRetryTask = nil }
         }
     }
 

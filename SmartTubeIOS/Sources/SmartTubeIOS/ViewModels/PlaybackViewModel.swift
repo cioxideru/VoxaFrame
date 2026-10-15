@@ -292,8 +292,13 @@ public final class PlaybackViewModel {
     var stallCount: Int = 0
     /// Wall-clock time of the first stall in the current sequence. Used by rateObserver to
     /// detect a rapid-repeat stall loop (≥3 stalls in <30s) where seeks re-stall immediately
-    /// because the CDN URL is expired/rate-limited. Reset to nil alongside stallCount in load().
+    /// because the CDN URL is expired/rate-limited. Reset by `registerStall(on:)` when the
+    /// window expires or the item changes, and in load().
     var firstRapidStallTime: Date? = nil
+    /// Item the current stall sequence belongs to; a stall on another item starts a new sequence.
+    @ObservationIgnored weak var stallItem: AVPlayerItem?
+    /// Delayed seek/rate nudge after a rate→0 stall; cancelled in load() and stop().
+    var stallRecoveryTask: Task<Void, Never>?
     var qualityTask: Task<Void, Never>? {
         get { qualityManager.qualityTask }
         set { qualityManager.qualityTask = newValue }

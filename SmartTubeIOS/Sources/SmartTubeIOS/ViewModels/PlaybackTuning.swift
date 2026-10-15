@@ -8,6 +8,8 @@ enum PlaybackTuning {
     static let qualityUpgradeDelayNanoseconds: UInt64 = 700_000_000
     static let poTokenPrefetchTimeoutNanoseconds: UInt64 = 2_000_000_000
     static let stallRecoveryDelayNanoseconds: UInt64 = 2_000_000_000
+    /// Stalls closer together than this on one item count as a rapid stall loop.
+    static let rapidStallWindow: TimeInterval = 30
     static let botGuardTimeoutNanoseconds: UInt64 = 6_000_000_000
     static let adaptiveVRTimeoutNanoseconds: UInt64 = 2_000_000_000
     static let adaptiveTVTimeoutNanoseconds: UInt64 = 3_000_000_000

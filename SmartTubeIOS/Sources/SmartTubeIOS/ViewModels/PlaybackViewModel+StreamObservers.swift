@@ -24,13 +24,9 @@ extension PlaybackViewModel {
                 case .failed:
                     let err = item.error.map { "\($0)" } ?? "nil"
                     playerLog.error("❌ AVPlayerItem failed: \(err)")
-                    if let video = self.currentVideo {
-                        self.exhaustiveRetryTask?.cancel()
-                        self.exhaustiveRetryTask = Task {
-                            await self.exhaustiveRetry(video: video, originalError: item.error)
-                        }
-                    } else {
-                        self.error = item.error
+                    // Retry the video that owned this item; a stale item is ignored.
+                    if self.player.currentItem === item {
+                        self.startExhaustiveRetry(video: info.video, item: item, originalError: item.error)
                     }
                 case .unknown:
                     playerLog.notice("AVPlayerItem status: unknown (loading)")
@@ -124,9 +120,9 @@ extension PlaybackViewModel {
             // permanently greyed out (#183).
             self.durationObserverTask?.cancel()
             self.durationObserverTask = Task { [weak self, weak item] in
-                guard let self, let item else { return }
+                guard let item else { return }
                 for await seconds in item.firstValidDurationStream {
-                    guard !Task.isCancelled else { return }
+                    guard let self, !Task.isCancelled else { return }
                     let prev = self.duration
                     self.duration = seconds
                     playerLog.notice(
@@ -161,7 +157,7 @@ extension PlaybackViewModel {
             )
             for await _ in notifications {
                 guard let self, !Task.isCancelled else { return }
-                self.stallCount += 1
+                self.registerStall(on: item)
                 let stallTime = Int(self.currentTime)
                 playerLog.notice(
                     "[stall] AVPlayerItemPlaybackStalled at t=\(stallTime)s stall#\(self.stallCount) video=\(self.currentVideo?.id ?? "unknown")"

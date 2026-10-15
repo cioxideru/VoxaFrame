@@ -149,7 +149,7 @@ extension PlaybackViewModel {
             )
             for await _ in notifications {
                 guard let self, !Task.isCancelled else { return }
-                self.stallCount += 1
+                self.registerStall(on: parkedItem)
                 playerLog.notice("[fix12/stall] playbackStalled at t=\(Int(self.currentTime))s #\(self.stallCount)")
             }
         }
@@ -226,6 +226,8 @@ extension PlaybackViewModel {
         retryAttempts = 0
         exhaustiveRetryTask?.cancel()
         exhaustiveRetryTask = nil
+        stallRecoveryTask?.cancel()
+        stallRecoveryTask = nil
         #if os(tvOS)
         tvEmbeddedEarlyTask?.cancel()
         tvEmbeddedEarlyTask = nil
@@ -407,6 +409,8 @@ extension PlaybackViewModel {
         // exhaustiveRetryTask is left dangling otherwise.
         exhaustiveRetryTask?.cancel()
         exhaustiveRetryTask = nil
+        stallRecoveryTask?.cancel()
+        stallRecoveryTask = nil
         // Reset isLoading immediately so a same-video re-open via play() does not hit
         // the early-return guard in load() before the cancelled task cleans up.
         isLoading = false
