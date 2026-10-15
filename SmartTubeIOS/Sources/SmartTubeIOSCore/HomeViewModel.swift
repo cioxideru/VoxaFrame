@@ -501,6 +501,10 @@ public final class HomeViewModel {
         await fetchShortsPages(generation: generation)
     }
 
+}
+
+extension HomeViewModel {
+
     // MARK: - Private fetch helpers
 
     /// Fetches the FEshorts feed. Non-isolated so it runs concurrently with
