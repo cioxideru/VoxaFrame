@@ -231,6 +231,27 @@ struct HomeRequestGenerationTests {
         #expect(!vm.isRefreshing)
     }
 
+    #if DEBUG
+    @Test("The UI fixture exposes new Shorts only through two distinct continuations")
+    func uiFixtureRequiresContinuations() throws {
+        let initial = HomePaginationUITestFixture.shortsPage(continuationToken: nil)
+        #expect(initial.videos.count == 10)
+        let firstToken = try #require(initial.nextPageToken)
+        let first = HomePaginationUITestFixture.shortsPage(continuationToken: firstToken)
+        let secondToken = try #require(first.nextPageToken)
+        let second = HomePaginationUITestFixture.shortsPage(continuationToken: secondToken)
+        #expect(Set((initial.videos + first.videos + second.videos).map(\.id)).count == 30)
+        #expect(first.videos.first?.id == "page-1-short-0")
+        #expect(second.videos.first?.id == "page-2-short-0")
+        #expect(second.nextPageToken == nil)
+        for subscriptions in [false, true] {
+            let regular = HomePaginationUITestFixture.regularPage(subscriptions: subscriptions, continuationToken: nil)
+            #expect(regular.nextPageToken == nil)
+            #expect(regular.videos.allSatisfy { !$0.isShort })
+        }
+    }
+    #endif
+
     private func short(_ id: String) -> Video {
         Video(id: id, title: id, channelTitle: "Channel", isShort: true)
     }

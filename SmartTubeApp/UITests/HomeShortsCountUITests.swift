@@ -231,12 +231,8 @@ final class HomeShortsCountUITests: XCTestCase {
 
 // MARK: - HomeShortsEndlessUITests
 
-/// The Home feed is one vertical scroll: a Shorts row, two rows of videos, the next Shorts
-/// row, and so on. Scrolling down must keep bringing new Shorts rows, filled with Shorts the
-/// first row did not show.
-///
-/// IMPORTANT: exercises the real network so Shorts paging actually runs. Requires a
-/// signed-in account via keychain.
+/// The fixture supplies ten initial Shorts and two disjoint continuation pages.
+/// Regular shelves have no continuations, so only Shorts demand can fetch the new cards.
 final class HomeShortsEndlessUITests: XCTestCase {
 
     private var app: XCUIApplication!
@@ -247,6 +243,8 @@ final class HomeShortsEndlessUITests: XCTestCase {
         app.launchArguments += [
             "--uitesting",
             "--uitesting-signed-in",
+            "--uitesting-reset-settings",
+            "--uitesting-home-pagination",
         ]
         app.launch()
         UITestHelpers.tapTab(named: "Home", in: app)
@@ -256,58 +254,50 @@ final class HomeShortsEndlessUITests: XCTestCase {
         app = nil
     }
 
-    private func shortsCardIDs(in row: XCUIElement) -> Set<String> {
-        let predicate = NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.shortsCard(""))
-        return Set(row.descendants(matching: .any).matching(predicate).allElementsBoundByIndex.map(\.identifier))
+    private func isVisible(_ element: XCUIElement, inside viewport: CGRect) -> Bool {
+        guard element.exists, element.isHittable else { return false }
+        let frame = element.frame
+        return !frame.isEmpty && viewport.contains(CGPoint(x: frame.midX, y: frame.midY))
     }
 
-    /// Swipes the feed up until `row` exists, giving up after `maxSwipes`.
-    private func scrollDown(until row: XCUIElement, maxSwipes: Int = 25) -> Bool {
+    /// Existence alone includes offscreen eager cards. Require a hittable element in the viewport.
+    private func scrollDown(until row: XCUIElement, maxSwipes: Int = 30) -> Bool {
         for _ in 0..<maxSwipes {
-            if row.waitForExistence(timeout: 2) { return true }
-            // Start the drag left of the middle so it begins on the feed, then go up.
-            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.8))
+            if row.waitForExistence(timeout: 1), isVisible(row, inside: app.windows.firstMatch.frame) { return true }
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.75))
             start.press(
-                forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.25)))
+                forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.45)))
         }
-        return row.exists
+        return isVisible(row, inside: app.windows.firstMatch.frame)
     }
 
-    /// The second Shorts row shows up further down the feed.
+    private func assertContinuationCard(_ videoID: String, inRow index: Int) {
+        let row = app.scrollViews[AccessibilityID.homeShortsRow(index)]
+        XCTAssertTrue(scrollDown(until: row), "Continuation row \(index) never became visible")
+        let card = row.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.shortsCard(videoID)).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10), "Continuation-only card \(videoID) was not fetched")
+        XCTAssertTrue(
+            isVisible(card, inside: row.frame.intersection(app.windows.firstMatch.frame)),
+            "Fetched card \(videoID) must be hittable and inside both the row and window viewport")
+    }
+
     func testScrollingDownRevealsASecondShortsRow() {
         let firstRow = app.scrollViews[AccessibilityID.homeShortsRow(0)]
-        XCTAssertTrue(firstRow.waitForExistence(timeout: 30), "First Shorts row not found within 30s")
+        XCTAssertTrue(scrollDown(until: firstRow), "Initial Shorts row never became visible")
+        let initialCard = firstRow.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.shortsCard("initial-short-0")).firstMatch
+        XCTAssertTrue(initialCard.waitForExistence(timeout: 10))
 
-        let secondRow = app.scrollViews[AccessibilityID.homeShortsRow(1)]
-        let found = scrollDown(until: secondRow)
-
-        let screenshot = XCTAttachment(screenshot: app.screenshot())
-        screenshot.name = "After scrolling the Home feed — second Shorts row found: \(found)"
-        screenshot.lifetime = .keepAlways
-        add(screenshot)
-
-        XCTAssertTrue(
-            found,
-            "Scrolling down the Home feed must reveal \(AccessibilityID.homeShortsRow(1)); "
-                + "check that video blocks request Shorts (loadShorts) as they appear."
-        )
+        // This ID is absent from all initial data; a no-op loadShorts cannot satisfy this test.
+        assertContinuationCard("page-1-short-0", inRow: 1)
     }
 
-    /// Later Shorts rows hold Shorts the first row did not, so the feed never repeats a row.
     func testLaterShortsRowsShowNewShorts() {
         let firstRow = app.scrollViews[AccessibilityID.homeShortsRow(0)]
-        XCTAssertTrue(firstRow.waitForExistence(timeout: 30), "First Shorts row not found within 30s")
-        let firstIDs = shortsCardIDs(in: firstRow)
-        XCTAssertFalse(firstIDs.isEmpty, "First Shorts row has no cards")
-
-        let secondRow = app.scrollViews[AccessibilityID.homeShortsRow(1)]
-        XCTAssertTrue(scrollDown(until: secondRow), "Second Shorts row not found after scrolling")
-        let secondIDs = shortsCardIDs(in: secondRow)
-
-        XCTAssertFalse(secondIDs.isEmpty, "Second Shorts row has no cards")
-        XCTAssertTrue(
-            secondIDs.isDisjoint(with: firstIDs),
-            "Second Shorts row repeats Shorts from the first: \(secondIDs.intersection(firstIDs))"
-        )
+        XCTAssertTrue(scrollDown(until: firstRow), "Initial Shorts row never became visible")
+        assertContinuationCard("page-1-short-0", inRow: 1)
+        // Go beyond both the initial supply and the first continuation page.
+        assertContinuationCard("page-2-short-0", inRow: 2)
     }
 }
