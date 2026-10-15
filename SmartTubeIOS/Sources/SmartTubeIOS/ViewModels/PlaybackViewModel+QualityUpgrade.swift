@@ -277,6 +277,8 @@ extension PlaybackViewModel {
                         videoTracks: vTracks, audioTracks: aTracks,
                         videoURL: videoURL, audioURL: audioURL)
                 } else {
+                    // A newer load cancelled this switch; it owns recovery, so don't retry here.
+                    guard !Task.isCancelled else { return nil }
                     playerLog.error(
                         "❌ [quality/DASH] loadTracks timed out after 10s — triggering 403 recovery retry")
                     selectedFormat = nil
