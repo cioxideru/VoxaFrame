@@ -69,6 +69,7 @@ final class VoiceOverTranslationController {
     @ObservationIgnored private var setVideoPlaying: (Bool) -> Void = { _ in }
     /// A voice seek is in flight; don't stack another one on top of it.
     @ObservationIgnored private var isSeekingVoice = false
+    @ObservationIgnored private var seekTask: Task<Void, Never>?
 
     init() {
         voicePlayer.automaticallyWaitsToMinimizeStalling = false
@@ -95,7 +96,7 @@ final class VoiceOverTranslationController {
         task = nil
         if let timeObserver, let mainPlayer { mainPlayer.removeTimeObserver(timeObserver) }
         timeObserver = nil
-        isSeekingVoice = false
+        cancelVoiceSeek()
         voicePlayer.pause()
         voicePlayer.replaceCurrentItem(with: nil)
         if videoId != nil { mainPlayer?.volume = mainVolume }
@@ -179,6 +180,7 @@ final class VoiceOverTranslationController {
         let wasWaiting = if case .waiting = state { true } else { false }
         if let timeObserver, let mainPlayer { mainPlayer.removeTimeObserver(timeObserver) }
         timeObserver = nil
+        cancelVoiceSeek()
         voicePlayer.replaceCurrentItem(with: nil)
         mainPlayer?.volume = mainVolume
         state = .failed(message)
@@ -264,6 +266,7 @@ final class VoiceOverTranslationController {
         // taking every AVPlayer in the app down with it (-11819 until relaunch).
         let item = AVPlayerItem(url: url)
         item.audioTimePitchAlgorithm = .timeDomain
+        cancelVoiceSeek()
         voicePlayer.replaceCurrentItem(with: item)
         mainPlayer.volume = originalAudioVolume
         if timeObserver == nil {
@@ -277,6 +280,13 @@ final class VoiceOverTranslationController {
         votLog.notice("translation attached (lively=\(livelyVoice)) — \(resume ? "resuming video" : "swapped audio")")
         if resume { setVideoPlaying(true) }
         sync()
+    }
+
+    /// Drops the pending voice seek; replacing the item cancels the AVPlayer seek itself.
+    private func cancelVoiceSeek() {
+        seekTask?.cancel()
+        seekTask = nil
+        isSeekingVoice = false
     }
 
     /// Mirrors the main player's state onto the voice player: any playback rate, pause, seeks.
@@ -299,9 +309,12 @@ final class VoiceOverTranslationController {
         if abs(voicePlayer.currentTime().seconds - videoTime.seconds) > Self.maxDrift {
             isSeekingVoice = true
             let tolerance = CMTime(seconds: 0.1, preferredTimescale: 600)
-            Task {
+            seekTask = Task { [weak self, voicePlayer] in
                 await voicePlayer.seek(to: videoTime, toleranceBefore: tolerance, toleranceAfter: tolerance)
+                // A seek on a replaced item must not unlock the new item's in-flight seek.
+                guard let self, !Task.isCancelled, voicePlayer.currentItem === voiceItem else { return }
                 isSeekingVoice = false
+                seekTask = nil
             }
         }
         if voicePlayer.rate != mainPlayer.rate { voicePlayer.rate = mainPlayer.rate }
