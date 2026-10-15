@@ -225,6 +225,8 @@ public final class HomeViewModel {
         loadTask?.cancel()
         shortsPreloadTask?.cancel()
         loadedAt = nil
+        shortsNextPageToken = nil
+        isLoadingMoreShorts = false
         isRefreshing = true
         if !keepingContent {
             shortsVideos = []
@@ -323,16 +325,20 @@ public final class HomeViewModel {
 
     // MARK: - Pagination
 
-    public func loadMore(sectionId: String) {
+    @discardableResult
+    public func loadMore(sectionId: String) -> Task<Void, Never>? {
         guard let idx = sections.firstIndex(where: { $0.id == sectionId }),
             let token = sections[idx].nextPageToken,
             !sections[idx].isLoadingMore,
             !sections[idx].isLoading
-        else { return }
+        else { return nil }
         sections[idx].isLoadingMore = true
         let type = sections[idx].section.type
-        Task {
+        let generation = loadGeneration
+        return Task {
+            guard isCurrentLoad(generation) else { return }
             let (newVideos, nextToken) = await HomeViewModel.fetchMoreVideos(type: type, token: token, api: api)
+            guard isCurrentLoad(generation) else { return }
             if let idx = sections.firstIndex(where: { $0.id == sectionId }) {
                 // Use a growing set so IDs that appear multiple times within
                 // newVideos itself (same page returning the same video twice)
@@ -374,9 +380,12 @@ public final class HomeViewModel {
     public func loadShorts(atLeast count: Int) {
         guard homeShortsVideos.count < count, !isLoadingMoreShorts, hasShortsSource else { return }
         isLoadingMoreShorts = true
+        let generation = loadGeneration
         shortsPreloadTask = Task { @MainActor [weak self] in
-            await self?.fetchShortsPages(until: count)
-            self?.isLoadingMoreShorts = false
+            guard let self, self.isCurrentLoad(generation) else { return }
+            await self.fetchShortsPages(until: count, generation: generation)
+            guard self.isCurrentLoad(generation) else { return }
+            self.isLoadingMoreShorts = false
         }
     }
 
@@ -384,9 +393,9 @@ public final class HomeViewModel {
         shortsNextPageToken != nil || sections.first { $0.section.type == .subscriptions }?.nextPageToken != nil
     }
 
-    private func fetchShortsPages(until target: Int) async {
-        while !Task.isCancelled, homeShortsVideos.count < target, hasShortsSource {
-            guard await fetchOneShortsPage() else {
+    private func fetchShortsPages(until target: Int, generation: Int) async {
+        while isCurrentLoad(generation), homeShortsVideos.count < target, hasShortsSource {
+            guard await fetchOneShortsPage(generation: generation) else {
                 homeLog.notice("loadShorts: stopping — page returned no new videos")
                 break
             }
@@ -400,12 +409,14 @@ public final class HomeViewModel {
     /// `shortsVideos`; subs results land in `sections[subscriptions].videos` — both
     /// are surfaced together via `homeShortsVideos`.
     /// Returns `true` if any new videos were appended.
-    private func fetchOneShortsPage() async -> Bool {
+    private func fetchOneShortsPage(generation: Int) async -> Bool {
+        guard isCurrentLoad(generation) else { return false }
         // Phase 1: one search page (srch: token from fetchShorts).
         if let token = shortsNextPageToken {
             homeLog.notice("fetchOneShortsPage search: fetching token=\(String(token.prefix(16)))\u{2026}")
             do {
                 let more = try await api.fetchShortsMore(continuationToken: token)
+                guard isCurrentLoad(generation) else { return false }
                 let existingIDs = Set(shortsVideos.map(\.id))
                 let newVideos = more.videos.filter { !existingIDs.contains($0.id) }
                 shortsVideos.append(contentsOf: newVideos)
@@ -418,6 +429,7 @@ public final class HomeViewModel {
                 }
                 // Search page returned 0 new Shorts — fall through to Phase 2
             } catch {
+                guard isCurrentLoad(generation) else { return false }
                 homeLog.error("fetchOneShortsPage search: failed: \(error.localizedDescription)")
                 shortsNextPageToken = nil
             }
@@ -431,6 +443,7 @@ public final class HomeViewModel {
             homeLog.notice("fetchOneShortsPage subs: fetching token=\(String(token.prefix(16)))\u{2026}")
             sections[idx].isLoadingMore = true
             let more = await Self.fetchMoreVideos(type: .subscriptions, token: token, api: api)
+            guard isCurrentLoad(generation) else { return false }
             sections[idx].isLoadingMore = false
             let existingIDs = Set(sections[idx].videos.map(\.id))
             let newVideos = more.0.filter { !existingIDs.contains($0.id) }
@@ -470,14 +483,17 @@ public final class HomeViewModel {
             return
         }
         isLoadingMoreShorts = true
-        defer { isLoadingMoreShorts = false }
+        let generation = loadGeneration
+        defer {
+            if isCurrentLoad(generation) { isLoadingMoreShorts = false }
+        }
         var loopIteration = 0
         // Loop until we have at least `threshold` items or pages run out.
-        while shortsVideos.count < threshold, shortsNextPageToken != nil {
+        while isCurrentLoad(generation), shortsVideos.count < threshold, shortsNextPageToken != nil {
             loopIteration += 1
             homeLog.notice(
                 "loadMoreShortsIfNeeded: loop=\(loopIteration) count=\(shortsVideos.count) threshold=\(threshold)")
-            guard await fetchOneShortsPage() else { break }
+            guard await fetchOneShortsPage(generation: generation) else { break }
         }
     }
 
