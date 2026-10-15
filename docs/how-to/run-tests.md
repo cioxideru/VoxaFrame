@@ -4,7 +4,7 @@
 
 **When to use:** running unit or UI tests locally, or setting up a fresh simulator.
 
-All commands are `just` recipes (run `just` from the repo root to list them). Don't use
+Run the commands below from the repo root. Don't use
 `mcp_xcode_RunAllTests`/`mcp_xcode_RunSomeTests` or any other `mcp_xcode_*` tool to run tests.
 
 ## Target simulator
@@ -34,19 +34,18 @@ Verify: `xcrun simctl spawn 6CEE2FAC-7D50-4BD0-95E2-1361EDD7FAF6 defaults read c
 ## Memory ceiling
 
 16 GB Mac Mini. Each simulator clone adds ~500–750 MB RAM (copy-on-write). **3 workers is the
-ceiling** — 5 stalls clone boot indefinitely with no output. `justfile` hardcodes 3; don't raise
+ceiling** — 5 stalls clone boot indefinitely with no output. `scripts/verify.sh` and the commands below use 3; don't raise
 it without more RAM.
 
 ## Commands
 
-- `just test-unit` — Swift Testing package tests, no simulator.
-- `just test-ui-legacy` — UI tests, 3 parallel workers. Temporary until WS3-T3.4 adds the
-  `Smoke`/`Live` test plans, at which point `just test-smoke`/`just test-ui` take over.
-- `just test-ui-one <SmartTubeUITests/Suite/testMethod>` — a single UI test.
+- `cd SmartTubeIOS && swift test --parallel` (`--filter <Name>` for one suite) — Swift Testing package tests, no simulator.
+- Smoke plan (hermetic): `VERIFY_SCOPE=full scripts/verify.sh` runs it after the gate and builds, or directly:
+
+  ```bash
+  xcodebuild test -workspace SmartTube.xcworkspace -scheme SmartTube -testPlan Smoke -destination 'platform=iOS Simulator,name=iPhone 17' -parallel-testing-enabled YES -maximum-parallel-testing-workers 3 CODE_SIGNING_ALLOWED=NO
+  ```
+
+- Live plan (needs a signed-in simulator): the same command with `-testPlan Live` and without `CODE_SIGNING_ALLOWED=NO`.
+- A single UI test: add `-only-testing:SmartTubeUITests/<Suite>/<testMethod>` and drop `-testPlan`.
 - Device/app log capture during a test run: `docs/how-to/device-logs.md`.
-
-## Known failure
-
-`just test-unit` currently fails to build (pre-existing, not test-writing-related) — see
-`AGENTS.md`'s Gotchas. Native-macOS-only code in `TOSPlayerView.swift`/
-`TOSPlayerViewModel+WebBridge.swift` doesn't compile. Fixing it is WS4/WS5 scope.

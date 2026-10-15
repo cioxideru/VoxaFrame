@@ -32,6 +32,8 @@ undiscoverable until it is. Keep this under 100 lines; anything that doesn't fit
 | [research/freetube-analysis.md](research/freetube-analysis.md) | FreeTube reference analysis | research reference | 2026-09-11 |
 | [research/android-repos.md](research/android-repos.md) | Original Android repo references | research reference | 2026-09-11 |
 | [research/AetherEngine.md](research/AetherEngine.md) | AetherEngine proposal — considered, not adopted | research reference | 2026-09-11 |
+| [archive/2026-05-aether-engine-proposal/AetherEngine.md](archive/2026-05-aether-engine-proposal/AetherEngine.md) | Original AetherEngine proposal (May 2026) | archived | 2026-05 |
+| [superpowers/specs/2026-06-11-tos-player-shorts-design.md](superpowers/specs/2026-06-11-tos-player-shorts-design.md) | TOS player for Shorts (iOS) design spec | current | 2026-06-11 |
 | `docs/modernization/README.md` (private repo, not linkable from here) | Architecture audit + modernization plan | current | 2026-09-10 — still in the private repo, deliberately deferred (see WS2-T2.6 Outcome) |
 
 ## Not yet written

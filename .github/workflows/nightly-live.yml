@@ -14,7 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Live UI suite
-        run: just test-ui
+        run: >-
+          xcodebuild test -workspace SmartTube.xcworkspace -scheme SmartTube -testPlan Live
+          -destination 'platform=iOS Simulator,name=iPhone 17'
+          -parallel-testing-enabled YES -maximum-parallel-testing-workers 3
+          -resultBundlePath ~/DevTemp/smarttube/logs/smarttube-live.xcresult
       - uses: actions/upload-artifact@v4
         if: always()
         with:

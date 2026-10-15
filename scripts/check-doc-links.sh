@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checks that every relative markdown link target in docs/, AGENTS.md, CLAUDE.md,
 # and README.md points at a file that actually exists. Skips URLs, anchors, and
-# mailto: links. Wired into `just ci` and pr.yml's "Docs sanity" step.
+# mailto: links. Wired into `scripts/ci.sh` and pr.yml's "Docs sanity" step.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

@@ -16,7 +16,7 @@ jobs:
         # may lag or differ. `ls /Applications | grep Xcode` on the runner if this fails.
         run: sudo xcode-select -s /Applications/Xcode_26.6.app
       - name: Install tools
-        run: brew install just swiftlint
+        run: brew install swiftlint
       - name: Placeholder secrets (fork-safe)
         run: cp SmartTubeApp/Config/Secrets.xcconfig.example SmartTubeApp/Config/Secrets.xcconfig
       - name: Cache SPM
@@ -31,12 +31,8 @@ jobs:
           test $(wc -l < AGENTS.md) -le 200
           head -1 CLAUDE.md | grep -q '^@AGENTS.md$'
           scripts/check-doc-links.sh          # WS2-T2.1 adds; until then `true`
-      - name: Gate
-        run: just ci
-      - name: Build iOS & tvOS
-        run: |
-          just build
-          just build-tvos
+      - name: Gate, SwiftLint, iOS & tvOS builds
+        run: VERIFY_SCOPE=build scripts/verify.sh
       - name: Unit tests (Xcode, iOS sim)   # once WS3-T3.4 adds the Unit plan
         if: hashFiles('SmartTubeApp/Unit.xctestplan') != ''
         run: xcodebuild test -workspace SmartTube.xcworkspace -scheme SmartTube -testPlan Unit -destination 'platform=iOS Simulator,name=iPhone 17' -onlyUsePackageVersionsFromResolvedFile CODE_SIGNING_ALLOWED=NO -resultBundlePath out/unit.xcresult

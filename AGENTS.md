@@ -4,14 +4,16 @@ Native Swift/SwiftUI YouTube client for iOS/iPadOS (17+), macOS Catalyst (14+) a
 Package `SmartTubeIOS/` (targets `SmartTubeIOSCore` = Foundation-only models/API/stores,
 `SmartTubeIOS` = SwiftUI views, view models, services) + Xcode project `SmartTubeApp/`
 (iOS+Catalyst app, tvOS app, Share/Safari extensions, Download widget, UI-test targets).
-Architecture map: docs/architecture.md · Glossary: CONTEXT.md · Decisions: docs/adr/ · Plan: docs/modernization/
+Architecture map: [docs/architecture.md](docs/architecture.md) · Glossary: [CONTEXT.md](CONTEXT.md) · Decisions: [docs/adr/](docs/adr/) · Docs index: [docs/README.md](docs/README.md)
+Overview: [README.md](README.md) · [CHANGELOG.md](CHANGELOG.md) · [PRIVACY_POLICY.md](PRIVACY_POLICY.md) · Claude Code: [CLAUDE.md](CLAUDE.md)
 
-## Commands (always via `just`; run `just` to list)
-- `just ci` — secrets check + format check + lint + unit tests. Run before every commit.
-- `just build` / `just build-tvos` — simulator builds, no signing needed.
-- `just test-unit` / `just test-unit-filter <Name>` — Swift Testing package tests (no simulator).
-- `just test-smoke` — hermetic UI smoke plan. `just test-ui` — live UI plan (needs signed-in simulator; 3 workers max, see docs/how-to/run-tests.md).
-- `just format` — swift-format in place. `just lint` — SwiftLint against the committed baseline.
+## Commands (scripts in `scripts/`, safe from any cwd)
+- `scripts/ci.sh` — secrets + doc links + swift-format check + package unit tests. Run before every commit, with SwiftLint:
+  `swiftlint lint --strict --baseline .swiftlint.baseline --config .swiftlint.yml` (fails only on new violations).
+- `scripts/verify.sh` — ci + SwiftLint + iOS/tvOS simulator builds + Smoke UI plan; `VERIFY_SCOPE=fast|build` stop earlier.
+- `cd SmartTubeIOS && swift test --filter <Name>` — one Swift Testing suite (no simulator).
+- Smoke/Live UI plans and single UI tests: docs/how-to/run-tests.md (needs a signed-in simulator for Live; 3 workers max).
+- `xcrun swift-format format --in-place --recursive --configuration .swift-format <paths from scripts/ci.sh>` — format.
 
 ## Rules that differ from defaults
 - Swift 6 strict concurrency everywhere. View models are `@MainActor @Observable`. No `ObservableObject`, `@Published`, Combine, `DispatchQueue`, completion handlers in new code.
@@ -27,7 +29,7 @@ Architecture map: docs/architecture.md · Glossary: CONTEXT.md · Decisions: doc
 - The Simulator cannot decode VP9/AV1 and cannot run PiP; assert stream *selection* in tests, not decoding.
 - WKWebView `evaluateJavaScript` has no user activation: PiP/fullscreen cannot be triggered from Swift.
 - Authenticated InnerTube calls use the TVHTML5 client on youtubei.googleapis.com with a Bearer token and no API key; the WEB client rejects Bearer tokens. Never call `/oauth2/v3/userinfo` for account info (the TV OAuth client isn't Data-API-v3-enabled) — use `account/accounts` with the TVHTML5 context instead.
-- The 16 GB build Mac stalls with > 3 parallel simulator clones; `just` hardcodes 3.
+- The 16 GB build Mac stalls with > 3 parallel simulator clones; the scripts cap UI workers at 3.
 - Playback fallback code (`PlaybackViewModel+Fallback.swift`) is under active decomposition (WS4). Do not add branches there; add a `StreamSource`.
 - Package tests run on native macOS: code under `#if !os(tvOS)` must also compile for AppKit (`TOSPlayerView` has an `NSViewRepresentable` branch; `NSImage.pngData()` is a local shim).
 - `swift test --parallel` runs suites concurrently. Tests touching a shared static (`CurrentQueueStore.shared`, a test `URLProtocol`'s routes) must be `.serialized` — nest suites sharing the same global under one serialized parent (e.g. `CurrentQueueStoreSuites`). Poll for the expected state with a deadline instead of a fixed sleep.
@@ -36,5 +38,4 @@ Architecture map: docs/architecture.md · Glossary: CONTEXT.md · Decisions: doc
 - The Yandex OAuth token (lively voices) lives in the Keychain via `TokenManager`; never log it or put it in settings JSON.
 
 ## Where things are
-- Playback: docs/architecture.md#playback · Tests how-to: docs/how-to/run-tests.md · Device logs: docs/how-to/device-logs.md
-- Tasks: tasks/README.md (open items) · Modernization program: docs/modernization/PLAN.md
+- Playback: [docs/architecture.md#playback](docs/architecture.md#playback) · Tests how-to: [docs/how-to/run-tests.md](docs/how-to/run-tests.md) · Device logs: [docs/how-to/device-logs.md](docs/how-to/device-logs.md) · Release: [docs/how-to/release.md](docs/how-to/release.md)

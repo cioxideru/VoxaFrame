@@ -19,7 +19,7 @@ structure that was never real.
 Safari extension, Download widget, two UI-test targets) is edited only through Xcode. No
 Tuist, XcodeGen, or other project-generation tool. Agents must not hand-edit `project.pbxproj`
 (enforced by the `block-pbxproj.sh` PreToolUse hook, WS1-T1.5); building and testing goes
-through `xcodebuild`/`swift test`, wrapped by `just` (WS1-T1.1).
+through `xcodebuild`/`swift test`, wrapped by `scripts/` (WS1-T1.1; originally a `justfile`).
 
 ## Consequences
 

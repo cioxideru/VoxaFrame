@@ -10,10 +10,10 @@
    e.g. `5.1`) and `CURRENT_PROJECT_VERSION` (build number, monotonic integer). These are single
    source of truth once WS1-T1.4's pbxproj wiring lands (see `docs/adr/0001-maintainability-baseline.md`
    for status); until then also check `project.pbxproj` doesn't have a stale hardcoded value.
-2. `just changelog` regenerates the `Unreleased` section of `CHANGELOG.md` from Conventional
+2. `git-cliff --config cliff.toml --unreleased --prepend CHANGELOG.md` regenerates the `Unreleased` section of `CHANGELOG.md` from Conventional
    Commits since the last tag (`cliff.toml`, WS1-T1.7). Review and edit before committing — it's a
    draft, not a final copy-paste.
-3. `just ci` — must pass before tagging.
+3. `scripts/ci.sh` and SwiftLint — must pass before tagging.
 
 ## Not yet documented
 

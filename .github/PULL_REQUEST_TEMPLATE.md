@@ -1,4 +1,4 @@
-- [ ] `just ci` passes locally
+- [ ] `scripts/ci.sh` and SwiftLint pass locally
 - [ ] Task/issue: #
 - [ ] Behaviour change? (yes/no) — if yes, which Live suites were run
 - [ ] No secrets, no hand-edited pbxproj

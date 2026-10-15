@@ -6,7 +6,7 @@
 ## Context
 
 WS1 (modernization program, see `docs/modernization/`) introduces SwiftLint with a frozen
-`.swiftlint.baseline` so `just lint` fails only on *new* violations, not the ~1,162 pre-existing
+`.swiftlint.baseline` so SwiftLint (`--baseline .swiftlint.baseline`) fails only on *new* violations, not the ~1,162 pre-existing
 ones. That baseline needs a recorded starting point so future work can show the ratchet moving
 down instead of just silently accumulating exceptions.
 
@@ -14,8 +14,8 @@ down instead of just silently accumulating exceptions.
 
 Record the metrics below as the baseline. Every future PR that touches a metric here should move
 it toward the WS0-stated program-wide targets (`docs/modernization/PLAN.md` §3), never away from
-them. `just metrics` reproduces the metrics that have a recipe; the rest are ad hoc greps recorded
-here for now until `just metrics` covers them.
+them. `scripts/metrics.sh` reproduces the metrics that have a recipe; the rest are ad hoc greps recorded
+here for now until `scripts/metrics.sh` covers them.
 
 ## Baseline (2026-09-10, commit range WS0–WS1-T1.3)
 
@@ -50,8 +50,8 @@ the two documents agree on the starting line.
 
 ## Consequences
 
-- `just lint` is green today; it stays green only by not introducing new violations of any kind
+- SwiftLint is green today; it stays green only by not introducing new violations of any kind
   the baseline already tracks, including in files the baseline covers.
-- Deleting a violation from a file removes its baseline entry the next time `just lint-baseline`
+- Deleting a violation from a file removes its baseline entry the next time `swiftlint lint --write-baseline .swiftlint.baseline --config .swiftlint.yml`
   is regenerated (not automatic) — regenerate deliberately, not to hide new violations.
 - The metrics above are a snapshot, not a target. Targets are in `docs/modernization/PLAN.md` §3.
