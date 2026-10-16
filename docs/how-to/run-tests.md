@@ -1,4 +1,4 @@
-> Status: current — command/configuration review 2026-10-15; tests not rerun.
+> Status: current — general command/configuration review 2026-10-15; targeted physical iPad performance checks added and run 2026-10-16, not a full UI-suite rerun.
 
 # How to run tests
 
@@ -56,3 +56,23 @@ it without more RAM.
   None of these paths proves UI acceptance. Nightly Live remains disabled pending the plans and runner.
 - Record `NOT RUN` with a reason and platform in the task evidence. Simulator checks do not
   establish physical-device decoding, PiP, or background-audio behavior; see [OQ-0005](../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).
+
+## Physical iPad performance
+
+`IPadPerformanceUITests` measures five launches to the first responsive frame and five
+four-swipe Home sequences (CPU, memory and scrolling hitches), then checks repeated tab
+navigation. It retains the device's account and settings. The Home tests require a populated
+feed and network access; launch measurements do not include waiting for the feed response.
+
+```bash
+xcodebuild test -workspace SmartTube.xcworkspace -scheme SmartTube \
+  -destination 'platform=iOS,id=<connected-device-UDID>' \
+  -only-testing:SmartTubeUITests/IPadPerformanceUITests \
+  -parallel-testing-enabled NO -resultBundlePath iPadPerformance.xcresult
+```
+
+Use the same device, build configuration and account for comparisons, keep other profiling
+sessions stopped, and do not interact with the iPad during measurements. The app runs without
+an attached debugger in these tests. Compare network-dependent timings separately from
+rendering; one short run does not establish sustained performance or a debugger's overhead.
+See [PLAN-0010](../exec-plans/completed/ipad-performance.md) for measured evidence and limits.

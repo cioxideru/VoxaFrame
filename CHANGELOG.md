@@ -8,6 +8,10 @@ All notable changes to SmartTube are documented here.
 
 ### Fixed — 2026-10-16
 
+- **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
+  restarts a queued load when the app becomes active. Cancelled queued loads skip
+  their requests. Token refresh keeps the current cards and pagination instead
+  of clearing the section and fetching it again.
 - **Shorts playback (PLAN-0009)** has persistent play/pause, mute, seeking and retry
   controls. Swipe navigation no longer intercepts the progress slider. New Shorts
   start at the beginning, and pending seeks/duration observations from an outgoing

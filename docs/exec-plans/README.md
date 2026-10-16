@@ -27,6 +27,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0010: iPad performance](completed/ipad-performance.md) — redundant feed loads fixed; physical launch, scrolling, navigation and PiP checks passed, broader performance acceptance remains OQ-0013.
+
 - [PLAN-0009: Shorts and player presentation stability](completed/player-shorts-stability.md) — controls, bounded readiness and presentation fixes; focused physical iPad PiP and Shorts checks passed, wider acceptance remains OQ-0005.
 
 - [PLAN-0008: Remember playback quality](completed/remember-playback-quality.md) — saved intent, resolution-first fallback and persistence checks.
@@ -38,4 +40,4 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0001: TOS player iOS port](completed/tos-player-ios-plan.md) — historically delivered; superseded by [ADR-0010](../adr/0010-remove-iframe-player.md).
 - [PLAN-0002 / #89: Shorts duration guard](completed/task-89-short-detection-issue.md) — fix and regression tests present.
 
-Reviewed against the working tree on 2026-10-15. Historical closure is not a fresh test result.
+Reviewed against the working tree on 2026-10-16. Historical closure is not a fresh test result.

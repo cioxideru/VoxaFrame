@@ -1,5 +1,66 @@
 import XCTest
 
+#if os(iOS)
+/// PLAN-0010: repeatable device measurements without changing the user's settings.
+final class IPadPerformanceUITests: XCTestCase {
+    private let app = XCUIApplication()
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+    }
+
+    override func tearDown() {
+        app.terminate()
+        super.tearDown()
+    }
+
+    func testLaunchToResponsive() {
+        let options = XCTMeasureOptions()
+        options.iterationCount = 5
+        measure(metrics: [XCTApplicationLaunchMetric(waitUntilResponsive: true)], options: options) {
+            app.terminate()
+            app.launch()
+        }
+    }
+
+    func testHomeScrolling() {
+        app.launch()
+        XCTAssertNotNil(UITestHelpers.waitForVideoCards(in: app, timeout: 45))
+        let options = XCTMeasureOptions()
+        options.iterationCount = 5
+        measure(
+            metrics: [
+                XCTOSSignpostMetric.scrollingAndDecelerationMetric,
+                XCTCPUMetric(application: app),
+                XCTMemoryMetric(application: app),
+            ], options: options
+        ) {
+            app.swipeUp(velocity: .fast)
+            app.swipeUp(velocity: .fast)
+            app.swipeDown(velocity: .fast)
+            app.swipeDown(velocity: .fast)
+        }
+    }
+
+    func testTabNavigationRetainsHomeFeed() {
+        app.launch()
+        XCTAssertNotNil(UITestHelpers.waitForVideoCards(in: app, timeout: 45))
+        for _ in 0..<3 {
+            UITestHelpers.tapTab(named: "Settings", in: app)
+            XCTAssertTrue(app.collectionViews.firstMatch.waitForExistence(timeout: 5))
+            UITestHelpers.tapTab(named: "Search", in: app)
+            XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 5))
+            UITestHelpers.tapTab(named: "Library", in: app)
+            XCTAssertTrue(app.segmentedControls.firstMatch.waitForExistence(timeout: 5))
+            UITestHelpers.tapTab(named: "Home", in: app)
+            XCTAssertNotNil(UITestHelpers.waitForVideoCards(in: app, timeout: 5))
+        }
+    }
+}
+#endif
+
 // MARK: - HomeInteractionsUITests
 //
 // Combined from SearchUITests (13 tests) + WatchLaterContextMenuUITests (3 tests).

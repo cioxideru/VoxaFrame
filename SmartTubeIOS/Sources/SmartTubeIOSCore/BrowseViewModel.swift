@@ -236,6 +236,7 @@ public final class BrowseViewModel {
             }
         }
         fetchTask?.cancel()
+        isLoading = true
         fetchTask = Task { await fetchSection(target) }
     }
 
@@ -263,9 +264,9 @@ public final class BrowseViewModel {
     }
 
     /// Refreshes the current section's feed if the last successful fetch was more than
-    /// `threshold` seconds ago (default 15 min). No-op while a fetch is already in flight.
+    /// `threshold` seconds ago (default 15 min). The first load belongs to sign-in or selection.
     public func refreshIfStale(threshold: TimeInterval = 15 * 60) {
-        guard !isLoading else { return }
+        guard fetchTask != nil, !isLoading else { return }
         let age = loadedAt.map { Date().timeIntervalSince($0) } ?? .infinity
         guard age > threshold else { return }
         let ageDesc = age.isFinite ? "\(Int(age))s" : "never loaded"
@@ -285,16 +286,16 @@ public final class BrowseViewModel {
 
     // MARK: - Auth
 
-    /// Triggers a content reload when auth state changes.
+    /// Reloads on sign-in, preserving the feed when an existing session refreshes its token.
     /// Sets the token on the API first so that the fetch always runs authenticated.
-    public func updateAuthToken(_ token: String?) async {
+    public func updateAuthToken(_ token: String?, reloadOnSignIn: Bool = true) async {
         let wasAuthenticated = hasAuthToken
         hasAuthToken = token != nil
         await api.setAuthToken(token)
-        if token != nil {
-            // Signed in — reload everything
+        if token == nil { onHomeLoaded?([]) }
+        if token != nil && !wasAuthenticated && reloadOnSignIn {
             loadContent(refresh: true, source: "updateAuthToken")
-        } else if wasAuthenticated {
+        } else if token == nil && wasAuthenticated {
             // Signed out — reload auth-gated sections to show local content instead
             let authSections: Set<BrowseSection.SectionType> = [.subscriptions, .channels]
             if authSections.contains(currentSection.type) {
@@ -314,8 +315,8 @@ extension BrowseViewModel {
     }
 
     private func fetchSection(_ section: BrowseSection) async {
-        isLoading = true
-        defer { isLoading = false }
+        guard !Task.isCancelled else { return }
+        defer { if !Task.isCancelled { isLoading = false } }
         browseLog.notice("Fetching section: \(section.title) (\(String(describing: section.type)))")
         do {
             try await withThrowingTaskGroup(of: Void.self) { group in

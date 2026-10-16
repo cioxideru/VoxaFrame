@@ -132,7 +132,8 @@ public struct HomeView: View {
         }
         .task(id: auth.accessToken) {
             await homeVM.updateAuthToken(auth.accessToken)
-            await sectionVM.updateAuthToken(auth.accessToken)
+            // Home has its own feed; load the section model only when its chip is visible.
+            await sectionVM.updateAuthToken(auth.accessToken, reloadOnSignIn: selectedSection.type != .home)
         }
         .task(id: selectedSection) {
             // Reset auto-retry flags when switching sections to prevent stale

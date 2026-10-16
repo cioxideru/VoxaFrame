@@ -140,7 +140,8 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 ## OQ-0013 — iOS HLS prewarm on card appearance
 
-- Status: awaiting physical-device measurement; owner: playback / release maintainer;
+- Status: targeted physical-device checks complete; broader reported slowdown remains unconfirmed;
+  owner: playback / release maintainer;
   basis: [ADR-0010](adr/0010-remove-iframe-player.md) and [PLAN-0006](exec-plans/completed/feed-version-shorts.md).
 - PLAN-0006 removes recurring card-driven WebView/BotGuard warmup on iOS, starts card
   prefetch from scroll visibility on iOS 18+, and uses the same VISIONOS HLS client as playback.
@@ -157,10 +158,16 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   warning about synchronous AVAudioSession activation on the main thread; the PiP run
   also reported a priority inversion. These are profiling leads, not measured causes
   of the user's whole-app slowdown.
-- Next step: install the exact candidate revision on the iPad and compare launch, feed scrolling,
-  and cold/warm tap-to-play with the same account and network. Record sample counts and an
-  app-scoped Instruments trace. Acceptance requires physical-device measurements; source
-  inspection and simulator functional checks alone do not prove the reported slowdown resolved.
+- [PLAN-0010](exec-plans/completed/ipad-performance.md) measured Debug 5.7 (25) on the same
+  physical iPad and fixed redundant startup loads and feed resets on token refresh.
+  `BrowseViewModel` Home fetch starts fell from three to one. Five-iteration launch and
+  scrolling comparisons showed no meaningful speedup (launch 0.397 s before, 0.395 s after).
+  All four physical launch/scroll/navigation/PiP tests passed; the final 20.71-second startup
+  trace recorded no hangs or animation hitches. The broad slowdown was not reproduced.
+- Next step for wider acceptance: compare an Xcode debugger-attached Run with standalone
+  launch, longer sessions and cold/warm tap-to-play using the same account and network.
+  Investigate the audio-session/priority-inversion leads if they recur in the slow scenario.
+  The targeted fixes and short device checks do not prove the whole-app report resolved.
 
 ## OQ-0014 — Firebase removal: Xcode project and App Store follow-up
 

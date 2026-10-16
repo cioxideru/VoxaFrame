@@ -9,6 +9,124 @@ import Testing
 @MainActor
 struct BrowseViewModelTests {
 
+    @Test("Initial foreground waits for sign-in instead of starting an anonymous Home load")
+    func initialForegroundDoesNotLoadBeforeAuthentication() async {
+        let mock = MockInnerTubeAPI()
+        mock.homeRowsResult = [VideoGroup(videos: [makeVideo("vid_0000001")])]
+        let vm = BrowseViewModel(api: mock)
+
+        vm.refreshIfStale()
+        #expect(!vm.isLoading)
+        #expect(mock.calls.isEmpty)
+        await vm.updateAuthToken("first-token")
+
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
+        #expect(mock.calls.filter { $0.method == "fetchHomeRows" }.count == 1)
+    }
+
+    @Test("Signed-out startup clears the widget without fetching a Home feed")
+    func signedOutStartupClearsWidgetWithoutFetching() async {
+        let mock = MockInnerTubeAPI()
+        let vm = BrowseViewModel(api: mock)
+        var widgetVideos: [Video]?
+        vm.onHomeLoaded = { widgetVideos = $0 }
+
+        await vm.updateAuthToken(nil)
+        vm.refreshIfStale()
+
+        #expect(widgetVideos == [])
+        #expect(!vm.isLoading)
+        #expect(mock.calls == [.init(method: "setAuthToken", args: ["nil"])])
+    }
+
+    @Test("Foreground refresh does not restart a load queued in the same event")
+    func foregroundRefreshKeepsQueuedLoad() async {
+        let mock = MockInnerTubeAPI()
+        mock.homeRowsResult = [VideoGroup(videos: [makeVideo("vid_0000001")])]
+        let vm = BrowseViewModel(api: mock)
+        vm.loadContent(source: "test")
+        #expect(vm.isLoading)
+
+        vm.refreshIfStale()
+
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
+        #expect(mock.calls.filter { $0.method == "fetchHomeRows" }.count == 1)
+    }
+
+    @Test("Replacing a queued feed load cancels it before it makes a request")
+    func replacedQueuedLoadDoesNotFetch() async {
+        let mock = MockInnerTubeAPI()
+        mock.homeRowsResult = [VideoGroup(videos: [makeVideo("vid_0000001")])]
+        let vm = BrowseViewModel(api: mock)
+        vm.loadContent(source: "test")
+        vm.loadContent(refresh: true, source: "test.replacement")
+
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
+        #expect(mock.calls.filter { $0.method == "fetchHomeRows" }.count == 1)
+    }
+
+    @Test(
+        "Refreshing credentials keeps the current feed and pagination",
+        arguments: [BrowseSection.SectionType.home, .subscriptions]
+    )
+    func tokenRefreshKeepsLoadedFeed(section: BrowseSection.SectionType) async {
+        let mock = MockInnerTubeAPI()
+        mock.homeRowsResult = [
+            VideoGroup(title: "Home", videos: [makeVideo("vid_0000001")], nextPageToken: "next-page")
+        ]
+        mock.subscriptionsResult = mock.homeRowsResult[0]
+        let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: section))
+        await vm.updateAuthToken("first-token")
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
+        let loadedAt = vm.loadedAt
+        let contentRequests = mock.calls.filter { $0.method != "setAuthToken" }
+
+        await vm.updateAuthToken("refreshed-token")
+
+        #expect(vm.loadedAt == loadedAt)
+        #expect(vm.videoGroups.first?.videos.first?.id == "vid_0000001")
+        #expect(vm.videoGroups.first?.nextPageToken == "next-page")
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
+        #expect(mock.calls.filter { $0.method != "setAuthToken" } == contentRequests)
+        #expect(mock.calls.last { $0.method == "setAuthToken" }?.args == ["refreshed-token"])
+    }
+
+    @Test("A hidden section can authenticate without replacing its feed")
+    func hiddenSectionDefersSignInReload() async {
+        let mock = MockInnerTubeAPI()
+        let vm = BrowseViewModel(api: mock)
+        vm.videoGroups = [VideoGroup(videos: [makeVideo("cached_0001")])]
+
+        await vm.updateAuthToken("first-token", reloadOnSignIn: false)
+
+        #expect(vm.videoGroups.first?.videos.first?.id == "cached_0001")
+        #expect(mock.calls == [.init(method: "setAuthToken", args: ["first-token"])])
+        mock.subscriptionsResult = VideoGroup(videos: [makeVideo("subs_000001")])
+        vm.select(section: BrowseSection(type: .subscriptions))
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
+        #expect(vm.videoGroups.first?.videos.first?.id == "subs_000001")
+        #expect(mock.calls.filter { $0.method == "fetchSubscriptions" }.count == 1)
+        #expect(!mock.calls.contains { $0.method == "fetchHomeRows" })
+    }
+
+    @Test("Deferring sign-in loading still clears account-only content on sign-out")
+    func deferredSignInStillHandlesSignOut() async {
+        let mock = MockInnerTubeAPI()
+        let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: .channels))
+        await vm.updateAuthToken("first-token", reloadOnSignIn: false)
+        vm.subscribedChannels = [Channel(id: "account-channel", title: "Account Channel")]
+        var widgetVideos: [Video]?
+        vm.onHomeLoaded = { widgetVideos = $0 }
+
+        await vm.updateAuthToken(nil, reloadOnSignIn: false)
+
+        #expect(vm.subscribedChannels.isEmpty)
+        #expect(widgetVideos == [])
+        #expect(!vm.hasAuthToken)
+        await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
+        #expect(!mock.calls.contains { $0.method == "fetchSubscribedChannels" })
+    }
+
     @Test("loadContent for .subscriptions calls fetchSubscriptions and populates videoGroups")
     func loadSubscriptionsPopulatesGroups() async {
         let mock = MockInnerTubeAPI()

@@ -24,6 +24,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0015) | current | 2026-10-15 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/completed/ipad-performance.md](exec-plans/completed/ipad-performance.md) | PLAN-0010: physical iPad measurements and redundant feed-load fixes | current | 2026-10-16 |
 | [exec-plans/completed/player-shorts-stability.md](exec-plans/completed/player-shorts-stability.md) | PLAN-0009: Shorts controls, loading and player presentation stability | current | 2026-10-16 |
 | [exec-plans/completed/remember-playback-quality.md](exec-plans/completed/remember-playback-quality.md) | PLAN-0008: saved playback quality and adaptive selection | current | 2026-10-16 |
 | [exec-plans/completed/player-video-scale.md](exec-plans/completed/player-video-scale.md) | PLAN-0007: player Fit / Fill control and simulator acceptance | current | 2026-10-16 |
