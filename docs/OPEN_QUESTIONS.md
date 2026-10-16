@@ -109,9 +109,12 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 - Status: open; owner: architecture maintainer; basis: [architecture](architecture.md),
   [ADR-0004](adr/0004-plain-init-injection.md), WS5/WS6/WS7/WS8.
-- The Foundation-only Core rule is not yet achieved: examples include SwiftUI in `AppSettings`,
-  AVFoundation in `SponsorBlockSkipManager`, JavaScriptCore in `BotGuardClient`, and Network in
-  `InnerTubeAPI`. Source boundaries, not the package target name, determine portability.
+- The Foundation-only Core rule is not yet achieved. PLAN-0011 moved the theme's SwiftUI
+  mapping and SponsorBlock's AVPlayer adapter into `SmartTubeIOS`. The Core import check
+  permits only specific remaining legacy files: Network in `InnerTubeAPI`/`VideoPreloadCache`,
+  JavaScriptCore in `BotGuardClient`, ActivityKit in `DownloadActivityAttributes`, and
+  ImageIO/UniformTypeIdentifiers in `HomeWidgetSnapshot`. Source boundaries, not the
+  package target name, determine portability.
 - `PlaybackSession`, the proposed resolver target and shared app navigation/composition are not
   present as the planned abstractions. Existing entry points and player types still own their
   own setup. Preserve behavior while defining the next authorized slice; do not treat the private

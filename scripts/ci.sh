@@ -6,6 +6,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 scripts/check-no-secrets.sh
 scripts/check-doc-links.sh
+python3 scripts/check-core-imports.py
 xcrun swift-format lint --strict --recursive --configuration .swift-format \
     SmartTubeIOS/Sources SmartTubeIOS/Tests SmartTubeApp/Sources SmartTubeApp/UITests "SmartTubeApp/Smart Tube"
 (cd SmartTubeIOS && swift test --parallel)

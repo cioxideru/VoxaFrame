@@ -1,4 +1,21 @@
 import AVFoundation
+import Observation
+import SmartTubeIOSCore
+
+/// The native seek surface used by SponsorBlock; decisions remain in Core.
+@MainActor
+public protocol SponsorBlockSeeking: AnyObject {
+    var sponsorBlockDuration: Double? { get }
+    func seekSponsorSegment(to: CMTime, toleranceBefore: CMTime, toleranceAfter: CMTime) async -> Bool
+}
+
+extension AVPlayer: SponsorBlockSeeking {
+    public var sponsorBlockDuration: Double? { currentItem?.duration.seconds }
+
+    public func seekSponsorSegment(to target: CMTime, toleranceBefore: CMTime, toleranceAfter: CMTime) async -> Bool {
+        await seek(to: target, toleranceBefore: toleranceBefore, toleranceAfter: toleranceAfter)
+    }
+}
 
 // MARK: - SponsorBlockDelegate
 
@@ -28,7 +45,7 @@ public final class SponsorBlockSkipManager {
     // MARK: - State
 
     public var sponsorSegments: [SponsorSegment] = []
-    public var currentToastSegment: SponsorSegment? = nil
+    public var currentToastSegment: SponsorSegment?
     /// True while a SponsorBlock auto-skip seek is in-flight. Guards against the
     /// periodic time observer re-triggering before the seek completes.
     public private(set) var isSkippingSegment: Bool = false
@@ -36,15 +53,29 @@ public final class SponsorBlockSkipManager {
     // MARK: - Dependencies
 
     @ObservationIgnored public weak var delegate: (any SponsorBlockDelegate)?
-    @ObservationIgnored public var player: AVPlayer?
+    @ObservationIgnored public var player: (any SponsorBlockSeeking)?
+
+    @ObservationIgnored private(set) var skipTask: Task<Void, Never>?
+    @ObservationIgnored var waitAfterSeek: @MainActor () async throws -> Void = {
+        try await Task.sleep(nanoseconds: 200_000_000)
+    }
 
     // MARK: - Init
 
     public init() {}
 
+    deinit { skipTask?.cancel() }
+
     // MARK: - Interface
 
+    func cancelPendingSkip() {
+        skipTask?.cancel()
+        skipTask = nil
+        isSkippingSegment = false
+    }
+
     public func reset() {
+        cancelPendingSkip()
         sponsorSegments = []
         currentToastSegment = nil
         isSkippingSegment = false
@@ -61,7 +92,7 @@ public final class SponsorBlockSkipManager {
             currentToastSegment = nil
             return false
         }
-        let effectiveDuration = player?.currentItem?.duration.seconds ?? delegate.duration
+        let effectiveDuration = player?.sponsorBlockDuration ?? delegate.duration
         let decision = SponsorBlockDecisionEngine.decide(
             at: time,
             segments: sponsorSegments,
@@ -82,19 +113,22 @@ public final class SponsorBlockSkipManager {
             return true
         case .skip(let target, _):
             currentToastSegment = nil
-            isSkippingSegment = true
             guard let player else { return true }
-            player.seek(
-                to: CMTime(seconds: target, preferredTimescale: 600),
-                toleranceBefore: .zero,
-                toleranceAfter: CMTime(seconds: 0.5, preferredTimescale: 600)
-            ) { [weak self] finished in
-                Task { @MainActor [weak self] in
-                    guard let self else { return }
-                    if finished { self.delegate?.snapCurrentTime(to: target) }
-                    try? await Task.sleep(nanoseconds: 200_000_000)
-                    self.isSkippingSegment = false
-                }
+            isSkippingSegment = true
+            let waitAfterSeek = waitAfterSeek
+            skipTask = Task { @MainActor [weak self] in
+                guard !Task.isCancelled else { return }
+                let finished = await player.seekSponsorSegment(
+                    to: CMTime(seconds: target, preferredTimescale: 600),
+                    toleranceBefore: .zero,
+                    toleranceAfter: CMTime(seconds: 0.5, preferredTimescale: 600)
+                )
+                guard !Task.isCancelled else { return }
+                if finished { self?.delegate?.snapCurrentTime(to: target) }
+                do { try await waitAfterSeek() } catch { return }
+                guard !Task.isCancelled else { return }
+                self?.isSkippingSegment = false
+                self?.skipTask = nil
             }
             return true
         case .none:
@@ -106,7 +140,7 @@ public final class SponsorBlockSkipManager {
     public func skipToastSegment() {
         guard let seg = currentToastSegment else { return }
         currentToastSegment = nil
-        let effectiveDuration = player?.currentItem?.duration.seconds ?? delegate?.duration ?? 0
+        let effectiveDuration = player?.sponsorBlockDuration ?? delegate?.duration ?? 0
         if effectiveDuration > 0 && seg.end >= effectiveDuration - 2.0 {
             delegate?.handlePlaybackEnd()
             return

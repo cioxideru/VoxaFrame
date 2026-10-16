@@ -1,6 +1,7 @@
 import AVFoundation
 import Testing
 
+@testable import SmartTubeIOS
 @testable import SmartTubeIOSCore
 
 // MARK: - SponsorBlockSkipManager unit tests
@@ -21,6 +22,7 @@ private final class SpyDelegate: SponsorBlockDelegate {
     var playbackEndCalled = false
     var showControlsCalled = false
     var snapCalled: Double? = nil
+    var snappedTimes: [Double] = []
 
     init(sponsorBlockEnabled: Bool = true) {
         var s = AppSettings()
@@ -31,7 +33,34 @@ private final class SpyDelegate: SponsorBlockDelegate {
     func seek(to seconds: Double) { seekCalled = seconds }
     func handlePlaybackEnd() { playbackEndCalled = true }
     func showControls() { showControlsCalled = true }
-    func snapCurrentTime(to seconds: Double) { snapCalled = seconds }
+    func snapCurrentTime(to seconds: Double) {
+        snapCalled = seconds
+        snappedTimes.append(seconds)
+    }
+}
+
+@MainActor
+private final class SeekSpy: SponsorBlockSeeking {
+    var sponsorBlockDuration: Double? = 100
+    var finished = true
+    var targets: [Double] = []
+    var holdSeek = false
+    private var pendingSeek: CheckedContinuation<Bool, Never>?
+    var toleranceBefore: Double?
+    var toleranceAfter: Double?
+
+    func seekSponsorSegment(to target: CMTime, toleranceBefore: CMTime, toleranceAfter: CMTime) async -> Bool {
+        targets.append(target.seconds)
+        self.toleranceBefore = toleranceBefore.seconds
+        self.toleranceAfter = toleranceAfter.seconds
+        if holdSeek { return await withCheckedContinuation { pendingSeek = $0 } }
+        return finished
+    }
+
+    func finishSeek() {
+        pendingSeek?.resume(returning: finished)
+        pendingSeek = nil
+    }
 }
 
 // MARK: - Tests
@@ -41,26 +70,82 @@ struct SponsorBlockSkipManagerTests {
 
     // MARK: - 1. .skip category triggers seek
 
-    @Test(".skip segment returns true and triggers seek on delegate")
-    @MainActor func skipCategorySeeks() async {
+    @Test("Auto-skip preserves precise seek tolerances and only snaps after success", arguments: [true, false])
+    @MainActor func skipCategorySeeks(finished: Bool) async {
         let manager = SponsorBlockSkipManager()
         let delegate = SpyDelegate()
-        let player = AVPlayer()
+        let player = SeekSpy()
+        manager.waitAfterSeek = {}
+        player.finished = finished
         manager.delegate = delegate
         manager.player = player
-        manager.sponsorSegments = [
-            SponsorSegment(
-                id: UUID(), start: 10.0, end: 30.0, category: .sponsor
-            )
-        ]
-        // Override delegate settings to use .skip for sponsor
-        var settings = AppSettings()
-        settings.sponsorBlockEnabled = true
-        settings.sponsorBlockActions[.sponsor] = .skip
-        delegate.settings = settings
+        manager.sponsorSegments = [SponsorSegment(id: UUID(), start: 10, end: 30, category: .sponsor)]
+        delegate.settings.sponsorBlockActions[.sponsor] = .skip
 
-        let result = manager.checkSponsorSkip(at: 15.0)
-        #expect(result == true)
+        #expect(manager.checkSponsorSkip(at: 15))
+        #expect(manager.isSkippingSegment)
+        #expect(manager.checkSponsorSkip(at: 16))
+        await waitForTasks { !manager.isSkippingSegment }
+        #expect(player.targets == [30])
+        #expect(player.toleranceBefore == 0)
+        #expect(player.toleranceAfter == 0.5)
+        #expect(delegate.snapCalled == (finished ? 30 : nil))
+        #expect(!delegate.playbackEndCalled)
+    }
+
+    @Test("Reset or stop before the queued skip starts prevents the native seek", arguments: [true, false])
+    @MainActor func resetBeforeSeekStarts(reset: Bool) async {
+        let player = SeekSpy()
+        do {
+            let manager = SponsorBlockSkipManager()
+            let delegate = SpyDelegate()
+            delegate.settings.sponsorBlockActions[.sponsor] = .skip
+            manager.delegate = delegate
+            manager.player = player
+            manager.sponsorSegments = [SponsorSegment(id: UUID(), start: 10, end: 30, category: .sponsor)]
+            manager.checkSponsorSkip(at: 15)
+            let queuedSkip = manager.skipTask
+            if reset {
+                manager.reset()
+            } else {
+                manager.cancelPendingSkip()
+            }
+            await queuedSkip?.value
+            #expect(manager.sponsorSegments.count == (reset ? 0 : 1))
+            #expect(!manager.isSkippingSegment)
+        }
+        #expect(player.targets.isEmpty)
+    }
+
+    @Test("Reset ignores an old seek completion while a new skip is pending")
+    @MainActor func resetRejectsLateSeek() async {
+        let manager = SponsorBlockSkipManager()
+        manager.waitAfterSeek = {}
+        let delegate = SpyDelegate()
+        delegate.settings.sponsorBlockActions[.sponsor] = .skip
+        manager.delegate = delegate
+        let oldPlayer = SeekSpy()
+        oldPlayer.holdSeek = true
+        manager.player = oldPlayer
+        manager.sponsorSegments = [SponsorSegment(id: UUID(), start: 10, end: 30, category: .sponsor)]
+        manager.checkSponsorSkip(at: 15)
+        await waitForTasks { oldPlayer.targets.count == 1 }
+        let oldSkip = manager.skipTask
+        manager.reset()
+        let newPlayer = SeekSpy()
+        newPlayer.holdSeek = true
+        manager.player = newPlayer
+        manager.sponsorSegments = [SponsorSegment(id: UUID(), start: 40, end: 60, category: .sponsor)]
+        manager.checkSponsorSkip(at: 45)
+        await waitForTasks { newPlayer.targets.count == 1 }
+        oldPlayer.finishSeek()
+        await oldSkip?.value
+        #expect(manager.isSkippingSegment)
+        #expect(delegate.snappedTimes.isEmpty)
+        newPlayer.finishSeek()
+        await waitForTasks { !manager.isSkippingSegment }
+        #expect(delegate.snappedTimes == [60])
+        #expect(newPlayer.targets == [60])
     }
 
     // MARK: - 2. isSkippingSegment guard prevents re-entry
@@ -70,7 +155,7 @@ struct SponsorBlockSkipManagerTests {
         let manager = SponsorBlockSkipManager()
         let delegate = SpyDelegate()
         manager.delegate = delegate
-        manager.player = AVPlayer()
+        manager.player = SeekSpy()
         manager.sponsorSegments = [
             SponsorSegment(
                 id: UUID(), start: 5.0, end: 20.0, category: .sponsor

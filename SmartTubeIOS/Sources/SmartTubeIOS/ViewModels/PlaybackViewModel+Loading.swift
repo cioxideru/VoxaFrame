@@ -54,6 +54,7 @@ extension PlaybackViewModel {
         if isIncognito == incognito, resumeParkedItem(for: video) {
             return
         }
+        sponsorBlockManager.reset()
         // Different video or parked item expired — clear parked state and tear down old item.
         if parkedVideoId != nil {
             player.replaceCurrentItem(with: nil)
@@ -355,6 +356,7 @@ extension PlaybackViewModel {
     // MARK: - Cleanup
 
     public func stop() {
+        sponsorBlockManager.cancelPendingSkip()
         cancelBackgroundQualityUpgrade()
         audioOnlySwapTask?.cancel()
         // Release the presenting view before teardown; suspend() keeps its handler.

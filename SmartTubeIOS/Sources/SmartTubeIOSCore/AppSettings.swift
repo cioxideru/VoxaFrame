@@ -1,5 +1,4 @@
 import Foundation
-import SwiftUI
 
 // MARK: - AppSettings
 
@@ -246,14 +245,6 @@ public struct AppSettings: Codable {
         case system = "System"
         case dark = "Dark"
         case light = "Light"
-
-        public var colorScheme: ColorScheme? {
-            switch self {
-            case .system: return nil
-            case .dark: return .dark
-            case .light: return .light
-            }
-        }
     }
 
     // MARK: Defaults

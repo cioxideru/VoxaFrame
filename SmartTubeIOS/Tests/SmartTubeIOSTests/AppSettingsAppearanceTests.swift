@@ -1,10 +1,19 @@
 import Foundation
+import SwiftUI
 import Testing
 
+@testable import SmartTubeIOS
 @testable import SmartTubeIOSCore
 
 @Suite("AppSettings accent color and grid columns")
 struct AppSettingsAppearanceTests {
+
+    @Test("Theme UI adapter preserves system, dark and light appearance")
+    func themeColorScheme() {
+        #expect(AppSettings.ThemeName.system.colorScheme == nil)
+        #expect(AppSettings.ThemeName.dark.colorScheme == ColorScheme.dark)
+        #expect(AppSettings.ThemeName.light.colorScheme == ColorScheme.light)
+    }
 
     private func decode(_ json: String) throws -> AppSettings {
         try JSONDecoder().decode(AppSettings.self, from: Data(json.utf8))

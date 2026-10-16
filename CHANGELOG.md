@@ -34,6 +34,11 @@ All notable changes to SmartTube are documented here.
   widget snapshot. Startup waits for a usable token, foreground refresh does not
   duplicate authentication loading, and token rotation preserves the feed. Sign-out
   clears the snapshot; late feed or thumbnail results cannot restore the old account.
+- **Core boundaries (PLAN-0011)** move the theme's SwiftUI mapping and SponsorBlock's
+  native seek adapter into the UI/platform target. CI rejects new platform imports
+  outside explicit legacy exceptions. Queue reordering preserves SwiftUI semantics
+  without importing it into Core; stopped or replaced SponsorBlock seeks cannot
+  update a newer playback session.
 - **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
   restarts a queued load when the app becomes active. Cancelled queued loads skip
   their requests. Token refresh keeps the current cards and pagination instead

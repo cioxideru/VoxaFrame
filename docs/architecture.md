@@ -3,7 +3,7 @@
 > How to update this doc: use `scripts/metrics.sh` for measured source metrics;
 > update the target list whenever WS8 changes `Package.swift` targets. This doc describes
 > the system as it is. Planned work and verification gaps are in [open questions](OPEN_QUESTIONS.md).
-> Reviewed against source on 2026-10-15; runtime acceptance was not repeated.
+> Source boundaries and ownership updated on 2026-10-16; physical-device acceptance remains separate.
 
 ## Containers
 
@@ -42,13 +42,13 @@ graph TD
     WebPlayer --> InnerTube
 ```
 
-Dependency direction: `SmartTubeIOSCore` must never import `SmartTubeIOS`, SwiftUI, UIKit, AVFoundation, or WebKit (intended rule; existing violations are tracked in [OQ-0009](OPEN_QUESTIONS.md#oq-0009--architecture-debt)). App targets depend on the package; the package never depends on an app target.
+Dependency direction: `SmartTubeIOSCore` must never import `SmartTubeIOS`, SwiftUI, UIKit, AVFoundation, or WebKit. The [Core import check](../scripts/check-core-imports.py) enforces permitted imports, including a file-scoped list of remaining legacy adapters tracked in [OQ-0009](OPEN_QUESTIONS.md#oq-0009--architecture-debt). App targets depend on the package; the package never depends on an app target.
 
 ## Modules
 
 | Module / area | Directory | Owner workstream | Notes |
 |---|---|---|---|
-| `SmartTubeIOSCore` | `SmartTubeIOS/Sources/SmartTubeIOSCore/` | WS6 (core hardening), WS3 (tests) | Should be Foundation-only; currently imports SwiftUI/AVFoundation/JavaScriptCore/ActivityKit/Network too |
+| `SmartTubeIOSCore` | `SmartTubeIOS/Sources/SmartTubeIOSCore/` | WS6 (core hardening), WS3 (tests) | Foundation-only remains the target; explicit legacy imports: Network, JavaScriptCore, ActivityKit, ImageIO and UniformTypeIdentifiers |
 | `SmartTubeIOS` (views/view models/services) | `SmartTubeIOS/Sources/SmartTubeIOS/` | WS7 (UI/composition), WS4/WS5 (player) | |
 | Playback (`PlaybackViewModel` + AVPlayer path) | `SmartTubeIOS/Sources/SmartTubeIOS/ViewModels/PlaybackViewModel*.swift` | WS4 (seams/pipeline), WS5 (session) | The critical path — see below |
 | Shorts player | `SmartTubeIOS/Sources/SmartTubeIOS/Views/Player/ShortsPlayerView*.swift` | WS5 | Vertical-swipe UI over `PlaybackViewModel` on all platforms |
@@ -59,6 +59,19 @@ Dependency direction: `SmartTubeIOSCore` must never import `SmartTubeIOS`, Swift
 | Docs / plans | `docs/**` | WS2 | [Plan lifecycle](exec-plans/README.md) |
 
 The private ownership/modernization records have not been imported or checked; see [OQ-0001](OPEN_QUESTIONS.md#oq-0001--public-documentation-migration).
+
+## Home feed and settings
+
+App entry points own one `HomeViewModel`, inject it into the visible Home and attach
+`HomeWidgetPublisher` to its completed result. The app's separate `BrowseViewModel`
+still serves navigation and other sections, but does not fetch a hidden Home feed.
+Session changes invalidate pending Home results and clear the widget; access-token
+rotation preserves the existing feed. Widget image work runs outside the main actor;
+the final snapshot write and sign-out clear are serialized together.
+
+Home's section model receives the saved History setting before authentication or
+section loading. Core retains settings data and SponsorBlock decisions; the theme's
+SwiftUI mapping and SponsorBlock's native seek adapter live in `SmartTubeIOS`.
 
 ## Playback
 
@@ -77,6 +90,8 @@ PiP controller and delegate. Fullscreen and mini-player containers attach that
 same layer only when their presentation is active. PiP entry dismisses fullscreen;
 the UIKit presenter confirms restoration after presentation and layout finish.
 Shorts own a separate playback view model and stop the regular player on entry.
+Presentation reads video identity from the playback model, with no separate current-video
+copy. A stopped, parked item is excluded from presentation until explicitly reopened.
 
 Current source inspection is distinct from [device acceptance](OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).
 

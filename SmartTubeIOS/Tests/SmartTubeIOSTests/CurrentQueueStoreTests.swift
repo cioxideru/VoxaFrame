@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 
 @testable import SmartTubeIOSCore
@@ -110,6 +111,22 @@ struct CurrentQueueStoreTests {
         await store.move(from: IndexSet(integer: 0), to: 3)  // move first to last
         #expect(await store.videos[0].id == "bbb22222222")
         #expect(await store.videos[2].id == "aaa11111111")
+    }
+
+    @Test("Queue moves match SwiftUI for every selection and insertion position")
+    func moveMatchesSwiftUI() async {
+        let original = (0..<5).map { makeVideo(id: "video-\($0)") }
+        let store = makeStore()
+        for mask in 0..<(1 << original.count) {
+            let source = IndexSet(original.indices.filter { mask & (1 << $0) != 0 })
+            for destination in 0...original.count {
+                var expected = original
+                expected.move(fromOffsets: source, toOffset: destination)
+                await store.replaceAll(with: original)
+                await store.move(from: source, to: destination)
+                #expect(await store.videos == expected)
+            }
+        }
     }
 
     // MARK: - clear
