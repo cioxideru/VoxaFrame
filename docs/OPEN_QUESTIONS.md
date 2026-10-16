@@ -49,7 +49,17 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 ## OQ-0005 — Playback device acceptance
 
 - Status: open; owner: playback/test maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
-- **NOT RUN in this review:** iOS regular-video and Shorts playback through AVPlayer after the
+- [PLAN-0009](exec-plans/completed/player-shorts-stability.md) adds persistent Shorts
+  controls and repairs loading state, video-layer attachment and PiP restoration.
+  iPad simulator checks cover real feed Shorts, seeking, mute, pause and repeated
+  mini-player transitions. On 2026-10-16, the candidate working tree also passed two
+  physical iPad Pro 11-inch (M5), iPadOS 27.0.1 tests without skips: three system PiP
+  entry/return cycles with Home visible underneath and preserved playback, and real
+  Shorts next/previous navigation with accessible controls. Restored video was
+  visually confirmed after two seconds of playback; transient black frames are not excluded.
+  Background recovery, long-session reliability, the codec matrix and tvOS runtime
+  remain unverified; test these before closing this entry.
+- **Historical 2026-10-15 review, before the focused checks above — NOT RUN:** iOS regular-video and Shorts playback through AVPlayer after the
   embed players were removed (ADR-0010), including swipe navigation, end-of-Short behavior and
   per-Short load errors (the embed path's auto-advance-on-error is gone); minimize/expand/stop
   audio continuity, background/foreground recovery, physical-device PiP;
@@ -89,8 +99,9 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 ## OQ-0008 — Shorts follow-ups
 
 - Status: deferred; owner: playback maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
-- Shorts now play through `PlaybackViewModel` on every platform. Like/dislike and comments UI in
-  the Shorts overlay, and pre-warming the next Short for instant swipes, are not implemented.
+- Shorts now play through `PlaybackViewModel` on every platform, with playback controls
+  delivered in PLAN-0009. Like/dislike and comments UI in the Shorts overlay remain deferred.
+  Lookahead fetches metadata for the next two Shorts; instant decoded-frame readiness is unverified.
   Decide which follow-ups are still wanted before making an execution plan; runtime verification
   is OQ-0005.
 
@@ -142,6 +153,10 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Physical profiling was attempted on the user's iPad Pro 11-inch (M5), iPadOS 27.0.1,
   with installed version 5.6 (24). The trace disconnected without usable samples, and later
   app-scoped attachment could not find the process. Version 5.7 (25) was tested in Simulator.
+- The 2026-10-16 physical PiP/Shorts tests passed functionally but reported a runtime
+  warning about synchronous AVAudioSession activation on the main thread; the PiP run
+  also reported a priority inversion. These are profiling leads, not measured causes
+  of the user's whole-app slowdown.
 - Next step: install the exact candidate revision on the iPad and compare launch, feed scrolling,
   and cold/warm tap-to-play with the same account and network. Record sample counts and an
   app-scoped Instruments trace. Acceptance requires physical-device measurements; source

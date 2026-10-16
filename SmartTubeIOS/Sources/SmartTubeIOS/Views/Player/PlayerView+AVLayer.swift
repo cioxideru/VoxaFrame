@@ -13,35 +13,52 @@ import AppKit
 //
 // Extracted from PlayerView.swift to keep that file under 1 000 lines.
 
-// MARK: - FullScreenPlayerLayerView (iOS)
+// MARK: - PersistentPlayerLayerView (iOS)
 
 #if os(iOS)
-/// UIViewRepresentable that embeds the shared PersistentPlayerHostView into the
-/// full-screen player context. UIView.addSubview transplants the hostView from
-/// the mini-player container automatically, keeping the AVPlayerLayer live.
-struct FullScreenPlayerLayerView: UIViewRepresentable {
-    let hostView: PersistentPlayerHostView
+/// Only the current presentation may move the shared layer. A retained, offscreen
+/// container must not steal it during UIKit/SwiftUI transition updates.
+struct PersistentPlayerLayerView: UIViewRepresentable {
+    @Environment(PlayerStateStore.self) private var playerState
+    let presentation: PlayerStateStore.Presentation
     var videoGravity: AVLayerVideoGravity
 
-    func makeUIView(context: Context) -> UIView {
-        let container = UIView()
+    func makeUIView(context: Context) -> Container {
+        let container = Container()
         container.backgroundColor = .black
         container.isAccessibilityElement = false
         container.accessibilityElementsHidden = true
-        hostView.videoGravity = videoGravity
-        hostView.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(hostView)
-        NSLayoutConstraint.activate([
-            hostView.topAnchor.constraint(equalTo: container.topAnchor),
-            hostView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            hostView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            hostView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-        ])
         return container
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        hostView.videoGravity = videoGravity
+    func updateUIView(_ container: Container, context: Context) {
+        let state = playerState
+        container.attach = { [weak state, weak container] in
+            guard let state, let container,
+                state.presentation == presentation, container.window != nil
+            else { return }
+            let host = state.playerHostView
+            if host.superview !== container {
+                host.translatesAutoresizingMaskIntoConstraints = true
+                host.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                container.addSubview(host)
+            }
+            host.frame = container.bounds
+            host.videoGravity = videoGravity
+        }
+        container.attach?()
+    }
+
+    final class Container: UIView {
+        var attach: (() -> Void)?
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            attach?()
+        }
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            attach?()
+        }
     }
 }
 #endif
@@ -73,7 +90,7 @@ struct PlayerAVLayerView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: _PlayerUIView, context: Context) {
-        uiView.playerLayer.player = player
+        if uiView.playerLayer.player !== player { uiView.playerLayer.player = player }
         uiView.playerLayer.videoGravity = videoGravity
     }
 
@@ -108,15 +125,14 @@ struct PlayerAVLayerView: UIViewRepresentable {
 /// smooth transition back to full-screen without rebuffering.
 final class PiPDelegate: NSObject, AVPictureInPictureControllerDelegate {
     private let onActiveChange: (Bool) -> Void
-    private let onDidStart: (() -> Void)?
+    private let onRestore: (@escaping (Bool) -> Void) -> Void
 
-    init(onActiveChange: @escaping (Bool) -> Void, onDidStart: (() -> Void)? = nil) {
+    init(onActiveChange: @escaping (Bool) -> Void, onRestore: @escaping (@escaping (Bool) -> Void) -> Void) {
         self.onActiveChange = onActiveChange
-        self.onDidStart = onDidStart
+        self.onRestore = onRestore
     }
 
     func pictureInPictureControllerDidStartPictureInPicture(_ controller: AVPictureInPictureController) {
-        onDidStart?()
         onActiveChange(true)
     }
 
@@ -132,10 +148,7 @@ final class PiPDelegate: NSObject, AVPictureInPictureControllerDelegate {
         _ controller: AVPictureInPictureController,
         restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void
     ) {
-        // The AVPlayerLayer is always present and visible in PlayerView, so the
-        // UI is immediately ready. Calling completionHandler(true) right away
-        // lets AVKit animate the video seamlessly back into the layer.
-        completionHandler(true)
+        onRestore(completionHandler)
     }
 }
 

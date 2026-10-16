@@ -166,7 +166,7 @@ struct MainTabView: View {
             "[MainTabView] body re-render — presentation=\(String(describing: playerState.presentation)) fullScreenVideo=\(fullScreenVideo?.id ?? "nil")"
         )
         let fullScreenBinding = Binding<Video?>(
-            get: { fullScreenVideo },
+            get: { playerState.presentation == .fullScreen ? playerState.currentVideo : nil },
             set: { newValue in
                 // Only transition to mini player when the cover is dismissed while
                 // presentation is still .fullScreen. If stop() already moved us to

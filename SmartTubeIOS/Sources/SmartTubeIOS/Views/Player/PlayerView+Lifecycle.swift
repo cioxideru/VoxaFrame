@@ -345,8 +345,7 @@ extension PlayerView {
             vm.updateSettings(store.settings)
             vm.updateAuthToken(authService.accessToken)
             vm.updateSAPISID(authService.sapisid)
-            // Expanding from the mini-player gives a fresh @State with no controller while
-            // isPlaying stays true, so onChange(of: vm.isPlaying) alone would never create one.
+            // Recheck settings on expansion; the store keeps the existing controller.
             ensurePiPController()
             if ProcessInfo.processInfo.arguments.contains("--uitesting-open-more-menu") {
                 playerLifecycleLog.notice(
@@ -440,11 +439,7 @@ extension PlayerView {
             )
             UIDevice.current.endGeneratingDeviceOrientationNotifications()
             // Skip suspend when minimizing to mini-player — playback should continue.
-            guard playerState.presentation != .miniPlayer else { return }
-            // Player view is being fully dismissed — release PiP controller so the
-            // next play session creates a fresh one bound to the current playerLayer.
-            pipController = nil
-            pipDelegate = nil
+            guard playerState.presentation == .hidden else { return }
             vm.suspend()
             #else
             vm.suspend()
@@ -557,31 +552,8 @@ extension PlayerView {
     }
 
     #if os(iOS)
-    /// Creates the PiP controller once the player is actually playing (AVPlayer needs a
-    /// ready item, otherwise isPictureInPicturePossible never becomes true), and releases
-    /// it when PiP is turned off in settings. The controller is kept after PiP ends:
-    /// playerLayer is owned by playerState and outlives PiP (TD-5). Called from onAppear
-    /// and onChange(of: vm.isPlaying); also released in onDisappear on full dismissal.
     func ensurePiPController() {
-        guard store.settings.pipEnabled else {
-            pipController = nil
-            pipDelegate = nil
-            return
-        }
-        let pipUITestingOverride = ProcessInfo.processInfo.arguments.contains("--uitesting-enable-pip")
-        guard vm.isPlaying, pipController == nil,
-            playerLayer.player != nil,
-            pipUITestingOverride || AVPictureInPictureController.isPictureInPictureSupported()
-        else { return }
-        let pip = AVPictureInPictureController(playerLayer: playerLayer)
-        pip?.canStartPictureInPictureAutomaticallyFromInline = true
-        let delegate = PiPDelegate(
-            onActiveChange: { active in isPiPActive = active },
-            onDidStart: { vm.updateNowPlayingInfo() }
-        )
-        pip?.delegate = delegate
-        pipDelegate = delegate
-        pipController = pip
+        playerState.configurePiP(enabled: store.settings.pipEnabled)
     }
     #endif
 
@@ -598,8 +570,8 @@ extension PlayerView {
             controlScale: controlScale,
             showMoreMenu: $showMoreMenu,
             channelDestination: $channelDestination,
-            pipController: $pipController,
-            isPiPActive: $isPiPActive,
+            pipController: playerState.pipController,
+            isPiPActive: playerState.isPiPActive,
             isLandscapeLocked: $isLandscapeLocked,
             showQualityPicker: $showQualityPicker,
             showSpeedPicker: $showSpeedPicker,

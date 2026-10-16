@@ -79,7 +79,7 @@ final class ShortsSwipeUITests: XCTestCase {
     /// A short swipe must work with the same AVPlayerLayer used outside UI tests.
     func testShortSwipeAdvancesWithoutControls() {
         let player = openControls()
-        XCTAssertFalse(app.buttons[AccessibilityID.shortsBackButton].exists)
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].exists)
         let start = player.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
         start.press(
             forDuration: 0, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -100)),
@@ -186,6 +186,25 @@ final class ShortsSwipeUITests: XCTestCase {
             "Swipe up should advance to the next short even when controls are visible")
     }
 
+    func testControlsRemainAvailableAndMuteSurvivesNextShort() {
+        let player = openControls()
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].isHittable)
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsPlayPauseButton].exists)
+        XCTAssertTrue(app.sliders[AccessibilityID.shortsSeekBar].exists)
+        let mute = app.buttons[AccessibilityID.shortsMuteButton]
+        XCTAssertTrue(mute.isHittable)
+        mute.tap()
+        XCTAssertEqual(mute.value as? String, "Muted")
+        swipe(.up, on: player)
+        let next = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label == %@", "2 / 3"), object: indexLabel)
+        XCTAssertEqual(XCTWaiter.wait(for: [next], timeout: 5), .completed)
+        XCTAssertEqual(mute.value as? String, "Muted")
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].isHittable)
+        mute.tap()
+        XCTAssertEqual(mute.value as? String, "Sound on")
+    }
+
     /// Swipe down returns to the previous short even when the controls overlay is shown.
     func testSwipeDownWorksWhenControlsAreVisible() {
         let player = openControls()
@@ -206,6 +225,59 @@ final class ShortsSwipeUITests: XCTestCase {
         XCTAssertEqual(
             indexLabel.label, "1 / 3",
             "Swipe down should return to the previous short even when controls are visible")
+    }
+}
+
+final class ShortsPlaybackControlsUITests: XCTestCase {
+    func testPauseMuteSeekAndAdvanceKeepWorking() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--uitesting", "--uitesting-reset-settings", "--uitesting-shorts",
+            "--uitesting-disable-sponsorblock", "--uitesting-shorts-ids=fKopy74weus,9bZkp7q19f0",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+        app.launch()
+        defer { app.terminate() }
+        let play = app.buttons[AccessibilityID.shortsPlayPauseButton]
+        let time = app.staticTexts[AccessibilityID.shortsTimeLabel]
+        func seconds() -> Int {
+            guard time.exists, let elapsed = time.label.components(separatedBy: " / ").first else { return -1 }
+            return elapsed.split(separator: ":").reduce(0) { $0 * 60 + (Int($1) ?? 0) }
+        }
+        func wait(
+            _ predicate: NSPredicate, timeout: TimeInterval = 10, file: StaticString = #filePath, line: UInt = #line
+        ) {
+            XCTAssertEqual(
+                XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: nil)], timeout: timeout),
+                .completed, file: file, line: line)
+        }
+        wait(NSPredicate { _, _ in play.exists && play.isEnabled && seconds() > 1 }, timeout: 45)
+        play.tap()
+        XCTAssertEqual(play.label, "Play")
+        let paused = seconds()
+        let advancedWhilePaused = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in seconds() > paused + 1 }, object: nil)
+        advancedWhilePaused.isInverted = true
+        XCTAssertEqual(XCTWaiter.wait(for: [advancedWhilePaused], timeout: 2), .completed)
+        app.buttons[AccessibilityID.shortsMuteButton].tap()
+        XCTAssertEqual(play.label, "Play", "Muting must not resume a paused Short")
+        app.sliders[AccessibilityID.shortsSeekBar].adjust(toNormalizedSliderPosition: 0.25)
+        wait(NSPredicate { _, _ in seconds() > paused + 5 })
+        XCTAssertEqual(
+            app.staticTexts[AccessibilityID.shortsIndexLabel].label, "1 / 2",
+            "Horizontal scrubbing must not change the Short")
+        play.tap()
+        let resumed = seconds()
+        wait(NSPredicate { _, _ in seconds() > resumed + 1 })
+        app.windows.firstMatch.swipeUp(velocity: .fast)
+        wait(NSPredicate { _, _ in app.staticTexts[AccessibilityID.shortsIndexLabel].label == "2 / 2" })
+        wait(NSPredicate { _, _ in play.isEnabled && seconds() > 1 }, timeout: 45)
+        XCTAssertEqual(app.buttons[AccessibilityID.shortsMuteButton].value as? String, "Muted")
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Playing second Short with persistent controls"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
     }
 }
 
@@ -291,10 +363,10 @@ final class ShortsLiveSwipeUITests: XCTestCase {
         guard sectionFeed.waitForExistence(timeout: 20) else { return }
     }
 
-    /// Waits up to `timeout` seconds for any `video.card.*` element to appear
+    /// Waits up to `timeout` seconds for any `shorts.card.*` element to appear
     /// inside the Shorts section feed and returns the first one.
-    private func waitForFirstVideoCard(timeout: TimeInterval = 10) -> XCUIElement? {
-        let predicate = NSPredicate(format: "identifier BEGINSWITH 'video.card.'")
+    private func waitForFirstShortsCard(timeout: TimeInterval = 10) -> XCUIElement? {
+        let predicate = NSPredicate(format: "identifier BEGINSWITH %@", AccessibilityID.shortsCard(""))
         let cards = app.descendants(matching: .any).matching(predicate)
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "count > 0"), object: cards)
         let result = XCTWaiter().wait(for: [expectation], timeout: timeout)
@@ -328,26 +400,58 @@ final class ShortsLiveSwipeUITests: XCTestCase {
         try navigateToShortsChip()
 
         // Wait for real Shorts to load from the network.
-        guard let firstCard = waitForFirstVideoCard(timeout: 20) else {
+        guard let firstCard = waitForFirstShortsCard(timeout: 20) else {
             try captureAndSkip("No Shorts loaded within 20 s — network unavailable or feed empty", in: app)
         }
 
         // Tap the first Short to open ShortsPlayerView.
-        firstCard.tap()
+        // A portrait card can be taller than an iPad's landscape viewport.
+        let visibleCard = firstCard.frame.intersection(app.frame)
+        XCTAssertFalse(visibleCard.isEmpty)
+        app.coordinate(withNormalizedOffset: .zero).withOffset(
+            CGVector(dx: visibleCard.midX - app.frame.minX, dy: visibleCard.midY - app.frame.minY)
+        ).tap()
 
         // Index label must appear (always-visible badge added for testability).
         XCTAssertTrue(indexLabel.waitForExistence(timeout: 10), "Shorts player index label should appear")
-        let initialLabel = indexLabel.label  // e.g. "1 / N"
+        let initialLabel = indexLabel.label
+        func waitForPlayback() {
+            let playable = NSPredicate { [self] _, _ in
+                let button = app.buttons[AccessibilityID.shortsPlayPauseButton]
+                let time = app.staticTexts[AccessibilityID.shortsTimeLabel]
+                guard button.exists, button.isEnabled, time.exists else { return false }
+                let elapsed = time.label.components(separatedBy: " / ")[0]
+                    .split(separator: ":").reduce(0) { $0 * 60 + (Int($1) ?? 0) }
+                return elapsed > 1
+            }
+            XCTAssertEqual(
+                XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: playable, object: nil)], timeout: 40),
+                .completed, "A real feed Short must start playing")
+            XCTAssertTrue(app.buttons[AccessibilityID.shortsPlayPauseButton].isHittable)
+            XCTAssertTrue(app.buttons[AccessibilityID.shortsMuteButton].isHittable)
+            XCTAssertTrue(app.sliders[AccessibilityID.shortsSeekBar].isHittable)
+            let frame = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            frame.name = "Playing real Short \(indexLabel.label)"
+            frame.lifetime = .keepAlways
+            add(frame)
+        }
+        waitForPlayback()
 
         // Swipe up → should advance to the next short.
         swipeUp()
-        sleep(1)  // allow animation to settle
+        let advanced = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label != %@", initialLabel), object: indexLabel)
+        XCTAssertEqual(XCTWaiter.wait(for: [advanced], timeout: 5), .completed)
+        waitForPlayback()
         let afterSwipeUp = indexLabel.label
         XCTAssertNotEqual(afterSwipeUp, initialLabel, "Swipe up should advance to the next short")
 
         // Swipe down → should go back to the previous short.
         swipeDown()
-        sleep(1)
+        let returned = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label == %@", initialLabel), object: indexLabel)
+        XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 5), .completed)
+        waitForPlayback()
         let afterSwipeDown = indexLabel.label
         XCTAssertEqual(afterSwipeDown, initialLabel, "Swipe down should return to the original short")
     }
@@ -356,7 +460,7 @@ final class ShortsLiveSwipeUITests: XCTestCase {
     func testLiveShortsSwipeUpBoundary() throws {
         try navigateToShortsChip()
 
-        guard let firstCard = waitForFirstVideoCard(timeout: 20) else {
+        guard let firstCard = waitForFirstShortsCard(timeout: 20) else {
             try captureAndSkip("No Shorts loaded within 20 s — network unavailable or feed empty", in: app)
         }
         firstCard.tap()

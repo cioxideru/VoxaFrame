@@ -130,10 +130,7 @@ extension PlaybackViewModel {
         let savedState = await VideoStateStore.shared.state(for: video.id)
         try Task.checkCancellation()
         guard currentVideo?.id == video.id else { return }
-        if let pos = savedState?.position, pos > 5 {
-            savedPositionToRestore = pos
-            playerLog.notice("Restoring position \(Int(pos))s for \(video.id)")
-        }
+        restoreSavedPosition(savedState, for: video)
         // Filter the quality picker to only heights that the HLS manifest actually
         // offers. The iOS player response lists all adaptive CDN formats at every
         // quality, but the HLS variant playlist may omit qualities the CDN has not
@@ -263,6 +260,11 @@ extension PlaybackViewModel {
         }
         #endif
 
+    }
+
+    func restoreSavedPosition(_ state: VideoStateStore.State?, for video: Video) {
+        // Shorts always start from the beginning, including a swipe back to a watched Short.
+        savedPositionToRestore = !video.isShort && (state?.position ?? 0) > 5 ? state?.position : nil
     }
 
     private func initialPlayerInfo(

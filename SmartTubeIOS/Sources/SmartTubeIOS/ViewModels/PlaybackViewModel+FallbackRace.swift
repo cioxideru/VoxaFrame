@@ -117,8 +117,10 @@ extension PlaybackViewModel {
         player.replaceCurrentItem(with: proxyItem)
         observePlaybackEndAndStalls(for: proxyItem)
         itemObserverTask?.cancel()
-        for await st in proxyItem.statusStream {
-            guard !Task.isCancelled else { return false }
+        for await st in proxyItem.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
+            guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === proxyItem else {
+                return false
+            }
             switch st {
             case .readyToPlay:
                 playerLog.notice("[benchmark] readyToPlay — BotGuardWV/proxy-HLS — videoId=\(video.id)")

@@ -79,10 +79,10 @@ extension PlayerView {
                 Color.black.ignoresSafeArea()
 
                 #if os(iOS)
-                // FullScreenPlayerLayerView: wraps PersistentPlayerHostView so the AVPlayerLayer
+                // PersistentPlayerLayerView: wraps PersistentPlayerHostView so the AVPlayerLayer
                 // survives PlayerView dismiss/re-present cycles (mini-player feature).
-                FullScreenPlayerLayerView(
-                    hostView: playerState.playerHostView,
+                PersistentPlayerLayerView(
+                    presentation: .fullScreen,
                     videoGravity: store.settings.videoGravityMode.avGravity
                 )
                 .ignoresSafeArea()

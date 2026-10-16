@@ -217,7 +217,8 @@ extension PlaybackViewModel {
         }
         player.replaceCurrentItem(with: item)
         itemObserverTask?.cancel()
-        for await status in item.statusStream {
+        for await status in item.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
+            guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === item else { return false }
             switch status {
             case .readyToPlay:
                 playerLog.notice("[benchmark] readyToPlay — ytDlp/HLS — videoId=\(video.id) title=\(video.title)")

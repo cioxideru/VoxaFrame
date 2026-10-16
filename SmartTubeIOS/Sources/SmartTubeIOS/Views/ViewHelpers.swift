@@ -176,6 +176,10 @@ enum AppSymbol {
     static let chevronDown = "chevron.down"
 
     // MARK: - Playback controls
+    static let play = "play.fill"
+    static let pause = "pause.fill"
+    static let muted = "speaker.slash.fill"
+    static let speaker = "speaker.wave.2.fill"
     static let videoFill = "arrow.up.left.and.arrow.down.right"
     static let videoFit = "arrow.down.right.and.arrow.up.left"
     static let previousTrack = "backward.end.fill"

@@ -165,7 +165,7 @@ extension PlaybackViewModel {
     // MARK: - Attempt Helpers
 
     /// Tries a single URL in AVPlayer. Returns true if `.readyToPlay` is received.
-    /// `statusStream` finishes after `.readyToPlay` or `.failed`, making it safe to await inline.
+    /// Stops waiting on readiness, failure or the shared stream-attempt deadline.
     func attemptURL(_ url: URL, for video: Video, info: PlayerInfo, label: String) async -> Bool {
         playerLog.notice("[\(label)]: \(ViewModelLogger.urlHost(url))")
 
@@ -216,7 +216,7 @@ extension PlaybackViewModel {
         observePlaybackEndAndStalls(for: item)
         itemObserverTask?.cancel()
 
-        for await status in item.statusStream {
+        for await status in item.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
             guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === item else { return false }
             switch status {
             case .readyToPlay:
@@ -231,6 +231,9 @@ extension PlaybackViewModel {
             @unknown default:
                 continue
             }
+        }
+        if !Task.isCancelled, player.currentItem === item, item.status == .unknown {
+            playerLog.error("[\(label)] AVPlayerItem readiness timed out — trying another source")
         }
         return false
     }

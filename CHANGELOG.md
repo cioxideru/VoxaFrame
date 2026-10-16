@@ -6,6 +6,21 @@ All notable changes to SmartTube are documented here.
 
 ## [Unreleased]
 
+### Fixed — 2026-10-16
+
+- **Shorts playback (PLAN-0009)** has persistent play/pause, mute, seeking and retry
+  controls. Swipe navigation no longer intercepts the progress slider. New Shorts
+  start at the beginning, and pending seeks/duration observations from an outgoing
+  video cannot overwrite the new video's state. Initial and fallback streams that
+  never become ready yield after 15 seconds; failed local/audio loads leave loading state.
+- **Player presentation (PLAN-0009)** retains PiP ownership when fullscreen closes,
+  reveals the previous app screen on PiP entry and waits for the restored interface
+  before completing the return. Fullscreen and mini-player share one video layer;
+  inactive containers cannot move it. Three physical iPad PiP/fullscreen cycles
+  passed with preserved time and restored video; wider device coverage remains in OQ-0005.
+- **Recommendations (PLAN-0009)** uses Home's mixed grid even when video groups
+  arrive with horizontal shelf layout.
+
 ### Fixed — 2026-10-15
 
 - **Same-video privacy changes (#94)** now reset tracking when reopening a playing,

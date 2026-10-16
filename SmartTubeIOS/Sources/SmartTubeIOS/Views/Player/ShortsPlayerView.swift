@@ -33,6 +33,8 @@ public struct ShortsPlayerView: View {
     @State var isTransitioning = false
     @State var transitionTask: Task<Void, Never>?
     @State var isFetchingMore = false
+    @State var fetchMoreTask: Task<Void, Never>?
+    @State var isMuted = false
     /// True while the app is backgrounded — guards onDisappear from calling stop()
     /// when iOS fires it as a side-effect of backgrounding rather than navigation.
     @State var isInBackground = false
@@ -42,7 +44,7 @@ public struct ShortsPlayerView: View {
         self.startIndex = startIndex
         self.api = api
         self._videos = State(initialValue: videos)
-        self._currentIndex = State(initialValue: startIndex)
+        self._currentIndex = State(initialValue: min(max(startIndex, 0), max(videos.count - 1, 0)))
         self._vm = State(initialValue: PlaybackViewModel(api: api))
     }
 
@@ -95,9 +97,19 @@ public struct ShortsPlayerView: View {
             .background(Color.black.ignoresSafeArea())
             #if os(iOS)
             .contentShape(Rectangle())
-            .onTapGesture { vm.togglePlayPause() }
+            .onTapGesture {
+                guard !vm.isLoading, vm.error == nil else { return }
+                vm.togglePlayPause()
+            }
+            // Keep navigation below the overlay so it cannot cancel the slider's drag.
+            .simultaneousGesture(shortsSwipeGesture)
+            .onChange(of: isDragging) { _, dragging in
+                guard !dragging, !isTransitioning else { return }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
+            }
             #endif
             #if os(tvOS)
+            .onPlayPauseCommand { vm.togglePlayPause() }
             // Siri Remote D-pad: up/down navigate prev/next short.
             .onMoveCommand { direction in
                 guard !isTransitioning else { return }
@@ -120,27 +132,25 @@ public struct ShortsPlayerView: View {
             }
             #endif
             // Keep controls and accessibility outside the moving video surface.
-            .overlay(alignment: .topTrailing) {
-                indexBadge
-            }
             .overlay {
-                if shouldShowControlsOverlay {
-                    shortsOverlay
-                        .accessibilityElement(children: .contain)
-                        .accessibilityIdentifier("shorts.controlsOverlay")
-                        .transition(.opacity)
-                        .animation(.easeInOut(duration: 0.2), value: shouldShowControlsOverlay)
-                }
+                shortsOverlay
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier(AccessibilityID.shortsControlsOverlay)
             }
             .overlay {
                 if let err = vm.error {
-                    Text(err.localizedDescription)
-                        .font(.caption)
-                        .foregroundStyle(.white)
-                        .padding(12)
-                        .background(.black.opacity(0.6))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .accessibilityIdentifier("shorts.errorBanner")
+                    VStack(spacing: 12) {
+                        Text(err.localizedDescription)
+                            .font(.caption)
+                            .multilineTextAlignment(.center)
+                            .accessibilityIdentifier(AccessibilityID.shortsErrorBanner)
+                        Button("Retry") { vm.retryLoad() }
+                            .buttonStyle(.borderedProminent)
+                            .accessibilityIdentifier(AccessibilityID.shortsRetryButton)
+                    }
+                    .foregroundStyle(.white)
+                    .padding()
+                    .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 8))
                 }
             }
             .overlay(alignment: .bottomTrailing) {
@@ -157,17 +167,10 @@ public struct ShortsPlayerView: View {
                 }
             }
             #if os(iOS)
-            // The gesture stays fixed while the video follows the finger.
-            .simultaneousGesture(shortsSwipeGesture)
-            .onChange(of: isDragging) { _, dragging in
-                guard !dragging, !isTransitioning else { return }
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
-            }
             .navigationBarHidden(true)
             .statusBarHidden(true)
             .toolbar(.hidden, for: .tabBar)
             #endif
-            .ignoresSafeArea()
             .onAppear {
                 #if os(iOS)
                 if playerState.presentation != .hidden { playerState.stop() }
@@ -175,6 +178,7 @@ public struct ShortsPlayerView: View {
                 vm.onPlaybackEnd = { handleShortEnded() }
                 vm.updateAuthToken(authService.accessToken)
                 vm.updateSAPISID(authService.sapisid)
+                guard videos.indices.contains(currentIndex) else { return }
                 if vm.currentVideoId == videos[currentIndex].id {
                     if vm.wasPlayingBeforeSuspend { vm.resume() }
                 } else {
@@ -187,6 +191,9 @@ public struct ShortsPlayerView: View {
             }
             .onDisappear {
                 guard !isInBackground else { return }
+                fetchMoreTask?.cancel()
+                fetchMoreTask = nil
+                isFetchingMore = false
                 transitionTask?.cancel()
                 transitionTask = nil
                 isTransitioning = false
@@ -208,7 +215,4 @@ public struct ShortsPlayerView: View {
         }  // NavigationStack
     }
 
-    private var shouldShowControlsOverlay: Bool {
-        vm.controlsVisible
-    }
 }

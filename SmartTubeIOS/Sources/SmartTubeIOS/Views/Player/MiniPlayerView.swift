@@ -16,7 +16,7 @@ struct MiniPlayerView: View {
     var body: some View {
         HStack(spacing: 8) {
             // Live video thumbnail (same AVPlayerLayer, transplanted here)
-            MiniPlayerLayerView(hostView: playerState.playerHostView)
+            PersistentPlayerLayerView(presentation: .miniPlayer, videoGravity: .resizeAspectFill)
                 .frame(width: 96, height: 54)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 .accessibilityHidden(true)
@@ -76,29 +76,4 @@ struct MiniPlayerView: View {
     }
 }
 
-// MARK: - MiniPlayerLayerView
-
-/// UIViewRepresentable that embeds PersistentPlayerHostView as a subview.
-/// UIView.addSubview transplants the hostView from the full-screen context
-/// automatically — no explicit removeFromSuperview needed.
-private struct MiniPlayerLayerView: UIViewRepresentable {
-    let hostView: PersistentPlayerHostView
-
-    func makeUIView(context: Context) -> UIView {
-        let container = UIView()
-        container.backgroundColor = .black
-        hostView.videoGravity = .resizeAspectFill
-        hostView.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(hostView)
-        NSLayoutConstraint.activate([
-            hostView.topAnchor.constraint(equalTo: container.topAnchor),
-            hostView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            hostView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            hostView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-        ])
-        return container
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {}
-}
 #endif

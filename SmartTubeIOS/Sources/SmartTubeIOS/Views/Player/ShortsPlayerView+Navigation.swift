@@ -53,9 +53,9 @@ extension ShortsPlayerView {
         guard !isFetchingMore else { return }
         isFetchingMore = true
         let existingIDs = Set(videos.map(\.id))
-        Task { @MainActor in
+        fetchMoreTask = Task { @MainActor in
             defer { isFetchingMore = false }
-            guard let group = try? await api.fetchShorts() else { return }
+            guard let group = try? await api.fetchShorts(), !Task.isCancelled else { return }
             let newVideos = group.videos.filter { !existingIDs.contains($0.id) }
             guard !newVideos.isEmpty else { return }
             videos.append(contentsOf: newVideos)
@@ -78,16 +78,18 @@ extension ShortsPlayerView {
         // Spring back to centre while the fetch is in flight.
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
         let existingIDs = Set(videos.map(\.id))
-        Task { @MainActor in
+        fetchMoreTask = Task { @MainActor in
             defer { isFetchingMore = false }
-            guard let group = try? await api.fetchShorts() else { return }
+            guard let group = try? await api.fetchShorts(), !Task.isCancelled else { return }
             let newVideos = group.videos.filter { !existingIDs.contains($0.id) }
             guard !newVideos.isEmpty else { return }
             // Prepend the new videos; re-anchor currentIndex so the on-screen
             // video doesn't change, then animate down to the last prepended video.
             videos.insert(contentsOf: newVideos, at: 0)
             currentIndex += newVideos.count
-            performVerticalTransition(direction: 1) { goTo(currentIndex - 1) }
+            if currentIndex == newVideos.count {
+                performVerticalTransition(direction: 1) { goTo(currentIndex - 1) }
+            }
         }
     }
 
@@ -99,8 +101,8 @@ extension ShortsPlayerView {
             settings: store.settings, currentIndex: currentIndex, count: videos.count)
         {
         case .replay:
-            vm.player.seek(to: .zero)
-            vm.player.rate = Float(store.settings.playbackSpeed)
+            vm.videoEnded = true
+            vm.togglePlayPause()
         case .advance(let next):
             performVerticalTransition(direction: -1) { goTo(next) }
         case .freeze:
@@ -109,6 +111,7 @@ extension ShortsPlayerView {
     }
 
     func loadVideo(at index: Int) {
+        guard videos.indices.contains(index) else { return }
         let video = videos[index]
         vm.updateSettings(store.settings)
         vm.setPlaybackSpeed(store.settings.playbackSpeed)

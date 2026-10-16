@@ -330,7 +330,7 @@ extension PlaybackViewModel {
     private func observeCompositionItem(
         _ compositeItem: AVPlayerItem, video: Video, info: PlayerInfo, label: String
     ) async -> Bool {
-        for await status in compositeItem.statusStream {
+        for await status in compositeItem.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
             guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === compositeItem else {
                 return false
             }
@@ -505,7 +505,7 @@ extension PlaybackViewModel {
         player.replaceCurrentItem(with: item)
         observePlaybackEndAndStalls(for: item)
         itemObserverTask?.cancel()
-        for await status in item.statusStream {
+        for await status in item.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
             guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === item else { return false }
             switch status {
             case .readyToPlay:

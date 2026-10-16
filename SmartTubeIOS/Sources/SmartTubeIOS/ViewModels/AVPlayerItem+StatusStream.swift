@@ -3,14 +3,32 @@ import AVFoundation
 extension AVPlayerItem {
     /// An `AsyncStream` that emits the item's `status` on each KVO change.
     var statusStream: AsyncStream<AVPlayerItem.Status> {
+        observedStatusStream(timeout: nil)
+    }
+
+    /// Ends without fabricating a status if AVFoundation stays `.unknown` past the deadline.
+    func statusStream(timeout: Duration) -> AsyncStream<AVPlayerItem.Status> {
+        observedStatusStream(timeout: timeout)
+    }
+
+    private func observedStatusStream(timeout: Duration?) -> AsyncStream<AVPlayerItem.Status> {
         AsyncStream { continuation in
+            let deadline = timeout.map { duration in
+                Task {
+                    do { try await Task.sleep(for: duration) } catch { return }
+                    continuation.finish()
+                }
+            }
             let observer = observe(\.status, options: [.initial, .new]) { item, _ in
                 continuation.yield(item.status)
                 if item.status == .readyToPlay || item.status == .failed {
                     continuation.finish()
                 }
             }
-            continuation.onTermination = { _ in observer.invalidate() }
+            continuation.onTermination = { _ in
+                observer.invalidate()
+                deadline?.cancel()
+            }
         }
     }
 

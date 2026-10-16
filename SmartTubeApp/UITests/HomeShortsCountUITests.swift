@@ -322,6 +322,21 @@ final class MixedFeedLayoutUITests: XCTestCase {
     func testSubscriptionsSpacing() { assertSpacing(section: "subscriptions", title: "Subscriptions") }
     func testRecommendedSpacing() { assertSpacing(section: "recommended", title: "Recommended") }
 
+    func testRecommendedShelvesUseTheSameGridAsHome() {
+        app.terminate()
+        app.launchArguments += ["--uitesting-inject-recommended-ids=one,two,three,four,five,six"]
+        app.launch()
+        selectSection("recommended", title: "Recommended")
+        let block = app.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.feedVideoBlock("recommended", 0)).firstMatch
+        XCTAssertTrue(block.waitForExistence(timeout: 10), "Shelf responses must use the mixed feed grid")
+        let cards = block.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'video.card.'")).allElementsBoundByIndex
+        let rowPositions = Set(cards.map { Int($0.frame.minY.rounded()) })
+        XCTAssertGreaterThan(
+            rowPositions.count, 1, "Recommendations must form video rows instead of one horizontal shelf")
+    }
+
     func testVerticalSwipesOnVideoBlocksScrollEachMixedFeed() {
         for (section, title) in [("home", "Home"), ("recommended", "Recommended"), ("subscriptions", "Subscriptions")] {
             selectSection(section, title: title)

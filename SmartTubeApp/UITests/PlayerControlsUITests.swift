@@ -42,7 +42,7 @@ final class PlayerControlsUITests: XCTestCase {
     }
 
     private var pipButton: XCUIElement {
-        app.buttons["player.pipButton"].firstMatch
+        app.buttons[AccessibilityID.playerPiPButton].firstMatch
     }
 
     private func showControls() {
@@ -121,6 +121,73 @@ final class PlayerControlsUITests: XCTestCase {
 }
 
 #if os(iOS)
+/// System PiP requires a real device; keep its saved settings and account intact.
+final class SystemPiPRestorationUITests: XCTestCase {
+    func testSystemPiPRevealsPreviousScreenAndRestoresPlayback() throws {
+        #if targetEnvironment(simulator)
+        throw XCTSkip("System PiP requires a physical iPad or iPhone")
+        #else
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--uitesting", "--uitesting-show-controls", "--uitesting-deeplink-video=fKopy74weus",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+        app.launch()
+        defer { app.terminate() }
+        let time = app.staticTexts[AccessibilityID.playerCurrentTimeLabel]
+        let pip = app.buttons[AccessibilityID.playerPiPButton]
+        XCTAssertTrue(pip.waitForExistence(timeout: 30))
+        func seconds() -> Int {
+            if !time.exists { app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap() }
+            guard time.waitForExistence(timeout: 2) else { return -1 }
+            return time.label.split(separator: ":").reduce(0) { $0 * 60 + (Int($1) ?? 0) }
+        }
+        let playing = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in seconds() > 2 }, object: nil)
+        let playingResult = XCTWaiter.wait(for: [playing], timeout: 30)
+        let beforePiP = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        beforePiP.name = "Video before entering system PiP"
+        beforePiP.lifetime = .keepAlways
+        add(beforePiP)
+        let playerTree = XCTAttachment(string: app.debugDescription)
+        playerTree.name = "Player before entering system PiP"
+        playerTree.lifetime = .keepAlways
+        add(playerTree)
+        XCTAssertEqual(playingResult, .completed)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for cycle in 1...3 {
+            let before = seconds()
+            pip.tap()
+            let previousScreen = XCTNSPredicateExpectation(
+                predicate: NSPredicate { _, _ in app.scrollViews["home.chipBar"].isHittable }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [previousScreen], timeout: 10), .completed)
+            let systemTree = XCTAttachment(string: springboard.debugDescription)
+            systemTree.name = "System PiP accessibility - cycle \(cycle)"
+            systemTree.lifetime = .keepAlways
+            add(systemTree)
+            let floating = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            floating.name = "System PiP above previous screen - cycle \(cycle)"
+            floating.lifetime = .keepAlways
+            add(floating)
+            let restore = springboard.buttons["Restore fullscreen"]
+            if !restore.exists { springboard.windows["PIP-SBInteractionPassThroughView"].tap() }
+            restore.tap()
+            XCTAssertTrue(time.waitForExistence(timeout: 10))
+            let restoredTime = seconds()
+            XCTAssertGreaterThanOrEqual(restoredTime, before, "PiP restore must retain playback time")
+            let advancing = XCTNSPredicateExpectation(
+                predicate: NSPredicate { _, _ in seconds() > restoredTime + 1 }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 10), .completed)
+            let fullscreen = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            fullscreen.name = "Video after system PiP restore - cycle \(cycle)"
+            fullscreen.lifetime = .keepAlways
+            add(fullscreen)
+        }
+        #endif
+    }
+}
+
 /// Live playback acceptance for scaling and remembered quality.
 final class PlayerVideoScaleUITests: XCTestCase {
     private var app: XCUIApplication!
@@ -201,6 +268,30 @@ final class PlayerVideoScaleUITests: XCTestCase {
         row.tap()
         waitForQuality(label)
         waitForTime(after: seconds() + 1)
+    }
+
+    func testRepeatedMiniPlayerRestorationKeepsPlaybackAndPreviousScreen() {
+        waitUntilReady()
+        waitForTime(after: 2)
+        for _ in 0..<3 {
+            showControls()
+            let before = seconds()
+            app.buttons[AccessibilityID.playerBackButton].firstMatch.tap()
+            let mini = app.otherElements["miniPlayer.bar"].firstMatch
+            XCTAssertTrue(mini.waitForExistence(timeout: 5))
+            XCTAssertTrue(
+                app.scrollViews["home.chipBar"].isHittable,
+                "Minimizing must reveal the screen underneath the player")
+            mini.tap()
+            XCTAssertTrue(app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 5))
+            showControls()
+            XCTAssertGreaterThanOrEqual(seconds(), before, "Expanding must retain the current player item")
+            waitForTime(after: before + 1)
+        }
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Video after three fullscreen-mini-player cycles"
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 
     func testQualitySelectionSurvivesNextVideoAndRelaunch() {

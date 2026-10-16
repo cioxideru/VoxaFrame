@@ -29,7 +29,10 @@ extension HomeView {
             }.filter { channelFilter == nil || $0.channelId == channelFilter }
         }
 
-        let rowGroups: [VideoGroup] = sectionVM.videoGroups.filter { $0.layout == .row }.map { group in
+        // Recommended always uses the Home grid, including responses/caches with shelf layout.
+        let isRecommended = selectedSection.type == .recommended
+        let shelves = sectionVM.videoGroups.filter { !isRecommended && $0.layout == .row }
+        let rowGroups: [VideoGroup] = shelves.map { group in
             var copy = group
             var videos = group.videos
             if applyHideShorts { videos = videos.filter { !$0.isShort } }
@@ -41,7 +44,7 @@ extension HomeView {
             return copy
         }
         // Shorts have their own portrait rows; preserve separate carousel groups.
-        let gridVideos = sectionVM.videoGroups.filter { $0.layout != .row }
+        let gridVideos = sectionVM.videoGroups.filter { isRecommended || $0.layout != .row }
             .flatMap(\.videos)
             .filter { !applyHideShorts || !$0.isShort }
             .filter { !hideLiveShorts || !($0.isLive && $0.isShort) }

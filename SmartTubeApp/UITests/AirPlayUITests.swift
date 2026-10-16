@@ -69,7 +69,7 @@ final class AirPlayUITests: XCTestCase {
     }
 
     private var pipButton: XCUIElement {
-        app.buttons["player.pipButton"].firstMatch
+        app.buttons[AccessibilityID.playerPiPButton].firstMatch
     }
 
     // MARK: - Tests

@@ -27,6 +27,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0009: Shorts and player presentation stability](completed/player-shorts-stability.md) — controls, bounded readiness and presentation fixes; focused physical iPad PiP and Shorts checks passed, wider acceptance remains OQ-0005.
+
 - [PLAN-0008: Remember playback quality](completed/remember-playback-quality.md) — saved intent, resolution-first fallback and persistence checks.
 
 - [PLAN-0007: Player Fit / Fill control](completed/player-video-scale.md) — toolbar toggle, playback continuity and rotation checks.

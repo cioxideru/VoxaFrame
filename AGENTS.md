@@ -30,6 +30,7 @@ text and IDs; put unresolved work in the register, and closed outcomes in the ch
 - Tests: Swift Testing for unit tests; no `Task.sleep`, no live network, fakes at protocol seams. UI tests use `AccessibilityID` and `waitForExistence`, never `sleep`.
 - Logging via `os.Logger` (subsystem `AppSubsystem`), never `print`.
 - Commits: Conventional Commits with the task ID, e.g. `fix(player): … (#312)`.
+- After completing implementation work and passing the required checks, commit the task's changes and merge them into local `master` without a separate request or confirmation, unless the user explicitly instructs otherwise.
 
 ## Gotchas
 - The Simulator cannot decode VP9/AV1 and cannot run PiP; assert stream *selection* in tests, not decoding.

@@ -13,10 +13,13 @@ private let playerLog = ViewModelLogger(category: "Player")
 
 extension PlaybackViewModel {
 
-    func observeInitialPlayerItem(_ item: AVPlayerItem, info: PlayerInfo, isHLS: Bool) {
+    func observeInitialPlayerItem(
+        _ item: AVPlayerItem, info: PlayerInfo, isHLS: Bool,
+        timeout: Duration = PlaybackTuning.itemReadinessTimeout
+    ) {
         itemObserverTask?.cancel()
         itemObserverTask = Task { [weak self] in
-            for await status in item.statusStream {
+            for await status in item.statusStream(timeout: timeout) {
                 guard let self, !Task.isCancelled, self.player.currentItem === item else { return }
                 switch status {
                 case .readyToPlay:
@@ -34,6 +37,11 @@ extension PlaybackViewModel {
                     break
                 }
             }
+            guard let self, !Task.isCancelled, self.player.currentItem === item, item.status == .unknown else {
+                return
+            }
+            playerLog.error("Initial AVPlayerItem readiness timed out — trying another source")
+            self.startExhaustiveRetry(video: info.video, item: item, originalError: URLError(.timedOut))
         }
 
     }
@@ -113,7 +121,7 @@ extension PlaybackViewModel {
             self.durationObserverTask = Task { [weak self, weak item] in
                 guard let item else { return }
                 for await seconds in item.firstValidDurationStream {
-                    guard let self, !Task.isCancelled else { return }
+                    guard let self, !Task.isCancelled, self.player.currentItem === item else { return }
                     let prev = self.duration
                     self.duration = seconds
                     playerLog.notice(

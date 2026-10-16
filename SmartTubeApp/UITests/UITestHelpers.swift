@@ -62,7 +62,16 @@ enum AccessibilityID {
     static var homeSectionFeed: String { "home.sectionFeed" }
     static var shortsBackButton: String { "shorts.backButton" }
     static var shortsIndexLabel: String { "shorts.indexLabel" }
+    static var shortsPlayPauseButton: String { "shorts.playPauseButton" }
+    static var shortsMuteButton: String { "shorts.muteButton" }
+    static var shortsSeekBar: String { "shorts.seekBar" }
+    static var shortsTimeLabel: String { "shorts.timeLabel" }
+    static var shortsTitleLabel: String { "shorts.titleLabel" }
+    static var shortsControlsOverlay: String { "shorts.controlsOverlay" }
+    static var shortsRetryButton: String { "shorts.retryButton" }
+    static var shortsErrorBanner: String { "shorts.errorBanner" }
     static var playerBackButton: String { "player.backButton" }
+    static var playerPiPButton: String { "player.pipButton" }
     static var playerVideoScaleButton: String { "player.videoScaleButton" }
     static var playerQuickQualityButton: String { "player.quickAccess.quality" }
     static var playerQualityPicker: String { "player.qualityPicker" }

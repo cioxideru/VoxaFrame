@@ -65,8 +65,8 @@ extension PlaybackViewModel {
     private func observeLocalPlayerItem(_ item: AVPlayerItem, video: Video) {
         itemObserverTask?.cancel()
         itemObserverTask = Task { [weak self] in
-            for await status in item.statusStream {
-                guard let self, !Task.isCancelled else { return }
+            for await status in item.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
+                guard let self, !Task.isCancelled, self.player.currentItem === item else { return }
                 switch status {
                 case .readyToPlay:
                     playerLog.notice(
@@ -76,12 +76,18 @@ extension PlaybackViewModel {
                 case .failed:
                     playerLog.error("❌ local-file AVPlayerItem failed: \(ViewModelLogger.errorSummary(item.error))")
                     self.error = item.error
+                    self.isLoading = false
                 case .unknown:
                     break
                 @unknown default:
                     break
                 }
             }
+            guard let self, !Task.isCancelled, self.player.currentItem === item, item.status == .unknown else {
+                return
+            }
+            self.error = URLError(.timedOut)
+            self.isLoading = false
         }
     }
 }

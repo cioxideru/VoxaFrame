@@ -72,6 +72,12 @@ The current AVPlayer path still uses an ordered cascade. [ADR-0005](adr/0005-str
 
 Shorts use `ShortsPlayerView` over `PlaybackViewModel` on every platform. The proposed `PlaybackSession` remains [open](OPEN_QUESTIONS.md#oq-0009--architecture-debt).
 
+On iOS, `PlayerStateStore` owns the regular player's persistent `AVPlayerLayer`,
+PiP controller and delegate. Fullscreen and mini-player containers attach that
+same layer only when their presentation is active. PiP entry dismisses fullscreen;
+the UIKit presenter confirms restoration after presentation and layout finish.
+Shorts own a separate playback view model and stop the regular player on entry.
+
 Current source inspection is distinct from [device acceptance](OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).
 
 ## Deep links

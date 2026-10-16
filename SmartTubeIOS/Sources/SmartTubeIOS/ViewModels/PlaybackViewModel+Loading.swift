@@ -172,6 +172,9 @@ extension PlaybackViewModel {
         wasPlayingBeforeSuspend = false
         currentTime = 0
         duration = 0
+        savedPositionToRestore = nil
+        itemObserverTask?.cancel()
+        durationObserverTask?.cancel()
         error = nil
         playerInfo = nil
         controlsVisible = false
@@ -186,7 +189,7 @@ extension PlaybackViewModel {
         endCards = []
 
         // Push the currently playing video onto the history stack before switching
-        if let prev = currentVideo {
+        if let prev = currentVideo, prev.id != video.id {
             history.append(prev)
         }
         currentVideo = video
@@ -216,15 +219,13 @@ extension PlaybackViewModel {
     /// Resets the retry guard and reloads the current video from scratch.
     public func retryLoad() {
         guard let video = currentVideo else { return }
-        error = nil
-        retryAttempts = 0
-        exhaustiveRetryTask?.cancel()
-        exhaustiveRetryTask = nil
         loadTask?.cancel()
+        resetPlaybackForLoad(video: video, incognito: isIncognito)
         isLoading = true
         loadTask = Task { [weak self] in
             guard let self else { return }
             await VideoPreloadCache.shared.invalidatePlayerInfo(for: video.id)
+            guard !Task.isCancelled, self.currentVideo?.id == video.id else { return }
             await self.loadAsync(video: video)
         }
     }

@@ -111,8 +111,8 @@ extension PlaybackViewModel {
         player.replaceCurrentItem(with: item)
         itemObserverTask?.cancel()
         itemObserverTask = Task { [weak self] in
-            for await status in item.statusStream {
-                guard let self, !Task.isCancelled else { return }
+            for await status in item.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
+                guard let self, !Task.isCancelled, self.player.currentItem === item else { return }
                 switch status {
                 case .readyToPlay:
                     audioOnlyLog.notice(
@@ -135,12 +135,20 @@ extension PlaybackViewModel {
                         self.isAudioOnlyMode = false
                     }
                     self.error = item.error
+                    self.isLoading = false
                 case .unknown:
                     audioOnlyLog.notice("Audio-only: AVPlayerItem status unknown (loading)")
                 @unknown default:
                     break
                 }
             }
+            guard let self, !Task.isCancelled, self.player.currentItem === item, item.status == .unknown else {
+                return
+            }
+            self.audioOnlyItemActive = false
+            if !liveToggle { self.isAudioOnlyMode = false }
+            self.error = URLError(.timedOut)
+            self.isLoading = false
         }
 
         // BUG-010 fix: restart endObserverTask so autoplay-to-next works in audio-only mode.

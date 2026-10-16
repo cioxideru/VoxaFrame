@@ -153,127 +153,70 @@ private struct LandscapePresenter<Item: Identifiable & Hashable>: UIViewControll
         var isTransitioning = false
         /// Incremented on dismiss; Tasks capture the value at creation and abort if it changed.
         var presentationGeneration = 0
-        /// After a dismiss, block re-presentations until this date. Prevents the
-        /// SwiftUI binding oscillation that occurs when playerIsActive toggles and
-        /// UIKit re-queries orientations, causing updateUIViewController(nil) followed
-        /// by updateUIViewController(video) within the same run-loop batch.
-        var suppressPresentUntil: Date = .distantPast
-        /// When the current player was presented. Used to ignore spurious nil updates
-        /// that arrive immediately after a present (while UIKit is settling).
-        var presentedAt: Date = .distantPast
-
         func sync(root: UIViewController) {
-
             guard !isTransitioning else { return }
-
-            if let currentItem = latestItem {
-                // Already presenting this exact item — nothing to do.
-                guard presentedID != AnyHashable(currentItem.id) else { return }
-                guard let contentBuilder else { return }
-
-                // Suppress rapid re-presentation while SwiftUI/UIKit binding is settling
-                // after a dismiss (binding can oscillate between nil and video).
-                guard Date() >= suppressPresentUntil else {
-                    landscapeLog.notice("[LandscapePresenter] sync — suppressing present (within dismiss window)")
-                    return
-                }
-
-                isTransitioning = true
-
-                func doPresent() {
-                    // Walk to the topmost presenter that is NOT being dismissed
-                    // BEFORE creating the new VC, so an abort leaves hostedVC/presentedID
-                    // intact and prevents immediate re-presentation.
-                    var top = root
-                    while let p = top.presentedViewController, !p.isBeingDismissed { top = p }
-                    // Bail if the top VC is unavailable or still has a child being dismissed.
-                    // Keep presentedID unchanged so subsequent Tasks see the same item ID
-                    // and short-circuit; onDismiss will clear everything when the
-                    // in-flight dismiss animation completes.
-                    guard top.view.window != nil,
-                        !top.isBeingDismissed,
-                        top.presentedViewController == nil
-                    else {
-                        landscapeLog.notice("[LandscapePresenter] doPresent — top VC not available, aborting")
-                        self.isTransitioning = false
-                        return
-                    }
-
-                    let hc = LandscapeAwareHostingController(rootView: contentBuilder(currentItem))
-                    hc.modalPresentationStyle = .fullScreen
-                    // Avoid a white flash during the presentation animation, before
-                    // the hosted SwiftUI content's own black background renders.
-                    hc.view.backgroundColor = .black
-                    hc.onDismiss = { [weak self] in
-                        landscapeLog.notice("[LandscapePresenter] onDismiss — clearing binding and hosted VC")
-                        // Suppress new presentations for 0.5 s while the SwiftUI binding
-                        // and UIKit orientation state settle after the dismiss.
-                        self?.suppressPresentUntil = Date().addingTimeInterval(0.5)
-                        // Invalidate all Tasks queued before this dismiss fires.
-                        self?.presentationGeneration += 1
-                        self?.latestItem = nil
-                        self?.latestBinding?.wrappedValue = nil
-                        self?.capturedDismissStore?.dismissPlayerAction = nil
-                        self?.hostedVC = nil
-                        self?.presentedID = nil
-                        self?.isTransitioning = false
-                    }
-                    self.hostedVC = hc
-                    self.presentedID = AnyHashable(currentItem.id)
-                    self.presentedAt = Date()
-                    // Register imperative dismiss hook so minimize()/stop() can dismiss
-                    // the VC directly without relying on SwiftUI's updateUIViewController,
-                    // which stalls when the hosting VC's view is off-screen (.fullScreen style).
-                    self.capturedDismissStore?.dismissPlayerAction = { [weak hc, weak self] in
-                        guard let hc, !hc.isBeingDismissed,
-                            hc.presentingViewController != nil
-                        else { return }
-                        landscapeLog.notice("[LandscapePresenter] dismissPlayerAction fired — dismissing")
-                        self?.isTransitioning = true
-                        hc.dismiss(animated: false) { [weak self] in
-                            self?.isTransitioning = false
-                        }
-                    }
-                    landscapeLog.notice(
-                        "[LandscapePresenter] presenting LandscapeAwareHostingController from \(type(of: top))")
-                    top.present(hc, animated: false) { [weak self] in
-                        self?.isTransitioning = false
-                    }
-                }
-
-                if let existing = hostedVC, existing.presentingViewController != nil {
-                    landscapeLog.notice("[LandscapePresenter] dismissing existing VC before presenting new")
-                    existing.dismiss(animated: false) { doPresent() }
-                } else {
-                    doPresent()
-                }
-
-            } else {
-                // item == nil — dismiss the hosted VC if still on screen.
-                // Ignore spurious nils that arrive within 0.5 s of the present
-                // (UIKit orientation re-queries can cause immediate nil updates).
-                guard Date() >= presentedAt.addingTimeInterval(0.5) else {
-                    landscapeLog.notice("[LandscapePresenter] item nil — ignoring spurious nil (within present window)")
-                    return
-                }
-                guard let hc = hostedVC else {
-                    presentedID = nil
-                    return
-                }
-                guard !hc.isBeingDismissed else { return }
-                guard hc.presentingViewController != nil else {
-                    hostedVC = nil
-                    presentedID = nil
-                    return
-                }
-                landscapeLog.notice("[LandscapePresenter] item nil — dismissing LandscapeAwareHostingController")
-                isTransitioning = true
-                hostedVC = nil
-                presentedID = nil
-                hc.dismiss(animated: false) { [weak self] in
-                    self?.isTransitioning = false
-                }
+            // Read the live binding: UIKit can hide the presenter before SwiftUI updates it.
+            latestItem = latestBinding?.wrappedValue
+            guard let currentItem = latestItem else {
+                if let hc = hostedVC { dismiss(hc, root: root) }
+                return
             }
+            guard presentedID != AnyHashable(currentItem.id), let contentBuilder else { return }
+            if let hc = hostedVC {
+                dismiss(hc, root: root)
+                return
+            }
+            var top = root
+            while let presented = top.presentedViewController, !presented.isBeingDismissed {
+                top = presented
+            }
+            guard top.view.window != nil, !top.isBeingDismissed,
+                top.presentedViewController == nil
+            else { return }
+
+            let hc = LandscapeAwareHostingController(rootView: contentBuilder(currentItem))
+            hc.modalPresentationStyle = .fullScreen
+            hc.view.backgroundColor = .black
+            hc.onDismiss = { [weak self, weak hc] in
+                guard let self, let hc, self.hostedVC === hc else { return }
+                self.presentationGeneration += 1
+                self.clearPresentation()
+                self.latestBinding?.wrappedValue = nil
+            }
+            hostedVC = hc
+            presentedID = AnyHashable(currentItem.id)
+            capturedDismissStore?.dismissPlayerAction = { [weak self, weak hc, weak root] in
+                guard let self, let hc, let root else { return }
+                self.dismiss(hc, root: root)
+            }
+            isTransitioning = true
+            top.present(hc, animated: false) { [weak self, weak hc] in
+                guard let self, let hc, self.hostedVC === hc else { return }
+                self.isTransitioning = false
+                hc.view.layoutIfNeeded()
+                self.capturedPlayerState?.completePictureInPictureRestoration()
+                self.sync(root: root)
+            }
+        }
+
+        private func dismiss(_ hc: LandscapeAwareHostingController, root: UIViewController) {
+            guard hostedVC === hc, !hc.isBeingDismissed else { return }
+            // Programmatic dismissal must not clear a newer expand/PiP restore request.
+            let presentingRoot = hc.view.window?.rootViewController ?? root
+            hc.onDismiss = nil
+            isTransitioning = true
+            hc.dismiss(animated: false) { [weak self] in
+                guard let self, self.hostedVC === hc else { return }
+                self.clearPresentation()
+                self.sync(root: presentingRoot)
+            }
+        }
+
+        private func clearPresentation() {
+            capturedDismissStore?.dismissPlayerAction = nil
+            hostedVC = nil
+            presentedID = nil
+            isTransitioning = false
         }
     }
 }

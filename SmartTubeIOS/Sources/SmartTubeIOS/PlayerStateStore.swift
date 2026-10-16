@@ -1,5 +1,6 @@
 #if os(iOS)
 import AVFoundation
+import AVKit
 import UIKit
 import Observation
 import SmartTubeIOSCore
@@ -18,7 +19,14 @@ private let storeLog = Logger(subsystem: "com.void.smarttube.app", category: "Pl
 /// so no explicit removeFromSuperview is needed when transplanting.
 final class PersistentPlayerHostView: UIView {
 
-    let playerLayer = AVPlayerLayer()
+    override static var layerClass: AnyClass { AVPlayerLayer.self }
+
+    var playerLayer: AVPlayerLayer {
+        guard let playerLayer = layer as? AVPlayerLayer else {
+            fatalError("layerClass must create an AVPlayerLayer")
+        }
+        return playerLayer
+    }
 
     var videoGravity: AVLayerVideoGravity {
         get { playerLayer.videoGravity }
@@ -28,15 +36,10 @@ final class PersistentPlayerHostView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         playerLayer.backgroundColor = UIColor.black.cgColor
-        layer.addSublayer(playerLayer)
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) not supported") }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        playerLayer.frame = bounds
-    }
 }
 
 // MARK: - PlayerStateStore
@@ -56,9 +59,10 @@ public final class PlayerStateStore {
         case hidden
         case miniPlayer
         case fullScreen
+        case pictureInPicture
     }
 
-    public private(set) var presentation: Presentation = .hidden
+    public internal(set) var presentation: Presentation = .hidden
 
     /// The video that is currently loaded or playing. Non-nil when presentation != .hidden.
     private(set) var currentVideo: Video? = nil
@@ -98,6 +102,11 @@ public final class PlayerStateStore {
     /// between full-screen and mini-player containers via UIView.addSubview.
     let playerHostView: PersistentPlayerHostView
 
+    var pipController: AVPictureInPictureController?
+    var isPiPActive = false
+    @ObservationIgnored var pipDelegate: PiPDelegate?
+    @ObservationIgnored var pipRestoreCompletion: ((Bool) -> Void)?
+
     // MARK: - Init
 
     public init(api: InnerTubeAPI) {
@@ -131,14 +140,14 @@ public final class PlayerStateStore {
             vm.load(video: video, incognito: incognito)
         }
         currentVideo = video
-        presentation = .fullScreen
+        expand()
         storeLog.notice("[PlayerStateStore] play — presentation set to .fullScreen")
     }
 
     /// Collapse the full-screen player to the mini-player bar. Playback continues.
     public func minimize() {
         storeLog.notice("[PlayerStateStore] minimize — currentPresentation=\(String(describing: self.presentation))")
-        presentation = .miniPlayer
+        presentation = isPiPActive ? .pictureInPicture : .miniPlayer
         let action = dismissPlayerAction
         dismissPlayerAction = nil
         storeLog.notice(
@@ -149,6 +158,11 @@ public final class PlayerStateStore {
     /// Expand the mini-player back to full-screen.
     func expand() {
         storeLog.notice("[PlayerStateStore] expand — currentPresentation=\(String(describing: self.presentation))")
+        if isPiPActive, pipRestoreCompletion == nil {
+            pipRestoreCompletion = { [weak controller = pipController] restored in
+                if restored { controller?.stopPictureInPicture() }
+            }
+        }
         presentation = .fullScreen
         storeLog.notice("[PlayerStateStore] expand — presentation set to .fullScreen")
     }
@@ -156,6 +170,9 @@ public final class PlayerStateStore {
     /// Stop playback completely and hide the player UI.
     func stop() {
         storeLog.notice("[PlayerStateStore] stop — currentPresentation=\(String(describing: self.presentation))")
+        pipRestoreCompletion?(false)
+        pipRestoreCompletion = nil
+        pipController?.stopPictureInPicture()
         vm.stop()
         currentVideo = nil
         presentation = .hidden

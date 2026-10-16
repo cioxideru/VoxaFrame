@@ -24,8 +24,8 @@ struct PlayerControlsOverlay: View {
     @Binding var channelDestination: ChannelDestination?
 
     #if os(iOS)
-    @Binding var pipController: AVPictureInPictureController?
-    @Binding var isPiPActive: Bool
+    let pipController: AVPictureInPictureController?
+    let isPiPActive: Bool
     @Binding var isLandscapeLocked: Bool
     @Environment(PlayerStateStore.self) private var playerState
     var vm: PlaybackViewModel { playerState.vm }
@@ -147,7 +147,7 @@ struct PlayerControlsOverlay: View {
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityIdentifier("player.pipButton")
+                    .accessibilityIdentifier(AccessibilityID.playerPiPButton)
                 }
                 // AirPlay route picker
                 AirPlayRoutePickerView()
