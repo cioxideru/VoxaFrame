@@ -373,8 +373,8 @@ extension PlaybackViewModel {
                 needsQuickStartup = false
                 isLoading = false
                 timeToPlayMs = Int(Date().timeIntervalSince(videoLoadStartedAt) * 1000)
-                player.rate = Float(settings.playbackSpeed)
-                isPlaying = true
+                guard ownsPlaybackAudioSession else { return false }
+                resumePreparedItem()
                 launchPhase2(video: video, info: info)
                 return true
             case .failed:
@@ -667,6 +667,7 @@ extension PlaybackViewModel {
     }
 
     private func webViewHLSItemBecameReady(_ item: AVPlayerItem, video: Video, preferredHeight: Int) {
+        guard !Task.isCancelled, ownsPlaybackAudioSession else { return }
         playerLog.notice("[benchmark] readyToPlay — webView/HLS — videoId=\(video.id) title=\(video.title)")
         playerLog.notice("✅ [webView/HLS] readyToPlay")
         // Refresh duration from AVPlayerItem — the YouTube API metadata may be
@@ -701,8 +702,7 @@ extension PlaybackViewModel {
         isLoading = false
         timeToPlayMs = Int(Date().timeIntervalSince(videoLoadStartedAt) * 1000)
         lastSuccessfulStreamType = "webView/HLS"
-        player.rate = Float(settings.playbackSpeed)
-        isPlaying = true
+        resumePreparedItem()
         qualityManager.isMuxedFallback = false
         // Auto ramps after its first frame; manual quality is already applied.
         Task { [weak self, weak item] in

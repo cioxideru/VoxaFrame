@@ -46,6 +46,7 @@ extension PlaybackViewModel {
                     self.isHandlingAudioInterruption = true
                     self.cancelStallRecovery()
                     self.cancelBackgroundQualityUpgrade()
+                    self.cancelPendingAudioPlayback()
                     self.player.pause()
                     self.isPlaying = false
                     self.updateNowPlayingPlayback()
@@ -56,15 +57,8 @@ extension PlaybackViewModel {
                 playerLog.notice("[interruption] ended — shouldResume=\(options.contains(.shouldResume))")
                 Task { @MainActor [weak self] in
                     guard let self else { return }
-                    do {
-                        try AVAudioSession.sharedInstance().setActive(true)
-                    } catch {
-                        playerLog.error("[interruption] setActive failed: \(ViewModelLogger.errorSummary(error))")
-                    }
                     if options.contains(.shouldResume) && self.wasPlayingBeforeInterruption {
-                        self.player.rate = Float(self.settings.playbackSpeed)
-                        self.isPlaying = true
-                        self.updateNowPlayingPlayback()
+                        self.requestAudioPlayback()
                     }
                     self.isHandlingAudioInterruption = false
                     self.wasPlayingBeforeInterruption = false
@@ -114,9 +108,7 @@ extension PlaybackViewModel {
                 guard let self, player.currentItem != nil else { return }
                 parkedResourceCleanup.cancel()
                 parkedVideoId = nil
-                player.rate = Float(settings.playbackSpeed)
-                isPlaying = true
-                updateNowPlayingPlayback()
+                requestAudioPlayback()
             }
             return .success
         }
@@ -124,6 +116,7 @@ extension PlaybackViewModel {
             Task { @MainActor [weak self] in
                 self?.cancelStallRecovery()
                 self?.cancelBackgroundQualityUpgrade()
+                self?.cancelPendingAudioPlayback()
                 self?.player.pause()
                 self?.isPlaying = false
                 self?.updateNowPlayingPlayback()

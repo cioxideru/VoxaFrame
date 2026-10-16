@@ -359,6 +359,7 @@ public final class PlaybackViewModel {
     public var sleepTimerMinutes: Int? { sleepTimer.sleepTimerMinutes }
     public func setSleepTimer(minutes: Int?) {
         sleepTimer.setSleepTimer(minutes: minutes) { [weak self] in
+            self?.cancelPendingAudioPlayback()
             self?.cancelBackgroundQualityUpgrade()
             self?.cancelStallRecovery()
             self?.player.pause()
@@ -401,6 +402,9 @@ public final class PlaybackViewModel {
     var seekDebounceTask: Task<Void, Never>?
     /// Tracks the in-flight loadAsync so it can be cancelled if load() is called again.
     var loadTask: Task<Void, Never>?
+    @ObservationIgnored var audioSession = PlaybackAudioSession.shared
+    @ObservationIgnored var audioSessionID: UUID?
+    @ObservationIgnored var audioPlaybackTask: Task<Void, Never>?
     /// Phase 2 background work: nextInfo, endCards, trackingURLs, neighbour prefetch.
     /// Cancelled at the start of every new load() and in stop().
     var phase2Task: Task<Void, Never>?
@@ -486,18 +490,6 @@ public final class PlaybackViewModel {
         self.comments = CommentsController(api: api)
 
         player.allowsExternalPlayback = true
-        #if canImport(UIKit)
-        do {
-            // Only configure the audio category at init time. setActive(true) is
-            // deliberately deferred to loadAsync (PlaybackViewModel+Loading.swift ~line 494)
-            // so that cold-launching the app does not interrupt background audio from
-            // other apps before the user starts a video (GitHub issue #54).
-            // setCategory alone does not interrupt other apps per AVAudioSession docs.
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
-        } catch {
-            playerLog.error("AVAudioSession category setup failed: \(ViewModelLogger.errorSummary(error))")
-        }
-        #endif
         setupTimeObserver()
         setupRateObserver()
         #if canImport(UIKit)
@@ -521,6 +513,8 @@ public final class PlaybackViewModel {
     }
 
     deinit {
+        audioPlaybackTask?.cancel()
+        if let audioSessionID { audioSession.invalidate(audioSessionID) }
         backgroundQualityUpgradeTask?.cancel()
         if let obs = timeObserver { player.removeTimeObserver(obs) }
         rateObserver?.invalidate()

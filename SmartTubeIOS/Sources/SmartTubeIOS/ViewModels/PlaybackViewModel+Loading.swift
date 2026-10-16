@@ -131,20 +131,15 @@ extension PlaybackViewModel {
         wasPlayingBeforeSuspend = false
         observePlaybackEndAndStalls(for: parkedItem)
         #if canImport(UIKit)
-        do {
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            playerLog.error("[fix12] AVAudioSession setActive failed: \(ViewModelLogger.errorSummary(error))")
-        }
         setupRemoteCommandCenter()
         UIApplication.shared.isIdleTimerDisabled = true
         #endif
-        player.rate = Float(settings.playbackSpeed)
-        isPlaying = true
+        requestAudioPlayback()
         return true
     }
 
     func resetPlaybackForLoad(video: Video, incognito: Bool) {
+        beginPlaybackAudioSession()
         cancelBackgroundQualityUpgrade()
         audioOnlySwapTask?.cancel()
         // Report watchtime for the video being replaced before tearing it down.
@@ -238,18 +233,11 @@ extension PlaybackViewModel {
     /// before the interruption/background transition.
     public func handleForeground() {
         guard player.currentItem != nil else { return }
-        #if canImport(UIKit)
-        do {
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            playerLog.error("AVAudioSession reactivation failed: \(ViewModelLogger.errorSummary(error))")
-        }
-        #endif
         // Resume only if we consider ourselves to be in playing state.
         // isPlaying is kept in sync with player.rate via KVO, so this only fires
         // when the player was paused while still intending to play (e.g. background transition).
         if isPlaying && player.rate == 0 {
-            player.rate = Float(settings.playbackSpeed)
+            requestAudioPlayback()
             playerLog.notice("[handleForeground] resumed player after foreground transition")
         }
     }
@@ -258,6 +246,7 @@ extension PlaybackViewModel {
     /// Pauses playback when the user has disabled background audio.
     public func handleBackground() {
         guard !settings.backgroundPlaybackEnabled else { return }
+        cancelPendingAudioPlayback()
         cancelBackgroundQualityUpgrade()
         // A pending stall recovery would otherwise resume playback in the background.
         cancelStallRecovery()
@@ -272,6 +261,7 @@ extension PlaybackViewModel {
     /// Called when the PlayerView temporarily disappears (e.g. a sheet slides over it).
     /// Use `resume()` to restart playback, or `load(video:)` to switch videos.
     public func suspend() {
+        cancelPendingAudioPlayback()
         cancelBackgroundQualityUpgrade()
         audioOnlySwapTask?.cancel()
         playerLog.notice(
@@ -289,6 +279,9 @@ extension PlaybackViewModel {
         cancelStallRecovery()
         player.pause()
         isPlaying = false
+        // Suspension retains the system session, as before (the voice-over player
+        // follows the video pause). Revoke intent so delayed work cannot restart it.
+        if let audioSessionID { audioSession.invalidate(audioSessionID) }
         controlsTimer?.cancel()
         // Cancel in-flight load tasks so their @Observable state mutations do not
         // fire after the PlayerView has been removed from the SwiftUI hierarchy.
@@ -345,8 +338,7 @@ extension PlaybackViewModel {
         // Re-establish the rate KVO observer (invalidated in suspend()) so isPlaying
         // stays in sync with the player again for this resumed session.
         setupRateObserver()
-        player.rate = Float(settings.playbackSpeed)
-        isPlaying = true
+        requestAudioPlayback()
         showControls()
         #if canImport(UIKit)
         UIApplication.shared.isIdleTimerDisabled = true
@@ -382,13 +374,7 @@ extension PlaybackViewModel {
         isPlaying = false
         wasPlayingBeforeSuspend = false
         wasPlayingBeforeInterruption = false
-        #if canImport(UIKit)
-        do {
-            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        } catch {
-            playerLog.error("AVAudioSession deactivation failed: \(ViewModelLogger.errorSummary(error))")
-        }
-        #endif
+        endPlaybackAudioSession()
         loadTask?.cancel()
         loadTask = nil
         // fix235: Cancel any in-flight exhaustiveRetry so it cannot call replaceCurrentItem

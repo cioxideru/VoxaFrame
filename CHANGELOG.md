@@ -44,6 +44,10 @@ All notable changes to SmartTube are documented here.
   requests remain protected; expired resources are recreated on the next load.
   Stopping also cancels pending quality changes, and stale browser callbacks cannot
   complete work belonging to a new WebView.
+- **Audio-session transitions (PLAN-0011)** run serially outside the UI actor and
+  configure the system only when playback starts. Cancelled or superseded requests
+  cannot resume a video or deactivate a newer session. Ready-state metadata remains
+  available while activation is pending; native transition durations are logged.
 - **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
   restarts a queued load when the app becomes active. Cancelled queued loads skip
   their requests. Token refresh keeps the current cards and pagination instead

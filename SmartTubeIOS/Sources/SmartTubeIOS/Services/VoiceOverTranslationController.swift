@@ -88,6 +88,11 @@ final class VoiceOverTranslationController {
         task = Task { [weak self] in await self?.run(request) }
     }
 
+    /// Pauses I/O while the video awaits audio-session activation, retaining the translation.
+    func pauseAudio() {
+        voicePlayer.pause()
+    }
+
     /// Detaches from the main player and restores its audio. Leaves the video's play state alone.
     func stop() {
         task?.cancel()

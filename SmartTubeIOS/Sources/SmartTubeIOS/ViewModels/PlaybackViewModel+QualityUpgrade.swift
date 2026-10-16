@@ -318,8 +318,8 @@ extension PlaybackViewModel {
                 )
                 if seekTarget > 0 { seek(to: seekTarget) }
                 loadAudioTracks(from: compositeItem)
-                player.rate = Float(settings.playbackSpeed)
-                isPlaying = true
+                guard !Task.isCancelled else { return }
+                resumePreparedItem()
                 return
             case .failed:
                 let itemError = compositeItem.error

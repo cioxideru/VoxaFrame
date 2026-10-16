@@ -14,6 +14,7 @@ private let playerLog = ViewModelLogger(category: "Player")
 extension PlaybackViewModel {
 
     func loadAsync(video: Video) async {
+        guard await activatePlaybackAudioSession(), currentVideo?.id == video.id else { return }
         prepareStreamLoading(video: video)
 
         if startLocalPlayback(video: video) { return }
@@ -230,12 +231,6 @@ extension PlaybackViewModel {
         // re-activating here (rather than waiting until readyToPlay) closes the gap
         // during which PlayerRemoteXPC reports err=-12860/-12785 and the widget is absent.
         setupRemoteCommandCenter()
-        do {
-            try AVAudioSession.sharedInstance().setActive(true)
-            playerLog.notice("[loadAsync] AVAudioSession activated early (lock-screen pre-seed)")
-        } catch {
-            playerLog.error("[loadAsync] early setActive failed: \(ViewModelLogger.errorSummary(error))")
-        }
         updateNowPlayingInfo()
         #endif
 
@@ -516,27 +511,18 @@ extension PlaybackViewModel {
         // Audio-only mode: if enabled, replace the HLS item with an audio-only asset.
         // Falls back to HLS (already in player) on any failure. No-op when disabled.
         await loadAudioOnlyItemIfEnabled()
+        guard await activatePlaybackAudioSession(), currentVideo?.id == video.id else { return }
 
         #if canImport(UIKit)
         // Re-register lock screen commands before starting playback.
         // Commands are removed in suspend()/stop(); re-registering here
         // ensures they work when load() is called after a stop().
         setupRemoteCommandCenter()
-        // Re-activate the audio session. stop() calls setActive(false) to release
-        // the session to other apps; without this call on the next load() the player
-        // starts silently because AVFoundation cannot acquire the inactive session.
-        do {
-            try AVAudioSession.sharedInstance().setActive(true)
-            playerLog.notice("[loadAsync] AVAudioSession activated before playback")
-        } catch {
-            playerLog.error("[loadAsync] AVAudioSession setActive(true) failed: \(ViewModelLogger.errorSummary(error))")
-        }
         #endif
         playerLog.notice(
             "[loadAsync] setting rate=\(self.settings.playbackSpeed) — player.timeControlStatus=\(self.player.timeControlStatus.rawValue) isAudioOnlyMode=\(self.isAudioOnlyMode)"
         )
-        player.rate = Float(settings.playbackSpeed)
-        isPlaying = true
+        resumePreparedItem()
         playerLog.notice(
             "[loadAsync] rate set — player.rate=\(self.player.rate) timeControlStatus=\(self.player.timeControlStatus.rawValue)"
         )

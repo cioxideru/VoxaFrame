@@ -66,7 +66,9 @@ extension PlaybackViewModel {
 
     /// Holds or resumes the video while Yandex prepares the translation, keeping `isPlaying` in
     /// sync so the rate observer doesn't treat the hold as a stall.
-    private func setPlayingForVoiceOver(_ playing: Bool) {
+    func setPlayingForVoiceOver(_ playing: Bool) {
+        if playing, !canResumeInAudioSession { return }
+        if !playing { cancelPendingAudioPlayback() }
         if !playing { cancelBackgroundQualityUpgrade() }
         isPlaying = playing
         if !playing { cancelStallRecovery() }

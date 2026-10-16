@@ -32,15 +32,8 @@ extension PlaybackViewModel {
                 observePlaybackEndAndStalls(for: item)
                 #if canImport(UIKit)
                 setupRemoteCommandCenter()
-                do {
-                    try AVAudioSession.sharedInstance().setActive(true)
-                } catch {
-                    playerLog.error(
-                        "[loadAsync] local: AVAudioSession setActive failed: \(ViewModelLogger.errorSummary(error))")
-                }
                 #endif
-                player.rate = Float(settings.playbackSpeed)
-                isPlaying = true
+                resumePreparedItem()
                 // Downloaded videos have no related videos — clear any stale state from a
                 // previous YouTube session so autoplay does not fire a YouTube video when
                 // the download ends. (Bug #224: wrong video played after local file ends.)

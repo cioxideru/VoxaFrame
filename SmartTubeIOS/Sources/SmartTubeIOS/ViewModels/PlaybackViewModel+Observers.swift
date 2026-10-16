@@ -147,7 +147,8 @@ extension PlaybackViewModel {
             ) { [weak self, weak item] _ in
                 Task { @MainActor [weak self, weak item] in
                     guard let self, let item, self.player.currentItem === item,
-                        self.isPlaying == expectedIsPlaying, self.player.rate == 0
+                        self.isPlaying == expectedIsPlaying, self.player.rate == 0,
+                        self.canResumeInAudioSession
                     else { return }
                     self.player.rate = Float(self.settings.playbackSpeed)
                     self.isPlaying = true
@@ -194,6 +195,7 @@ extension PlaybackViewModel {
     /// The audio output went away (e.g. headphones unplugged) and AVPlayer paused itself.
     /// Record it as a deliberate pause so neither stall path resumes on the speaker.
     func handleAudioOutputLost() {
+        cancelPendingAudioPlayback()
         cancelBackgroundQualityUpgrade()
         cancelStallRecovery()
         guard isPlaying else { return }

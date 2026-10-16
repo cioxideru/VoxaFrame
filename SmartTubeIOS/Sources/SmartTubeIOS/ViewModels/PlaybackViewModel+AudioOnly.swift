@@ -112,7 +112,9 @@ extension PlaybackViewModel {
         itemObserverTask?.cancel()
         itemObserverTask = Task { [weak self] in
             for await status in item.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
-                guard let self, !Task.isCancelled, self.player.currentItem === item else { return }
+                guard let self, !Task.isCancelled, self.player.currentItem === item,
+                    self.ownsPlaybackAudioSession
+                else { return }
                 switch status {
                 case .readyToPlay:
                     audioOnlyLog.notice(
@@ -120,8 +122,7 @@ extension PlaybackViewModel {
                     )
                     audioOnlyLog.notice("✅ Audio-only AVPlayerItem readyToPlay")
                     if seekTime > 0 { self.seek(to: seekTime) }
-                    self.player.rate = Float(self.settings.playbackSpeed)
-                    self.isPlaying = true
+                    self.resumePreparedItem()
                     self.loadAudioTracks(from: item)
                     // Dismiss the spinner — audio item is buffered and playing.
                     self.isLoading = false

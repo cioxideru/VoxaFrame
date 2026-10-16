@@ -13,6 +13,10 @@ private let playerLog = ViewModelLogger(category: "Player")
 extension PlaybackViewModel {
 
     public func togglePlayPause() {
+        if audioPlaybackTask != nil, audioSessionID != nil, !isPlaying {
+            cancelPendingAudioPlayback()
+            return
+        }
         if isPlaying { cancelBackgroundQualityUpgrade() }
         // Restarting a parked item (stop() keeps it, fix12) un-stops it without load(),
         // so resume() must work again afterwards.
@@ -24,16 +28,20 @@ extension PlaybackViewModel {
         if videoEnded {
             videoEnded = false
             seek(to: 0)
-            player.rate = Float(settings.playbackSpeed)
-            isPlaying = true
+            requestAudioPlayback()
             showControls()
             #if canImport(UIKit)
             updateNowPlayingPlayback()
             #endif
             return
         }
-        if isPlaying { player.pause() } else { player.rate = Float(settings.playbackSpeed) }
-        isPlaying.toggle()
+        if isPlaying {
+            cancelPendingAudioPlayback()
+            player.pause()
+            isPlaying = false
+        } else {
+            requestAudioPlayback()
+        }
         showControls()
         #if canImport(UIKit)
         updateNowPlayingPlayback()

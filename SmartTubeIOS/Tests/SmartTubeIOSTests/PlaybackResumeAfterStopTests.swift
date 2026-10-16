@@ -33,18 +33,21 @@ struct PlaybackResumeAfterStopTests {
     }
 
     @Test("togglePlayPause() on a parked item un-parks it so resume() works again")
-    func togglePlayUnparks() {
+    func togglePlayUnparks() async {
         let vm = PlaybackViewModel()
+        vm.audioSession = PlaybackAudioSession(driver: .init(configure: {}, setActive: { _ in }))
         vm.player.replaceCurrentItem(with: AVPlayerItem(url: URL(fileURLWithPath: "/dev/null")))
         vm.parkedVideoId = "parked-1"
 
         vm.togglePlayPause()
+        await vm.audioPlaybackTask?.value
         #expect(vm.parkedVideoId == nil)
         #expect(vm.isPlaying)
 
         vm.player.pause()
         vm.isPlaying = false
         vm.resume()
+        await vm.audioPlaybackTask?.value
         #expect(vm.isPlaying)
     }
 }

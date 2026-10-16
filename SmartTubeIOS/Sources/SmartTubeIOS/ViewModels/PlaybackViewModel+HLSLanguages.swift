@@ -81,7 +81,8 @@ extension PlaybackViewModel {
                     let target = CMTime(seconds: position, preferredTimescale: 600)
                     await item.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero)
                 }
-                player.rate = Float(settings.playbackSpeed)
+                guard !Task.isCancelled, player.currentItem === item else { return }
+                resumePreparedItem()
                 return
             case .failed:
                 let err = ViewModelLogger.errorSummary(item.error)
@@ -218,15 +219,16 @@ extension PlaybackViewModel {
         player.replaceCurrentItem(with: item)
         itemObserverTask?.cancel()
         for await status in item.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
-            guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === item else { return false }
+            guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === item,
+                ownsPlaybackAudioSession
+            else { return false }
             switch status {
             case .readyToPlay:
                 playerLog.notice("[benchmark] readyToPlay — ytDlp/HLS — videoId=\(video.id) title=\(video.title)")
                 playerLog.notice("✅ [ytDlp[sim]/HLS] readyToPlay")
                 needsQuickStartup = false
                 isLoading = false
-                player.rate = Float(settings.playbackSpeed)
-                isPlaying = true
+                resumePreparedItem()
                 return true
             case .failed:
                 let err = ViewModelLogger.errorSummary(item.error)

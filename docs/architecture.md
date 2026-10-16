@@ -93,6 +93,14 @@ Shorts own a separate playback view model and stop the regular player on entry.
 Presentation reads video identity from the playback model, with no separate current-video
 copy. A stopped, parked item is excluded from presentation until explicitly reopened.
 
+`PlaybackAudioSession` serializes native audio-session transitions outside `MainActor`.
+Each playback intent can be revoked synchronously before delayed activation or stop
+work finishes. UI resume paths own one cancellable task; ready callbacks can publish
+metadata while that task waits to start the current item. Configuration is deferred
+until playback, and transition outcomes/durations are recorded in the local log.
+Stopped player items and idle WebViews retain a 60-second reuse window; memory
+pressure can release them earlier without interrupting active playback or requests.
+
 Current source inspection is distinct from [device acceptance](OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).
 
 ## Deep links

@@ -379,9 +379,10 @@ extension PlaybackViewModel {
         return item
     }
 
-    private func attemptItemBecameReady(
+    func attemptItemBecameReady(
         _ item: AVPlayerItem, video: Video, info: PlayerInfo, label: String, isMuxedFallback: Bool
     ) {
+        guard !Task.isCancelled, ownsPlaybackAudioSession else { return }
         playerLog.notice("[benchmark] readyToPlay — \(label) — videoId=\(video.id) title=\(video.title)")
         playerLog.notice("✅ [\(label)] readyToPlay")
         let itemDur = item.duration.seconds
@@ -415,8 +416,7 @@ extension PlaybackViewModel {
         isLoading = false
         timeToPlayMs = Int(Date().timeIntervalSince(videoLoadStartedAt) * 1000)
         lastSuccessfulStreamType = label
-        player.rate = Float(settings.playbackSpeed)
-        isPlaying = true
+        resumePreparedItem()
         launchPhase2(video: video, info: info)
         // Track whether the succeeded stream is muxed so quality-switch attempts
         // can detect the state and trigger fresh WKWebView extraction (#210).
