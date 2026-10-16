@@ -187,7 +187,7 @@ final class PlaybackQualityManager {
         }
         let savedTime = delegate.currentTime
         qualityTask = Task { [weak self] in
-            guard let self else { return }
+            guard let self, !Task.isCancelled else { return }
             #if canImport(WebKit)
             // Guard: if current playback is a muxed fallback, all stored HLS variant URLs
             // are from an expired/failed session. Reusing them would immediately 403.

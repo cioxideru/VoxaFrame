@@ -16,7 +16,11 @@ extension PlaybackViewModel {
         if isPlaying { cancelBackgroundQualityUpgrade() }
         // Restarting a parked item (stop() keeps it, fix12) un-stops it without load(),
         // so resume() must work again afterwards.
-        if videoEnded || !isPlaying { parkedVideoId = nil }
+        if videoEnded || !isPlaying {
+            guard player.currentItem != nil else { return }
+            parkedResourceCleanup.cancel()
+            parkedVideoId = nil
+        }
         if videoEnded {
             videoEnded = false
             seek(to: 0)

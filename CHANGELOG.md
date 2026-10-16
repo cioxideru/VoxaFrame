@@ -39,6 +39,11 @@ All notable changes to SmartTube are documented here.
   outside explicit legacy exceptions. Queue reordering preserves SwiftUI semantics
   without importing it into Core; stopped or replaced SponsorBlock seeks cannot
   update a newer playback session.
+- **Idle resources (PLAN-0011)** release stopped player items and unused WebViews
+  after a 60-second reuse window or a memory warning. Active playback and browser
+  requests remain protected; expired resources are recreated on the next load.
+  Stopping also cancels pending quality changes, and stale browser callbacks cannot
+  complete work belonging to a new WebView.
 - **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
   restarts a queued load when the app becomes active. Cancelled queued loads skip
   their requests. Token refresh keeps the current cards and pagination instead

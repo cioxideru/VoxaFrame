@@ -27,7 +27,10 @@ private final class MockQualityDelegate: QualityContext, QualityEventHandler {
     var isSwappingItem = false
     var isQualityChangePending = false
     func qualityItemDidBecomeReady(_ item: AVPlayerItem, seekTo: TimeInterval) {}
-    func qualityItemDidFail(error: Error?, quality: VideoQualityPreference, hasAppliedH264Cap: Bool) {}
+    var failureCount = 0
+    func qualityItemDidFail(error: Error?, quality: VideoQualityPreference, hasAppliedH264Cap: Bool) {
+        failureCount += 1
+    }
     func qualitySelectDASHFormat(videoURL: URL, audioURL: URL, seekTo: TimeInterval) async {}
 }
 
@@ -57,6 +60,26 @@ struct RememberedQualityTests {
         mgr.delegate = delegate
         return (mgr, delegate)  // caller keeps delegate alive (mgr.delegate is weak)
     }
+
+    #if canImport(WebKit)
+    @Test @MainActor
+    func cancelBeforeQualityTaskStartsPreservesParkedResources() async throws {
+        let (manager, delegate) = makeManager(default: .auto)
+        manager.isMuxedFallback = true
+        let url = URL(string: "https://example.com/parked.m3u8")!
+        manager.wkHLSMasterURL = url
+        manager.hlsVariantURLs = [720: url]
+        manager.selectFormat(makeFormat(height: 720))
+        let task = try #require(manager.qualityTask)
+        manager.cancel()
+        await task.value
+        #expect(task.isCancelled)
+        #expect(delegate.failureCount == 0)
+        #expect(manager.isMuxedFallback)
+        #expect(manager.wkHLSMasterURL == url)
+        #expect(manager.hlsVariantURLs == [720: url])
+    }
+    #endif
 
     @Test("Picking a format remembers resolution and codec without changing the legacy default")
     @MainActor

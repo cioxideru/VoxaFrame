@@ -37,7 +37,7 @@ Do not push. Related device acceptance remains in
 | 8 | Remove stale duplicated current-video state from presentation | Architecture | Implemented and reviewed; Next/Previous/autoplay and recovery tests pass; full check, 1009 tests; iOS build passes; iOS presentation tests await Simulator |
 | 9 | Share one Home feed result with its widget | Architecture | Implemented and reviewed; 55 Home tests cover shared publication, auth/foreground ordering and late writes after sign-out; 1012 tests and iOS/tvOS UI-target builds pass |
 | 10 | Move UI/AVPlayer responsibilities out of Core and check the boundary | Architecture | Implemented and reviewed; 65 focused tests include seek cancellation and 192 queue-move comparisons; 1016 tests, import guard and iOS/tvOS UI-target builds pass |
-| 11 | Release inactive parked player/WebView resources on idle/pressure | Memory | Pending |
+| 11 | Release inactive parked player/WebView resources on idle/pressure | Memory | Implemented and reviewed; 28 focused tests cover expiry, pressure, cancellation, weak lifetime and reopen; 1028 tests and iOS/tvOS UI-target builds pass |
 | 12 | Measure and serialize audio-session transitions outside UI work | Concurrency | Pending |
 
 ## Verification
@@ -58,8 +58,12 @@ measurements distinct from correctness tests and do not infer a device speedup.
   duplicate Home loading for widgets and settings wired to the wrong feed instance.
 - Cleanup direction: prove behavior per step, then remove the replaced path in that same step.
 
-Next deliverable: item 11, release inactive playback and WebView resources.
+Next deliverable: item 12, serialize audio-session transitions outside UI work.
 
 Translation transfer keeps six downloaded segment files at most, copies audio with
 a 64 KiB buffer and reads one upload part at a time (a short tail joins the preceding
 part). Playlist metadata still scales with segment count; no measured MB saving is claimed.
+
+Stopped player items and idle WebViews have a 60-second reuse window. Memory pressure
+can release them earlier; active/paused playback and in-flight browser work are protected.
+Reopening after release performs a normal cold load. No measured RAM saving is claimed.

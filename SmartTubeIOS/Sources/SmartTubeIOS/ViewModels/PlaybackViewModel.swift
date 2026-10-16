@@ -436,6 +436,7 @@ public final class PlaybackViewModel {
     // entire exhaustiveRetry race (~1.27s) is skipped — audio session re-activated and
     // playback resumes in <0.1s. Cleared when a different video is requested.
     var parkedVideoId: String?
+    @ObservationIgnored var parkedResourceCleanup = IdleResourceCleanup()
 
     // MARK: - Now Playing cache
     // Never read nowPlayingInfo back from MPNowPlayingInfoCenter — doing a

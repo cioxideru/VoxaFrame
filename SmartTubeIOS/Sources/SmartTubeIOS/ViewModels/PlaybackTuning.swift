@@ -2,6 +2,7 @@ import Foundation
 
 /// Shared timing values for initial playback, fallback attempts and quality changes.
 enum PlaybackTuning {
+    static let idleResourceRetention: Duration = .seconds(60)
     /// A stream that never reports readiness must yield to the next playback source.
     static let itemReadinessTimeout: Duration = .seconds(15)
     static let bufferReleaseDelay: Duration = .seconds(5)

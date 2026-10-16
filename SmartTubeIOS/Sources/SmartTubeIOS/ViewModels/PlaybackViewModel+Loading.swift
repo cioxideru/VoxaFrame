@@ -14,6 +14,7 @@ private let playerLog = ViewModelLogger(category: "Player")
 extension PlaybackViewModel {
 
     public func load(video: Video, incognito: Bool = false) {
+        parkedResourceCleanup.cancel()
         playerLog.notice(
             "[load] load() called — id=\(video.id) currentVideo=\(self.currentVideo?.id ?? "nil") isLoading=\(self.isLoading) player.item=\(self.player.currentItem != nil)"
         )
@@ -356,6 +357,7 @@ extension PlaybackViewModel {
     // MARK: - Cleanup
 
     public func stop() {
+        qualityManager.cancel()
         sponsorBlockManager.cancelPendingSkip()
         cancelBackgroundQualityUpgrade()
         audioOnlySwapTask?.cancel()
@@ -374,10 +376,7 @@ extension PlaybackViewModel {
             }
         }
         player.pause()
-        // fix12: Do NOT call player.replaceCurrentItem(with: nil) — keep the AVPlayerItem
-        // alive so load() can detect and reuse it if the same video is re-opened within
-        // a short window. Saves the ~1.27s exhaustiveRetry race for hot same-video replays.
-        // load() calls replaceCurrentItem(nil) when a different video is requested.
+        // Keep the item briefly for same-video reopen; pressure or idle timeout releases it.
         parkedVideoId = currentVideo?.id
         voiceOver.stop()
         isPlaying = false
@@ -446,6 +445,19 @@ extension PlaybackViewModel {
         }
         audioSessionObserver = nil
         routeChangeObserver = nil
+        scheduleParkedItemCleanup()
+    }
+
+    private func scheduleParkedItemCleanup() {
+        let parkedItem = player.currentItem
+        parkedResourceCleanup.schedule { [weak self, weak parkedItem] in
+            guard let self, self.parkedVideoId != nil, !self.isPlaying,
+                let parkedItem, self.player.currentItem === parkedItem
+            else { return }
+            self.player.replaceCurrentItem(with: nil)
+            self.qualityManager.reset()
+            // Keep the stopped marker: PlayerStateStore must not expose this video again.
+        }
     }
 
     // MARK: - Phase 2: Background enrichment

@@ -28,6 +28,8 @@ final class YouTubeWebViewHLSExtractor: NSObject {
     static let shared = YouTubeWebViewHLSExtractor()
 
     private var webView: WKWebView?
+    var idleCleanup = IdleResourceCleanup()
+    var loadRequest: (WKWebView, URLRequest) -> Void = { webView, request in webView.load(request) }
     private var continuation: CheckedContinuation<URL?, Never>?
     private var timeoutTask: Task<Void, Never>?
     /// Incremented each time `extractHLSURL` starts a new extraction. Timeout tasks
@@ -117,6 +119,8 @@ final class YouTubeWebViewHLSExtractor: NSObject {
     /// - Parameter timeoutSeconds: How long to wait before giving up. Default 20 s.
     /// - Returns: The HLS master manifest URL (may include `spc=`), or `nil` on failure/timeout.
     func extractHLSURL(videoId: String, timeoutSeconds: Double = 40) async -> URL? {
+        idleCleanup.beginUse()
+        defer { idleCleanup.endUse { [weak self] in self?.releaseIdleWebView() } }
         // Cancel any pending extraction before starting a new one.
         finish(url: nil)
         extractedNSolver = nil
@@ -211,7 +215,7 @@ final class YouTubeWebViewHLSExtractor: NSObject {
             // Accept-Language: YouTube uses this to pick the page language; using en-US
             // avoids consent-wall redirects seen in some locales.
             request.setValue("en-US,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-            wv.load(request)
+            loadRequest(wv, request)
 
             // Timeout safety net. Captures `myGeneration` so that if `extractHLSURL`
             // is called again (cancelling this extraction), the woken-up cancelled task
@@ -232,6 +236,8 @@ final class YouTubeWebViewHLSExtractor: NSObject {
     /// all waiters receive the same URL result.
     /// Returns `nil` if no extraction is in progress.
     func awaitCurrentExtraction() async -> URL? {
+        idleCleanup.beginUse()
+        defer { idleCleanup.endUse { [weak self] in self?.releaseIdleWebView() } }
         guard continuation != nil else { return nil }
         return await withCheckedContinuation { (cont: CheckedContinuation<URL?, Never>) in
             self.extraContinuations.append(cont)
@@ -251,6 +257,8 @@ final class YouTubeWebViewHLSExtractor: NSObject {
     /// multiple VideoCardView timeout-driven tasks for `_CjIX66a9ts` woke up sequentially
     /// and each called `extractHLSURL`, cancelling `priorityExtract`'s active continuation).
     func priorityExtract(videoId: String) async -> URL? {
+        idleCleanup.beginUse()
+        defer { idleCleanup.endUse { [weak self] in self?.releaseIdleWebView() } }
         guard !Task.isCancelled else { return nil }
         serialTaskEpoch &+= 1
         pendingSerialTaskVideoId = videoId
@@ -279,6 +287,8 @@ final class YouTubeWebViewHLSExtractor: NSObject {
     /// advanced the epoch — this task is stale and should await `pendingSerialTask`
     /// (the priority task) instead of calling `extractHLSURL` and cancelling it.
     func serialExtract(videoId: String) async -> URL? {
+        idleCleanup.beginUse()
+        defer { idleCleanup.endUse { [weak self] in self?.releaseIdleWebView() } }
         let previousTask = pendingSerialTask
         let capturedEpoch = serialTaskEpoch
         let newTask = Task { @MainActor [weak self] in
@@ -343,7 +353,7 @@ final class YouTubeWebViewHLSExtractor: NSObject {
 
     // MARK: - Private helpers
 
-    private func finishWithURL(_ url: URL, poToken: String?) {
+    func finishWithURL(_ url: URL, poToken: String?) {
         // Store the pot= token as a separate property so callers can read it from
         // `extractedPoToken` after `extractHLSURL` returns. Previously the pot was
         // baked into the manifest URL path (/pot/<token>), which is not a valid CDN
@@ -363,6 +373,18 @@ final class YouTubeWebViewHLSExtractor: NSObject {
         }
         guard currentExtractionVideoId == videoId else { return }
         finish(url: nil)
+    }
+
+    private func releaseIdleWebView() {
+        guard continuation == nil, extraContinuations.isEmpty else { return }
+        webView?.navigationDelegate = nil
+        webView?.stopLoading()
+        webView?.configuration.userContentController.removeAllScriptMessageHandlers()
+        webView?.configuration.userContentController.removeAllUserScripts()
+        webView = nil
+        // Keep result metadata until the next extraction: callers read it after await.
+        pendingSerialTask = nil
+        pendingSerialTaskVideoId = nil
     }
 
     private func finish(url: URL?) {
@@ -443,7 +465,7 @@ extension YouTubeWebViewHLSExtractor: WKScriptMessageHandler {
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage
     ) {
-        guard message.name == "hlsExtractor" else { return }
+        guard message.webView === webView, message.name == "hlsExtractor" else { return }
 
         // Message is now a JSON object: { hlsManifestUrl, poToken, source, unsolvedN, solvedN }
         var hlsURLString: String?
@@ -539,6 +561,7 @@ extension YouTubeWebViewHLSExtractor: WKNavigationDelegate {
         didFail navigation: WKNavigation!,
         withError error: Error
     ) {
+        guard webView === self.webView else { return }
         // fix17: Ignore NSURLErrorCancelled (-999) — these fire when stopLoading() is called
         // between sequential extractions on the reused WKWebView.
         let nsError = error as NSError
@@ -552,6 +575,7 @@ extension YouTubeWebViewHLSExtractor: WKNavigationDelegate {
         didFailProvisionalNavigation navigation: WKNavigation!,
         withError error: Error
     ) {
+        guard webView === self.webView else { return }
         // fix17: Ignore NSURLErrorCancelled (-999) — these fire when stopLoading() is called
         // between sequential extractions on the reused WKWebView.
         let nsError = error as NSError

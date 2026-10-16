@@ -41,6 +41,8 @@ public final class BotGuardWebViewRunner: NSObject {
 
     // MARK: - State
     private var webView: WKWebView?
+    var idleCleanup = IdleResourceCleanup()
+    var loadRequest: (WKWebView, URLRequest) -> Void = { webView, request in webView.load(request) }
     private var mintCallbackReady = false
     private var mintExpiry: Date?
     /// Shared preparation outlives cancellation of any individual caller.
@@ -118,6 +120,8 @@ public final class BotGuardWebViewRunner: NSObject {
     /// Requires `prepare()` to have been called first. Returns `nil` if the mintCallback
     /// is not ready or if the JS call fails.
     public func mintToken(identifier: String) async -> String? {
+        idleCleanup.beginUse()
+        defer { idleCleanup.endUse { [weak self] in self?.releaseIdleWebView() } }
         guard isReady, let wv = webView else {
             bgwvLog.notice("[BotGuardWV] mintToken — not ready (isReady=\(self.isReady), wv=\(self.webView != nil))")
             return nil
@@ -204,7 +208,7 @@ public final class BotGuardWebViewRunner: NSObject {
 
     // MARK: - Private: WKWebView setup
 
-    private func launchWebView(attemptID: UUID) {
+    func launchWebView(attemptID: UUID) {
         let contentController = WKUserContentController()
         contentController.add(self, name: "botguardRunner")
 
@@ -240,7 +244,7 @@ public final class BotGuardWebViewRunner: NSObject {
         }
         var request = URLRequest(url: pageURL, timeoutInterval: 15)
         request.setValue("en-US,en;q=0.9", forHTTPHeaderField: "Accept-Language")
-        wv.load(request)
+        loadRequest(wv, request)
 
     }
 
@@ -456,7 +460,7 @@ public final class BotGuardWebViewRunner: NSObject {
     private func teardownWebView() {
         // Stop navigation but keep the script message handler and the JS context alive —
         // mintToken() needs to call window.__bgMintCallback via WKScriptMessageHandler.
-        // Handlers are only removed in invalidate() when the WKWebView is fully torn down.
+        // Idle cleanup removes handlers when the reuse window ends.
         webView?.navigationDelegate = nil
         webView?.stopLoading()
     }
@@ -485,14 +489,15 @@ public final class BotGuardWebViewRunner: NSObject {
         }
     }
 
-    /// Destroys the WKWebView entirely (call on TTL expiry or app backgrounding).
-    private func invalidate() {
-        if let attemptID = prepareAttemptID { finishPreparation(attemptID: attemptID) }
+    private func releaseIdleWebView() {
+        guard prepareTask == nil, prepareCont == nil, prepareWaiters.isEmpty, mintCont == nil else { return }
+        // Keep the small result value for callers resuming after prepare/mint.
         mintCallbackReady = false
         mintExpiry = nil
         webView?.navigationDelegate = nil
         webView?.stopLoading()
         webView?.configuration.userContentController.removeAllScriptMessageHandlers()
+        webView?.configuration.userContentController.removeAllUserScripts()
         webView = nil
     }
 }
@@ -506,6 +511,8 @@ extension BotGuardWebViewRunner {
         },
         launch: (UUID) -> Void
     ) async -> PrepareResult {
+        idleCleanup.beginUse()
+        defer { idleCleanup.endUse { [weak self] in self?.releaseIdleWebView() } }
         let attemptID = UUID()
         return await withCheckedContinuation { continuation in
             prepareAttemptID = attemptID
@@ -538,6 +545,8 @@ extension BotGuardWebViewRunner {
 
     /// Only the initiating caller receives the result; joiners wait for cache publication.
     func prepare(using operation: @escaping @MainActor () async -> PrepareResult) async -> PrepareResult? {
+        idleCleanup.beginUse()
+        defer { idleCleanup.endUse { [weak self] in self?.releaseIdleWebView() } }
         guard !Task.isCancelled, !isReady else { return nil }
         let id = UUID()
         let (stream, continuation) = AsyncStream<PrepareResult>.makeStream(bufferingPolicy: .bufferingNewest(1))
@@ -545,7 +554,9 @@ extension BotGuardWebViewRunner {
         defer { prepareWaiters.removeValue(forKey: id) }
         let startsPreparation = prepareTask == nil
         if startsPreparation {
-            prepareTask = Task {
+            idleCleanup.beginUse()
+            prepareTask = Task { [self] in
+                defer { self.idleCleanup.endUse { [weak self] in self?.releaseIdleWebView() } }
                 let result = await operation()
                 self.prepareTask = nil
                 let waiters = self.prepareWaiters.values
