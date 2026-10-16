@@ -17,20 +17,16 @@ extension HomeView {
         let isSubscriptions = selectedSection.type == .subscriptions
         let channelFilter = isSubscriptions ? subscriptionsChannelFilter : nil
 
-        // Pinned shorts row: shown above the scrollable content for all chips
-        // except the Shorts chip itself (which shows a full vertical list instead).
-        // For Recommended, use the separately-fetched recommendedShortsVideos so
-        // there is no double-counting with the grid below.
-        // For all other chips, extract any shorts that appear in the video groups.
-        let pinnedShorts: [Video]
+        // Mixed sections share Home's interleaving; the Shorts chip keeps its vertical list.
+        let feedShorts: [Video]
         if isShorts || applyHideShorts {
-            pinnedShorts = []
+            feedShorts = []
         } else if selectedSection.type == .recommended {
-            pinnedShorts = sectionVM.recommendedShortsVideos.filter { !hideLiveShorts || !($0.isLive && $0.isShort) }
+            feedShorts = sectionVM.recommendedShortsVideos.filter { !hideLiveShorts || !($0.isLive && $0.isShort) }
         } else {
-            pinnedShorts = sectionVM.videoGroups.flatMap(\.videos).filter(\.isShort).filter {
+            feedShorts = sectionVM.videoGroups.flatMap(\.videos).filter(\.isShort).filter {
                 !hideLiveShorts || !($0.isLive && $0.isShort)
-            }
+            }.filter { channelFilter == nil || $0.channelId == channelFilter }
         }
 
         let rowGroups: [VideoGroup] = sectionVM.videoGroups.filter { $0.layout == .row }.map { group in
@@ -41,15 +37,10 @@ extension HomeView {
             if hideVideoPremieres { videos = videos.filter { !$0.isUpcoming } }
             if applyHideWatched { videos = videos.filter { !$0.isWatched(threshold: hideWatchedThreshold) } }
             if let channelFilter { videos = videos.filter { $0.channelId == channelFilter } }
-            copy.videos = videos
+            copy.videos = isShorts ? videos : videos.filter { !$0.isShort }
             return copy
         }
-        // For non-Shorts chips, exclude shorts from the grid — they appear in the
-        // pinned row above. For the Shorts chip itself, keep all videos.
-        // VStack (not LazyVStack) is required here. LazyVGrid inside LazyVStack
-        // collapses to zero height — grid items become invisible and non-tappable
-        // because LazyVStack never provides a measured height to LazyVGrid.
-        // Row groups are few (typically ≤15 carousels) so eager rendering is fine.
+        // Shorts have their own portrait rows; preserve separate carousel groups.
         let gridVideos = sectionVM.videoGroups.filter { $0.layout != .row }
             .flatMap(\.videos)
             .filter { !applyHideShorts || !$0.isShort }
@@ -125,35 +116,6 @@ extension HomeView {
                 .padding(.horizontal)
                 .padding(.vertical, 6)
             }
-            // Pinned ShortsRowSection — outside the ScrollView so it stays fixed
-            // at the top while the video content below scrolls.
-            if !pinnedShorts.isEmpty {
-                ShortsRowSection(
-                    videos: pinnedShorts,
-                    onSelect: { selectVideo($0, from: pinnedShorts) },
-                    accessibilityID: selectedSection.type == .recommended
-                        ? "recommended.shortsRow"
-                        : "browse.shortsRow",
-                    loadMore: {
-                        // Reaching the end of the shorts row means the user wants more
-                        // content of ALL types — set both flags so onChange keeps
-                        // retrying until both shorts AND non-shorts have grown (or pages
-                        // are exhausted). Without setting needsMoreNonShorts here, pages
-                        // that arrive with only non-shorts would not re-trigger the loop.
-                        let allVideos = sectionVM.videoGroups.flatMap(\.videos)
-                        shortsCountAtTrigger = allVideos.filter(\.isShort).count
-                        nonShortsCountAtTrigger = allVideos.filter { !$0.isShort }.count
-                        needsMoreShorts = true
-                        needsMoreNonShorts = true
-                        if let last = paginationTrigger {
-                            sectionVM.loadMoreIfNeeded(lastVideo: last)
-                        }
-                    }
-                )
-                #if os(tvOS)
-                .focusSection()
-                #endif
-            }
             if isShorts {
                 // Shorts chip: vertical portrait card list driven by ShortsRowSection's
                 // internal ScrollView. frame(maxHeight: .infinity) ensures the internal
@@ -185,7 +147,7 @@ extension HomeView {
                         if selectedSection.type == .playlists, queueVideosCount > 0 {
                             currentQueueRow
                         }
-                        ForEach(rowGroups) { group in
+                        ForEach(rowGroups.filter { !$0.videos.isEmpty }) { group in
                             if let title = group.title, !title.isEmpty {
                                 Text(title)
                                     .font(.headline)
@@ -195,29 +157,15 @@ extension HomeView {
                             }
                             VideoRowSection(videos: group.videos, onSelect: { selectVideo($0, from: group.videos) })
                         }
-                        if !gridVideos.isEmpty {
-                            VideoGridSection(
-                                videos: gridVideos,
-                                onSelect: { selectVideo($0, from: gridVideos) },
-                                loadMore: {
-                                    // Reaching the end of the grid means the user wants
-                                    // more content of ALL types — set both flags so
-                                    // onChange keeps retrying until both non-shorts AND
-                                    // shorts have grown (or pages are exhausted). Without
-                                    // setting needsMoreShorts here, pages that contain
-                                    // only shorts (no new grid videos) would stall the
-                                    // retry — and the pinned shorts row would never grow
-                                    // unless the user also manually scrolls it to the end.
-                                    let allVideos = sectionVM.videoGroups.flatMap(\.videos)
-                                    nonShortsCountAtTrigger = allVideos.filter { !$0.isShort }.count
-                                    shortsCountAtTrigger = allVideos.filter(\.isShort).count
-                                    needsMoreNonShorts = true
-                                    needsMoreShorts = true
-                                    if let last = paginationTrigger {
-                                        sectionVM.loadMoreIfNeeded(lastVideo: last)
-                                    }
-                                }
-                            )
+                        interleavedSectionFeed(shorts: feedShorts, videos: gridVideos) {
+                            let allVideos = sectionVM.videoGroups.flatMap(\.videos)
+                            nonShortsCountAtTrigger = allVideos.filter { !$0.isShort }.count
+                            shortsCountAtTrigger = allVideos.filter(\.isShort).count
+                            needsMoreNonShorts = true
+                            needsMoreShorts = true
+                            if let last = paginationTrigger {
+                                sectionVM.loadMoreIfNeeded(lastVideo: last)
+                            }
                         }
                         if sectionVM.isLoading {
                             ProgressView().frame(maxWidth: .infinity).padding()
@@ -227,7 +175,7 @@ extension HomeView {
                 .accessibilityIdentifier(AccessibilityID.homeSectionFeed)
                 .refreshable { sectionVM.loadContent(refresh: true) }
                 #if os(iOS)
-                .simultaneousGesture(sectionSwipe)
+                .background { Color.clear.contentShape(Rectangle()).modifier(sectionSwipe) }
                 #endif
                 #if os(tvOS)
                 .focusSection()
@@ -273,7 +221,7 @@ extension HomeView {
                     let hasMorePages = sectionVM.videoGroups.last?.nextPageToken != nil
                     let currentShortsCount = allVideos.filter(\.isShort).count
                     if currentShortsCount > shortsCountAtTrigger {
-                        needsMoreShorts = false  // pinned row got new shorts — satisfied
+                        needsMoreShorts = false  // feed got new shorts — satisfied
                     } else if !hasMorePages {
                         needsMoreShorts = false  // no more pages — stop
                     } else {

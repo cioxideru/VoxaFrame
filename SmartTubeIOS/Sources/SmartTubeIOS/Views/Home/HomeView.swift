@@ -36,6 +36,7 @@ public struct HomeView: View {
     @State private var showSignIn = false
     /// Where the Home feed's Shorts rows sit; reset whenever the feed is replaced.
     @State private var homeLayout = HomeFeedLayout()
+    @State private var sectionLayout = HomeFeedLayout()
     @State private var homeFeedHeight: CGFloat = 0
     @State var queueVideosCount: Int = 0
     // Auto-retry tracking: record the type-specific video count at the moment a
@@ -120,6 +121,10 @@ public struct HomeView: View {
         }
         #endif
         .onChange(of: homeVM.feedGeneration) { homeLayout = HomeFeedLayout() }
+        .onChange(of: sectionVM.loadedAt) {
+            if sectionVM.loadedAt == nil { sectionLayout = HomeFeedLayout() }
+        }
+        .onChange(of: subscriptionsChannelFilter) { sectionLayout = HomeFeedLayout() }
         .onChange(of: visibleSections) { _, newSections in
             if !newSections.contains(selectedSection), let first = newSections.first {
                 selectedSection = first
@@ -134,6 +139,7 @@ public struct HomeView: View {
             // triggers from a previous section firing on the new section's content.
             needsMoreShorts = false
             needsMoreNonShorts = false
+            sectionLayout = HomeFeedLayout()
             // #62: leaving Subscriptions (or a hard refresh landing back on it) drops
             // any channel filter — a stale filter pointing at a channel that no longer
             // has videos in a freshly reloaded feed would otherwise silently show "no
@@ -265,18 +271,14 @@ extension HomeView {
     /// A clearly sideways swipe over the feed moves to the next / previous chip. Attached
     /// only to the vertical feeds, not the horizontal Shorts row, whose own scrolling would
     /// otherwise also change the section.
-    var sectionSwipe: some Gesture {
-        DragGesture(minimumDistance: 30)
-            .onEnded { value in
-                let dx = value.translation.width
-                let dy = value.translation.height
-                guard abs(dx) > 80, abs(dx) > abs(dy) * 2 else { return }
-                let sections = visibleSections
-                guard let index = sections.firstIndex(of: selectedSection) else { return }
-                let next = index + (dx < 0 ? 1 : -1)
-                guard sections.indices.contains(next) else { return }
-                withAnimation(.easeInOut(duration: 0.2)) { select(sections[next]) }
-            }
+    var sectionSwipe: some ViewModifier {
+        HomeSectionSwipe { dx in
+            let sections = visibleSections
+            guard let index = sections.firstIndex(of: selectedSection) else { return }
+            let next = index + (dx < 0 ? 1 : -1)
+            guard sections.indices.contains(next) else { return }
+            withAnimation(.easeInOut(duration: 0.2)) { select(sections[next]) }
+        }
     }
     #endif
 
@@ -311,7 +313,7 @@ extension HomeView {
                 channelDestination = ChannelDestination(channelId: channel.id)
             }
             #if os(iOS)
-            .simultaneousGesture(sectionSwipe)
+            .modifier(sectionSwipe)
             #endif
         }
     }
@@ -330,20 +332,13 @@ extension HomeView {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
         #if os(iOS)
-        .simultaneousGesture(sectionSwipe)
+        .modifier(sectionSwipe)
         #endif
     }
 
     // MARK: - Home shelves  (unified interleaved feed)
 
-    /// Shorts per Home Shorts row: all a tvOS row shows, about three iPhone screens elsewhere.
-    #if os(tvOS)
-    private static let homeShortsPerRow = ShortsRowSection.shortsCardMaxTVCount
-    #else
-    private static let homeShortsPerRow = 10
-    #endif
-
-    /// One vertical feed: a Shorts row, two rows of videos, another Shorts row, and so on
+    /// One vertical feed: ten Shorts, six rows of videos, another Shorts row, and so on
     /// (`HomeFeedLayout`). Each Shorts row scrolls horizontally on its own.
     private var homeShelves: some View {
         Group {
@@ -355,8 +350,7 @@ extension HomeView {
                 let segments = homeLayout.segments(
                     shorts: shortsVideos,
                     videos: homeVM.homeRegularVideos,
-                    columns: videoGridColumnCount(store.settings, landscape: isLandscapeLayout),
-                    shortsPerRow: Self.homeShortsPerRow
+                    columns: videoGridColumnCount(store.settings, landscape: isLandscapeLayout)
                 )
                 let stack = LazyVStack(alignment: .leading, spacing: 0) {
                     ForEach(segments) { homeFeedSegment($0, in: segments, shorts: shortsVideos) }
@@ -371,7 +365,7 @@ extension HomeView {
                     // The gaps between segments take the chip swipe too. Shorts rows sit in front
                     // of this background, so dragging one still scrolls the row.
                     stack.background {
-                        Color.clear.contentShape(Rectangle()).simultaneousGesture(sectionSwipe)
+                        Color.clear.contentShape(Rectangle()).modifier(sectionSwipe)
                     }
                     #else
                     stack
@@ -391,6 +385,7 @@ extension HomeView {
                 #endif
             }
         }
+        .task { homeVM.refreshIfStale() }
     }
 
     @ViewBuilder
@@ -412,6 +407,8 @@ extension HomeView {
                 loadMore: isLastBlock ? { homeVM.loadMoreMerged() } : nil,
                 eager: true
             )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier(AccessibilityID.feedVideoBlock(.home, segment.index))
             .contentShape(Rectangle())
             .onAppear {
                 homeLayout.markLaidOut(block: segment.index, in: segments)
@@ -420,7 +417,7 @@ extension HomeView {
             // On the video blocks, not the Shorts rows: dragging a Shorts row sideways scrolls
             // the row instead of switching the section.
             #if os(iOS)
-            block.simultaneousGesture(sectionSwipe)
+            block.modifier(sectionSwipe)
             #else
             block
             #endif
@@ -431,10 +428,42 @@ extension HomeView {
     /// still take one.
     private func requestHomeShorts(through block: Int) {
         guard !store.settings.hideShorts else { return }
-        homeVM.loadShorts(atLeast: homeLayout.shortsWanted(through: block, shortsPerRow: Self.homeShortsPerRow))
+        homeVM.loadShorts(atLeast: homeLayout.shortsWanted(through: block))
     }
 
     // MARK: - Section feed  (non-Home chips)
+
+    func interleavedSectionFeed(shorts: [Video], videos: [Video], loadMore: @escaping () -> Void) -> some View {
+        let segments = sectionLayout.segments(
+            shorts: shorts, videos: videos,
+            columns: videoGridColumnCount(store.settings, landscape: isLandscapeLayout))
+        return LazyVStack(alignment: .leading, spacing: 0) {
+            ForEach(segments) { segment in
+                switch segment.kind {
+                case .shorts:
+                    ShortsRowSection(
+                        videos: segment.items,
+                        onSelect: { selectVideo($0, from: shorts) },
+                        accessibilityID: AccessibilityID.sectionShortsRow(selectedSection.type, segment.index),
+                        loadMore: videos.isEmpty ? loadMore : nil)
+                case .videos:
+                    VideoGridSection(
+                        videos: segment.items,
+                        onSelect: { selectVideo($0, from: videos) },
+                        loadMore: segment.index == segments.last(where: { $0.kind == .videos })?.index
+                            ? loadMore : nil,
+                        eager: true
+                    )
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier(AccessibilityID.feedVideoBlock(selectedSection.type, segment.index))
+                    .onAppear { sectionLayout.markLaidOut(block: segment.index, in: segments) }
+                    #if os(iOS)
+                    .modifier(sectionSwipe)
+                    #endif
+                }
+            }
+        }
+    }
 
     @ViewBuilder
     var sectionFeed: some View {
@@ -491,7 +520,7 @@ extension HomeView {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
         #if os(iOS)
-        .simultaneousGesture(sectionSwipe)
+        .modifier(sectionSwipe)
         #endif
     }
 

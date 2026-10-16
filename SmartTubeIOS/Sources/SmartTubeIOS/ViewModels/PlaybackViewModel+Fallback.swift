@@ -97,6 +97,7 @@ extension PlaybackViewModel {
                 return false
             }
             player.replaceCurrentItem(with: compositeItem)
+            observePlaybackEndAndStalls(for: compositeItem)
             itemObserverTask?.cancel()
 
             return await observeCompositionItem(compositeItem, video: video, info: info, label: label)
@@ -182,6 +183,7 @@ extension PlaybackViewModel {
 
     private func applyCompositionPlayerInfo(_ info: PlayerInfo, label: String) {
         playerInfo = info
+        selectedFormat = effectiveQuality == .auto ? nil : qualityManager.preferredVideoFormat(from: info.formats)
         let newFormats = Self.deduplicatedVideoFormats(info.formats)
         // Never reduce quality options — same policy as attemptURL.
         let maxCurrentHeight = availableFormats.map(\.height).max() ?? 0
@@ -329,6 +331,9 @@ extension PlaybackViewModel {
         _ compositeItem: AVPlayerItem, video: Video, info: PlayerInfo, label: String
     ) async -> Bool {
         for await status in compositeItem.statusStream {
+            guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === compositeItem else {
+                return false
+            }
             switch status {
             case .readyToPlay:
                 playerLog.notice(
@@ -498,8 +503,10 @@ extension PlaybackViewModel {
         }
         lastAttemptedStreamURL = masterURL
         player.replaceCurrentItem(with: item)
+        observePlaybackEndAndStalls(for: item)
         itemObserverTask?.cancel()
         for await status in item.statusStream {
+            guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === item else { return false }
             switch status {
             case .readyToPlay:
                 webViewHLSItemBecameReady(item, video: video, preferredHeight: preferredHeight)
@@ -533,6 +540,7 @@ extension PlaybackViewModel {
                     url: allVariants[h], bitrate: nil)
             }
             availableFormats = syntheticFormats
+            qualityManager.setSelectedFormatForCurrentPreference()
             playerLog.notice(
                 "[webView/HLS] quality picker: \(syntheticFormats.map { $0.qualityLabel }.joined(separator: ", "))")
         }
@@ -632,12 +640,10 @@ extension PlaybackViewModel {
         // (matches the primary HLS path in loadAsync). Forward buffer is reset to system
         // default in the readyToPlay ramp task below.
         item.preferredForwardBufferDuration = 0.5
-        // Fast-start ABR: cap initial variant at 360p so AVPlayer downloads the smallest
-        // first segment, then ramp to preferred quality after readyToPlay.
-        // Compute preferred height here so the ramp Task captures it.
+        // Resolve the saved choice before playback; Auto retains the fast-start ramp.
         let preferredHeight: Int
-        if settings.preferredQuality != .auto, let cap = settings.preferredQuality.maxHeight {
-            preferredHeight = cap
+        if let height = effectiveQuality.closestHeight(in: allVariants.keys) ?? effectiveQuality.height {
+            preferredHeight = height
         } else if let best = allVariants.keys.filter({ $0 >= 720 }).max()
             ?? allVariants.keys.max()
         {
@@ -645,10 +651,13 @@ extension PlaybackViewModel {
         } else {
             preferredHeight = 0
         }
-        // Start at 360p (fast first-frame) regardless of preferred quality.
-        item.preferredMaximumResolution = CGSize(width: 640, height: 360)
+        let initialHeight = effectiveQuality == .auto ? 360 : preferredHeight
+        item.preferredMaximumResolution =
+            effectiveQuality == .auto
+            ? CGSize(width: 640, height: 360)
+            : CGSize(width: CGFloat(initialHeight) * 4, height: CGFloat(initialHeight))
         playerLog.notice(
-            "[webView/HLS] fast-start ABR: initial cap 360p → ramp to \(preferredHeight > 0 ? "\(preferredHeight)p" : "Auto") after readyToPlay"
+            "[webView/HLS] initial cap \(initialHeight)p → target \(preferredHeight > 0 ? "\(preferredHeight)p" : "Auto")"
         )
         return (item, preferredHeight)
     }
@@ -691,8 +700,7 @@ extension PlaybackViewModel {
         player.rate = Float(settings.playbackSpeed)
         isPlaying = true
         qualityManager.isMuxedFallback = false
-        // Fast-start quality ramp: first frame is on screen at 360p. Upgrade ABR hints
-        // to preferred quality (same pattern as primary HLS path in loadAsync).
+        // Auto ramps after its first frame; manual quality is already applied.
         Task { [weak self, weak item] in
             try? await Task.sleep(for: PlaybackTuning.qualityRampDelay)
             guard let self, !Task.isCancelled else { return }

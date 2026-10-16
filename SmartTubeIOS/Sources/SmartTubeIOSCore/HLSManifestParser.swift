@@ -19,65 +19,52 @@ import Foundation
 public func parseHLSMasterManifest(_ manifestText: String, baseURL: URL) -> [Int: URL] {
     var variants: [Int: URL] = [:]
     var variantIsH264: [Int: Bool] = [:]
-    let lines = manifestText.components(separatedBy: .newlines)
-    var pendingHeight: Int? = nil
-    var pendingIsH264: Bool = false
-
-    for line in lines {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-
-        if trimmed.hasPrefix("#EXT-X-STREAM-INF") {
-            pendingHeight = nil
-            pendingIsH264 = false
-
-            if let range = trimmed.range(of: #"RESOLUTION=\d+x(\d+)"#, options: .regularExpression) {
-                let match = String(trimmed[range])
-                if let xIdx = match.firstIndex(of: "x"),
-                    let height = Int(match[match.index(after: xIdx)...])
-                {
-                    pendingHeight = height
-                }
+    for format in parseHLSVideoFormats(manifestText, baseURL: baseURL) {
+        let height = format.height
+        if variants[height] == nil {
+            variants[height] = format.url
+            variantIsH264[height] = format.videoCodec == .h264
+        } else {
+            #if !os(tvOS)
+            if !(variantIsH264[height] ?? false), format.videoCodec == .h264 {
+                variants[height] = format.url
+                variantIsH264[height] = true
             }
-            if let codecsRange = trimmed.range(of: #"CODECS="[^"]*""#, options: .regularExpression) {
-                pendingIsH264 = trimmed[codecsRange].contains("avc1")
-            }
-
-        } else if !trimmed.hasPrefix("#"), !trimmed.isEmpty, let height = pendingHeight {
-            let variantURL: URL?
-            if trimmed.hasPrefix("http") {
-                variantURL = URL(string: trimmed)
-            } else {
-                variantURL = URL(string: trimmed, relativeTo: baseURL).map { $0.absoluteURL }
-            }
-
-            if let resolvedURL = variantURL {
-                if variants[height] == nil {
-                    variants[height] = resolvedURL
-                    variantIsH264[height] = pendingIsH264
-                } else {
-                    #if !os(tvOS)
-                    // iOS/macOS: upgrade HEVC variant to H.264 if one arrives later.
-                    if !(variantIsH264[height] ?? false) && pendingIsH264 {
-                        variants[height] = resolvedURL
-                        variantIsH264[height] = true
-                    }
-                    #endif
-                }
-            }
-            pendingHeight = nil
-            pendingIsH264 = false
-
-        } else if trimmed.hasPrefix("#") {
-            // Any tag other than #EXT-X-STREAM-INF resets pending state so
-            // we don't accidentally attach a URI from a different entry.
-            if pendingHeight != nil, !trimmed.hasPrefix("#EXT-X-STREAM-INF") {
-                pendingHeight = nil
-                pendingIsH264 = false
-            }
+            #endif
         }
     }
-
     return variants
+}
+
+/// Keeps codec alternatives at the same resolution so selection uses the actual HLS ladder.
+public func parseHLSVideoFormats(_ manifest: String, baseURL: URL) -> [VideoFormat] {
+    var formats: [VideoFormat] = []
+    var pending: VideoFormat?
+    for line in manifest.components(separatedBy: .newlines) {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        if trimmed.hasPrefix("#EXT-X-STREAM-INF:") {
+            pending = nil
+            let attributes = trimmed.dropFirst("#EXT-X-STREAM-INF:".count).split(separator: ",")
+            func attribute(_ name: String) -> String? {
+                attributes.first(where: { $0.hasPrefix(name + "=") })
+                    .map { String($0.dropFirst(name.count + 1)) }
+            }
+            let dimensions = attribute("RESOLUTION")?.split(separator: "x").compactMap { Int($0) } ?? []
+            guard dimensions.count == 2, dimensions[0] > 0, dimensions[1] > 0 else { continue }
+            let codecs = extractQuotedHLSAttribute("CODECS", from: trimmed) ?? ""
+            let fps = attribute("FRAME-RATE").flatMap(Double.init).flatMap { Int(exactly: $0.rounded()) } ?? 30
+            pending = VideoFormat(
+                label: "\(dimensions[1])p", width: dimensions[0], height: dimensions[1], fps: fps,
+                mimeType: "video/mp4; codecs=\"\(codecs)\"", bitrate: attribute("BANDWIDTH").flatMap(Int.init))
+        } else if trimmed.hasPrefix("#") {
+            pending = nil
+        } else if !trimmed.isEmpty, var format = pending {
+            format.url = URL(string: trimmed, relativeTo: baseURL)?.absoluteURL
+            if format.url != nil { formats.append(format) }
+            pending = nil
+        }
+    }
+    return formats
 }
 
 /// Parses a map of stream height → variant URL from the HLS master manifest for a

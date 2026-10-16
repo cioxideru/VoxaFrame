@@ -47,11 +47,28 @@ enum AccessibilityID {
         index == 0 ? "home.shortsRow" : "home.shortsRow.\(index)"
     }
 
+    static func sectionShortsRow(_ section: String, _ index: Int) -> String {
+        let prefix = section == "recommended" ? "recommended.shortsRow" : "browse.shortsRow"
+        return index == 0 ? prefix : "\(prefix).\(index)"
+    }
+
+    static func feedVideoBlock(_ section: String, _ index: Int) -> String {
+        "feed.\(section).videos.\(index)"
+    }
+
     static func shortsCard(_ videoId: String) -> String {
         "shorts.card.\(videoId)"
     }
     static var homeSectionFeed: String { "home.sectionFeed" }
+    static var shortsBackButton: String { "shorts.backButton" }
+    static var shortsIndexLabel: String { "shorts.indexLabel" }
     static var playerBackButton: String { "player.backButton" }
+    static var playerVideoScaleButton: String { "player.videoScaleButton" }
+    static var playerQuickQualityButton: String { "player.quickAccess.quality" }
+    static var playerQualityPicker: String { "player.qualityPicker" }
+    static var playerNextButton: String { "player.nextBtn" }
+    static var playerCurrentTimeLabel: String { "player.currentTimeLabel" }
+    static var playerPlayPauseButton: String { "player.playPauseButton" }
     static var playerProbeStreamResult: String { "player.probeStreamResult" }
     static var playerQuickAccessRow: String { "player.quickAccessRow" }
     static var playerRetryButton: String { "player.retryButton" }

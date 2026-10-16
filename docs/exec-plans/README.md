@@ -27,6 +27,12 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0008: Remember playback quality](completed/remember-playback-quality.md) — saved intent, resolution-first fallback and persistence checks.
+
+- [PLAN-0007: Player Fit / Fill control](completed/player-video-scale.md) — toolbar toggle, playback continuity and rotation checks.
+
+- [PLAN-0006: Feed spacing, app version and AVPlayer Shorts](completed/feed-version-shorts.md) — delivered code and simulator checks; physical performance acceptance remains OQ-0013.
+
 - [PLAN-0001: TOS player iOS port](completed/tos-player-ios-plan.md) — historically delivered; superseded by [ADR-0010](../adr/0010-remove-iframe-player.md).
 - [PLAN-0002 / #89: Shorts duration guard](completed/task-89-short-detection-issue.md) — fix and regression tests present.
 

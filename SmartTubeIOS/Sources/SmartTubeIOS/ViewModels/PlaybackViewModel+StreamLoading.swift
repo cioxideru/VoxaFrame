@@ -14,13 +14,14 @@ private let playerLog = ViewModelLogger(category: "Player")
 extension PlaybackViewModel {
 
     func loadAsync(video: Video) async {
-        await prepareStreamLoading(video: video)
+        prepareStreamLoading(video: video)
 
         if startLocalPlayback(video: video) { return }
 
         do {
             try await loadPrimaryStream(video: video)
         } catch {
+            guard !Task.isCancelled, currentVideo?.id == video.id else { return }
             isLoading = false
             // Ignore CancellationError — it is expected when stop() or a new load()
             // cancels an in-flight loadTask. Surfacing it would show a spurious error
@@ -111,9 +112,7 @@ extension PlaybackViewModel {
             }
         }
 
-        // Fetch player info using the iOS client (unauthenticated).
-        // If YouTube returns UNPLAYABLE/LOGIN_REQUIRED and the user is signed in,
-        // automatically retry with the authenticated TV client before showing an error.
+        // Reuse a prefetched VISIONOS response before trying the legacy client chain.
         let (info, visionOSHLSInfo) = try await initialPlayerInfo(video: video, cached: cached)
 
         // BUG-005 fix: guard against rapid navigation — if the user navigated away while we
@@ -122,12 +121,15 @@ extension PlaybackViewModel {
             playerLog.notice("[loadAsync] superseded: discarding playerInfo for \(video.id)")
             return
         }
+        try Task.checkCancellation()
         applyInitialPlayerInfo(info)
 
         let sponsorCached = applyInitialSponsorSegments(video: video, cached: cached)
 
         // Restore saved watch position (mirrors VideoStateController)
         let savedState = await VideoStateStore.shared.state(for: video.id)
+        try Task.checkCancellation()
+        guard currentVideo?.id == video.id else { return }
         if let pos = savedState?.position, pos > 5 {
             savedPositionToRestore = pos
             playerLog.notice("Restoring position \(Int(pos))s for \(video.id)")
@@ -140,7 +142,7 @@ extension PlaybackViewModel {
         // HLS variant fetch is NOT on the critical path: we use the master URL for
         // initial playback, so AVPlayer does not need variant URLs to show the first
         // frame. Fetch in a background Task and update the quality picker when done.
-        prefetchInitialHLSVariants(info: info)
+        if !info.isFromVisionOSClient, effectiveQuality == .auto { prefetchInitialHLSVariants(info: info) }
 
         guard let streamURL = info.preferredStreamURL else {
             // iOS client returned adaptive-only formats (no HLS, no muxed stream).
@@ -164,11 +166,14 @@ extension PlaybackViewModel {
         // back to muxed 360p as Phase 2 if all adaptive attempts fail.
         // VISIONOS HLS needs its own policy (codec-filtered master, visionOS UA) —
         // also when the VISIONOS response comes back from VideoPreloadCache on a replay.
-        if let visionOSHLSInfo = visionOSHLSInfo ?? (info.hlsURL != nil && info.isFromVisionOSClient ? info : nil) {
-            if await tryAllStreams(video: video, info: visionOSHLSInfo, label: "VisionOS", skipMuxed: true) {
-                playerLog.notice("[VisionOS] ✅ native HLS playback from loadAsync")
+        if let preferredHLSInfo = visionOSHLSInfo
+            ?? (info.hlsURL != nil && (info.isFromVisionOSClient || effectiveQuality != .auto) ? info : nil)
+        {
+            let label = preferredHLSInfo.isFromVisionOSClient ? "VisionOS" : "iOS"
+            if await tryAllStreams(video: video, info: preferredHLSInfo, label: label, skipMuxed: true) {
+                playerLog.notice("[\(label)] ✅ native HLS playback from loadAsync")
                 #if canImport(WebKit)
-                YouTubeWebViewHLSExtractor.shared.cancelCurrentExtraction()
+                YouTubeWebViewHLSExtractor.shared.cancelCurrentExtraction(for: video.id)
                 #endif
                 return
             }
@@ -202,7 +207,7 @@ extension PlaybackViewModel {
                 authTrackingTask: authTrackingTask, sponsorCached: sponsorCached))
     }
 
-    private func prepareStreamLoading(video: Video) async {
+    private func prepareStreamLoading(video: Video) {
         // Defensive re-establish: guarantees rateObserver is live for every load,
         // even if this view model instance went through suspend() (which
         // invalidates it) and is now loading a different video directly via
@@ -237,56 +242,23 @@ extension PlaybackViewModel {
         updateNowPlayingInfo()
         #endif
 
-        // Fetch the BotGuard PO token before the primary stream attempt.
-        // Awaited (with a 2 s safety timeout) so api.hasPoToken(for:) returns true during
-        // the rqh=1 adaptive stream check in tryAllStreams — preventing an unnecessary
-        // WKWebView fallback on every cold start.
-        // BotGuardClient completes in <500 ms on first run; cached result returns in <1 ms
-        // thereafter (TTL ~12 h). The 2 s timeout is a safety net for slow networks only.
-        let capturedAPI = api
-        let capturedVideoId = video.id
-        if !(await api.hasPoToken(for: video.id)) {
-            await withTaskGroup(of: Void.self) { group in
-                group.addTask { await capturedAPI.prefetchPoToken(for: capturedVideoId) }
-                group.addTask { try? await Task.sleep(nanoseconds: PlaybackTuning.poTokenPrefetchTimeoutNanoseconds) }
-                _ = await group.next()
-                group.cancelAll()
-            }
-        }
+    }
+
+    /// Browser work is only useful after the native VISIONOS path fails.
+    func prepareLegacyStreamLoading(video: Video) {
+        guard !Task.isCancelled, currentVideo?.id == video.id else { return }
         #if canImport(WebKit)
-        // Fire-and-forget: start WKWebView BotGuard pipeline in the background.
-        // Takes 3–8 s; by the time the primary attempt fails and exhaustiveRetry runs,
-        // it may be ready to provide a full getMinter-minted token (CDN-accepted for rqh=1).
-        // Zero impact on primary path timing — runs concurrently.
         if !BotGuardWebViewRunner.shared.isReady {
-            let capturedVideoIdForWV = video.id
             Task { @MainActor in
-                await BotGuardWebViewRunner.shared.prepare(for: capturedVideoIdForWV)
+                await BotGuardWebViewRunner.shared.prepare(for: video.id)
             }
         }
-        // Fire-and-forget: start WKWebView HLS extraction concurrently with the primary path.
-        // For rqh=1 videos the ~2 s extraction overlaps the primary iOS attempt so the URL
-        // is ready (or nearly ready) by the time exhaustiveRetry reaches Phase -2, saving
-        // the serial 2–4 s wait. For non-rqh=1 videos the task completes silently unused.
-        // Use priorityExtract() (not serialExtract) so earlyTask starts wv.load() IMMEDIATELY
-        // without waiting for any in-flight VideoCardView second-serialExtract. A background
-        // card extraction (e.g. POTUARPb1CU) may have captured pendingSerialTask just before
-        // the tap; chaining onto it (serialExtract's behaviour) delays wv.load() by ~2.3 s,
-        // making CDN trust too stale (~0.5 s) for AndroidVR loadTracks (R12 regression).
-        // priorityExtract registers itself in pendingSerialTask so race-failed handlers still
-        // chain onto it correctly via serialExtract.
-        let capturedVideoIdForHLS = video.id
-        // Reuse an in-flight pre-warm started by stop() for the same video (fix10).
-        // If stop() already started serialExtract for this videoId, wkHLSEarlyTask is
-        // non-nil and for the same video — just let it run; racePathB awaits its value.
         if wkHLSEarlyTask == nil {
-            wkHLSEarlyTaskVideoId = capturedVideoIdForHLS
+            let videoId = video.id
+            wkHLSEarlyTaskVideoId = videoId
             wkHLSEarlyTask = Task { @MainActor in
-                // priorityExtract bypasses pendingSerialTask chaining → wv.load() starts
-                // immediately at tap time. For pfa/1 rqh=1 videos like _DY9cTWakcM, this
-                // refreshes CDN IP-level trust so it is only ~2.5 s old when AndroidVR
-                // loadTracks runs — within the ~2.5 s trust window.
-                return await YouTubeWebViewHLSExtractor.shared.priorityExtract(videoId: capturedVideoIdForHLS)
+                guard !Task.isCancelled else { return nil }
+                return await YouTubeWebViewHLSExtractor.shared.priorityExtract(videoId: videoId)
             }
         }
         #endif
@@ -317,6 +289,8 @@ extension PlaybackViewModel {
             visionOSHLSInfo = visionInfo
             await VideoPreloadCache.shared.store(playerInfo: info, for: video.id)
         } else {
+            try Task.checkCancellation()
+            prepareLegacyStreamLoading(video: video)
             info = try await fetchPrimaryPlayerInfo(video: video)
             await VideoPreloadCache.shared.store(playerInfo: info, for: video.id)
         }
@@ -416,10 +390,9 @@ extension PlaybackViewModel {
         // Auto quality leaves hints unconstrained (zero) so AVPlayer's ABR can freely
         // select the highest variant the network supports.
         let initialMaxH: Int
-        if settings.preferredQuality != .auto, let height = settings.preferredQuality.maxHeight {
+        if let height = qualityManager.resolvedHeight(for: effectiveQuality) {
             initialMaxH = height
-            let matchingFormat = availableFormats.first { $0.height <= height }
-            selectedFormat = matchingFormat
+            qualityManager.setSelectedFormatForCurrentPreference()
             playerLog.notice("Initial quality \(height)p — using master URL with ABR hints")
         } else {
             initialMaxH = 0  // unconstrained — resolved to .zero / 0 below

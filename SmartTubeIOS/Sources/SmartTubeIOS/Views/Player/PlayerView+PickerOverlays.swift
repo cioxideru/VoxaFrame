@@ -26,6 +26,11 @@ extension PlayerView {
 
     // MARK: - Quality picker overlay
 
+    private func selectAndRememberQuality(_ format: VideoFormat?) {
+        vm.selectFormat(format)
+        store.settings.lastVideoQuality = vm.settings.lastVideoQuality
+    }
+
     var qualityPickerOverlay: some View {
         ZStack(alignment: .bottom) {
             Color.black.opacity(0.5)
@@ -50,7 +55,7 @@ extension PlayerView {
                         Button {
                             pickerLog.notice(
                                 "[qualityPicker] selected Auto (was: \(vm.selectedFormat?.qualityLabel ?? "Auto"))")
-                            vm.selectFormat(nil)
+                            selectAndRememberQuality(nil)
                             showQualityPicker = false
                             qualityToastMessage = "Auto quality"
                         } label: {
@@ -77,7 +82,7 @@ extension PlayerView {
                                 pickerLog.notice(
                                     "[qualityPicker] selected \(fmt.qualityLabel) (was: \(vm.selectedFormat?.qualityLabel ?? "Auto"))"
                                 )
-                                vm.selectFormat(fmt)
+                                selectAndRememberQuality(fmt)
                                 showQualityPicker = false
                                 qualityToastMessage = "\(fmt.qualityLabel) · may take up to 30s"
                             } label: {
@@ -117,7 +122,7 @@ extension PlayerView {
             .frame(maxWidth: moreMenuPortraitWidth)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .accessibilityIdentifier("player.qualityPicker")
+            .accessibilityIdentifier(AccessibilityID.playerQualityPicker)
             .task {
                 // Fix 2A: pre-warm all quality tiers the moment the picker opens so that
                 // by the time the user taps a resolution, tracks are cached (< 100ms switch).

@@ -80,9 +80,8 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 ## OQ-0007 — Release runbook and version settings
 
 - Status: open; owner: release maintainer; basis: [release guide](how-to/release.md), WS1-T1.4.
-- `Base.xcconfig` defines versions, but `project.pbxproj` still carries hardcoded version settings
-  and no `baseConfigurationReference`. Do not claim config centralization is finished. Reconcile
-  through Xcode and verify resolved build settings for every shipping target/configuration.
+- Version settings are now inherited from the Xcode project for all shipping targets. The stale
+  values in the unused `Base.xcconfig` and the iOS target's build override were removed in PLAN-0006.
 - Signing, archive, and TestFlight/App Store upload have no public end-to-end runbook. Private
   material and live signing/upload were **NOT CHECKED**. Capture actual release steps on the next
   authorized release; do not invent account-specific procedure.
@@ -130,14 +129,23 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 ## OQ-0013 — iOS HLS prewarm on card appearance
 
-- Status: open; owner: playback / release maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
-- `VideoCardView` starts HLS prewarm when non-Shorts cards appear. This was formerly the main
-  source of SlowLoad; its effect on iOS after the embed-player removal is **NOT MEASURED**.
-- Next step: before release, compare prewarm enabled and disabled on a physical iOS device
-  with the same feed and network conditions, covering cold and warm caches. Record card
-  appearance/scroll responsiveness, tap-to-play latency and SlowLoad frequency, with the exact
-  revision, device, sample counts and logs. Acceptance: measured results and a recorded decision
-  to retain, limit or disable prewarm; source inspection alone does not establish a performance gain.
+- Status: awaiting physical-device measurement; owner: playback / release maintainer;
+  basis: [ADR-0010](adr/0010-remove-iframe-player.md) and [PLAN-0006](exec-plans/completed/feed-version-shorts.md).
+- PLAN-0006 removes recurring card-driven WebView/BotGuard warmup on iOS, starts card
+  prefetch from scroll visibility on iOS 18+, and uses the same VISIONOS HLS client as playback.
+  Browser extraction now starts only after native playback fails. iOS 17 retains the existing
+  appearance/disappearance fallback for visibility.
+- The tested iPad simulator Shorts path made no browser extractions or BotGuard requests;
+  lookahead produced usable player info. A small before/after sample showed no meaningful
+  cold-playback timing improvement. These results do not establish faster whole-app launch,
+  smoother rendering, or lower resource use on the physical iPad.
+- Physical profiling was attempted on the user's iPad Pro 11-inch (M5), iPadOS 27.0.1,
+  with installed version 5.6 (24). The trace disconnected without usable samples, and later
+  app-scoped attachment could not find the process. Version 5.7 (25) was tested in Simulator.
+- Next step: install the exact candidate revision on the iPad and compare launch, feed scrolling,
+  and cold/warm tap-to-play with the same account and network. Record sample counts and an
+  app-scoped Instruments trace. Acceptance requires physical-device measurements; source
+  inspection and simulator functional checks alone do not prove the reported slowdown resolved.
 
 ## OQ-0014 — Firebase removal: Xcode project and App Store follow-up
 
@@ -178,3 +186,13 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Next step: compile under Swift 6 strict concurrency; run HomeRequestGenerationTests,
   HomeViewModelTests, HomeFeedSegmentTests, and HomeShortsEndlessUITests (Debug fixture).
   Verify refresh while switching chips, gesture arbitration, and tvOS focus separately.
+
+## OQ-0016 — Voice-over after reopening a parked video
+
+- Status: open; owner: playback maintainer; basis: independent review of `mac/feed-version-shorts`.
+- `PlaybackViewModel.stop()` stops the voice-over controller. The same-video fast path in
+  `resumeParkedItem(for:)` resumes the retained AVPlayerItem without reapplying the language /
+  voice-over policy, so an enabled translation is not restored on reopening that video.
+- Next step: restore the selected translation policy in the shared resume path without replacing
+  the parked video item. Cover translation-enabled stop/reopen and the ordinary untranslated path.
+- This separate review finding was not changed by PLAN-0006's feed, prefetch and Shorts fixes.

@@ -128,6 +128,7 @@ struct PlayerControlsOverlay: View {
                     #endif
                 }
                 Spacer()
+                videoScaleButton
                 #if os(iOS)
                 // Picture-in-Picture button — shown when PiP is enabled in settings and supported on this device
                 if store.settings.pipEnabled, let pip = pipController {
@@ -305,7 +306,7 @@ struct PlayerControlsOverlay: View {
                     #if !os(tvOS)
                     Text(formatDuration(vm.currentTime))
                         .padding(.leading, 6)
-                        .accessibilityIdentifier("player.currentTimeLabel")
+                        .accessibilityIdentifier(AccessibilityID.playerCurrentTimeLabel)
                     Spacer()
                     Text(formatDuration(vm.duration))
                         .padding(.trailing, 6)
@@ -381,7 +382,7 @@ struct PlayerControlsOverlay: View {
                         highlighted: highlightedControl == .nextVideo,
                         scale: 1.55,
                         shadowRadius: 14,
-                        identifier: "player.nextBtn",
+                        identifier: AccessibilityID.playerNextButton,
                         enabled: vm.hasNext,
                         width: 64,
                         height: 64
@@ -405,7 +406,7 @@ struct PlayerControlsOverlay: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(!vm.hasNext)
-                    .accessibilityIdentifier("player.nextBtn")
+                    .accessibilityIdentifier(AccessibilityID.playerNextButton)
                     #endif
                 }
                 .font(.caption)
@@ -476,7 +477,7 @@ extension PlayerControlsOverlay {
             scale: 1.6,
             shadowOpacity: 0.65,
             shadowRadius: 8,
-            identifier: "player.playPauseButton",
+            identifier: AccessibilityID.playerPlayPauseButton,
             width: 88,
             height: 88
         ) {
@@ -491,7 +492,7 @@ extension PlayerControlsOverlay {
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())
-        .accessibilityIdentifier("player.playPauseButton")
+        .accessibilityIdentifier(AccessibilityID.playerPlayPauseButton)
         #endif
     }
 

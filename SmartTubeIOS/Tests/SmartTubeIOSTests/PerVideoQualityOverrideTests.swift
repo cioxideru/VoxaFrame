@@ -7,11 +7,8 @@ import Testing
 
 // MARK: - PerVideoQualityOverrideTests
 //
-// The quality picker's per-video pick must be temporary: it overrides the
-// persisted default (AppSettings.preferredQuality) for the current video only.
-// PlaybackQualityManager records the pick in `perVideoQuality` (survives
-// CDN-failure reverts of `selectedFormat`) and exposes `effectiveQuality`
-// (per-video pick ?? persisted default) for recovery/stream-selection paths.
+// Explicit choices survive video changes and temporary stream fallbacks.
+// The legacy default applies only before the first explicit selection.
 
 // MARK: - Mocks
 
@@ -30,14 +27,14 @@ private final class MockQualityDelegate: QualityContext, QualityEventHandler {
     var isSwappingItem = false
     var isQualityChangePending = false
     func qualityItemDidBecomeReady(_ item: AVPlayerItem, seekTo: TimeInterval) {}
-    func qualityItemDidFail(error: Error?, quality: AppSettings.VideoQuality, hasAppliedH264Cap: Bool) async {}
+    func qualityItemDidFail(error: Error?, quality: VideoQualityPreference, hasAppliedH264Cap: Bool) {}
     func qualitySelectDASHFormat(videoURL: URL, audioURL: URL, seekTo: TimeInterval) async {}
 }
 
 // MARK: - Tests
 
-@Suite("Per-video quality override")
-struct PerVideoQualityOverrideTests {
+@Suite("Remembered quality preference")
+struct RememberedQualityTests {
 
     private func makeFormat(height: Int) -> VideoFormat {
         VideoFormat(
@@ -61,14 +58,14 @@ struct PerVideoQualityOverrideTests {
         return (mgr, delegate)  // caller keeps delegate alive (mgr.delegate is weak)
     }
 
-    @Test("Picking a format records perVideoQuality and leaves the default untouched")
+    @Test("Picking a format remembers resolution and codec without changing the legacy default")
     @MainActor
     func pickRecordsIntentWithoutTouchingDefault() {
         let (mgr, delegate) = makeManager(default: .q480)
         mgr.selectFormat(makeFormat(height: 720))
-        #expect(mgr.perVideoQuality == .q720)
+        #expect(delegate.settings.lastVideoQuality == VideoQualityPreference(height: 720, codec: .h264))
         #expect(delegate.settings.preferredQuality == .q480)
-        #expect(mgr.effectiveQuality == .q720)
+        #expect(mgr.effectiveQuality == VideoQualityPreference(height: 720, codec: .h264))
     }
 
     @Test("Explicitly picking Auto overrides a non-auto default")
@@ -77,7 +74,8 @@ struct PerVideoQualityOverrideTests {
         let (mgr, delegate) = makeManager(default: .q480)
         mgr.selectFormat(nil)
         _ = delegate  // keep weak delegate alive through the assertions
-        #expect(mgr.perVideoQuality == .auto)
+        #expect(delegate.settings.lastVideoQuality == .auto)
+        mgr.reset()
         #expect(mgr.effectiveQuality == .auto)
     }
 
@@ -86,22 +84,28 @@ struct PerVideoQualityOverrideTests {
     func noPickFallsBackToDefault() {
         let (mgr, delegate) = makeManager(default: .q480)
         _ = delegate
-        #expect(mgr.perVideoQuality == nil)
-        #expect(mgr.effectiveQuality == .q480)
+        #expect(delegate.settings.lastVideoQuality == nil)
+        #expect(mgr.effectiveQuality == VideoQualityPreference(height: 480))
     }
 
-    @Test("reset() clears the per-video pick — next video starts at the default")
+    @Test("reset() keeps the choice and a temporary fallback does not overwrite it")
     @MainActor
-    func resetClearsPerVideoPick() {
+    func nextVideoRetainsChoice() {
         let (mgr, delegate) = makeManager(default: .q480)
         mgr.selectFormat(makeFormat(height: 1080))
         mgr.reset()
         _ = delegate
-        #expect(mgr.perVideoQuality == nil)
-        #expect(mgr.effectiveQuality == .q480)
+        mgr.availableFormats = [makeFormat(height: 720), makeFormat(height: 360)]
+        mgr.setSelectedFormatForCurrentPreference()
+        #expect(mgr.selectedFormat?.height == 720)
+        #expect(mgr.effectiveQuality == VideoQualityPreference(height: 1080, codec: .h264))
+        mgr.reset()
+        mgr.availableFormats = [makeFormat(height: 1080), makeFormat(height: 720)]
+        mgr.setSelectedFormatForCurrentPreference()
+        #expect(mgr.selectedFormat?.height == 1080)
     }
 
-    @Test("setSelectedFormatForCurrentPreference prefers the per-video pick over the default")
+    @Test("setSelectedFormatForCurrentPreference prefers the remembered choice over the default")
     @MainActor
     func cdnRevertRestoresPerVideoPick() {
         let (mgr, delegate) = makeManager(default: .q1080)

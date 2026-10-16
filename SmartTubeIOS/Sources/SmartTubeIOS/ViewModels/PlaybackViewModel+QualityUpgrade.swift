@@ -16,6 +16,9 @@ private let playerLog = ViewModelLogger(category: "Player")
 extension PlaybackViewModel {
 
     func launchPhase2(video: Video, info: PlayerInfo, cached: CachedVideoData? = nil) {
+        #if canImport(UIKit)
+        UIApplication.shared.isIdleTimerDisabled = true
+        #endif
         phase2Task?.cancel()
         phase2Task = Task(priority: .utility) { [weak self] in
             // Use the caller-supplied cached data when available so Phase 2 can use
@@ -39,11 +42,12 @@ extension PlaybackViewModel {
         //  • muxed fallback → fetch AndroidVR playerInfo so quality-tap skips 403 recovery
         //  • adaptive playing → pre-warm tracks for the user's preferred quality tier
         prefetchTask?.cancel()
+        guard info.hlsURL == nil else { return }
         if info.bestAdaptiveAudioURL == nil {
             prefetchTask = Task(priority: .utility) { [weak self] in
                 await self?.fetchAndCacheAdaptivePlayerInfo(video: video, muxedInfo: info)
             }
-        } else if settings.preferredQuality != .auto {
+        } else if effectiveQuality != .auto {
             prefetchTask = Task(priority: .utility) { [weak self] in
                 await self?.prefetchPreferredQualityTracks(info: info)
             }
@@ -90,18 +94,14 @@ extension PlaybackViewModel {
         }
     }
 
-    /// Pre-loads `AVAssetTrack` arrays for `settings.preferredQuality` into
+    /// Pre-loads `AVAssetTrack` arrays for the remembered quality into
     /// `AVAssetTrackCache` so that the first quality-tap after initial playback
     /// is a cache hit rather than a CDN round-trip.
     private func prefetchPreferredQualityTracks(info: PlayerInfo) async {
-        guard settings.preferredQuality != .auto,
-            let maxH = settings.preferredQuality.maxHeight
+        guard let maxH = effectiveQuality.height
         else { return }
         guard
-            let videoURL = PlaybackQualityManager.selectBestVideoFormat(
-                from: info.formats, preferredMaxHeight: maxH,
-                preferH264: settings.preferH264
-            )?.url,
+            let videoURL = qualityManager.preferredVideoFormat(from: info.formats)?.url,
             let audioURL = info.bestAdaptiveAudioURL
         else { return }
         if AVAssetTrackCache.shared.videoTracks(for: videoURL) != nil { return }

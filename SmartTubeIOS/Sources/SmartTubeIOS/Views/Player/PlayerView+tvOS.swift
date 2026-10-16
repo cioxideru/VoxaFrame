@@ -55,13 +55,13 @@ extension PlayerView {
     /// `tvNextControl(from:direction:)` rather than SwiftUI's native focus
     /// engine, giving full control over the d-pad routing logic.
     enum TVPlayerControl: Equatable {
-        case back, channel, more  // top row
+        case back, channel, videoScale, more  // top row
         case seekBack, playPause, seekForward  // centre row
         case prevVideo, prevChapter, nextChapter, nextVideo  // bottom row
 
         var isTopRow: Bool {
             switch self {
-            case .back, .channel, .more: true
+            case .back, .channel, .videoScale, .more: true
             default: false
             }
         }
@@ -99,7 +99,8 @@ extension PlayerView {
         case .left:
             switch current {
             // top row
-            case .more: return .channel
+            case .more: return .videoScale
+            case .videoScale: return .channel
             case .channel: return .back
             // center row
             case .playPause: return .seekBack
@@ -114,7 +115,8 @@ extension PlayerView {
             switch current {
             // top row
             case .back: return .channel
-            case .channel: return .more
+            case .channel: return .videoScale
+            case .videoScale: return .more
             // center row
             case .seekBack: return .playPause
             case .playPause: return .seekForward
@@ -162,6 +164,7 @@ extension PlayerView {
             playerLog.notice("[tv] .more activated — setting showMoreMenu=true")
             showMoreMenu = true
             highlightedControl = nil
+        case .videoScale: store.settings.videoGravityMode.toggle()
         case .seekBack: vm.seekRelative(seconds: -Double(store.settings.seekBackSeconds))
         case .playPause: vm.togglePlayPause()
         case .seekForward: vm.seekRelative(seconds: Double(store.settings.seekForwardSeconds))

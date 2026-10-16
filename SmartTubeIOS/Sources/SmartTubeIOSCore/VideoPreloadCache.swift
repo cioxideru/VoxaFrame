@@ -66,7 +66,7 @@ public actor VideoPreloadCache {
 
     // MARK: - TTL constants
 
-    /// iOS-client CDN stream URLs expire after ~6 h; use 5 h 30 m to be safe.
+    /// CDN stream URLs expire after ~6 h; use 5 h 30 m to be safe.
     public static let playerInfoTTL: TimeInterval = 5.5 * 3600
     /// Tracking URLs are account-bound; token lifetime is typically 1 h.
     public static let trackingTTL: TimeInterval = 3600
@@ -151,7 +151,7 @@ public actor VideoPreloadCache {
     nonisolated private let pathMonitor = NWPathMonitor()
     private var currentPath: NWPath? = nil
 
-    private init(
+    init(
         api: InnerTubeAPI = InnerTubeAPI(),
         sponsorBlock: SponsorBlockService = SponsorBlockService(),
         deArrow: DeArrowService = DeArrowService()
@@ -314,8 +314,11 @@ public actor VideoPreloadCache {
         }
         cacheLog.notice("[coalesce] creating new in-flight task for \(videoId, privacy: .public)")
         let task = Task<PlayerInfo?, Never>(priority: .userInitiated) {
-            let result = try? await self.api.fetchPlayerInfo(videoId: videoId)
+            let result = try? await self.api.fetchPlayerInfoVisionOS(videoId: videoId)
             self.inFlightPlayerFetches.removeValue(forKey: videoId)
+            guard !Task.isCancelled, let result, result.hlsURL != nil else { return nil }
+            // Publish the stream before optional metadata finishes, so the next Short can start.
+            self.store(playerInfo: result, for: videoId)
             return result
         }
         inFlightPlayerFetches[videoId] = task
@@ -555,20 +558,7 @@ public actor VideoPreloadCache {
         // eliminating the actor-timing race that caused tracking=false on browse-phase prefetch.
         // This runs concurrently with the 5 child tasks above (all are in flight by this point).
         //
-        // Tracking URLs: prefer the `playbackTracking` URLs from the iOS-client player
-        // response (which `getOrFetchPlayerInfo` already obtained) over a separate dedicated
-        // fetch. The previous approach (a separate `fetchAuthenticatedTrackingURLs` call hitting
-        // a separate endpoint) failed for device-code-signed-in users because YouTube's web
-        // client rejects the TV device-code Bearer with HTTP 400, and the cookie-exchange paths
-        // (OAuthLogin + Multilogin) are blocked by Google policy (INVALID_TOKENS / RECOVERABLE).
-        // The iOS client's response reliably includes `playbackTracking` URLs in
-        // `PlayerInfo.trackingURLs` — they are the right shape (full c=IOS, cver=, plid=, etc.
-        // params from a real YouTube response). Previously these URLs were thrown away
-        // (replaced by a nil from the failing dedicated call), forcing the pings onto the
-        // constructed fallback URLs which return 200 but are not credited. The dedicated
-        // `fetchAuthenticatedTrackingURLs` call is no longer used here; it remains in the API
-        // for callers that have a working web-session auth context (SAPISID or web OAuth
-        // Bearer) where it can return real account-bound URLs.
+        // Reuse tracking URLs from the prefetched player response.
 
         let (next, cards, sponsor, dearrow) =
             await (nextResult, endCardsResult, sponsorResult, deArrowResult)

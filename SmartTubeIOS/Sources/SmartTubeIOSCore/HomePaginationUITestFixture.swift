@@ -5,16 +5,27 @@ import Foundation
 enum HomePaginationUITestFixture {
     static var isEnabled: Bool {
         let arguments = ProcessInfo.processInfo.arguments
-        return arguments.contains("--uitesting") && arguments.contains("--uitesting-home-pagination")
+        return arguments.contains("--uitesting")
+            && (arguments.contains("--uitesting-home-pagination") || isMixedFeedEnabled)
+    }
+
+    static var isMixedFeedEnabled: Bool {
+        let arguments = ProcessInfo.processInfo.arguments
+        return arguments.contains("--uitesting") && arguments.contains("--uitesting-mixed-feed")
     }
 
     static func regularPage(subscriptions: Bool, continuationToken: String?) -> VideoGroup {
         let prefix = subscriptions ? "subscription" : "recommended"
-        let videos =
+        var videos =
             continuationToken == nil
-            ? (0..<20).map {
+            ? (0..<60).map {
                 Video(id: "\(prefix)-\($0)", title: "\(prefix) video \($0)", channelTitle: "Fixture")
             } : []
+        if isMixedFeedEnabled, continuationToken == nil {
+            videos += (0..<30).map {
+                Video(id: "\(prefix)-short-\($0)", title: "Short \($0)", channelTitle: "Fixture", isShort: true)
+            }
+        }
         return VideoGroup(title: prefix, videos: videos)
     }
 

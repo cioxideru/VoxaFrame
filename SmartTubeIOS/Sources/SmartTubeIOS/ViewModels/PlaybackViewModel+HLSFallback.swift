@@ -29,31 +29,10 @@ extension PlaybackViewModel {
         return client.hasPrefix("ANDROID") ? InnerTubeClients.Android.userAgent : InnerTubeClients.iOS.userAgent
     }
 
-    /// Returns the best adaptive video-only MP4 URL, respecting the user's quality preference.
-    /// When `preferredQuality != .auto`, filters to formats at or below `maxHeight`, sorts
-    /// by height descending then bitrate descending. Falls back to highest bitrate when no
-    /// format meets the height cap.
-    /// When `preferredQuality == .auto`, caps at the display's native resolution so the
-    /// player never fetches a resolution higher than the screen can render.
-    ///
-    /// H.264 (avc1) is preferred over AV1 (av01) at any given resolution because Android-client
-    /// AV1 streams require a proof-of-origin token (pot) that the app does not supply, causing
-    /// systematic HTTP 403 errors on adaptive composition. H.264 streams are served without
-    /// that restriction and are well-supported by AVFoundation.
+    /// Manual quality uses nearest resolution, then codec. Auto retains its display cap and H.264 preference.
     func qualityCapVideoURL(from formats: [SmartTubeIOSCore.VideoFormat]) -> URL? {
-        let maxH: Int
-        if settings.preferredQuality != .auto, let height = settings.preferredQuality.maxHeight {
-            maxH = height
-        } else {
-            // Auto: cap at the display's native resolution — no benefit loading higher
-            // than what the screen can actually render.
-            maxH = Self.displayMaxVideoHeight()
-        }
-        return PlaybackQualityManager.selectBestVideoFormat(
-            from: formats,
-            preferredMaxHeight: maxH,
-            preferH264: true
-        )?.url
+        qualityManager.preferredVideoFormat(
+            from: formats, autoMaximumHeight: Self.displayMaxVideoHeight(), preferH264: true)?.url
     }
 
     /// Returns the maximum video height (pixels) that this display can render for

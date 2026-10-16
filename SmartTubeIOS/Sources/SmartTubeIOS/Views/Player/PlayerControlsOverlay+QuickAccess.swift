@@ -1,13 +1,48 @@
 import SmartTubeIOSCore
 import SwiftUI
 
-#if !os(tvOS)
 // MARK: - Quick-access row (iOS and macOS)
 //
 // Compact pill buttons giving one-tap access to speed, quality, audio track,
 // and sleep-timer pickers without opening the 3-dot more menu.
 // Surfaced directly below the progress bar as requested in GitHub issue #52.
 extension PlayerControlsOverlay {
+    @ViewBuilder var videoScaleButton: some View {
+        let isFilled = store.settings.videoGravityMode == .fill
+        let symbol = isFilled ? AppSymbol.videoFit : AppSymbol.videoFill
+        Group {
+            #if os(tvOS)
+            tvOverlayControl(
+                highlighted: highlightedControl == .videoScale,
+                scale: 1.5, shadowRadius: 12,
+                identifier: AccessibilityID.playerVideoScaleButton,
+                width: 64, height: 64
+            ) {
+                Image(systemName: symbol)
+                    .font(.system(size: 18 * controlScale))
+                    .foregroundStyle(isFilled ? Color.accentColor : .white)
+            }
+            #else
+            Button {
+                store.settings.videoGravityMode.toggle()
+                vm.showControls()
+            } label: {
+                Image(systemName: symbol)
+                    .font(.system(size: 18 * controlScale))
+                    .foregroundStyle(isFilled ? Color.accentColor : .white)
+                    .frame(width: 44, height: 44)
+                    .background(.black.opacity(0.4), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.playerVideoScaleButton)
+            #endif
+        }
+        .accessibilityLabel(Text("Video Fit", bundle: .module))
+        .accessibilityValue(
+            isFilled ? Text("Fill (crop)", bundle: .module) : Text("Fit (letterbox)", bundle: .module))
+    }
+
+    #if !os(tvOS)
 
     @ViewBuilder var quickAccessButtonRow: some View {
         HStack(spacing: 8) {
@@ -21,7 +56,7 @@ extension PlayerControlsOverlay {
                 quickAccessButton(
                     systemImage: AppSymbol.videoQuality,
                     label: qualityLabel,
-                    accessibilityId: "player.quickAccess.quality"
+                    accessibilityId: AccessibilityID.playerQuickQualityButton
                 ) { showQualityPicker = true }
                 .disabled(vm.availableFormats.isEmpty)
                 .opacity(vm.availableFormats.isEmpty ? 0.4 : 1)
@@ -92,5 +127,5 @@ extension PlayerControlsOverlay {
         .buttonStyle(.plain)
         .accessibilityIdentifier(accessibilityId)
     }
+    #endif
 }
-#endif

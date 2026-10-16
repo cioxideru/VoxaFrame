@@ -40,14 +40,8 @@ extension PlaybackViewModel {
         // fetches for the same (or different) video running at the same time.
         loadTask?.cancel()
         #if canImport(WebKit)
-        // fix10: preserve the pre-warm task when the same video is re-tapped after stop().
-        // racePathB will await earlyTask.value and get the result when extraction completes
-        // (~0.75s after tap if stop() started it 0.5s earlier) instead of ~1.25s from scratch.
-        // For different-video navigation, cancel as before.
         if wkHLSEarlyTaskVideoId != video.id {
-            wkHLSEarlyTask?.cancel()
-            wkHLSEarlyTask = nil
-            wkHLSEarlyTaskVideoId = nil
+            cancelEarlyWebViewExtraction()
             wkHLSPermissionDenied = false
         }
         #endif
@@ -124,11 +118,8 @@ extension PlaybackViewModel {
         else { return false }
         playerLog.notice("[fix12] same-video re-open — reusing parked AVPlayerItem for \(video.id)")
         parkedVideoId = nil
-        // Cancel the now-useless wkHLS serialExtract started by stop().
         #if canImport(WebKit)
-        wkHLSEarlyTask?.cancel()
-        wkHLSEarlyTask = nil
-        wkHLSEarlyTaskVideoId = nil
+        cancelEarlyWebViewExtraction()
         #endif
         currentVideo = video
         isLoading = false
@@ -136,28 +127,7 @@ extension PlaybackViewModel {
         videoEnded = false
         error = nil
         wasPlayingBeforeSuspend = false
-        // Re-wire end-of-playback and stall observers on the still-alive item.
-        endObserverTask?.cancel()
-        endObserverTask = Task { [weak self, parkedItem] in
-            let notifications = NotificationCenter.default.notifications(
-                named: AVPlayerItem.didPlayToEndTimeNotification, object: parkedItem
-            )
-            for await _ in notifications {
-                guard let self, !Task.isCancelled else { return }
-                self.handlePlaybackEnd()
-            }
-        }
-        stallObserverTask?.cancel()
-        stallObserverTask = Task { @MainActor [weak self, parkedItem] in
-            let notifications = NotificationCenter.default.notifications(
-                named: AVPlayerItem.playbackStalledNotification, object: parkedItem
-            )
-            for await _ in notifications {
-                guard let self, !Task.isCancelled else { return }
-                self.registerStall(on: parkedItem)
-                playerLog.notice("[fix12/stall] playbackStalled at t=\(Int(self.currentTime))s #\(self.stallCount)")
-            }
-        }
+        observePlaybackEndAndStalls(for: parkedItem)
         #if canImport(UIKit)
         do {
             try AVAudioSession.sharedInstance().setActive(true)
@@ -332,9 +302,7 @@ extension PlaybackViewModel {
         rateObserver?.invalidate()
         rateObserver = nil
         #if canImport(WebKit)
-        wkHLSEarlyTask?.cancel()
-        wkHLSEarlyTask = nil
-        wkHLSEarlyTaskVideoId = nil
+        cancelEarlyWebViewExtraction()
         #endif
         isLoading = false
         #if canImport(UIKit)
@@ -431,20 +399,13 @@ extension PlaybackViewModel {
         prefetchTask?.cancel()
         prefetchTask = nil
         AVAssetTrackCache.shared.clear()
-        // Evict the cached WKWebView HLS URL for the video that just stopped.
-        // CDN stream sessions are single-use: re-using the same manifest URL with a
-        // new AVPlayerItem on a subsequent tap resumes from the previous position or
-        // serves recycled session content, which the user sees as a wrong / different
-        // video for ~1s before the 403 fires. Evicting here forces a fresh extraction
-        // on re-tap while still allowing neighbour pre-warms to populate the cache.
-        //
-        // fix10: after evicting the stale CDN URL, start a fresh wkHLS extraction via
-        // serialExtract. When extraction completes (~1.25s), the URL is stored in cache
-        // so Phase -1a finds it on the next load() for this video (bypassing the full
-        // exhaustiveRetry race entirely → ~0.5s faster). The task is also assigned to
-        // wkHLSEarlyTask so racePathB can use it if the re-tap happens before extraction
-        // completes (< 1.25s after stop).
-        rewarmStoppedVideoHLS()
+        #if canImport(WebKit)
+        cancelEarlyWebViewExtraction()
+        #endif
+        // Browser CDN sessions are single-use; refresh only if playback needs the fallback again.
+        if let stoppedVideoId = currentVideo?.id {
+            Task { await VideoPreloadCache.shared.invalidateWKHLSURL(for: stoppedVideoId) }
+        }
         itemObserverTask?.cancel()
         itemObserverTask = nil
         endObserverTask?.cancel()
@@ -496,6 +457,63 @@ extension PlaybackViewModel {
     ) async {
         guard !Task.isCancelled else { return }
 
+        await loadPhase2SponsorSegments(video: video, cached: cached, sponsorCached: sponsorCached)
+
+        guard !Task.isCancelled else { return }
+
+        await loadPhase2RelatedVideos(video: video, cached: cached)
+
+        guard !Task.isCancelled else { return }
+
+        // --- End cards ---
+        if let cachedCards = cached.endCards, !cached.staleFields.contains(.endCards) {
+            playerLog.notice("cache HIT: endCards (skipping network)")
+            endCards = cachedCards
+        } else if let staleCards = cached.endCards, cached.staleFields.contains(.endCards) {
+            playerLog.notice("SWR: endCards stale — using cached, revalidating in background")
+            endCards = staleCards
+            let videoId = video.id
+            Task(priority: .background) { [api = self.api] in
+                if let fresh = try? await api.fetchEndCards(videoId: videoId) {
+                    await VideoPreloadCache.shared.store(endCards: fresh, for: videoId)
+                }
+            }
+        } else if !info.endCards.isEmpty {
+            endCards = info.endCards
+            playerLog.notice("endCards: \(info.endCards.count) from primary response")
+            await VideoPreloadCache.shared.store(endCards: info.endCards, for: video.id)
+        } else {
+            do {
+                let webCards = try await api.fetchEndCards(videoId: video.id)
+                guard !Task.isCancelled else { return }
+                endCards = webCards
+                playerLog.notice("endCards: \(webCards.count) from web client fallback")
+                await VideoPreloadCache.shared.store(endCards: webCards, for: video.id)
+            } catch {
+                playerLog.error("endCards fetch failed: \(ViewModelLogger.errorSummary(error))")
+                endCards = []
+            }
+        }
+
+        guard !Task.isCancelled else { return }
+
+        // --- Tracking URLs ---
+        let resolvedTrackingURLs: PlaybackTrackingURLs?
+        if let cachedTracking = cachedTrackingURLs {
+            resolvedTrackingURLs = cachedTracking
+            playerLog.notice("cache HIT: trackingURLs")
+        } else {
+            resolvedTrackingURLs = await authTrackingTask?.value ?? info.trackingURLs
+            await VideoPreloadCache.shared.store(trackingURLs: resolvedTrackingURLs, for: video.id)
+        }
+        guard !Task.isCancelled else { return }
+        tracker.setTrackingURLs(resolvedTrackingURLs)  // incognito: session id is empty, never flushed
+        playerLog.notice("activeTrackingURLs resolved: \(resolvedTrackingURLs != nil ? "account-bound" : "none")")
+
+        prefetchNeighboursIfNeeded(info: info)
+    }
+
+    private func loadPhase2SponsorSegments(video: Video, cached: CachedVideoData, sponsorCached: Bool) async {
         // --- SponsorBlock cache miss or stale ---
         if !sponsorCached, settings.sponsorBlockEnabled {
             let channelIsExcluded =
@@ -524,9 +542,9 @@ extension PlaybackViewModel {
                 }
             }
         }
+    }
 
-        guard !Task.isCancelled else { return }
-
+    private func loadPhase2RelatedVideos(video: Video, cached: CachedVideoData) async {
         // --- Related videos + like status ---
         // UI testing inject: bypass all network fetches for related videos.
         // Used by testPlayerSwipeRightWorksWhenControlsAreVisible which runs on
@@ -611,64 +629,19 @@ extension PlaybackViewModel {
             #endif
 
         }  // end of non-inject related-videos branch
+    }
 
-        guard !Task.isCancelled else { return }
+    private func prefetchNeighboursIfNeeded(info: PlayerInfo) {
+        // Shorts owns its next-video list and already prefetches that list on navigation.
+        guard onPlaybackEnd == nil else { return }
 
-        // Launch WKWebView pre-extraction as soon as relatedVideos is populated.
-        // Starting here (before endCards/trackingURLs) gives ~0.6–3 s more lead
-        // time for the warm extraction to complete before the user swipes.
         #if canImport(WebKit)
-        if let firstNeighbour = relatedVideos.first?.id {
+        if !info.isFromVisionOSClient, let firstNeighbour = relatedVideos.first?.id {
             Task(priority: .background) { [weak self] in
                 await self?.preExtractWKHLSForVideo(firstNeighbour)
             }
         }
         #endif
-
-        // --- End cards ---
-        if let cachedCards = cached.endCards, !cached.staleFields.contains(.endCards) {
-            playerLog.notice("cache HIT: endCards (skipping network)")
-            endCards = cachedCards
-        } else if let staleCards = cached.endCards, cached.staleFields.contains(.endCards) {
-            playerLog.notice("SWR: endCards stale — using cached, revalidating in background")
-            endCards = staleCards
-            let videoId = video.id
-            Task(priority: .background) { [api = self.api] in
-                if let fresh = try? await api.fetchEndCards(videoId: videoId) {
-                    await VideoPreloadCache.shared.store(endCards: fresh, for: videoId)
-                }
-            }
-        } else if !info.endCards.isEmpty {
-            endCards = info.endCards
-            playerLog.notice("endCards: \(info.endCards.count) from primary response")
-            await VideoPreloadCache.shared.store(endCards: info.endCards, for: video.id)
-        } else {
-            do {
-                let webCards = try await api.fetchEndCards(videoId: video.id)
-                guard !Task.isCancelled else { return }
-                endCards = webCards
-                playerLog.notice("endCards: \(webCards.count) from web client fallback")
-                await VideoPreloadCache.shared.store(endCards: webCards, for: video.id)
-            } catch {
-                playerLog.error("endCards fetch failed: \(ViewModelLogger.errorSummary(error))")
-                endCards = []
-            }
-        }
-
-        guard !Task.isCancelled else { return }
-
-        // --- Tracking URLs ---
-        let resolvedTrackingURLs: PlaybackTrackingURLs?
-        if let cachedTracking = cachedTrackingURLs {
-            resolvedTrackingURLs = cachedTracking
-            playerLog.notice("cache HIT: trackingURLs")
-        } else {
-            resolvedTrackingURLs = await authTrackingTask?.value ?? info.trackingURLs
-            await VideoPreloadCache.shared.store(trackingURLs: resolvedTrackingURLs, for: video.id)
-        }
-        guard !Task.isCancelled else { return }
-        tracker.setTrackingURLs(resolvedTrackingURLs)  // incognito: session id is empty, never flushed
-        playerLog.notice("activeTrackingURLs resolved: \(resolvedTrackingURLs != nil ? "account-bound" : "none")")
 
         // BUG-015 fix: read currentAuthToken per-prefetch-call so a token refresh mid-loop
         // uses the fresh token rather than a stale snapshot captured before the loop starts.
@@ -691,29 +664,14 @@ extension PlaybackViewModel {
 }
 
 extension PlaybackViewModel {
-    /// fix10: evict the stopped video's CDN URL and start a fresh wkHLS extraction (see stop()).
-    func rewarmStoppedVideoHLS() {
-        guard let stoppedVideoId = currentVideo?.id else { return }
-        Task { await VideoPreloadCache.shared.invalidateWKHLSURL(for: stoppedVideoId) }
-        #if canImport(WebKit)
-        wkHLSEarlyTaskVideoId = stoppedVideoId
-        let capturedId = stoppedVideoId
-        wkHLSEarlyTask = Task { @MainActor in
-            guard let url = await YouTubeWebViewHLSExtractor.shared.serialExtract(videoId: capturedId) else {
-                return nil
-            }
-            // Defense-in-depth: if load() for a different video cancelled this task
-            // between serialExtract's return and the store, bail rather than write
-            // a potentially stale URL into the cache under the wrong key.
-            guard !Task.isCancelled else {
-                playerLog.notice("[fix10] pre-warm task was cancelled — not caching URL for \(capturedId)")
-                return nil
-            }
-            // Store the fresh URL so Phase -1a serves from cache on re-tap.
-            await VideoPreloadCache.shared.store(wkHLSManifestURL: url, for: capturedId)
-            playerLog.notice("[fix10] wkHLS pre-warm complete — cached for \(capturedId)")
-            return url
+    #if canImport(WebKit)
+    func cancelEarlyWebViewExtraction() {
+        wkHLSEarlyTask?.cancel()
+        wkHLSEarlyTask = nil
+        if let videoId = wkHLSEarlyTaskVideoId {
+            YouTubeWebViewHLSExtractor.shared.cancelCurrentExtraction(for: videoId)
         }
-        #endif
+        wkHLSEarlyTaskVideoId = nil
     }
+    #endif
 }

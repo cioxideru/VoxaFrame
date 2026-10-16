@@ -197,7 +197,7 @@ struct VideoGridSection: View {
     let videos: [Video]
     let onSelect: (Video) -> Void
     var loadMore: (() -> Void)? = nil
-    /// Lays the rows out eagerly. The Home feed uses this for its two-row blocks inside an
+    /// Lays the rows out eagerly. Mixed feeds use this for their six-row blocks inside an
     /// outer `LazyVStack`, where a nested lazy grid can collapse to zero height.
     var eager = false
 

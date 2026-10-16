@@ -247,6 +247,10 @@ struct EndCardButton: View {
 // MARK: - AppSettings.VideoGravityMode → AVLayerVideoGravity mapping
 
 extension AppSettings.VideoGravityMode {
+    mutating func toggle() {
+        self = self == .fit ? .fill : .fit
+    }
+
     var avGravity: AVLayerVideoGravity {
         self == .fill ? .resizeAspectFill : .resizeAspect
     }

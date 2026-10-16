@@ -44,7 +44,7 @@ final class ShortsSwipeUITests: XCTestCase {
     }
 
     private var indexLabel: XCUIElement {
-        app.staticTexts["shorts.indexLabel"].firstMatch
+        app.staticTexts[AccessibilityID.shortsIndexLabel].firstMatch
     }
 
     private enum SwipeDirection { case up, down }
@@ -74,6 +74,19 @@ final class ShortsSwipeUITests: XCTestCase {
 
         XCTAssertTrue(indexLabel.waitForExistence(timeout: 3))
         XCTAssertEqual(indexLabel.label, "2 / 3", "Swipe up should advance to the next short")
+    }
+
+    /// A short swipe must work with the same AVPlayerLayer used outside UI tests.
+    func testShortSwipeAdvancesWithoutControls() {
+        let player = openControls()
+        XCTAssertFalse(app.buttons[AccessibilityID.shortsBackButton].exists)
+        let start = player.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
+        start.press(
+            forDuration: 0, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -100)),
+            withVelocity: .fast, thenHoldForDuration: 0)
+        let advanced = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label == %@", "2 / 3"), object: indexLabel)
+        XCTAssertEqual(XCTWaiter.wait(for: [advanced], timeout: 3), .completed)
     }
 
     /// Swipe up twice reaches the last short (3 / 3).
@@ -151,7 +164,7 @@ final class ShortsSwipeUITests: XCTestCase {
     //
     // These tests verify that swipe navigation still works when the controls
     // overlay is displayed on screen.  The overlay is revealed by tapping the
-    // player window (which fires SwipeGestureOverlay.onTap → vm.showControls()).
+    // player window (togglePlayPause also reveals the controls).
     // The swipe is then performed immediately while the overlay is visible.
 
     /// Swipe up advances to the next short even when the controls overlay is shown.
@@ -162,6 +175,7 @@ final class ShortsSwipeUITests: XCTestCase {
 
         // Tap to reveal the controls overlay (vm.showControls → controlsVisible = true).
         player.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].waitForExistence(timeout: 3))
 
         // Swipe up immediately while the controls overlay is still on screen.
         swipe(.up, on: player)
@@ -183,6 +197,7 @@ final class ShortsSwipeUITests: XCTestCase {
 
         // Tap to reveal the controls overlay.
         player.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].waitForExistence(timeout: 3))
 
         // Swipe down while controls are visible.
         swipe(.down, on: player)
@@ -302,7 +317,7 @@ final class ShortsLiveSwipeUITests: XCTestCase {
     }
 
     private var indexLabel: XCUIElement {
-        app.staticTexts["shorts.indexLabel"].firstMatch
+        app.staticTexts[AccessibilityID.shortsIndexLabel].firstMatch
     }
 
     // MARK: - Tests

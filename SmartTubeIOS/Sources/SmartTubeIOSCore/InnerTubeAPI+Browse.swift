@@ -29,6 +29,11 @@ extension InnerTubeAPI {
     /// When authenticated, uses TVHTML5 on youtubei.googleapis.com for a personalised feed.
     /// When unauthenticated, uses the WEB client on www.youtube.com for the default feed.
     public func fetchHome(continuationToken: String? = nil) async throws -> VideoGroup {
+        #if DEBUG
+        if HomePaginationUITestFixture.isMixedFeedEnabled {
+            return HomePaginationUITestFixture.regularPage(subscriptions: false, continuationToken: continuationToken)
+        }
+        #endif
         let isAuth = authToken != nil
         var body = makeBody(
             client: isAuth ? tvClientContext : webClientContext,

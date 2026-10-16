@@ -7,6 +7,11 @@ import SwiftUI
 public struct AppSettings: Codable {
     // MARK: Player
     public var preferredQuality: VideoQuality
+    public var lastVideoQuality: VideoQualityPreference?
+
+    public var videoQualityPreference: VideoQualityPreference {
+        lastVideoQuality ?? VideoQualityPreference(height: preferredQuality.maxHeight)
+    }
     public var playbackSpeed: Double
     public var autoplayEnabled: Bool
     public var subtitlesLanguage: String?
@@ -255,6 +260,7 @@ public struct AppSettings: Codable {
 
     public init() {
         preferredQuality = .auto
+        lastVideoQuality = nil
         playbackSpeed = 1.0
         autoplayEnabled = true
         subtitlesLanguage = nil
@@ -343,6 +349,7 @@ extension AppSettings {
     enum CodingKeys: String, CodingKey {
         case settingsVersion
         case preferredQuality
+        case lastVideoQuality
         case playbackSpeed
         case autoplayEnabled
         case subtitlesLanguage
@@ -398,6 +405,7 @@ extension AppSettings {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         settingsVersion = c.safeDecode(Int.self, forKey: .settingsVersion, default: 0)
         preferredQuality = c.safeDecode(VideoQuality.self, forKey: .preferredQuality, default: d.preferredQuality)
+        lastVideoQuality = c.safeDecode(VideoQualityPreference?.self, forKey: .lastVideoQuality, default: nil)
         playbackSpeed = c.safeDecode(Double.self, forKey: .playbackSpeed, default: d.playbackSpeed)
         autoplayEnabled = c.safeDecode(Bool.self, forKey: .autoplayEnabled, default: d.autoplayEnabled)
         subtitlesLanguage = c.safeDecode(String?.self, forKey: .subtitlesLanguage, default: d.subtitlesLanguage)

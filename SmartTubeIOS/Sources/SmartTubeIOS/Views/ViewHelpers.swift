@@ -176,6 +176,8 @@ enum AppSymbol {
     static let chevronDown = "chevron.down"
 
     // MARK: - Playback controls
+    static let videoFill = "arrow.up.left.and.arrow.down.right"
+    static let videoFit = "arrow.down.right.and.arrow.up.left"
     static let previousTrack = "backward.end.fill"
     static let nextTrack = "forward.end.fill"
     static let previousChapter = "backward.end.alt.fill"

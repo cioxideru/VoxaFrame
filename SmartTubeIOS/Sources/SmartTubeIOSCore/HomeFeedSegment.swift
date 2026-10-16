@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - HomeFeedSegment
 
-/// One block of the Home feed: a horizontal Shorts row, or a block of exactly two video-grid
+/// One block of a mixed feed: a horizontal Shorts row, or a block of exactly six video-grid
 /// rows (only the very last video block may be shorter).
 public struct HomeFeedSegment<Item>: Identifiable {
     public enum Kind: String, Sendable {
@@ -12,7 +12,7 @@ public struct HomeFeedSegment<Item>: Identifiable {
 
     public let kind: Kind
     /// Shorts row `n` always holds `shorts[n * perRow ..< (n + 1) * perRow]` and video block `n`
-    /// `videos[n * 2 * columns ..< (n + 1) * 2 * columns]`, so ids stay stable while the lists grow.
+    /// a fixed chunk of video rows, so ids stay stable while the lists grow.
     public let index: Int
     public let items: [Item]
     public var id: String { "\(kind.rawValue).\(index)" }
@@ -22,13 +22,16 @@ extension HomeFeedSegment: Equatable where Item: Equatable {}
 
 // MARK: - HomeFeedLayout
 
-/// Places the Home feed's Shorts rows between its video blocks: Shorts row, two video rows,
-/// Shorts row, two video rows, … Each Shorts row goes in front of the next free video block;
+/// Places the mixed feed's Shorts rows between its video blocks: ten Shorts, six video rows,
+/// ten Shorts, six video rows, … Each Shorts row goes in front of the next free video block;
 /// once the Shorts run out the feed continues with video blocks only.
 ///
 /// Blocks already laid out (`markLaidOut`) never gain or lose a Shorts row, so Shorts that
 /// arrive late are placed further down instead of pushing content the user has seen.
 public struct HomeFeedLayout: Equatable, Sendable {
+    public static let shortsPerRow = 10
+    public static let videoRowsPerBlock = 6
+
     /// Highest video block laid out so far; -1 before the first one appears.
     public private(set) var laidOutThrough = -1
     /// Video block in front of which each settled Shorts row sits (all at or before `laidOutThrough`).
@@ -49,11 +52,11 @@ public struct HomeFeedLayout: Equatable, Sendable {
     }
 
     /// The feed in display order. `columns` is the column count the video grid actually lays
-    /// out, so every video block but the last fills exactly two rows.
+    /// out, so every video block but the last fills exactly six rows.
     public func segments<Item>(
-        shorts: [Item], videos: [Item], columns: Int, shortsPerRow: Int
+        shorts: [Item], videos: [Item], columns: Int, shortsPerRow: Int = Self.shortsPerRow
     ) -> [HomeFeedSegment<Item>] {
-        let videosPerBlock = max(columns, 1) * 2
+        let videosPerBlock = max(columns, 1) * Self.videoRowsPerBlock
         let shortsPerBlock = max(shortsPerRow, 1)
         let blockCount = (videos.count + videosPerBlock - 1) / videosPerBlock
         let rows = rowBlocks(rowCount: (shorts.count + shortsPerBlock - 1) / shortsPerBlock, blockCount: blockCount)
@@ -93,7 +96,7 @@ public struct HomeFeedLayout: Equatable, Sendable {
     }
 
     /// Shorts needed for every video block through `block` that can still take a Shorts row to get one.
-    public func shortsWanted(through block: Int, shortsPerRow: Int) -> Int {
+    public func shortsWanted(through block: Int, shortsPerRow: Int = Self.shortsPerRow) -> Int {
         rowBlocks(rowCount: .max, blockCount: block + 1).count * max(shortsPerRow, 1)
     }
 }

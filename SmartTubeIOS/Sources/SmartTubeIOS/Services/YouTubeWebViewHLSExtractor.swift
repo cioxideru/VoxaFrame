@@ -72,16 +72,6 @@ final class YouTubeWebViewHLSExtractor: NSObject {
     /// after the current extraction finishes, the next idle card (via retry) can start one.
     static var isPreWarming = false
 
-    /// Maximum number of card tasks that may enter the preWarm loop simultaneously.
-    /// Each loop iteration takes ~2.5 s (warm extraction). Limiting to 3 means at most
-    /// 3 cards queue up for preWarm at any time; cards beyond that skip the loop entirely
-    /// and rely on the tap-time extraction instead. Reduces background CPU when the home
-    /// feed has 15+ visible cards each spinning their own preWarm task.
-    static let maxPreWarmLoops: Int = 3
-    /// Current number of active VideoCardView preWarm loops. @MainActor-isolated — only
-    /// mutated from the card's .task modifier (which runs on MainActor).
-    static var activePreWarmLoops: Int = 0
-
     /// Pre-warms the WKWebView HLS extraction for `videoId` and stores the result in
     /// `VideoPreloadCache`. Called speculatively on card appear so that if the user taps,
     /// Phase -1a can play from the cached URL instead of waiting ~3 s for a live extraction.
@@ -117,10 +107,6 @@ final class YouTubeWebViewHLSExtractor: NSObject {
         if let pot = capturedPoToken {
             await VideoPreloadCache.shared.store(wkHLSPoToken: pot, for: videoId)
         }
-        // fix26b: Notification removed from preWarm(). VideoCardView's heartbeat loop
-        // fires prewarm.done.<videoId> AFTER the second serialExtract completes, so the
-        // test always taps into a live CDN session (not the preWarm session which is
-        // immediately invalidated by earlyTask's wv.load() call).
     }
 
     /// Loads the YouTube watch page for `videoId` in a hidden WKWebView, waits for the
@@ -265,10 +251,11 @@ final class YouTubeWebViewHLSExtractor: NSObject {
     /// multiple VideoCardView timeout-driven tasks for `_CjIX66a9ts` woke up sequentially
     /// and each called `extractHLSURL`, cancelling `priorityExtract`'s active continuation).
     func priorityExtract(videoId: String) async -> URL? {
+        guard !Task.isCancelled else { return nil }
         serialTaskEpoch &+= 1
         pendingSerialTaskVideoId = videoId
         let newTask = Task { @MainActor [weak self] in
-            guard let self else { return Optional<URL>.none }
+            guard let self, !Task.isCancelled else { return Optional<URL>.none }
             extractLog.notice(
                 "[webView] priorityExtract(\(videoId as NSString)): starting immediately (user tap, bypasses chain)")
             return await self.extractHLSURL(videoId: videoId)
@@ -370,7 +357,11 @@ final class YouTubeWebViewHLSExtractor: NSObject {
 
     /// Abandons the in-flight extraction (e.g. VISIONOS HLS is already playing) so the
     /// hidden WKWebView stops loading YouTube instead of running to its 40 s timeout.
-    func cancelCurrentExtraction() {
+    func cancelCurrentExtraction(for videoId: String) {
+        if pendingSerialTaskVideoId == videoId {
+            pendingSerialTask?.cancel()
+        }
+        guard currentExtractionVideoId == videoId else { return }
         finish(url: nil)
     }
 

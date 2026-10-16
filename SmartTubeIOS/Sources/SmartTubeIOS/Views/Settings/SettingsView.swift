@@ -139,7 +139,16 @@ public struct SettingsView: View {
             }
 
             #if !os(iOS)
-            Picker("Default Quality", selection: $store.settings.preferredQuality) {
+            Picker(
+                "Default Quality",
+                selection: Binding(
+                    get: { store.settings.preferredQuality },
+                    set: {
+                        store.settings.preferredQuality = $0
+                        store.settings.lastVideoQuality = nil
+                    }
+                )
+            ) {
                 ForEach(AppSettings.VideoQuality.allCases, id: \.self) { q in
                     Text(q.rawValue.capitalized).tag(q)
                 }

@@ -48,6 +48,15 @@ public enum AccessibilityID {
         index == 0 ? "home.shortsRow" : "home.shortsRow.\(index)"
     }
 
+    public static func sectionShortsRow(_ section: BrowseSection.SectionType, _ index: Int) -> String {
+        let prefix = section == .recommended ? "recommended.shortsRow" : "browse.shortsRow"
+        return index == 0 ? prefix : "\(prefix).\(index)"
+    }
+
+    public static func feedVideoBlock(_ section: BrowseSection.SectionType, _ index: Int) -> String {
+        "feed.\(section.rawValue).videos.\(index)"
+    }
+
     public static func videoCard(_ videoId: String) -> String {
         "video.card.\(videoId)"
     }
@@ -56,7 +65,15 @@ public enum AccessibilityID {
         "shorts.card.\(videoId)"
     }
     public static var homeSectionFeed: String { "home.sectionFeed" }
+    public static var shortsBackButton: String { "shorts.backButton" }
+    public static var shortsIndexLabel: String { "shorts.indexLabel" }
     public static var playerBackButton: String { "player.backButton" }
+    public static var playerVideoScaleButton: String { "player.videoScaleButton" }
+    public static var playerQuickQualityButton: String { "player.quickAccess.quality" }
+    public static var playerQualityPicker: String { "player.qualityPicker" }
+    public static var playerNextButton: String { "player.nextBtn" }
+    public static var playerCurrentTimeLabel: String { "player.currentTimeLabel" }
+    public static var playerPlayPauseButton: String { "player.playPauseButton" }
     public static var playerProbeStreamResult: String { "player.probeStreamResult" }
     public static var playerQuickAccessRow: String { "player.quickAccessRow" }
     public static var playerRetryButton: String { "player.retryButton" }

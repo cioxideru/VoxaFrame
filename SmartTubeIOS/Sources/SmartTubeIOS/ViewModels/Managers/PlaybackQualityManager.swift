@@ -22,7 +22,7 @@ extension AVPlayer: PlayerItemSwappable {}
 @MainActor
 protocol QualityContext: AnyObject {
     var playerInfo: PlayerInfo? { get }
-    var settings: AppSettings { get }
+    var settings: AppSettings { get set }
     var currentVideo: Video? { get }
     var currentTime: TimeInterval { get }
     var toastMessage: String? { get set }
@@ -43,7 +43,7 @@ protocol QualityEventHandler: AnyObject {
     /// dispatch the appropriate recovery path.
     func qualityItemDidFail(
         error: Error?,
-        quality: AppSettings.VideoQuality,
+        quality: VideoQualityPreference,
         hasAppliedH264Cap: Bool  // snapshot: avoid race with qualityManager.hasAppliedH264Cap
     ) async
     /// Called when quality needs to change for a DASH/MP4-only video (no HLS URL available).
@@ -81,13 +81,9 @@ final class PlaybackQualityManager {
     /// Stats for Nerds "Selected" row and by UI tests that verify selectFormat was called.
     /// Cleared only when the user picks Auto or a new video loads.
     var pendingQualityLabel: String = ""
-    /// The user's quality pick for the *current video*, set by `selectFormat`.
-    /// `nil` = no pick this video (the persisted default applies); `.auto` = the
-    /// user explicitly chose Auto for this video. Unlike `selectedFormat`, this
-    /// survives CDN-failure reverts; cleared only by `reset()` on a new video.
-    var perVideoQuality: AppSettings.VideoQuality? = nil
     var availableFormats: [VideoFormat] = []
     var hlsVariantURLs: [Int: URL] = [:]
+    private(set) var hlsManifestFormats: [VideoFormat] = []
     private var hlsPlaybackUserAgent = InnerTubeClients.Web.userAgent
     private var hlsPlaybackMaximumHeight: Int? = nil
     private var hlsVideoCodecs: [String] = []
@@ -115,12 +111,14 @@ final class PlaybackQualityManager {
     // Delegated to HLSManifestCache.shared (SmartTubeIOSCore). Survives reset() so
     // revisited videos skip the manifest fetch. See HLSManifestCache for TTL / capacity.
 
-    static func cachedHLSVariants(for videoId: String) -> [Int: URL]? {
-        HLSManifestCache.shared.variants(for: videoId)
+    func cachedHLSVariants(for videoId: String) -> [Int: URL]? {
+        guard let variants = HLSManifestCache.shared.variants(for: videoId) else { return nil }
+        hlsManifestFormats = HLSManifestCache.shared.formats(for: videoId) ?? []
+        return variants
     }
 
-    static func cacheHLSVariants(_ variants: [Int: URL], for videoId: String) {
-        HLSManifestCache.shared.store(variants, for: videoId)
+    func cacheHLSVariants(_ variants: [Int: URL], for videoId: String) {
+        HLSManifestCache.shared.store(variants, formats: hlsManifestFormats, for: videoId)
     }
 
     // MARK: - Dependencies
@@ -141,9 +139,9 @@ final class PlaybackQualityManager {
     func reset() {
         selectedFormat = nil
         pendingQualityLabel = ""
-        perVideoQuality = nil
         availableFormats = []
         hlsVariantURLs = [:]
+        hlsManifestFormats = []
         hlsPlaybackUserAgent = InnerTubeClients.Web.userAgent
         hlsPlaybackMaximumHeight = nil
         hlsVideoCodecs = []
@@ -176,28 +174,10 @@ final class PlaybackQualityManager {
         playerLog.notice("[quality] selectFormat: \(previousLabel) → \(newLabel)")
         selectedFormat = format
         pendingQualityLabel = format?.qualityLabel ?? ""
-        let quality: AppSettings.VideoQuality
-        if let fmt = format {
-            if let q = AppSettings.VideoQuality.from(height: fmt.height) {
-                quality = q
-            } else {
-                playerLog.error(
-                    "selectFormat: non-standard height \(fmt.height)p — no matching VideoQuality; falling back to .auto"
-                )
-                assertionFailure(
-                    "selectFormat received format with non-standard height \(fmt.height) not in VideoQuality enum")
-                quality = .auto
-            }
-        } else {
-            quality = .auto
-        }
-        // Per-video intent: overrides the persisted default for this video only.
-        perVideoQuality = quality
+        let quality = VideoQualityPreference(format: format)
+        delegate?.settings.lastVideoQuality = quality
         // With several codecs allowed, a picked row plays its own codec; Auto lets AVPlayer choose.
-        if hlsAllowedVideoCodecs.count > 1 {
-            let picked = format.flatMap { HLSPlaybackPolicy.videoCodec(ofMimeType: $0.mimeType) }
-            hlsVideoCodecs = picked.flatMap { hlsAllowedVideoCodecs.contains($0) ? [$0] : nil } ?? hlsAllowedVideoCodecs
-        }
+        updateHLSCodecSelection(format)
         delegate?.toastMessage = format.map { "\($0.height)p" } ?? "Auto"
         qualityTask?.cancel()
         qualityTask = nil
@@ -231,7 +211,7 @@ final class PlaybackQualityManager {
             }
             #endif
             if self.delegate?.playerInfo?.hlsURL != nil {
-                await self.reloadHLSItem(seekTo: savedTime, quality: quality)
+                self.reloadHLSItem(seekTo: savedTime, quality: quality)
             } else {
                 await self.reloadDASHItem(seekTo: savedTime, format: format)
             }
@@ -239,7 +219,7 @@ final class PlaybackQualityManager {
     }
 
     /// Rebuilds the HLS player item from the stored `playerInfo`.
-    func reloadHLSItem(seekTo time: TimeInterval, quality: AppSettings.VideoQuality) async {
+    func reloadHLSItem(seekTo time: TimeInterval, quality: VideoQualityPreference) {
         guard let hlsURL = delegate?.playerInfo?.hlsURL else {
             playerLog.error(
                 "[quality] reloadHLSItem: playerInfo.hlsURL is nil — video is DASH/MP4 only, HLS quality switch not possible"
@@ -263,6 +243,7 @@ final class PlaybackQualityManager {
         // Quality preference is applied as ABR hints (preferredMaximumResolution +
         // preferredPeakBitRate), which strongly guide AVPlayer without replacing the item.
         itemObserverTask?.cancel()
+        updateHLSCodecSelection(quality.bestMatch(in: availableFormats))
         let asset = makeHLSAsset(url: hlsURL, options: uaOpts)
         let item = AVPlayerItem(asset: asset)
         item.audioTimePitchAlgorithm = .spectral
@@ -272,7 +253,7 @@ final class PlaybackQualityManager {
             try? await Task.sleep(for: .seconds(5))
             item?.preferredForwardBufferDuration = 0
         }
-        let requestedCap = quality.maxHeight
+        let requestedCap = resolvedHeight(for: quality)
         let effectiveCap =
             hlsPlaybackMaximumHeight.map { min(requestedCap ?? $0, $0) }
             ?? requestedCap
@@ -382,27 +363,20 @@ extension PlaybackQualityManager {
             playerLog.notice(
                 "[quality] reloadDASHItem: requested=\(fmt.height)p playerInfo mp4 heights=[\(infoMp4Heights)]")
 
-            let h264Pref = delegate?.settings.preferH264 ?? false
-            let bestFromInfo = PlaybackQualityManager.selectBestVideoFormat(
-                from: info.formats, preferredMaxHeight: fmt.height,
-                preferH264: h264Pref
-            )
+            let bestFromInfo = preferredVideoFormat(from: info.formats)
             let resolvedHeight = bestFromInfo?.height ?? -1
             playerLog.notice(
-                "[quality] reloadDASHItem: preferH264=\(h264Pref) selectBestVideoFormat(maxH=\(fmt.height)) → resolvedHeight=\(resolvedHeight)p codec=\(bestFromInfo?.mimeType ?? "nil")"
+                "[quality] reloadDASHItem: requested=\(fmt.height)p → resolvedHeight=\(resolvedHeight)p codec=\(bestFromInfo?.mimeType ?? "nil")"
             )
 
-            // Guard: selectBestVideoFormat falls back to the highest available format when
-            // no format at or below preferredMaxHeight exists. Only use the result if it
-            // actually satisfies the height constraint — otherwise fall through to the
-            // availableFormats URL path to avoid silently rebuilding at the wrong quality.
-            if let matchedFmt = bestFromInfo, matchedFmt.height <= fmt.height, let infoURL = matchedFmt.url {
+            if let matchedFmt = bestFromInfo, let infoURL = matchedFmt.url {
                 videoURL = infoURL
+                selectedFormat = matchedFmt
                 playerLog.notice("[quality] reloadDASHItem: ✅ resolved \(matchedFmt.height)p from playerInfo.formats")
             } else if fmt.mimeType.hasPrefix("video/mp4") {
-                // playerInfo lacks this quality at or below — fall back to availableFormats URL.
+                // No usable format from the working client; retain the picked URL as a fallback.
                 playerLog.notice(
-                    "[quality] reloadDASHItem: ⚠️ \(fmt.height)p not in playerInfo ≤\(fmt.height)p (best=\(resolvedHeight)p), using availableFormats URL"
+                    "[quality] reloadDASHItem: no playable video in playerInfo, using availableFormats URL"
                 )
                 videoURL = fmt.url
             } else {
@@ -465,17 +439,43 @@ extension PlaybackQualityManager {
     /// only the `selectedFormat` state needs to reflect the preference (e.g. fallback paths
     /// that keep the master URL for EXT-X-MEDIA audio rendition reasons).
     func setSelectedFormatForCurrentPreference() {
-        guard let maxH = effectiveQuality.maxHeight else {
-            selectedFormat = nil
-            return
-        }
-        selectedFormat = availableFormats.first { $0.height <= maxH }
+        selectedFormat = effectiveQuality.bestMatch(in: availableFormats)
+        updateHLSCodecSelection(selectedFormat)
     }
 
-    /// The quality cap recovery and stream-selection paths must honour:
-    /// the per-video pick when one exists, otherwise the persisted default.
-    var effectiveQuality: AppSettings.VideoQuality {
-        perVideoQuality ?? delegate?.settings.preferredQuality ?? .auto
+    private func updateHLSCodecSelection(_ format: VideoFormat?) {
+        guard let picked = format?.videoCodec?.rawValue,
+            hlsAllowedVideoCodecs.isEmpty || hlsAllowedVideoCodecs.contains(picked)
+        else {
+            hlsVideoCodecs = hlsAllowedVideoCodecs
+            return
+        }
+        hlsVideoCodecs = [picked]
+    }
+
+    var effectiveQuality: VideoQualityPreference {
+        delegate?.settings.videoQualityPreference ?? .auto
+    }
+
+    func resolvedHeight(for quality: VideoQualityPreference) -> Int? {
+        quality.bestMatch(in: availableFormats)?.height
+            ?? quality.closestHeight(in: hlsVariantURLs.keys)
+            ?? quality.height
+    }
+
+    func preferredVideoFormat(
+        from formats: [VideoFormat], autoMaximumHeight: Int? = nil, preferH264: Bool? = nil
+    ) -> VideoFormat? {
+        let preference = effectiveQuality
+        if preference.height != nil {
+            return preference.bestMatch(
+                in: formats.filter {
+                    $0.mimeType.hasPrefix("video/mp4") && !$0.mimeType.contains(", ") && $0.url != nil
+                })
+        }
+        return Self.selectBestVideoFormat(
+            from: formats, preferredMaxHeight: autoMaximumHeight,
+            preferH264: preferH264 ?? delegate?.settings.preferH264 ?? false)
     }
 
     /// Fetches the HLS master manifest and returns a map of stream height → variant playlist URL.
@@ -483,6 +483,8 @@ extension PlaybackQualityManager {
         url: URL,
         userAgent: String = InnerTubeClients.Web.userAgent
     ) async -> [Int: URL] {
+        let videoID = delegate?.currentVideo?.id
+        hlsManifestFormats = []
         var request = URLRequest(url: url)
         // Use the web browser (Chrome) UA to fetch HLS master manifests.
         // YouTube's manifest CDN (manifest.googlevideo.com) serves the full quality tier
@@ -503,6 +505,8 @@ extension PlaybackQualityManager {
             playerLog.notice("HLS manifest fetch failed — showing all quality options")
             return [:]
         }
+        guard !Task.isCancelled, delegate?.currentVideo?.id == videoID else { return [:] }
+        hlsManifestFormats = parseHLSVideoFormats(text, baseURL: url.deletingLastPathComponent())
         let variants = parseHLSMasterManifest(text, baseURL: url.deletingLastPathComponent())
         playerLog.notice("HLS manifest parsed: heights=\(variants.keys.sorted().reversed())")
         return variants
@@ -660,15 +664,9 @@ extension PlaybackQualityManager {
     /// On `readyToPlay`, delegates the seek + rate restore to `qualityItemDidBecomeReady`.
     private func reloadWKHLSItem(seekTo time: TimeInterval, height: Int?) async {
         guard !Task.isCancelled else { return }
-        let sortedHeights = hlsVariantURLs.keys.sorted(by: >)
-        let selectedHeight: Int?
-        if let h = height {
-            // Best variant at or below requested height, falling back to the lowest if none fit.
-            selectedHeight = sortedHeights.first(where: { $0 <= h }) ?? sortedHeights.last
-        } else {
-            // Auto = highest available variant.
-            selectedHeight = sortedHeights.first
-        }
+        let selectedHeight =
+            VideoQualityPreference(height: height).closestHeight(in: hlsVariantURLs.keys)
+            ?? hlsVariantURLs.keys.max()
         guard let h = selectedHeight, let variantURL = hlsVariantURLs[h] else {
             playerLog.error("[wkHLS quality] no variant URL for height=\(height.map { "\($0)" } ?? "Auto")")
             return

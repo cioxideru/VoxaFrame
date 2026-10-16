@@ -115,6 +115,7 @@ extension PlaybackViewModel {
         proxyItem.audioTimePitchAlgorithm = .spectral
         proxyItem.preferredForwardBufferDuration = 0.5
         player.replaceCurrentItem(with: proxyItem)
+        observePlaybackEndAndStalls(for: proxyItem)
         itemObserverTask?.cancel()
         for await st in proxyItem.statusStream {
             guard !Task.isCancelled else { return false }

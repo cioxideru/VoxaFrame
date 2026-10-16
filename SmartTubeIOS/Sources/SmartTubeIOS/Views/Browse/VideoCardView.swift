@@ -40,6 +40,7 @@ public struct VideoCardView: View {
     @Environment(PlayerRouter.self) private var playerRouter
     #endif
     @State private var localProgress: Double?
+    @State private var isVisibleForPrefetch = false
     @State private var watchLaterAlert: DownloadAlertItem?
     @State private var playlistPickerMode: PlaylistPickerSheet.Mode?
     /// Index into `video.thumbnailFallbackURLs`. -1 = use primary `thumbnailURL`.
@@ -76,7 +77,7 @@ public struct VideoCardView: View {
     // Extracted so the tvOS body can wrap it in a Button (which handles the
     // Select button press natively) while iOS continues using the bare view.
 
-    private var cardContent: some View {
+    private var cardLayout: some View {
         Group {
             if compact {
                 compactLayout
@@ -84,67 +85,29 @@ public struct VideoCardView: View {
                 gridLayout
             }
         }
+    }
+
+    private var cardContent: some View {
+        Group {
+            if #available(iOS 18, macOS 15, tvOS 18, *) {
+                cardLayout.onScrollVisibilityChange { isVisibleForPrefetch = $0 }
+            } else {
+                cardLayout
+                    .onAppear { isVisibleForPrefetch = true }
+                    .onDisappear { isVisibleForPrefetch = false }
+            }
+        }
         .task {
             localProgress = await VideoStateStore.shared.state(for: video.id)?.watchedFraction
         }
-        .task(id: video.id) {
+        .task(id: isVisibleForPrefetch ? video.id : nil) {
+            guard isVisibleForPrefetch else { return }
             await VideoPreloadCache.shared.prefetch(
                 videoId: video.id,
                 sponsorCategories: store.settings.activeSponsorCategories,
                 authToken: authService.accessToken,
                 priority: .visible
             )
-            // Pre-warm BotGuardWebViewRunner when cards scroll into view so the
-            // WKWebView youtube.com context is ready before the user taps. Only
-            // runs once — isReady short-circuits all subsequent calls (~0ms).
-            // fix16: Await BotGuard BEFORE preWarm so its SOCS cookie is in the shared
-            // .default() WKWebView data store before extractHLSURL creates its WKWebView.
-            // Without this, uN7uKLsGRWw (rqh=1) hits a GDPR redirect on a cold data store
-            // and times out at 40 s. With the SOCS cookie already set, extraction is ~2 s.
-            // BotGuard.prepare() is idempotent (no-op if already ready, or coalescences with
-            // an ongoing task), so all card tasks joining the same prepare() call pay ≤8 s
-            // total — not per-card.
-            #if canImport(WebKit)
-            await BotGuardWebViewRunner.shared.prepare()
-            if !video.isShort
-                && YouTubeWebViewHLSExtractor.activePreWarmLoops < YouTubeWebViewHLSExtractor.maxPreWarmLoops
-            {
-                YouTubeWebViewHLSExtractor.activePreWarmLoops += 1
-                defer { YouTubeWebViewHLSExtractor.activePreWarmLoops -= 1 }
-                let videoId = video.id
-                outer: while !Task.isCancelled {
-                    if await VideoPreloadCache.shared.cachedWKHLSURL(for: videoId) == nil {
-                        await YouTubeWebViewHLSExtractor.preWarm(videoId: videoId)
-                    }
-                    let hasCachedURL = await VideoPreloadCache.shared.cachedWKHLSURL(for: videoId) != nil
-                    let hasCachedPot = await VideoPreloadCache.shared.cachedPoToken(for: videoId) != nil
-                    if hasCachedURL && !hasCachedPot && !YouTubeWebViewHLSExtractor.isPreWarming {
-                        YouTubeWebViewHLSExtractor.isPreWarming = true
-                        if let freshURL = await YouTubeWebViewHLSExtractor.shared.serialExtract(videoId: videoId) {
-                            let freshPot = YouTubeWebViewHLSExtractor.shared.extractedPoToken
-                            await VideoPreloadCache.shared.store(
-                                wkHLSManifestURL: freshURL, for: videoId, isPreWarm: true)
-                            if let pot = freshPot {
-                                await VideoPreloadCache.shared.store(wkHLSPoToken: pot, for: videoId)
-                            }
-                        }
-                        YouTubeWebViewHLSExtractor.isPreWarming = false
-                    }
-                    CFNotificationCenterPostNotification(
-                        CFNotificationCenterGetDarwinNotifyCenter(),
-                        CFNotificationName("com.void.smarttube.player.prewarm.done.\(videoId)" as CFString),
-                        nil, nil, true
-                    )
-                    do {
-                        try await Task.sleep(nanoseconds: 30_000_000_000)
-                    } catch {
-                        break outer
-                    }
-                    let stillCached = await VideoPreloadCache.shared.cachedWKHLSURL(for: videoId) != nil
-                    if stillCached { break outer }
-                }
-            }
-            #endif
         }
         .contextMenu {
             #if !os(tvOS)
@@ -583,9 +546,8 @@ extension VideoCardView {
             .task(id: video.id) {
                 // Reset so a reused card slot always tries the primary URL for the new video.
                 thumbnailFallbackIndex = -1
-                #if canImport(WebKit)
+                #if canImport(WebKit) && !os(iOS)
                 await BotGuardWebViewRunner.shared.prepare()
-                #if !os(iOS)
                 if !video.isShort {
                     let videoId = video.id
                     while !Task.isCancelled {
@@ -594,7 +556,6 @@ extension VideoCardView {
                         try? await Task.sleep(nanoseconds: 4_000_000_000)
                     }
                 }
-                #endif
                 #endif
             }
         }

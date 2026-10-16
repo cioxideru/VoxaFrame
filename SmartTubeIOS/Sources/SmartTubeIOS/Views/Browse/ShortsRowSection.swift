@@ -28,9 +28,7 @@ struct ShortsRowSection: View {
     private let cardWidth: CGFloat = 120
     #endif
 
-    /// Maximum cards shown on tvOS in horizontal mode. A 1920-pt screen holds
-    /// ~9 cards at 200 pt each; capping prevents overflow and keeps focus manageable.
-    static let shortsCardMaxTVCount = 9
+    private static let verticalTVLimit = 9
 
     // MARK: - Body
 
@@ -48,15 +46,23 @@ struct ShortsRowSection: View {
         #if os(tvOS)
         // On tvOS, ScrollView(.horizontal) consumes UP/DOWN directional events
         // from the Siri remote, trapping focus inside the row and preventing
-        // navigation to the content below. Use a plain HStack capped at
-        // shortsCardMaxTVCount cards instead.
+        // navigation to the content below. Fit the ten cards into a plain HStack instead.
         HStack(alignment: .top, spacing: videoGridRowSpacing) {
-            ForEach(Array(videos.prefix(Self.shortsCardMaxTVCount))) { video in
+            ForEach(Array(videos.prefix(HomeFeedLayout.shortsPerRow))) { video in
                 Button {
                     onSelect(video)
                 } label: {
                     ShortsCardView(video: video, onTap: { onSelect(video) })
-                        .frame(width: cardWidth, height: cardWidth * 16 / 9)
+                        .aspectRatio(9 / 16, contentMode: .fit)
+                        .containerRelativeFrame(.horizontal) { width, _ in
+                            min(
+                                cardWidth,
+                                max(
+                                    1,
+                                    (width - 32 - videoGridRowSpacing
+                                        * CGFloat(HomeFeedLayout.shortsPerRow - 1))
+                                        / CGFloat(HomeFeedLayout.shortsPerRow)))
+                        }
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
@@ -116,10 +122,10 @@ struct ShortsRowSection: View {
 
     @ViewBuilder private var verticalBody: some View {
         #if os(tvOS)
-        // tvOS: plain LazyVStack capped at shortsCardMaxTVCount — no ScrollView
+        // tvOS: plain LazyVStack capped at verticalTVLimit — no ScrollView
         // to avoid trapping Siri remote directional events.
         LazyVStack(alignment: .leading, spacing: videoGridRowSpacing) {
-            ForEach(Array(videos.prefix(Self.shortsCardMaxTVCount))) { video in
+            ForEach(Array(videos.prefix(Self.verticalTVLimit))) { video in
                 Button {
                     onSelect(video)
                 } label: {

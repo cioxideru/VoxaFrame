@@ -213,9 +213,11 @@ extension PlaybackViewModel {
             return false
         }
         player.replaceCurrentItem(with: item)
+        observePlaybackEndAndStalls(for: item)
         itemObserverTask?.cancel()
 
         for await status in item.statusStream {
+            guard !Task.isCancelled, currentVideo?.id == video.id, player.currentItem === item else { return false }
             switch status {
             case .readyToPlay:
                 attemptItemBecameReady(item, video: video, info: info, label: label, isMuxedFallback: isMuxedFallback)
@@ -246,25 +248,26 @@ extension PlaybackViewModel {
                     url: hlsURL, userAgent: hlsPolicy.userAgent
                 )
                 if fetched.isEmpty,
-                    let cached = PlaybackQualityManager.cachedHLSVariants(for: videoId)
+                    let cached = qualityManager.cachedHLSVariants(for: videoId)
                 {
                     allVariantURLs = cached
                 } else {
                     allVariantURLs = fetched
                 }
                 if !fetched.isEmpty {
-                    PlaybackQualityManager.cacheHLSVariants(fetched, for: videoId)
+                    qualityManager.cacheHLSVariants(fetched, for: videoId)
                 }
-            } else if let cached = PlaybackQualityManager.cachedHLSVariants(for: videoId) {
+            } else if let cached = qualityManager.cachedHLSVariants(for: videoId) {
                 playerLog.notice("[\(label)] HLS: using cached manifest for \(videoId) variantCount=\(cached.count)")
                 allVariantURLs = cached
             } else {
                 let fetched = await fetchHLSVariantURLs(url: hlsURL)
                 allVariantURLs = fetched
                 if !fetched.isEmpty {
-                    PlaybackQualityManager.cacheHLSVariants(fetched, for: videoId)
+                    qualityManager.cacheHLSVariants(fetched, for: videoId)
                 }
             }
+            guard !Task.isCancelled, currentVideo?.id == video.id else { return (url, false) }
             let urls =
                 hlsPolicy.maximumHeight.map { cap in
                     allVariantURLs.filter { $0.key <= cap }
@@ -272,21 +275,28 @@ extension PlaybackViewModel {
             playerLog.notice(
                 "[\(label)] HLS: hlsURL=yes variantCount=\(urls.count) effectiveQuality=\(effectiveQuality)")
             availableFormats = hlsPolicy.pickerFormats(from: info.formats, current: availableFormats)
+            if !qualityManager.hlsManifestFormats.isEmpty {
+                availableFormats = hlsPolicy.playableManifestFormats(qualityManager.hlsManifestFormats)
+            }
+            qualityManager.configureHLSPlayback(
+                userAgent: hlsPolicy.userAgent,
+                maximumHeight: hlsPolicy.maximumHeight,
+                videoCodecs: hlsPolicy.videoCodecs
+            )
             if !urls.isEmpty {
                 hlsVariantURLs = urls
                 let playableFormats = availableFormats.filter { urls.keys.contains($0.height) }
                 availableFormats = playableFormats
+                qualityManager.setSelectedFormatForCurrentPreference()
                 // Use a variant playlist URL directly rather than the master manifest URL.
                 // The master manifest (hls_variant) stalls AVPlayer on manifest.googlevideo.com
                 // because it requires session-level auth that AVPlayer's isolated network stack
                 // cannot provide. Variant playlist URLs (hls_playlist) are directly downloadable
                 // — yt-dlp confirms 720p in 13 s, 1080p in 29 s for the same video.
-                // Per-video pick (when set) takes precedence over the persisted default —
-                // a mid-playback 403 recovery must not silently revert the user's choice.
-                let preferredMaxH = hlsPolicy.cappedHeight(requested: effectiveQuality.maxHeight)
+                let preferredMaxH = qualityManager.resolvedHeight(for: effectiveQuality)
                 let chosen =
-                    preferredMaxH
-                    .flatMap { height in urls.filter { $0.key <= height }.max(by: { $0.key < $1.key }) }
+                    selectedFormat.flatMap { format in format.url.map { (key: format.height, value: $0) } }
+                    ?? preferredMaxH.flatMap { height in urls[height].map { (key: height, value: $0) } }
                     ?? urls.max(by: { $0.key < $1.key })
                 if let chosen {
                     if hlsPolicy.filtersMasterManifest {
@@ -298,20 +308,11 @@ extension PlaybackViewModel {
                         effectiveURL = chosen.value
                         playerLog.notice("[\(label)] HLS: selected variant \(chosen.key)p")
                     }
-                    // DIAGNOSTIC D-14: probe variant playlist + first segment before handing to AVPlayer.
-                    // Ephemeral session → no cookies, no shared state.
-                    // 200 → URL is publicly accessible; 403 → YouTube session (SAPISID) required.
-                    // Log the segment host and whether rqh=1 is enforced at segment level.
-                    probeHLSVariant(chosen.value, label: label)
+
                 }
             } else {
                 playerLog.notice("[\(label)] HLS manifest fetch returned 0 variants — using master as-is")
             }
-            qualityManager.configureHLSPlayback(
-                userAgent: hlsPolicy.userAgent,
-                maximumHeight: hlsPolicy.maximumHeight,
-                videoCodecs: hlsPolicy.videoCodecs
-            )
             qualityManager.setSelectedFormatForCurrentPreference()
             applyHLSHints = true
         } else {
@@ -319,89 +320,6 @@ extension PlaybackViewModel {
         }
 
         return (effectiveURL, applyHLSHints)
-    }
-
-    private func probeHLSVariant(_ url: URL, label: String) {
-        let capturedAuthToken = currentAuthToken
-        Task {
-            var diagReq = URLRequest(url: url)
-            diagReq.setValue(
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15,gzip(gfe)",
-                forHTTPHeaderField: "User-Agent"
-            )
-            diagReq.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
-            diagReq.setValue("https://www.youtube.com/", forHTTPHeaderField: "Referer")
-            diagReq.timeoutInterval = PlaybackTuning.playlistProbeTimeout
-            guard
-                let (diagData, diagResp) = try? await URLSession(configuration: .ephemeral).data(
-                    for: diagReq),
-                let http = diagResp as? HTTPURLResponse
-            else {
-                playerLog.notice(
-                    "[\(label)] D-14 HLS variant probe: fail/timeout (no-cookie/Safari UA)")
-                return
-            }
-            let playlistText = String(data: diagData, encoding: .utf8) ?? ""
-            // Find first absolute segment URL (https:// line not starting with #)
-            let firstSegURL =
-                playlistText.components(separatedBy: "\n")
-                .first { $0.hasPrefix("https://") } ?? "(no absolute URL found)"
-            // rqh=1 appears as /rqh/1/ path-style in HLS URLs (not ?rqh=1 query-style)
-            let hasRqh =
-                firstSegURL.contains("/rqh/1") || firstSegURL.contains("rqh=1")
-                || firstSegURL.contains("rqh%3D1")
-            playerLog.notice(
-                "[\(label)] D-14 HLS variant probe: HTTP \(http.statusCode) bytes=\(diagData.count) firstSeg_rqh=\(hasRqh) firstSegHost=\(ViewModelLogger.urlHost(URL(string: firstSegURL)))"
-            )
-            // Also test first segment URL (if absolute) to see if segments need auth
-            if firstSegURL.hasPrefix("https://"), let segURL = URL(string: firstSegURL) {
-                var segReq = URLRequest(url: segURL)
-                segReq.setValue(
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15,gzip(gfe)",
-                    forHTTPHeaderField: "User-Agent"
-                )
-                segReq.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
-                segReq.setValue("https://www.youtube.com/", forHTTPHeaderField: "Referer")
-                segReq.timeoutInterval = PlaybackTuning.playlistProbeTimeout
-                // Range request — just the first byte to test access
-                segReq.setValue("bytes=0-0", forHTTPHeaderField: "Range")
-                if let (_, segResp) = try? await URLSession(configuration: .ephemeral).data(for: segReq),
-                    let segHttp = segResp as? HTTPURLResponse
-                {
-                    playerLog.notice(
-                        "[\(label)] D-14 segment probe (Safari UA/no-cookie): HTTP \(segHttp.statusCode) rqh=\(hasRqh)"
-                    )
-                } else {
-                    playerLog.notice("[\(label)] D-14 segment probe: fail/timeout")
-                }
-
-                // D-15: probe same segment WITH Bearer token — determines if
-                // OAuth2 Bearer satisfies rqh=1 for HLS path-style segments.
-                // If this returns 200/206, resource-loader interception is viable.
-                if let bearerToken = capturedAuthToken, hasRqh {
-                    var segBearerReq = URLRequest(url: segURL)
-                    segBearerReq.setValue(
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15,gzip(gfe)",
-                        forHTTPHeaderField: "User-Agent"
-                    )
-                    segBearerReq.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
-                    segBearerReq.setValue("https://www.youtube.com/", forHTTPHeaderField: "Referer")
-                    segBearerReq.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
-                    segBearerReq.setValue("bytes=0-0", forHTTPHeaderField: "Range")
-                    segBearerReq.timeoutInterval = PlaybackTuning.playlistProbeTimeout
-                    if let (_, segResp2) = try? await URLSession(configuration: .ephemeral).data(
-                        for: segBearerReq),
-                        let segHttp2 = segResp2 as? HTTPURLResponse
-                    {
-                        playerLog.notice(
-                            "[\(label)] D-15 segment probe (Safari UA+Bearer): HTTP \(segHttp2.statusCode) rqh=\(hasRqh)"
-                        )
-                    } else {
-                        playerLog.notice("[\(label)] D-15 segment probe (Bearer): fail/timeout")
-                    }
-                }
-            }
-        }
     }
 
     private func makeAttemptItem(
@@ -440,7 +358,7 @@ extension PlaybackViewModel {
             item?.preferredForwardBufferDuration = 0
         }
         if applyHLSHints {
-            if let maxH = hlsPolicy.cappedHeight(requested: effectiveQuality.maxHeight) {
+            if let maxH = hlsPolicy.cappedHeight(requested: qualityManager.resolvedHeight(for: effectiveQuality)) {
                 item.preferredMaximumResolution = CGSize(width: CGFloat(maxH) * 4, height: CGFloat(maxH))
                 item.preferredPeakBitRate = peakBitRate(for: maxH)
                 playerLog.notice(

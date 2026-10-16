@@ -1,4 +1,5 @@
 import Foundation
+
 extension BrowseViewModel {
 
     func fetchHomeSection() async throws {
@@ -84,6 +85,13 @@ extension BrowseViewModel {
     }
 
     func fetchSubscriptionsSection() async throws {
+        #if DEBUG
+        if HomePaginationUITestFixture.isMixedFeedEnabled {
+            videoGroups = [try await api.fetchSubscriptions()]
+            isAuthRequired = false
+            return
+        }
+        #endif
         if hasAuthToken {
             let group = try await api.fetchSubscriptions()
             if !Task.isCancelled {

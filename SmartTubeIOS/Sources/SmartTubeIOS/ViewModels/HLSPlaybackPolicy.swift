@@ -11,8 +11,8 @@ struct HLSPlaybackPolicy: Equatable, Sendable {
     let videoCodecs: [String]
 
     /// HLS `CODECS` prefixes of the two ladders the VISIONOS client serves.
-    static let h264 = "avc1"
-    static let vp9 = "vp09"
+    static let h264 = VideoCodec.h264.rawValue
+    static let vp9 = VideoCodec.vp9.rawValue
 
     /// iOS/tvOS 26.2+ ship a VP9 decoder that apps must opt into. With it, the VISIONOS
     /// ladder's VP9 variants (1440p, 2160p) play natively; without it, H.264 tops out at 1080p.
@@ -67,6 +67,18 @@ struct HLSPlaybackPolicy: Equatable, Sendable {
         return min(requested ?? maximumHeight, maximumHeight)
     }
 
+    func playableManifestFormats(_ formats: [VideoFormat]) -> [VideoFormat] {
+        let playable = formats.filter { format in
+            (videoCodecs.isEmpty || format.videoCodec.map { videoCodecs.contains($0.rawValue) } == true)
+                && format.height <= (maximumHeight ?? .max)
+        }
+        return Dictionary(grouping: playable, by: { "\($0.height):\($0.codecShortLabel)" })
+            .values.compactMap { group in group.max { ($0.fps, $0.bitrate ?? 0) < ($1.fps, $1.bitrate ?? 0) } }
+            .sorted {
+                $0.height != $1.height ? $0.height > $1.height : $0.codecShortLabel < $1.codecShortLabel
+            }
+    }
+
     /// Quality picker rows under this policy: the VP9 ladder's rows and/or the current H.264 rows
     /// up to the H.264 ladder's top, VP9 first at equal height; the current rows when unfiltered.
     func pickerFormats(
@@ -87,9 +99,7 @@ struct HLSPlaybackPolicy: Equatable, Sendable {
 
     /// The ladder codec of an adaptive format: `video/webm; codecs="vp9"` → `vp9`, `avc1.…` → `h264`.
     static func videoCodec(ofMimeType mimeType: String) -> String? {
-        if mimeType.contains(h264) { return h264 }
-        if mimeType.contains("vp9") || mimeType.contains(vp9) { return vp9 }
-        return nil
+        VideoCodec(mimeType: mimeType)?.rawValue
     }
 
     /// Quality picker rows for a VP9 ladder: YouTube lists VP9 as `video/webm; codecs="vp9"`

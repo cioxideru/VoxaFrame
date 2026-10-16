@@ -28,18 +28,26 @@ public struct HLSManifestCache {
 
     // MARK: - Storage
 
-    private var cache = TTLCache<String, [Int: URL]>(ttl: HLSManifestCache.ttl, maxEntries: HLSManifestCache.maxEntries)
+    private struct Entry {
+        let variants: [Int: URL]
+        let formats: [VideoFormat]
+    }
+    private var cache = TTLCache<String, Entry>(ttl: HLSManifestCache.ttl, maxEntries: HLSManifestCache.maxEntries)
 
     // MARK: - Interface
 
     /// Returns cached variant URLs for `videoId` if the entry exists and is within the TTL.
     public mutating func variants(for videoId: String) -> [Int: URL]? {
-        cache.get(videoId)
+        cache.get(videoId)?.variants
+    }
+
+    public mutating func formats(for videoId: String) -> [VideoFormat]? {
+        cache.get(videoId)?.formats
     }
 
     /// Stores variant URLs for `videoId`. Evicts the oldest entry when at capacity.
-    public mutating func store(_ variants: [Int: URL], for videoId: String) {
-        cache.set(variants, for: videoId)
+    public mutating func store(_ variants: [Int: URL], formats: [VideoFormat] = [], for videoId: String) {
+        cache.set(Entry(variants: variants, formats: formats), for: videoId)
     }
 
     /// Removes a specific video's cache entry (e.g. after a 403 to force a fresh fetch).

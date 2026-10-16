@@ -11,11 +11,7 @@ import UIKit
 // Full-screen vertical-swipe player for YouTube Shorts.
 // Swipe up advances to the next short; swipe down goes to the previous one.
 //
-// AVPlayerViewController intercepts all UIKit touches before SwiftUI sees them,
-// so a plain SwiftUI DragGesture layered above VideoPlayer is never delivered.
-// Instead, a UIViewRepresentable installs a UIPanGestureRecognizer directly
-// into the window that is set to cancel the AVPlayer's own recognizers, giving
-// SwiftUI-side navigation full priority.
+// The passive video surface and controls share one SwiftUI swipe gesture.
 
 public struct ShortsPlayerView: View {
     public let startIndex: Int
@@ -32,6 +28,7 @@ public struct ShortsPlayerView: View {
     @Environment(PlayerStateStore.self) var playerState
     #endif
     @State var slideOffset: CGFloat = 0
+    @GestureState var isDragging = false
     @State var containerHeight: CGFloat = 0
     @State var isTransitioning = false
     @State var transitionTask: Task<Void, Never>?
@@ -54,70 +51,14 @@ public struct ShortsPlayerView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
 
-                if ProcessInfo.processInfo.arguments.contains("--uitesting") {
-                    Color.black.ignoresSafeArea()
-                } else {
-                    #if os(iOS) || os(tvOS)
-                    // PlayerAVLayerView instead of VideoPlayer/AVPlayerViewController.
-                    // Using AVPlayerViewController (VideoPlayer) causes it to dominate
-                    // the entire UIKit accessibility tree, hiding all overlaid SwiftUI
-                    // elements (index badge, controls). A bare AVPlayerLayer renders
-                    // video without any UIKit accessibility interference.
-                    PlayerAVLayerView(player: vm.player, videoGravity: .resizeAspectFill)
-                        .ignoresSafeArea()
-                        .accessibilityHidden(true)
-                    #else
-                    Color.black.ignoresSafeArea()
-                    #endif
-                }
-
-                // Gesture capture layer — a UIViewRepresentable that installs a
-                // UIPanGestureRecognizer at the UIKit level so it fires even when
-                // AVPlayerViewController is absorbing touches below.
-                #if os(iOS)
-                SwipeGestureOverlay(
-                    onSwipeUp: {
-                        guard !isTransitioning else { return }
-                        if let next = ShortsNavigation.targetIndex(
-                            vertical: -100, horizontal: 0, current: currentIndex, count: videos.count)
-                        {
-                            performVerticalTransition(direction: -1) { goTo(next) }
-                        } else {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
-                        }
-                    },
-                    onSwipeDown: {
-                        guard !isTransitioning else { return }
-                        if let prev = ShortsNavigation.targetIndex(
-                            vertical: 100, horizontal: 0, current: currentIndex, count: videos.count)
-                        {
-                            performVerticalTransition(direction: 1) { goTo(prev) }
-                        } else {
-                            loadMoreAtStart()
-                        }
-                    },
-                    onTap: { _ in vm.togglePlayPause() },
-                    onTwoFingerTap: {},
-                    onPanChanged: { dy in
-                        guard !isTransitioning else { return }
-                        let canGoUp =
-                            ShortsNavigation.targetIndex(
-                                vertical: -100, horizontal: 0, current: currentIndex, count: videos.count) != nil
-                        let canGoDown =
-                            ShortsNavigation.targetIndex(
-                                vertical: 100, horizontal: 0, current: currentIndex, count: videos.count) != nil
-                        if (dy < 0 && canGoUp) || (dy > 0 && canGoDown) {
-                            slideOffset = dy
-                        } else {
-                            slideOffset = dy * 0.15  // rubber-band resistance at boundaries
-                        }
-                    },
-                    onSwipeCancelled: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
-                    }
-                )
-                .ignoresSafeArea()
-                .accessibilityHidden(true)
+                #if os(iOS) || os(tvOS)
+                // The video surface is passive; gestures belong to the layer above it.
+                PlayerAVLayerView(player: vm.player, videoGravity: .resizeAspectFill)
+                    .ignoresSafeArea()
+                    .accessibilityHidden(true)
+                    .allowsHitTesting(false)
+                #else
+                Color.black.ignoresSafeArea()
                 #endif
 
                 if vm.isLoading {
@@ -145,8 +86,6 @@ public struct ShortsPlayerView: View {
                         .animation(.easeInOut(duration: 0.2), value: vm.statsForNerdsVisible)
                 }
             }
-            // Single-tap toggles play/pause via the UIKit window-level tap
-            // recognizer inside SwipeGestureOverlay (onTap above).
             .offset(y: slideOffset)
             .onGeometryChange(for: CGFloat.self) {
                 $0.size.height
@@ -154,6 +93,10 @@ public struct ShortsPlayerView: View {
                 containerHeight = $0
             }
             .background(Color.black.ignoresSafeArea())
+            #if os(iOS)
+            .contentShape(Rectangle())
+            .onTapGesture { vm.togglePlayPause() }
+            #endif
             #if os(tvOS)
             // Siri Remote D-pad: up/down navigate prev/next short.
             .onMoveCommand { direction in
@@ -176,9 +119,7 @@ public struct ShortsPlayerView: View {
                 }
             }
             #endif
-            // indexBadge, controls overlay, and error banner are placed OUTSIDE the
-            // ZStack as overlays so UIViewRepresentable elements (SwipeGestureOverlay)
-            // inside the ZStack cannot absorb them from the accessibility tree.
+            // Keep controls and accessibility outside the moving video surface.
             .overlay(alignment: .topTrailing) {
                 indexBadge
             }
@@ -216,6 +157,12 @@ public struct ShortsPlayerView: View {
                 }
             }
             #if os(iOS)
+            // The gesture stays fixed while the video follows the finger.
+            .simultaneousGesture(shortsSwipeGesture)
+            .onChange(of: isDragging) { _, dragging in
+                guard !dragging, !isTransitioning else { return }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
+            }
             .navigationBarHidden(true)
             .statusBarHidden(true)
             .toolbar(.hidden, for: .tabBar)

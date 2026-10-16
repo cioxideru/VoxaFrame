@@ -17,7 +17,7 @@ extension PlaybackViewModel {
         itemObserverTask?.cancel()
         itemObserverTask = Task { [weak self] in
             for await status in item.statusStream {
-                guard let self, !Task.isCancelled else { return }
+                guard let self, !Task.isCancelled, self.player.currentItem === item else { return }
                 switch status {
                 case .readyToPlay:
                     self.initialPlayerItemBecameReady(item, info: info, isHLS: isHLS)
@@ -73,7 +73,7 @@ extension PlaybackViewModel {
         // to a higher-quality variant during continued playback. This is
         // a hint update only — no item replacement, no stutter.
         if info.hlsURL != nil {
-            let targetMaxH = self.settings.preferredQuality.maxHeight
+            let targetMaxH = self.qualityManager.resolvedHeight(for: self.effectiveQuality)
             Task { [weak self, weak item] in
                 try? await Task.sleep(for: PlaybackTuning.qualityRampDelay)
                 guard let self, !Task.isCancelled else { return }
@@ -128,26 +128,22 @@ extension PlaybackViewModel {
     func observePlaybackEndAndStalls(for item: AVPlayerItem) {
         // Observe end-of-item using NotificationCenter async sequence
         endObserverTask?.cancel()
+        let endNotifications = NotificationCenter.default.notifications(
+            named: AVPlayerItem.didPlayToEndTimeNotification, object: item)
         endObserverTask = Task { [weak self] in
-            let notifications = NotificationCenter.default.notifications(
-                named: AVPlayerItem.didPlayToEndTimeNotification,
-                object: item
-            )
-            for await _ in notifications {
-                guard let self, !Task.isCancelled else { return }
+            for await _ in endNotifications {
+                guard let self, !Task.isCancelled, self.player.currentItem === item else { return }
                 self.handlePlaybackEnd()
             }
         }
 
         // Observe playback stalls, log them and attempt recovery (bug #193).
         stallObserverTask?.cancel()
+        let stallNotifications = NotificationCenter.default.notifications(
+            named: AVPlayerItem.playbackStalledNotification, object: item)
         stallObserverTask = Task { @MainActor [weak self] in
-            let notifications = NotificationCenter.default.notifications(
-                named: AVPlayerItem.playbackStalledNotification,
-                object: item
-            )
-            for await _ in notifications {
-                guard let self, !Task.isCancelled else { return }
+            for await _ in stallNotifications {
+                guard let self, !Task.isCancelled, self.player.currentItem === item else { return }
                 self.registerStall(on: item)
                 let stallTime = Int(self.currentTime)
                 playerLog.notice(

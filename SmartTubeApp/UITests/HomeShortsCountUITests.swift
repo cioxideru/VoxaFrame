@@ -301,3 +301,118 @@ final class HomeShortsEndlessUITests: XCTestCase {
         assertContinuationCard("page-2-short-0", inRow: 2)
     }
 }
+
+/// Exercises the actual mixed feed views with deterministic, offline data.
+final class MixedFeedLayoutUITests: XCTestCase {
+    private var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app = XCUIApplication()
+        app.launchArguments += [
+            "--uitesting", "--uitesting-signed-in", "--uitesting-reset-settings", "--uitesting-mixed-feed",
+        ]
+        app.launch()
+        UITestHelpers.tapTab(named: "Home", in: app)
+    }
+
+    override func tearDownWithError() throws { app = nil }
+
+    func testHomeSpacing() { assertSpacing(section: "home", title: "Home") }
+    func testSubscriptionsSpacing() { assertSpacing(section: "subscriptions", title: "Subscriptions") }
+    func testRecommendedSpacing() { assertSpacing(section: "recommended", title: "Recommended") }
+
+    func testVerticalSwipesOnVideoBlocksScrollEachMixedFeed() {
+        for (section, title) in [("home", "Home"), ("recommended", "Recommended"), ("subscriptions", "Subscriptions")] {
+            selectSection(section, title: title)
+            let block = app.descendants(matching: .any)
+                .matching(identifier: AccessibilityID.feedVideoBlock(section, 0)).firstMatch
+            XCTAssertTrue(block.waitForExistence(timeout: 10))
+            let before = block.frame.minY
+            let window = app.windows.firstMatch.frame
+            let startY = min(block.frame.minY + 180, window.maxY - 80)
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: window.midX, dy: startY))
+            let end = origin.withOffset(CGVector(dx: window.midX, dy: startY - 150))
+            start.press(forDuration: 0, thenDragTo: end, withVelocity: .fast, thenHoldForDuration: 0)
+            let moved = NSPredicate { _, _ in !block.exists || block.frame.minY < before - 40 }
+            XCTAssertEqual(
+                XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: moved, object: nil)], timeout: 3), .completed)
+            XCTAssertTrue(app.scrollViews["home.chipBar"].buttons[title].isSelected)
+        }
+    }
+
+    func testShortsSwipeStaysInSectionAndVideoSwipeChangesSection() {
+        let row = app.scrollViews[AccessibilityID.homeShortsRow(0)]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        row.swipeLeft()
+        XCTAssertTrue(app.scrollViews["home.chipBar"].buttons["Home"].isSelected)
+        let block = app.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.feedVideoBlock("home", 0)).firstMatch
+        XCTAssertTrue(block.waitForExistence(timeout: 10))
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let window = app.windows.firstMatch.frame
+        let y = min(block.frame.minY + 80, window.maxY - 80)
+        origin.withOffset(CGVector(dx: window.width * 0.8, dy: y)).press(
+            forDuration: 0, thenDragTo: origin.withOffset(CGVector(dx: window.width * 0.2, dy: y)),
+            withVelocity: .fast, thenHoldForDuration: 0)
+        let recommended = app.scrollViews["home.chipBar"].buttons["Recommended"]
+        let selected = NSPredicate(format: "selected == true")
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: selected, object: recommended)], timeout: 5),
+            .completed)
+    }
+
+    private func selectSection(_ section: String, title: String) {
+        if section != "home" {
+            let chips = app.scrollViews["home.chipBar"]
+            let chip = chips.buttons[title]
+            XCTAssertTrue(chip.waitForExistence(timeout: 10))
+            UITestHelpers.scrollChipIntoView(chip, in: chips, app: app)
+            chip.tap()
+        }
+    }
+
+    private func assertSpacing(section: String, title: String) {
+        selectSection(section, title: title)
+        let firstID =
+            section == "home" ? AccessibilityID.homeShortsRow(0) : AccessibilityID.sectionShortsRow(section, 0)
+        let first = app.scrollViews[firstID]
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        XCTAssertEqual(uniqueCards(in: first, prefix: "shorts.card.").count, 10)
+
+        let block = app.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.feedVideoBlock(section, 0)).firstMatch
+        XCTAssertTrue(block.waitForExistence(timeout: 10))
+        let videos = uniqueCards(in: block, prefix: "video.card.")
+        XCTAssertFalse(videos.isEmpty)
+        let rows = Set(videos.map { Int($0.frame.minY.rounded()) })
+        XCTAssertEqual(rows.count, 6, "Every full video block must contain six rendered rows")
+        XCTAssertGreaterThanOrEqual(block.frame.minY, first.frame.maxY - 1)
+
+        let secondID =
+            section == "home" ? AccessibilityID.homeShortsRow(1) : AccessibilityID.sectionShortsRow(section, 1)
+        let second = app.scrollViews[secondID]
+        for _ in 0..<30 {
+            if second.exists, second.isHittable,
+                app.windows.firstMatch.frame.contains(CGPoint(x: second.frame.midX, y: second.frame.midY))
+            {
+                break
+            }
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+            start.press(
+                forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35)))
+        }
+        XCTAssertTrue(second.waitForExistence(timeout: 5))
+        XCTAssertTrue(second.isHittable, "Second Shorts row must be reachable by vertical scrolling")
+        XCTAssertEqual(uniqueCards(in: second, prefix: "shorts.card.").count, 10)
+        if block.exists { XCTAssertGreaterThanOrEqual(second.frame.minY, block.frame.maxY - 1) }
+    }
+
+    private func uniqueCards(in container: XCUIElement, prefix: String) -> [XCUIElement] {
+        let elements = container.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix)).allElementsBoundByIndex
+        var seen = Set<String>()
+        return elements.filter { seen.insert($0.identifier).inserted }
+    }
+}

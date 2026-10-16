@@ -119,3 +119,152 @@ final class PlayerControlsUITests: XCTestCase {
     }
     #endif
 }
+
+#if os(iOS)
+/// Live playback acceptance for scaling and remembered quality.
+final class PlayerVideoScaleUITests: XCTestCase {
+    private var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        app = XCUIApplication()
+        app.launchArguments = [
+            "--uitesting", "--uitesting-reset-settings", "--uitesting-show-controls",
+            "--uitesting-disable-sponsorblock", "--uitesting-deeplink-video=fKopy74weus",
+            "--uitesting-inject-related-video-ids=9bZkp7q19f0",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+        app.launch()
+    }
+
+    override func tearDownWithError() throws {
+        XCUIDevice.shared.orientation = .portrait
+        app.terminate()
+        app = nil
+    }
+
+    private var scaleButton: XCUIElement { app.buttons[AccessibilityID.playerVideoScaleButton] }
+    private var timeLabel: XCUIElement { app.staticTexts[AccessibilityID.playerCurrentTimeLabel] }
+
+    private func showControls() {
+        guard !scaleButton.exists else { return }
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
+        XCTAssertTrue(scaleButton.waitForExistence(timeout: 4))
+    }
+
+    private func seconds() -> Int {
+        guard timeLabel.exists else { return -1 }
+        return timeLabel.label.split(separator: ":").reduce(0) { $0 * 60 + (Int($1) ?? 0) }
+    }
+
+    private func waitUntilReady() {
+        XCTAssertTrue(app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch.waitForExistence(timeout: 20))
+        showControls()
+        let ready = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "enabled == true"),
+            object: app.buttons[AccessibilityID.playerPlayPauseButton])
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 30), .completed, "Live video must become playable")
+    }
+
+    private func waitForTime(after previous: Int) {
+        let advancing = XCTNSPredicateExpectation(
+            predicate: NSPredicate { [self] _, _ in
+                showControls()
+                return seconds() > previous
+            }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 5), .completed, "Playback must keep advancing")
+    }
+
+    private func assertMode(_ value: String) {
+        showControls()
+        XCTAssertTrue(scaleButton.isHittable)
+        XCTAssertEqual(scaleButton.value as? String, value)
+    }
+
+    private func waitForQuality(_ label: String) {
+        let selected = XCTNSPredicateExpectation(
+            predicate: NSPredicate { [self] _, _ in
+                showControls()
+                return app.buttons[AccessibilityID.playerQuickQualityButton].label.contains(label)
+            }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 30), .completed)
+    }
+
+    private func pickQuality(_ label: String) {
+        showControls()
+        app.buttons[AccessibilityID.playerQuickQualityButton].tap()
+        let picker = app.scrollViews[AccessibilityID.playerQualityPicker]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        let row = picker.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", label)).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        row.tap()
+        waitForQuality(label)
+        waitForTime(after: seconds() + 1)
+    }
+
+    func testQualitySelectionSurvivesNextVideoAndRelaunch() {
+        waitUntilReady()
+        waitForTime(after: 2)
+        pickQuality("720p")
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
+        app.launch()
+        waitUntilReady()
+        waitForQuality("720p")
+        waitForTime(after: seconds() + 1)
+        let title = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
+        let firstTitle = title.label
+        showControls()
+        app.buttons[AccessibilityID.playerNextButton].tap()
+        let nextVideo = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in title.exists && title.label != firstTitle }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [nextVideo], timeout: 20), .completed)
+        waitUntilReady()
+        waitForQuality("720p")
+        waitForTime(after: seconds() + 1)
+
+        pickQuality("Auto")
+        app.terminate()
+        app.launch()
+        waitUntilReady()
+        waitForQuality("Auto")
+        waitForTime(after: seconds() + 1)
+    }
+
+    func testZoomPreservesPlaybackAndSurvivesRotation() {
+        waitUntilReady()
+        waitForTime(after: 2)
+        assertMode("Fit (letterbox)")
+        let beforeZoom = seconds()
+        scaleButton.tap()
+        assertMode("Fill (crop)")
+        XCTAssertGreaterThanOrEqual(seconds(), beforeZoom, "Zoom must not reset the timeline")
+        waitForTime(after: seconds())
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        waitForTime(after: seconds() + 1)
+        assertMode("Fill (crop)")
+        XCTAssertGreaterThanOrEqual(seconds(), beforeZoom)
+        let cropped = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        cropped.name = "Fill mode in landscape"
+        cropped.lifetime = .keepAlways
+        add(cropped)
+
+        let beforeFit = seconds()
+        scaleButton.tap()
+        assertMode("Fit (letterbox)")
+        XCTAssertGreaterThanOrEqual(seconds(), beforeFit, "Returning to Fit must not reset the timeline")
+        waitForTime(after: seconds())
+        XCUIDevice.shared.orientation = .portrait
+        waitForTime(after: seconds() + 1)
+        assertMode("Fit (letterbox)")
+        XCTAssertGreaterThanOrEqual(seconds(), beforeFit)
+        let fitted = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        fitted.name = "Fit mode in portrait"
+        fitted.lifetime = .keepAlways
+        add(fitted)
+    }
+}
+#endif

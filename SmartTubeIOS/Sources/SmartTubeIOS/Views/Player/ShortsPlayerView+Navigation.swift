@@ -45,22 +45,6 @@ extension ShortsPlayerView {
         if index >= videos.count - 2 {
             loadMoreIfNeeded()
         }
-        // Pre-fetch the next 2 shorts so swiping is instant.
-        let lookahead = videos[(index + 1)..<min(index + 3, videos.count)].map(\.id)
-        if !lookahead.isEmpty {
-            let token = authService.accessToken
-            let cats = store.settings.activeSponsorCategories
-            Task(priority: .background) {
-                for videoId in lookahead {
-                    await VideoPreloadCache.shared.prefetch(
-                        videoId: videoId,
-                        sponsorCategories: cats,
-                        authToken: token,
-                        priority: .speculative
-                    )
-                }
-            }
-        }
     }
 
     /// Fetches an additional batch of Shorts and appends them, deduplicating by id.
@@ -129,5 +113,21 @@ extension ShortsPlayerView {
         vm.updateSettings(store.settings)
         vm.setPlaybackSpeed(store.settings.playbackSpeed)
         vm.load(video: video)
+        // Start lookahead on the first Short too, ahead of background feed-card requests.
+        let lookahead = videos[(index + 1)..<min(index + 3, videos.count)].map(\.id)
+        if !lookahead.isEmpty {
+            let token = authService.accessToken
+            let cats = store.settings.activeSponsorCategories
+            Task(priority: .background) {
+                for videoId in lookahead {
+                    await VideoPreloadCache.shared.prefetch(
+                        videoId: videoId,
+                        sponsorCategories: cats,
+                        authToken: token,
+                        priority: .immediate
+                    )
+                }
+            }
+        }
     }
 }

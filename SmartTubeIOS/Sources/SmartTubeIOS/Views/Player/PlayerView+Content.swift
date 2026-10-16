@@ -151,9 +151,8 @@ extension PlayerView {
                             vm.seekRelative(seconds: Double(store.settings.seekForwardSeconds))
                             seekToastMessage = "\(store.settings.seekForwardSeconds)s →"
                         } else {
-                            let newMode: AppSettings.VideoGravityMode =
-                                store.settings.videoGravityMode == .fit ? .fill : .fit
-                            store.settings.videoGravityMode = newMode
+                            store.settings.videoGravityMode.toggle()
+                            let newMode = store.settings.videoGravityMode
                             scaleToast = newMode == .fill ? "Fill" : "Fit"
                             seekToastMessage = newMode == .fill ? "Fill" : "Fit"  // diagnostic: also set seekToast
                         }

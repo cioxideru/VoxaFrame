@@ -576,7 +576,7 @@ extension PlaybackViewModel: QualityEventHandler {
         loadAudioTracks(from: item)
     }
 
-    func qualityItemDidFail(error: Error?, quality: AppSettings.VideoQuality, hasAppliedH264Cap: Bool) async {
+    func qualityItemDidFail(error: Error?, quality: VideoQualityPreference, hasAppliedH264Cap: Bool) async {
         let nsErr = (error as? NSError) ?? NSError(domain: "", code: 0)
         let action = qualityRecoveryAction(
             for: nsErr,
@@ -596,7 +596,7 @@ extension PlaybackViewModel: QualityEventHandler {
             playerLog.notice("Quality-switch failed — reverting selectedFormat to Auto")
             qualityManager.selectedFormat = nil
             toastMessage = "Quality unavailable — reverting to Auto"
-            await qualityManager.reloadHLSItem(seekTo: currentTime, quality: .auto)
+            qualityManager.reloadHLSItem(seekTo: currentTime, quality: .auto)
         case .retryWithH264Cap:
             playerLog.notice("Auto HLS Cannot Decode — retrying with H.264 bitrate cap")
             qualityManager.hasAppliedH264Cap = true

@@ -37,7 +37,7 @@ public enum QualityRecoveryAction: Sendable {
 ///   - hasAppliedH264Cap: `true` if the H.264 bitrate cap has already been tried.
 public func qualityRecoveryAction(
     for error: NSError,
-    quality: AppSettings.VideoQuality,
+    quality: VideoQualityPreference,
     hasAppliedH264Cap: Bool
 ) -> QualityRecoveryAction {
     let is403 = error.domain == nsURLErrorDomain && error.code == -1102

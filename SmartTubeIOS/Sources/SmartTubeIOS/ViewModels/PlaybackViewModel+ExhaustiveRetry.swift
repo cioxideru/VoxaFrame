@@ -35,6 +35,7 @@ extension PlaybackViewModel {
     func exhaustiveRetry(
         video: Video, originalError: Error?, playerInfo: PlayerInfo? = nil, cached: CachedVideoData? = nil
     ) async {
+        guard !Task.isCancelled, currentVideo?.id == video.id else { return }
         // Testing override: --uitesting-force-stream-method restricts the retry to a
         // single named client so UI tests can probe one path at a time.
         if let method = StreamMethodProbeSupport.forcedStreamMethod {
@@ -45,6 +46,7 @@ extension PlaybackViewModel {
         // that AVPlayer plays natively (VP9 through 2160p, else H.264 through 1080p). Tried first on every
         // platform — the WKWebView/BotGuard paths below can each wait up to 40 s.
         if await tryVisionOSRetry(video: video) { return }
+        prepareLegacyStreamLoading(video: video)
         #if canImport(WebKit)
         if await tryCachedWebViewHLS(video: video, playerInfo: playerInfo, cached: cached) { return }
         if let path = await raceLegacyStreams(video: video) {
@@ -244,10 +246,7 @@ extension PlaybackViewModel {
             // schedule a background HLS quality upgrade via TVEmbedded or MWEB while the
             // video is already playing at the lower quality. Does not affect readyToPlay timing.
             let vrMaxH = availableFormats.map(\.height).max() ?? 0
-            let preferredH =
-                settings.preferredQuality == .auto
-                ? Self.displayMaxVideoHeight()
-                : (settings.preferredQuality.maxHeight ?? 1080)
+            let preferredH = effectiveQuality.height ?? Self.displayMaxVideoHeight()
             if vrMaxH > 0 && vrMaxH < min(preferredH, 480) {
                 playerLog.notice(
                     "[AndroidVR] maxH=\(vrMaxH) < preferred \(min(preferredH, 480))p — scheduling background HLS quality upgrade"
