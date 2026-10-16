@@ -6,6 +6,15 @@ All notable changes to SmartTube are documented here.
 
 ## [Unreleased]
 
+### Changed — 2026-10-17
+
+- **Version 5.10 (28) (PLAN-0013)** gives Shorts separate audio language,
+  automatic Yandex translation, lively voices and original background audio settings.
+  Existing translation choices are copied once on upgrade; later changes in either
+  player stay independent. Shorts retains its choices across videos and relaunch,
+  including Auto and disabled translation. Both players reuse the translation service
+  and the device's Yandex Keychain token.
+
 ### Changed — 2026-10-16
 
 - **Version 5.9 (27) (PLAN-0012)** adds the regular player's audio-track/Yandex

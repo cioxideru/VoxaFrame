@@ -139,6 +139,9 @@ struct PlayerAudioTrackPicker: View {
 
     /// Per-video translation into the default audio language from Settings, plus lively voices.
     @ViewBuilder private func voiceOverControls(target: String) -> some View {
+        let livelyVoiceKey = vm.isShortsPlayer ? \AppSettings.shortsYandexVOTLivelyVoice : \.yandexVOTLivelyVoice
+        let originalAudioKey =
+            vm.isShortsPlayer ? \AppSettings.shortsYandexVOTKeepOriginalAudio : \.yandexVOTKeepOriginalAudio
         Divider()
         VStack(alignment: .leading, spacing: 10) {
             Toggle(
@@ -153,9 +156,9 @@ struct PlayerAudioTrackPicker: View {
                 Toggle(
                     "Lively Voices",
                     isOn: Binding(
-                        get: { store.settings.yandexVOTLivelyVoice },
+                        get: { store.settings[keyPath: livelyVoiceKey] },
                         set: { isOn in
-                            store.settings.yandexVOTLivelyVoice = isOn
+                            store.settings[keyPath: livelyVoiceKey] = isOn
                             vm.updateSettings(store.settings)
                             if vm.isVoiceOverActive { vm.restartVoiceOver() }
                         }
@@ -166,9 +169,9 @@ struct PlayerAudioTrackPicker: View {
             Toggle(
                 "Original Audio in Background",
                 isOn: Binding(
-                    get: { store.settings.yandexVOTKeepOriginalAudio },
+                    get: { store.settings[keyPath: originalAudioKey] },
                     set: { isOn in
-                        store.settings.yandexVOTKeepOriginalAudio = isOn
+                        store.settings[keyPath: originalAudioKey] = isOn
                         vm.updateSettings(store.settings)
                         vm.voiceOver.keepsOriginalAudio = isOn
                     }
@@ -197,20 +200,21 @@ struct PlayerAudioTrackPicker: View {
     }
 
     private var translationLanguagePicker: some View {
-        Picker(
+        let languageKey = vm.isShortsPlayer ? \AppSettings.shortsPreferredAudioLanguage : \.preferredAudioLanguage
+        return Picker(
             "Default Audio Language",
             selection: Binding(
-                get: { store.settings.preferredAudioLanguage },
+                get: { store.settings[keyPath: languageKey] },
                 set: { language in
                     let wasActive = vm.isVoiceOverActive
-                    store.settings.preferredAudioLanguage = language
+                    store.settings[keyPath: languageKey] = language
                     vm.updateSettings(store.settings)
                     if wasActive { vm.restartVoiceOver() }
                 }
             )
         ) {
             Text("Auto (System Default)").tag(nil as String?)
-            if let language = store.settings.preferredAudioLanguage,
+            if let language = store.settings[keyPath: languageKey],
                 !YandexVOTClient.targetLanguages.contains(language)
             {
                 Text(Locale.current.localizedString(forLanguageCode: language) ?? language)

@@ -41,6 +41,11 @@ enum AccessibilityID {
     static var settingsYandexVOTKeepOriginalAudioToggle: String { "settings.yandexVOTKeepOriginalAudioToggle" }
     static var settingsYandexVOTLivelyVoiceToggle: String { "settings.yandexVOTLivelyVoiceToggle" }
     static var settingsYandexVOTToggle: String { "settings.yandexVOTToggle" }
+    static var settingsPreferredAudioLanguageRow: String { "settings.preferredAudioLanguageRow" }
+    static var settingsShortsAudioLanguageRow: String { "settings.shortsAudioLanguageRow" }
+    static var settingsShortsYandexVOTToggle: String { "settings.shortsYandexVOTToggle" }
+    static var settingsShortsLivelyVoiceToggle: String { "settings.shortsLivelyVoiceToggle" }
+    static var settingsShortsKeepOriginalAudioToggle: String { "settings.shortsKeepOriginalAudioToggle" }
     static var settingsYandexVOTTokenField: String { "settings.yandexVOTTokenField" }
     static var settingsPINLock: String { "settingsPINLock" }
 

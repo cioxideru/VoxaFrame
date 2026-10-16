@@ -49,6 +49,10 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 ## OQ-0005 — Playback device acceptance
 
 - Status: open; owner: playback/test maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
+- [PLAN-0013](exec-plans/completed/shorts-translation-settings.md) separates Shorts
+  translation preferences. Migration, persistence and isolation are covered by native
+  tests and iPad Simulator controls checks; live Yandex audio/synchronization and
+  physical-device acceptance remain unverified.
 - [PLAN-0012](exec-plans/completed/shorts-account-controls.md) adds account-sourced
   Shorts and the regular player's translation/audio and Fit/Fill controls. Live
   signed-in recommendation relevance, Yandex service audio/synchronization and

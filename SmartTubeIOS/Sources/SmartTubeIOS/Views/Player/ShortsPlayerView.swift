@@ -49,7 +49,7 @@ public struct ShortsPlayerView: View {
         self.api = api
         self._videos = State(initialValue: videos)
         self._currentIndex = State(initialValue: min(max(startIndex, 0), max(videos.count - 1, 0)))
-        self._vm = State(initialValue: PlaybackViewModel(api: api))
+        self._vm = State(initialValue: PlaybackViewModel(api: api, isShortsPlayer: true))
     }
 
     public var body: some View {

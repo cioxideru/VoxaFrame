@@ -27,6 +27,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0013: Independent Shorts translation settings](completed/shorts-translation-settings.md) — separate persisted preferences; native checks, four focused iPad UI tests and iOS/tvOS builds pass.
+
 - [PLAN-0012: Account Shorts and shared playback controls](completed/shorts-account-controls.md) — account sources, bounded continuation, shared translation/audio and Fit/Fill; native checks, five iPad UI tests and iOS/tvOS builds pass.
 
 - [PLAN-0011: Resource ownership and lifecycle](completed/resource-quality.md) — twelve sequential fixes; native and iPad Simulator package tests, nine iPad UI tests and iOS/tvOS builds pass; physical device checks remain deferred.
@@ -44,4 +46,4 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0001: TOS player iOS port](completed/tos-player-ios-plan.md) — historically delivered; superseded by [ADR-0010](../adr/0010-remove-iframe-player.md).
 - [PLAN-0002 / #89: Shorts duration guard](completed/task-89-short-detection-issue.md) — fix and regression tests present.
 
-Reviewed against the working tree on 2026-10-16. Historical closure is not a fresh test result.
+Reviewed against the working tree on 2026-10-17. Historical closure is not a fresh test result.

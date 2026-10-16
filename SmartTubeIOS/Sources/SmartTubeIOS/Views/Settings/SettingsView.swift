@@ -46,6 +46,7 @@ public struct SettingsView: View {
             playerSection
             videoCodecsSection
             yandexVOTSection
+            shortsTranslationSection
             generalSection
             uiSection
             sponsorBlockSection
@@ -413,23 +414,8 @@ extension SettingsView {
     private var yandexVOTSection: some View {
         @Bindable var store = store
         return Section {
-            Picker("Default Audio Language", selection: $store.settings.preferredAudioLanguage) {
-                Text("Auto (System Default)").tag(nil as String?)
-                Divider()
-                Text("Russian").tag("ru" as String?)
-                Text("English").tag("en" as String?)
-                Text("Kazakh").tag("kk" as String?)
-                Text("Spanish").tag("es" as String?)
-                Text("French").tag("fr" as String?)
-                Text("German").tag("de" as String?)
-                Text("Japanese").tag("ja" as String?)
-                Text("Korean").tag("ko" as String?)
-                Text("Portuguese (Brazil)").tag("pt-BR" as String?)
-                Text("Chinese (Simplified)").tag("zh-Hans" as String?)
-                Divider()
-                Text("Original Track Only").tag("original" as String?)
-            }
-            .accessibilityIdentifier("settings.preferredAudioLanguageRow")
+            audioLanguagePicker(selection: $store.settings.preferredAudioLanguage)
+                .accessibilityIdentifier(AccessibilityID.settingsPreferredAudioLanguageRow)
             Toggle("Yandex Voice-Over Translation", isOn: $store.settings.yandexVOTEnabled)
                 .accessibilityIdentifier(AccessibilityID.settingsYandexVOTToggle)
             if store.settings.yandexVOTEnabled {
@@ -438,7 +424,9 @@ extension SettingsView {
                 Toggle("Original Audio in Background", isOn: $store.settings.yandexVOTKeepOriginalAudio)
                     .accessibilityIdentifier(AccessibilityID.settingsYandexVOTKeepOriginalAudioToggle)
             }
-            if store.settings.yandexVOTEnabled, store.settings.yandexVOTLivelyVoice {
+            if (store.settings.yandexVOTEnabled && store.settings.yandexVOTLivelyVoice)
+                || (store.settings.shortsYandexVOTEnabled && store.settings.shortsYandexVOTLivelyVoice)
+            {
                 SecureField("Yandex OAuth Token", text: $yandexToken)
                     .autocorrectionDisabled()
                     .onAppear { yandexToken = TokenManager.yandexVOTToken() ?? "" }
@@ -469,6 +457,47 @@ extension SettingsView {
             Text(
                 "The video's original or dubbed track in this language is played instead of the system language. With Yandex translation on, a video without such a track is voice-over translated by Yandex into Russian, English or Kazakh. AVPlayer only (turn off the IFrame Player). A video Yandex hasn't translated before stays paused for a few minutes until the translation is ready. Lively voices: Russian only, needs the token."
             )
+        }
+    }
+
+    private var shortsTranslationSection: some View {
+        @Bindable var store = store
+        return Section {
+            audioLanguagePicker(selection: $store.settings.shortsPreferredAudioLanguage)
+                .accessibilityIdentifier(AccessibilityID.settingsShortsAudioLanguageRow)
+            Toggle("Yandex Voice-Over Translation", isOn: $store.settings.shortsYandexVOTEnabled)
+                .accessibilityIdentifier(AccessibilityID.settingsShortsYandexVOTToggle)
+            if store.settings.shortsYandexVOTEnabled {
+                Toggle("Lively Voices", isOn: $store.settings.shortsYandexVOTLivelyVoice)
+                    .accessibilityIdentifier(AccessibilityID.settingsShortsLivelyVoiceToggle)
+                Toggle("Original Audio in Background", isOn: $store.settings.shortsYandexVOTKeepOriginalAudio)
+                    .accessibilityIdentifier(AccessibilityID.settingsShortsKeepOriginalAudioToggle)
+            }
+        } header: {
+            HStack {
+                Text("Shorts")
+                Text(verbatim: "·")  // verbatim: punctuation separating two localized labels
+                Text("Audio Language")
+            }
+        }
+    }
+
+    private func audioLanguagePicker(selection: Binding<String?>) -> some View {
+        Picker("Default Audio Language", selection: selection) {
+            Text("Auto (System Default)").tag(nil as String?)
+            Divider()
+            Text("Russian").tag("ru" as String?)
+            Text("English").tag("en" as String?)
+            Text("Kazakh").tag("kk" as String?)
+            Text("Spanish").tag("es" as String?)
+            Text("French").tag("fr" as String?)
+            Text("German").tag("de" as String?)
+            Text("Japanese").tag("ja" as String?)
+            Text("Korean").tag("ko" as String?)
+            Text("Portuguese (Brazil)").tag("pt-BR" as String?)
+            Text("Chinese (Simplified)").tag("zh-Hans" as String?)
+            Divider()
+            Text("Original Track Only").tag("original" as String?)
         }
     }
 

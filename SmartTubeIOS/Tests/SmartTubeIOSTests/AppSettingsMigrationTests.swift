@@ -20,6 +20,47 @@ import Testing
 @Suite("AppSettings forward-compatible decoding (#181)")
 struct AppSettingsMigrationTests {
 
+    @Test("Legacy translation preferences seed an independent Shorts copy")
+    func migrateShortsTranslationPreferences() throws {
+        let json = Data(
+            """
+            {"preferredAudioLanguage":"ru","yandexVOTEnabled":true,
+             "yandexVOTLivelyVoice":true,"yandexVOTKeepOriginalAudio":false,"playbackSpeed":1.5}
+            """.utf8)
+        let settings = try JSONDecoder().decode(AppSettings.self, from: json)
+        #expect(settings.shortsPreferredAudioLanguage == "ru")
+        #expect(settings.shortsYandexVOTEnabled)
+        #expect(settings.shortsYandexVOTLivelyVoice)
+        #expect(!settings.shortsYandexVOTKeepOriginalAudio)
+        #expect(settings.preferredAudioLanguage == "ru")
+        #expect(settings.playbackSpeed == 1.5)
+    }
+
+    @Test(
+        "Shorts Auto and disabled choices survive saves and regular-player changes",
+        arguments: [nil, "en"] as [String?])
+    func independentShortsPreferencesRoundTrip(language: String?) throws {
+        var settings = AppSettings()
+        settings.preferredAudioLanguage = "ru"
+        settings.yandexVOTEnabled = true
+        settings.yandexVOTLivelyVoice = true
+        settings.shortsPreferredAudioLanguage = language
+        settings.shortsYandexVOTKeepOriginalAudio = false
+        let data = try JSONEncoder().encode(settings)
+        var restored = try JSONDecoder().decode(AppSettings.self, from: data)
+        restored.preferredAudioLanguage = "kk"
+        let savedAgain = try JSONEncoder().encode(restored)
+        let reloaded = try JSONDecoder().decode(AppSettings.self, from: savedAgain)
+        #expect(reloaded.shortsPreferredAudioLanguage == language)
+        #expect(!reloaded.shortsYandexVOTEnabled)
+        #expect(!reloaded.shortsYandexVOTLivelyVoice)
+        #expect(!reloaded.shortsYandexVOTKeepOriginalAudio)
+        #expect(reloaded.preferredAudioLanguage == "kk")
+        #expect(reloaded.yandexVOTEnabled)
+        #expect(reloaded.yandexVOTLivelyVoice)
+        #expect(reloaded.yandexVOTKeepOriginalAudio)
+    }
+
     // MARK: - Missing new field → default, other fields preserved
 
     /// Simulates loading settings stored by an old app version that doesn't have

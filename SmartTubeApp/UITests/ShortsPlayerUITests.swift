@@ -333,7 +333,22 @@ final class ShortsAccountControlsUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 8), .completed)
     }
 
-    func testSharedAudioTranslationAndScaleSurviveNextRotationAndRelaunch() {
+    private func openRegularPlayerWithRussianLanguage() {
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-shorts" }
+        app.launch()
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        let language = app.buttons[AccessibilityID.settingsPreferredAudioLanguageRow]
+        UITestHelpers.scrollUntilVisible(language, in: app.collectionViews.firstMatch)
+        XCTAssertTrue(language.waitForExistence(timeout: 5))
+        language.tap()
+        app.buttons["Russian"].firstMatch.tap()
+        app.terminate()
+        app.launchArguments.append("--uitesting-deeplink-video=fKopy74weus")
+        app.launch()
+    }
+
+    func testIndependentShortsTranslationAndScaleSurviveNextRotationAndRelaunch() {
         app.launch()
         XCTAssertTrue(scale.waitForExistence(timeout: 15))
         XCTAssertEqual(scale.value as? String, "Fit (letterbox)")
@@ -349,6 +364,12 @@ final class ShortsAccountControlsUITests: XCTestCase {
         XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].waitForExistence(timeout: 5))
         XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerLivelyVoiceToggle].exists)
         XCTAssertTrue(app.switches[AccessibilityID.playerAudioKeepOriginalAudioToggle].exists)
+        let livelyVoice = app.switches[AccessibilityID.playerAudioTrackPickerLivelyVoiceToggle]
+        let originalAudio = app.switches[AccessibilityID.playerAudioKeepOriginalAudioToggle]
+        livelyVoice.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        originalAudio.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        XCTAssertEqual(livelyVoice.value as? String, "1")
+        XCTAssertEqual(originalAudio.value as? String, "0")
         let screenshot = XCTAttachment(screenshot: app.screenshot())
         screenshot.name = "Shorts audio and Yandex controls"
         screenshot.lifetime = .keepAlways
@@ -364,6 +385,8 @@ final class ShortsAccountControlsUITests: XCTestCase {
         XCTAssertEqual(scale.value as? String, "Fill (crop)")
         audio.tap()
         XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.switches[AccessibilityID.playerAudioTrackPickerLivelyVoiceToggle].value as? String, "1")
+        XCTAssertEqual(app.switches[AccessibilityID.playerAudioKeepOriginalAudioToggle].value as? String, "0")
         app.buttons["Cancel"].firstMatch.tap()
 
         app.terminate()
@@ -374,15 +397,27 @@ final class ShortsAccountControlsUITests: XCTestCase {
         audio.tap()
         XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].waitForExistence(timeout: 5))
 
-        app.terminate()
-        app.launchArguments.removeAll { $0 == "--uitesting-shorts" }
-        app.launchArguments.append("--uitesting-deeplink-video=fKopy74weus")
-        app.launch()
+        openRegularPlayerWithRussianLanguage()
         let regularAudio = app.buttons[AccessibilityID.playerQuickAudioButton]
         XCTAssertTrue(regularAudio.waitForExistence(timeout: 20))
         regularAudio.tap()
+        XCTAssertTrue(language.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.switches[AccessibilityID.playerAudioTrackPickerLivelyVoiceToggle].value as? String, "0")
+        XCTAssertEqual(app.switches[AccessibilityID.playerAudioKeepOriginalAudioToggle].value as? String, "1")
+        language.tap()
+        app.buttons["English"].firstMatch.tap()
+
+        app.terminate()
+        app.launchArguments.removeAll { $0.hasPrefix("--uitesting-deeplink-video=") }
+        app.launchArguments.append("--uitesting-shorts")
+        app.launch()
+        XCTAssertTrue(audio.waitForExistence(timeout: 15))
+        audio.tap()
         XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].waitForExistence(timeout: 5))
         XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].label.contains("Russian"))
+        XCTAssertEqual(app.switches[AccessibilityID.playerAudioTrackPickerLivelyVoiceToggle].value as? String, "1")
+        XCTAssertEqual(app.switches[AccessibilityID.playerAudioKeepOriginalAudioToggle].value as? String, "0")
     }
 
     func testShortsPaginationAdvancesBeyondFirstBatch() {

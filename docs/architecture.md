@@ -3,7 +3,7 @@
 > How to update this doc: use `scripts/metrics.sh` for measured source metrics;
 > update the target list whenever WS8 changes `Package.swift` targets. This doc describes
 > the system as it is. Planned work and verification gaps are in [open questions](OPEN_QUESTIONS.md).
-> Source boundaries and ownership updated on 2026-10-16; physical-device acceptance remains separate.
+> Source boundaries and ownership updated on 2026-10-17; physical-device acceptance remains separate.
 
 ## Containers
 
@@ -90,8 +90,13 @@ PiP controller and delegate. Fullscreen and mini-player containers attach that
 same layer only when their presentation is active. PiP entry dismisses fullscreen;
 the UIKit presenter confirms restoration after presentation and layout finish.
 Shorts own a separate playback view model and stop the regular player on entry.
-Their audio/translation picker is shared with the regular player, and both read the
-same persisted Fit/Fill setting. Account Shorts come from authenticated subscription
+Their audio/translation picker is shared with the regular player. `AppSettings`
+stores independent Shorts language, automatic translation, lively voice and original
+audio choices, seeded from legacy settings once on upgrade. The Shorts playback model
+resolves those preferences on initialization and every settings update; the shared
+picker writes only the active player's preferences. Both reuse the same Yandex service
+and Keychain token, and read the same persisted Fit/Fill setting.
+Account Shorts come from authenticated subscription
 pages plus Shorts present in Home recommendations; signed-out discovery uses search.
 Home and Recommended reuse their subscription response instead of loading it twice.
 The Shorts player retains source-tagged continuation tokens and discards them when

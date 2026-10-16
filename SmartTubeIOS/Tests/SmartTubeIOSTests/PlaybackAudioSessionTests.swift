@@ -45,6 +45,41 @@ private final class AudioSessionDriverProbe: @unchecked Sendable {
 
 @Suite("Serialized playback audio session (PLAN-0011)")
 struct PlaybackAudioSessionTests {
+    @Test @MainActor func shortsTranslationScopeSurvivesSettingsUpdates() {
+        var settings = AppSettings()
+        settings.preferredAudioLanguage = "ru"
+        settings.shortsPreferredAudioLanguage = "en"
+        settings.shortsYandexVOTEnabled = true
+        settings.shortsYandexVOTLivelyVoice = true
+        settings.shortsYandexVOTKeepOriginalAudio = false
+        settings.playbackSpeed = 1.5
+        settings.videoGravityMode = .fill
+        let regular = PlaybackViewModel(settings: settings)
+        let shorts = PlaybackViewModel(settings: settings, isShortsPlayer: true)
+        defer {
+            regular.stop()
+            shorts.stop()
+        }
+        #expect(regular.voiceOverTargetLanguage == "ru")
+        #expect(!regular.settings.yandexVOTEnabled)
+        #expect(shorts.voiceOverTargetLanguage == "en")
+        #expect(shorts.settings.yandexVOTEnabled)
+        #expect(shorts.settings.yandexVOTLivelyVoice)
+        #expect(!shorts.settings.yandexVOTKeepOriginalAudio)
+        #expect(shorts.settings.playbackSpeed == 1.5)
+        #expect(shorts.settings.videoGravityMode == .fill)
+
+        settings.preferredAudioLanguage = "kk"
+        settings.yandexVOTEnabled = true
+        settings.shortsYandexVOTEnabled = false
+        regular.updateSettings(settings)
+        shorts.updateSettings(settings)
+        #expect(regular.voiceOverTargetLanguage == "kk")
+        #expect(regular.settings.yandexVOTEnabled)
+        #expect(shorts.voiceOverTargetLanguage == "en")
+        #expect(!shorts.settings.yandexVOTEnabled)
+    }
+
     @Test @MainActor func voiceOverMuteSurvivesCancellationAndReplacement() {
         let translation = VoiceOverTranslationController()
         let player = AVPlayer()

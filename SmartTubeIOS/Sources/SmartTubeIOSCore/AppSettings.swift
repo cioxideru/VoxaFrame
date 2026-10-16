@@ -150,6 +150,22 @@ public struct AppSettings: Codable {
     /// without music or effects); off mutes it.
     public var yandexVOTKeepOriginalAudio: Bool
 
+    // MARK: Shorts audio and translation
+    public var shortsPreferredAudioLanguage: String?
+    public var shortsYandexVOTEnabled: Bool
+    public var shortsYandexVOTLivelyVoice: Bool
+    public var shortsYandexVOTKeepOriginalAudio: Bool
+
+    /// Resolve only the audio/translation preferences at the Shorts playback boundary.
+    public var shortsPlaybackSettings: AppSettings {
+        var result = self
+        result.preferredAudioLanguage = shortsPreferredAudioLanguage
+        result.yandexVOTEnabled = shortsYandexVOTEnabled
+        result.yandexVOTLivelyVoice = shortsYandexVOTLivelyVoice
+        result.yandexVOTKeepOriginalAudio = shortsYandexVOTKeepOriginalAudio
+        return result
+    }
+
     // MARK: Video codecs (AVPlayer, VISIONOS HLS)
     /// Plays the VP9 ladder (up to 2160p) when the device has a VP9 decoder.
     public var vp9Enabled: Bool
@@ -304,6 +320,10 @@ public struct AppSettings: Codable {
         yandexVOTEnabled = false
         yandexVOTLivelyVoice = false
         yandexVOTKeepOriginalAudio = true
+        shortsPreferredAudioLanguage = nil
+        shortsYandexVOTEnabled = false
+        shortsYandexVOTLivelyVoice = false
+        shortsYandexVOTKeepOriginalAudio = true
         vp9Enabled = true
         h264Enabled = false
         preferredCaptionLanguage = nil
@@ -381,6 +401,10 @@ extension AppSettings {
         case yandexVOTEnabled
         case yandexVOTLivelyVoice
         case yandexVOTKeepOriginalAudio
+        case shortsPreferredAudioLanguage
+        case shortsYandexVOTEnabled
+        case shortsYandexVOTLivelyVoice
+        case shortsYandexVOTKeepOriginalAudio
         case vp9Enabled
         case h264Enabled
         case preferredCaptionLanguage
@@ -393,6 +417,7 @@ extension AppSettings {
 
     public init(from decoder: Decoder) throws {
         let d = AppSettings()  // defaults for any missing/mismatched field
+        self = d
         let c = try decoder.container(keyedBy: CodingKeys.self)
         settingsVersion = c.safeDecode(Int.self, forKey: .settingsVersion, default: 0)
         preferredQuality = c.safeDecode(VideoQuality.self, forKey: .preferredQuality, default: d.preferredQuality)
@@ -465,5 +490,19 @@ extension AppSettings {
         audioOnlyMode = c.safeDecode(Bool.self, forKey: .audioOnlyMode, default: d.audioOnlyMode)
         preferH264 = c.safeDecode(Bool.self, forKey: .preferH264, default: d.preferH264)
         iCloudSyncEnabled = c.safeDecode(Bool.self, forKey: .iCloudSyncEnabled, default: d.iCloudSyncEnabled)
+        decodeShortsTranslation(from: c)
+    }
+
+    private mutating func decodeShortsTranslation(from container: KeyedDecodingContainer<CodingKeys>) {
+        // Copy legacy choices once; an omitted optional language in a new profile means Auto.
+        shortsPreferredAudioLanguage = container.safeDecode(
+            String?.self, forKey: .shortsPreferredAudioLanguage,
+            default: container.contains(.shortsYandexVOTEnabled) ? nil : preferredAudioLanguage)
+        shortsYandexVOTEnabled = container.safeDecode(
+            Bool.self, forKey: .shortsYandexVOTEnabled, default: yandexVOTEnabled)
+        shortsYandexVOTLivelyVoice = container.safeDecode(
+            Bool.self, forKey: .shortsYandexVOTLivelyVoice, default: yandexVOTLivelyVoice)
+        shortsYandexVOTKeepOriginalAudio = container.safeDecode(
+            Bool.self, forKey: .shortsYandexVOTKeepOriginalAudio, default: yandexVOTKeepOriginalAudio)
     }
 }

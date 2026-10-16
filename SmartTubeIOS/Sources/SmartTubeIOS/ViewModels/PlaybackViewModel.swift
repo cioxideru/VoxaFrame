@@ -463,17 +463,21 @@ public final class PlaybackViewModel {
     var hasAuthToken: Bool = false
     var currentAuthToken: String? = nil
 
+    let isShortsPlayer: Bool
+
     public init(
         api: InnerTubeAPI = InnerTubeAPI(),
         sponsorBlock: SponsorBlockService = SponsorBlockService(),
         deArrow: DeArrowService = DeArrowService(),
-        settings: AppSettings = AppSettings()
+        settings: AppSettings = AppSettings(),
+        isShortsPlayer: Bool = false
     ) {
         self.api = api
         self.tracker = WatchtimeTracker(api: api)
         self.sponsorBlock = sponsorBlock
         self.deArrow = deArrow
-        self.settings = settings
+        self.isShortsPlayer = isShortsPlayer
+        self.settings = isShortsPlayer ? settings.shortsPlaybackSettings : settings
 
         // Create managers before any other setup (they hold no back-references yet).
         let sbm = SponsorBlockSkipManager()
@@ -543,7 +547,7 @@ public final class PlaybackViewModel {
     public var currentVideoId: String? { currentVideo?.id }
 
     public func updateSettings(_ newSettings: AppSettings) {
-        settings = newSettings
+        settings = isShortsPlayer ? newSettings.shortsPlaybackSettings : newSettings
         isAudioOnlyMode = newSettings.audioOnlyMode
     }
 }

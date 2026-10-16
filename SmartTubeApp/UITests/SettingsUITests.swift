@@ -2,13 +2,8 @@ import XCTest
 
 // MARK: - SettingsUITests
 //
-// All tests except testSignInButtonVisibleWhenSignedOut have moved to
-// HomeFeedAndSettingsUITests.swift (combined with HomeFeedNoDuplicatesUITests
-// for a single shared app launch).
-//
-// testSignInButtonVisibleWhenSignedOut is kept here because it deliberately
-// terminates and re-launches the app with --uitesting-sign-out and cannot
-// share state with other tests.
+// Relaunch and reset-sensitive settings tests live here; shared-launch checks
+// remain in HomeFeedAndSettingsUITests.swift.
 
 final class SettingsUITests: XCTestCase {
 
@@ -37,5 +32,37 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(
             signInEl.waitForExistence(timeout: 5),
             "'Sign in with Google' button must be visible when the session is cleared via --uitesting-sign-out")
+    }
+
+    func testShortsTranslationDefaultsAreIndependentAndPersist() {
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        let shortsToggle = app.switches[AccessibilityID.settingsShortsYandexVOTToggle]
+        let regularToggle = app.switches[AccessibilityID.settingsYandexVOTToggle]
+        let form = app.collectionViews.firstMatch
+        UITestHelpers.scrollUntilVisible(shortsToggle, in: form, maxSwipes: 14)
+        XCTAssertTrue(shortsToggle.waitForExistence(timeout: 5))
+        XCTAssertEqual(shortsToggle.value as? String, "0")
+        shortsToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        XCTAssertEqual(shortsToggle.value as? String, "1")
+        let original = app.switches[AccessibilityID.settingsShortsKeepOriginalAudioToggle]
+        UITestHelpers.scrollUntilVisible(original, in: form)
+        XCTAssertTrue(original.waitForExistence(timeout: 5))
+        original.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        XCTAssertEqual(original.value as? String, "0")
+        XCTAssertEqual(regularToggle.value as? String, "0")
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Separate Shorts translation settings"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
+        app.launch()
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.scrollUntilVisible(shortsToggle, in: form, maxSwipes: 14)
+        XCTAssertEqual(shortsToggle.value as? String, "1")
+        UITestHelpers.scrollUntilVisible(original, in: form)
+        XCTAssertEqual(original.value as? String, "0")
+        XCTAssertEqual(regularToggle.value as? String, "0")
     }
 }
