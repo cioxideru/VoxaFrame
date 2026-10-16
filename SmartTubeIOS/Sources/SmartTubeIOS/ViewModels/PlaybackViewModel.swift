@@ -265,6 +265,7 @@ public final class PlaybackViewModel {
     @ObservationIgnored nonisolated(unsafe) var timeObserver: Any?
     // Registered and removed on MainActor; deinit only removes the final token after all owners are gone.
     @ObservationIgnored nonisolated(unsafe) var audioSessionObserver: Any?
+    @ObservationIgnored var audioSessionNotificationCenter = NotificationCenter.default
     // Same lifecycle as audioSessionObserver: set on MainActor, deinit removes the final token.
     @ObservationIgnored nonisolated(unsafe) var routeChangeObserver: Any?
     @ObservationIgnored nonisolated(unsafe) var rateObserver: NSKeyValueObservation?
@@ -519,7 +520,7 @@ public final class PlaybackViewModel {
         if let obs = timeObserver { player.removeTimeObserver(obs) }
         rateObserver?.invalidate()
         airPlayObserver?.invalidate()
-        if let obs = audioSessionObserver { NotificationCenter.default.removeObserver(obs) }
+        if let obs = audioSessionObserver { audioSessionNotificationCenter.removeObserver(obs) }
         if let obs = routeChangeObserver { NotificationCenter.default.removeObserver(obs) }
         #if canImport(UIKit)
         let center = MPRemoteCommandCenter.shared()

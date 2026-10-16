@@ -14,6 +14,7 @@ import MediaPlayer
 /// Regression test for Task #233: lock screen Now Playing widget was missing
 /// next/previous buttons because nextTrackCommand / previousTrackCommand were never
 /// registered in setupRemoteCommandCenter().
+@Suite(.serialized)
 @MainActor
 struct NowPlayingCommandsTests {
 
@@ -82,7 +83,7 @@ struct NowPlayingCommandsTests {
         let vm = PlaybackViewModel()
         vm.setupRemoteCommandCenter()
 
-        let thumbURL = URL(string: "https://i.ytimg.com/vi/testArtwork/hqdefault.jpg")!
+        let thumbURL = URL(fileURLWithPath: "/dev/null")
         let video = Video(id: "artworkVideo", title: "Art", channelTitle: "Chan", thumbnailURL: thumbURL)
         vm.currentVideo = video
         vm.updateNowPlayingInfo()
@@ -97,7 +98,7 @@ struct NowPlayingCommandsTests {
         let vm = PlaybackViewModel()
         vm.setupRemoteCommandCenter()
 
-        let thumbURL = URL(string: "https://i.ytimg.com/vi/sameVideo/hqdefault.jpg")!
+        let thumbURL = URL(fileURLWithPath: "/dev/null")
         let video = Video(id: "sameVideo", title: "Same", channelTitle: "Chan", thumbnailURL: thumbURL)
         vm.currentVideo = video
 

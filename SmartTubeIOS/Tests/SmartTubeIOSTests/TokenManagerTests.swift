@@ -1,4 +1,5 @@
 import Foundation
+import Security
 import Testing
 
 @testable import SmartTubeIOSCore
@@ -14,10 +15,28 @@ import Testing
 @Suite("TokenManager")
 struct TokenManagerTests {
 
+    private func requireKeychainAccess() throws {
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: "test-tm-host-probe-\(UUID().uuidString)",
+            kSecAttrAccount: "probe",
+        ]
+        var insertion = query
+        insertion[kSecValueData] = Data([0])
+        insertion[kSecAttrAccessible] = kSecAttrAccessibleAfterFirstUnlock
+        let status = SecItemAdd(insertion as CFDictionary, nil)
+        defer { SecItemDelete(query as CFDictionary) }
+        try #require(
+            status == errSecSuccess,
+            "Test host cannot write Keychain: OSStatus=\(status), \(SecCopyErrorMessageString(status, nil) as String? ?? "unknown")"
+        )
+    }
+
     // MARK: - 1. Keychain roundtrip
 
     @Test("setToken persists all fields to Keychain across instances")
     func setTokenPersistsToKeychain() async throws {
+        try requireKeychainAccess()
         let service = "test-tm-\(UUID().uuidString)"
         let tm = TokenManager(keychainService: service)
         let expiry = Date(timeIntervalSinceNow: 3600)

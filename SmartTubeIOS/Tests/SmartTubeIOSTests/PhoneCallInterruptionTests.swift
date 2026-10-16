@@ -56,24 +56,35 @@ struct PhoneCallInterruptionFlagTests {
 @MainActor
 struct PhoneCallInterruptionNotificationTests {
 
+    private func makePlayer(center: NotificationCenter) -> PlaybackViewModel {
+        let vm = PlaybackViewModel()
+        vm.audioSession = PlaybackAudioSession(driver: .init(configure: {}, setActive: { _ in }))
+        vm.player.replaceCurrentItem(with: AVPlayerItem(asset: AVMutableComposition()))
+        vm.setupAudioSessionObserver(center: center)
+        return vm
+    }
+
+    private func waitUntil(_ predicate: () -> Bool) async -> Bool {
+        let deadline = ContinuousClock.now + .seconds(2)
+        while !predicate(), ContinuousClock.now < deadline { await Task.yield() }
+        return predicate()
+    }
+
     @Test("Interruption .began pauses the player and sets interruption flags")
     func interruptionBeganPausesAndSetsFlags() async {
-        let vm = PlaybackViewModel()
+        let center = NotificationCenter()
+        let vm = makePlayer(center: center)
+        defer { vm.stop() }
         vm.isPlaying = true
 
-        NotificationCenter.default.post(
+        center.post(
             name: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance(),
             userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue]
         )
 
-        var observed = false
-        for _ in 0..<50 {
-            if vm.isHandlingAudioInterruption && vm.wasPlayingBeforeInterruption && !vm.isPlaying {
-                observed = true
-                break
-            }
-            try? await Task.sleep(for: .milliseconds(10))
+        let observed = await waitUntil {
+            vm.isHandlingAudioInterruption && vm.wasPlayingBeforeInterruption && !vm.isPlaying
         }
 
         #expect(
@@ -84,21 +95,20 @@ struct PhoneCallInterruptionNotificationTests {
 
     @Test("Interruption .ended with shouldResume resumes playback")
     func interruptionEndedResumesWhenShouldResume() async {
-        let vm = PlaybackViewModel()
+        let center = NotificationCenter()
+        let vm = makePlayer(center: center)
+        defer { vm.stop() }
         vm.isPlaying = true
 
-        NotificationCenter.default.post(
+        center.post(
             name: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance(),
             userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue]
         )
 
-        for _ in 0..<50 {
-            if vm.isHandlingAudioInterruption { break }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        #expect(await waitUntil { vm.isHandlingAudioInterruption })
 
-        NotificationCenter.default.post(
+        center.post(
             name: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance(),
             userInfo: [
@@ -107,14 +117,7 @@ struct PhoneCallInterruptionNotificationTests {
             ]
         )
 
-        var resumed = false
-        for _ in 0..<50 {
-            if vm.isPlaying && !vm.isHandlingAudioInterruption {
-                resumed = true
-                break
-            }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        let resumed = await waitUntil { vm.isPlaying && !vm.isHandlingAudioInterruption }
 
         #expect(resumed, "Expected isPlaying=true and isHandlingAudioInterruption=false after .ended with shouldResume")
     }

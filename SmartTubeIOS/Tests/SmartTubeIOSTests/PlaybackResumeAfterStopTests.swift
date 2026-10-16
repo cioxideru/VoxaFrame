@@ -36,7 +36,8 @@ struct PlaybackResumeAfterStopTests {
     func togglePlayUnparks() async {
         let vm = PlaybackViewModel()
         vm.audioSession = PlaybackAudioSession(driver: .init(configure: {}, setActive: { _ in }))
-        vm.player.replaceCurrentItem(with: AVPlayerItem(url: URL(fileURLWithPath: "/dev/null")))
+        vm.player.replaceCurrentItem(with: AVPlayerItem(asset: AVMutableComposition()))
+        defer { vm.stop() }
         vm.parkedVideoId = "parked-1"
 
         vm.togglePlayPause()
@@ -49,5 +50,26 @@ struct PlaybackResumeAfterStopTests {
         vm.resume()
         await vm.audioPlaybackTask?.value
         #expect(vm.isPlaying)
+    }
+
+    @Test("A delayed pause notification cannot clear a later resume")
+    func staleRateDropDoesNotPauseResumedPlayer() throws {
+        let vm = PlaybackViewModel()
+        vm.player.replaceCurrentItem(with: AVPlayerItem(asset: AVMutableComposition()))
+        defer { vm.stop() }
+        vm.player.rate = 1
+        vm.isPlaying = true
+        try #require(vm.player.rate == 1)
+
+        vm.handlePlayerRateChange(0)
+
+        #expect(vm.isPlaying)
+        #expect(vm.stallCount == 0)
+        #expect(vm.stallRecoveryTask == nil)
+
+        vm.player.pause()
+        vm.handlePlayerRateChange(0)
+        #expect(!vm.isPlaying)
+        #expect(vm.stallCount == 1)
     }
 }

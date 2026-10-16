@@ -48,6 +48,8 @@ All notable changes to SmartTube are documented here.
   configure the system only when playback starts. Cancelled or superseded requests
   cannot resume a video or deactivate a newer session. Ready-state metadata remains
   available while activation is pending; native transition durations are logged.
+  Delayed pause notifications cannot overwrite a newer resume, and lock-screen
+  next/previous commands take their enabled state from the current queue on setup.
 - **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
   restarts a queued load when the app becomes active. Cancelled queued loads skip
   their requests. Token refresh keeps the current cards and pagination instead

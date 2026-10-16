@@ -57,6 +57,26 @@ it without more RAM.
 - Record `NOT RUN` with a reason and platform in the task evidence. Simulator checks do not
   establish physical-device decoding, PiP, or background-audio behavior; see [OQ-0005](../OPEN_QUESTIONS.md#oq-0005--playback-device-acceptance).
 
+## Package tests on iPad Simulator
+
+The workspace's `SmartTubeIOS` product scheme has no Test action. Run the package's
+own `SmartTubeIOS-Package` scheme from its directory to exercise iOS-only unit tests:
+
+```bash
+cd SmartTubeIOS
+xcodebuild test -scheme SmartTubeIOS-Package -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,id=<simulator-UDID>' \
+  -parallel-testing-enabled NO -collect-test-diagnostics never \
+  '-skip-testing:SmartTubeIOSTests/TokenManagerTests/setTokenPersistsToKeychain()' \
+  CODE_SIGNING_ALLOWED=NO
+```
+
+The one explicit exclusion is a Keychain integration test: the standalone iOS
+test runner lacks its required entitlement (`SecItemAdd` returns -34018). It
+remains enabled in the native macOS package checks. Do not treat an excluded
+test as passed or weaken production Keychain security to accommodate this host.
+The parentheses in the Swift Testing selector are required.
+
 ## Physical iPad performance
 
 `IPadPerformanceUITests` measures five launches to the first responsive frame and five

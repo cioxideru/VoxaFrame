@@ -426,9 +426,8 @@ extension PlaybackViewModel {
         center.nextTrackCommand.removeTarget(nil)
         center.previousTrackCommand.removeTarget(nil)
         #endif
-        for obs in [audioSessionObserver, routeChangeObserver].compactMap({ $0 }) {
-            NotificationCenter.default.removeObserver(obs)
-        }
+        if let audioSessionObserver { audioSessionNotificationCenter.removeObserver(audioSessionObserver) }
+        if let routeChangeObserver { NotificationCenter.default.removeObserver(routeChangeObserver) }
         audioSessionObserver = nil
         routeChangeObserver = nil
         scheduleParkedItemCleanup()

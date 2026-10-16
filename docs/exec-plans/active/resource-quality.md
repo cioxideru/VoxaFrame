@@ -34,11 +34,11 @@ Do not push. Related device acceptance remains in
 | 5 | Stream translation audio through bounded buffers and temporary files | Memory | Implemented and reviewed; 34 focused tests cover bytes/order, bounds and cleanup; full check, 998 tests |
 | 6 | Bound and atomically invalidate WK-HLS cache entries | Memory | Implemented and reviewed; clock-driven expiry, shared LRU, token-only and replay tests; full check, 1005 tests |
 | 7 | Apply History settings to the actual Home section model | Architecture | Implemented and reviewed; initial disabled and cancellation regressions pass; 1007 tests and iOS/tvOS UI-target builds pass; UI execution pending |
-| 8 | Remove stale duplicated current-video state from presentation | Architecture | Implemented and reviewed; Next/Previous/autoplay and recovery tests pass; full check, 1009 tests; iOS build passes; iOS presentation tests await Simulator |
+| 8 | Remove stale duplicated current-video state from presentation | Architecture | Implemented and reviewed; Next/Previous/autoplay and recovery tests pass; full check, 1009 tests; iOS presentation tests pass in the final iPad package run |
 | 9 | Share one Home feed result with its widget | Architecture | Implemented and reviewed; 55 Home tests cover shared publication, auth/foreground ordering and late writes after sign-out; 1012 tests and iOS/tvOS UI-target builds pass |
 | 10 | Move UI/AVPlayer responsibilities out of Core and check the boundary | Architecture | Implemented and reviewed; 65 focused tests include seek cancellation and 192 queue-move comparisons; 1016 tests, import guard and iOS/tvOS UI-target builds pass |
 | 11 | Release inactive parked player/WebView resources on idle/pressure | Memory | Implemented and reviewed; 28 focused tests cover expiry, pressure, cancellation, weak lifetime and reopen; 1028 tests and iOS/tvOS UI-target builds pass |
-| 12 | Measure and serialize audio-session transitions outside UI work | Concurrency | Implemented and reviewed; 30 focused tests cover off-main ordering, cancellation, owner replacement, voice-over and item changes during activation; 1040 tests and iOS/tvOS UI-target builds pass; Simulator acceptance pending |
+| 12 | Measure and serialize audio-session transitions outside UI work | Concurrency | Implemented and reviewed; off-main ordering, cancellation, owner replacement, voice-over and item changes during activation pass; Simulator follow-up fixes stale rate notifications and remote-command state; final native check, 1041 tests; iPad package run, 1050 tests |
 
 ## Verification
 
@@ -47,6 +47,14 @@ timers, buffering, eviction and state ownership. UI tests exercise the compositi
 on iPad Simulator. Run package checks, strict SwiftLint, iOS/tvOS builds including
 UI-test targets, and selected iPad UI regressions before merging. Keep performance
 measurements distinct from correctness tests and do not infer a device speedup.
+
+The final package run uses iPad Pro 11-inch (M5), iOS 26.5. All 1050 selected tests
+pass, including the iOS-only presentation, interruption and remote-command tests.
+Only `TokenManagerTests/setTokenPersistsToKeychain()` is excluded: an explicit
+capability probe confirms `errSecMissingEntitlement` (-34018) in the standalone
+iOS test runner. The actual Keychain roundtrip passes in the full native macOS
+check (1041 tests); production token storage is unchanged. The first iPad run
+exposed stale KVO delivery and remote-command flags, both fixed and regression-tested.
 
 ## Ownership direction
 
@@ -58,7 +66,7 @@ measurements distinct from correctness tests and do not infer a device speedup.
   duplicate Home loading for widgets and settings wired to the wrong feed instance.
 - Cleanup direction: prove behavior per step, then remove the replaced path in that same step.
 
-Next deliverable: iPad Simulator acceptance, then local master integration.
+Next deliverable: iPad Simulator UI acceptance, then local master integration.
 
 Translation transfer keeps six downloaded segment files at most, copies audio with
 a 64 KiB buffer and reads one upload part at a time (a short tail joins the preceding

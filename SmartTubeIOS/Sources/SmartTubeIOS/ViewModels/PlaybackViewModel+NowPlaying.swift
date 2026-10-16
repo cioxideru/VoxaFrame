@@ -25,8 +25,10 @@ private func makeNonisolatedArtworkProvider(image: UIImage) -> (CGSize) -> UIIma
 #if canImport(UIKit)
 extension PlaybackViewModel {
 
-    func setupAudioSessionObserver() {
-        audioSessionObserver = NotificationCenter.default.addObserver(
+    func setupAudioSessionObserver(center: NotificationCenter = .default) {
+        if let audioSessionObserver { audioSessionNotificationCenter.removeObserver(audioSessionObserver) }
+        audioSessionNotificationCenter = center
+        audioSessionObserver = center.addObserver(
             forName: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance(),
             queue: .main
@@ -91,6 +93,8 @@ extension PlaybackViewModel {
 
     func setupRemoteCommandCenter() {
         let center = MPRemoteCommandCenter.shared()
+        center.nextTrackCommand.isEnabled = hasNext
+        center.previousTrackCommand.isEnabled = hasPrevious
         // Remove any existing targets first so this function is safe to call
         // multiple times (e.g. early in loadAsync AND at readyToPlay) without
         // accumulating duplicate handlers.
