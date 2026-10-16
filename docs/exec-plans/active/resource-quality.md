@@ -29,7 +29,7 @@ Do not push. Related device acceptance remains in
 | --- | --- | --- | --- |
 | 1 | Own/cancel background quality upgrade; preserve pause and session identity | Concurrency | Implemented and reviewed; 33 focused tests pass across 6 suites |
 | 2 | Cancel individual BotGuard waiters without blocking fallback timeout | Concurrency | Implemented and reviewed; 4 waiter tests; full check passes, 983 tests |
-| 3 | Bind BotGuard safety timer and completion to one attempt | Concurrency | Pending |
+| 3 | Bind BotGuard safety timer and completion to one attempt | Concurrency | Implemented and reviewed; controlled timer/stale callback tests and JS syntax check; full check, 986 tests |
 | 4 | Separate subscription cancellation/failure from empty results; bound work | Concurrency | Pending |
 | 5 | Stream translation audio through bounded buffers and temporary files | Memory | Pending |
 | 6 | Bound and atomically invalidate WK-HLS cache entries | Memory | Pending |
@@ -58,4 +58,4 @@ measurements distinct from correctness tests and do not infer a device speedup.
   duplicate Home loading for widgets and settings wired to the wrong feed instance.
 - Cleanup direction: prove behavior per step, then remove the replaced path in that same step.
 
-Next deliverable: item 3, attempt-owned BotGuard safety timer.
+Next deliverable: item 4, bounded and cancellation-safe subscription loading.

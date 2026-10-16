@@ -16,6 +16,7 @@ enum PlaybackTuning {
     /// Rapid-stall-loop escalations to exhaustiveRetry allowed per video (reset by load()).
     static let maxStallEscalationsPerVideo = 2
     static let botGuardTimeoutNanoseconds: UInt64 = 6_000_000_000
+    static let botGuardPreparationTimeout: Duration = .seconds(45)
     static let adaptiveVRTimeoutNanoseconds: UInt64 = 2_000_000_000
     static let adaptiveTVTimeoutNanoseconds: UInt64 = 3_000_000_000
     static let adaptiveStartupTimeoutNanoseconds: UInt64 = 1_500_000_000

@@ -46,8 +46,6 @@ public final class BotGuardWebViewRunner: NSObject {
     /// Shared preparation outlives cancellation of any individual caller.
     private var prepareTask: Task<Void, Never>?
     private(set) var prepareWaiters: [UUID: AsyncStream<PrepareResult>.Continuation] = [:]
-    /// The video ID passed to the most recent `launchWebView(videoId:)` call.
-    private var currentVideoId: String = ""
     /// The WEB session's visitorData extracted from the WKWebView's youtube.com context.
     /// Used as the canonical BotGuard identifier when minting tokens, ensuring consistency
     /// with the session that solved the BotGuard challenge.
@@ -55,6 +53,8 @@ public final class BotGuardWebViewRunner: NSObject {
 
     /// Continuation for the active prepare task (set in launchWebView; resumed by WKScriptMessageHandler).
     private var prepareCont: CheckedContinuation<PrepareResult, Never>?
+    private var prepareAttemptID: UUID?
+    private var prepareTimeoutTask: Task<Void, Never>?
     /// Continuation for `mintToken(for:)`.
     private var mintCont: CheckedContinuation<String?, Never>?
 
@@ -82,12 +82,11 @@ public final class BotGuardWebViewRunner: NSObject {
     /// Multiple concurrent callers `await` the same in-progress task — only one WKWebView
     /// is ever launched. Returns `nil` if already ready; returns the `PrepareResult` on first run.
     @discardableResult
-    public func prepare(for videoId: String = "") async -> PrepareResult? {
+    public func prepare(for _: String = "") async -> PrepareResult? {
         await prepare {
             bgwvLog.notice("[BotGuardWV] prepare() starting — will load youtube.com context for BotGuard pipeline")
-            let result = await withCheckedContinuation { (cont: CheckedContinuation<PrepareResult, Never>) in
-                self.prepareCont = cont
-                self.launchWebView(videoId: videoId)
+            let result = await self.runPreparation { attemptID in
+                self.launchWebView(attemptID: attemptID)
             }
             if result.hasMinter {
                 self.mintCallbackReady = true
@@ -205,8 +204,7 @@ public final class BotGuardWebViewRunner: NSObject {
 
     // MARK: - Private: WKWebView setup
 
-    private func launchWebView(videoId: String) {
-        currentVideoId = videoId
+    private func launchWebView(attemptID: UUID) {
         let contentController = WKUserContentController()
         contentController.add(self, name: "botguardRunner")
 
@@ -237,237 +235,223 @@ public final class BotGuardWebViewRunner: NSObject {
         // so fetch() calls to jnn-pa.googleapis.com pass CORS.
         guard let pageURL = URL(string: "https://www.youtube.com/robots.txt") else {
             bgwvLog.error("[BotGuardWV] invalid robots.txt URL")
-            prepareCont?.resume(
-                returning: PrepareResult(
-                    hasMinter: false, websafeToken: nil, ttl: 3600, integrityTokenLen: 0, webVisitorData: ""))
-            prepareCont = nil
+            finishPreparation(attemptID: attemptID)
             return
         }
         var request = URLRequest(url: pageURL, timeoutInterval: 15)
         request.setValue("en-US,en;q=0.9", forHTTPHeaderField: "Accept-Language")
         wv.load(request)
 
-        // Safety timeout — fail after 45 s regardless.
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 45_000_000_000)
-            guard let self, self.prepareCont != nil else { return }
-            bgwvLog.notice("[BotGuardWV] ⚠️ prepare() timed out after 45 s")
-            self.prepareCont?.resume(
-                returning: PrepareResult(
-                    hasMinter: false, websafeToken: nil, ttl: 3600, integrityTokenLen: 0, webVisitorData: ""
-                ))
-            self.prepareCont = nil
-            self.teardownWebView()
-        }
     }
 
     /// JavaScript that runs the full BotGuard WAA pipeline inside WKWebView.
     /// Runs `Create → parse → eval VM → vm.a() → asyncSnapshotFn() → GenerateIT → getMinter → WEB guide`.
-    private static func pipelineJS(videoId _: String) -> String {
-        let apiKey = waaAPIKey
-        let reqKey = requestKey
-        return """
-            (async function runBotGuardInWebKit() {
-                function send(data) {
-                    window.webkit.messageHandlers.botguardRunner.postMessage(JSON.stringify(data));
-                }
-                try {
-                    // ── Phase 1: WAA Create ─────────────────────────────────────────────────
-                    const createResp = await fetch(
-                        'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/Create',
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json+protobuf',
-                                'x-goog-api-key': '\(apiKey)',
-                                'x-user-agent': 'grpc-web-javascript/0.1'
-                            },
-                            body: JSON.stringify(['\(reqKey)'])
-                        }
-                    );
-                    if (!createResp.ok) throw new Error('WAA Create HTTP ' + createResp.status);
-                    const outer = await createResp.json();
+    static func pipelineJS(attemptID: UUID) -> String {
+        pipelineFunction + "('\(attemptID.uuidString)');"
+    }
 
-                    // ── Parse BgUtils v3.2 descrambled challenge ────────────────────────────
-                    let interpreterJS = null, program = '', globalName = '';
+    private static let pipelineFunction = """
+        (async function runBotGuardInWebKit(attemptID) {
+            function send(data) {
+                data.attemptID = attemptID;
+                window.webkit.messageHandlers.botguardRunner.postMessage(JSON.stringify(data));
+            }
+            try {
+                // ── Phase 1: WAA Create ─────────────────────────────────────────────────
+                const createResp = await fetch(
+                    'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/Create',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json+protobuf',
+                            'x-goog-api-key': '\(waaAPIKey)',
+                            'x-user-agent': 'grpc-web-javascript/0.1'
+                        },
+                        body: JSON.stringify(['\(requestKey)'])
+                    }
+                );
+                if (!createResp.ok) throw new Error('WAA Create HTTP ' + createResp.status);
+                const outer = await createResp.json();
 
-                    if (typeof outer[1] === 'string' && outer[1].length > 0) {
-                        // Descramble: base64-decode → each byte + 97 (mod 256) → UTF-8 → JSON
-                        const encoded = outer[1];
-                        const rem = encoded.length % 4;
-                        const padded = rem === 0 ? encoded : encoded + '='.repeat(4 - rem);
-                        const bStr = atob(padded);
-                        const bytes = new Uint8Array(bStr.length);
-                        for (let i = 0; i < bStr.length; i++) bytes[i] = (bStr.charCodeAt(i) + 97) & 0xFF;
-                        const inner = JSON.parse(new TextDecoder().decode(bytes));
-                        program = inner[4] || '';
-                        globalName = inner[5] || '';
-                        const wrappedScript = Array.isArray(inner[1]) ? inner[1] : [];
-                        const wrappedUrl    = Array.isArray(inner[2]) ? inner[2] : [];
-                        const inlineJS = wrappedScript.find(x => typeof x === 'string' && x.length > 0);
-                        if (inlineJS) {
-                            interpreterJS = inlineJS;
-                        } else {
-                            const urlRaw = wrappedUrl.find(x => typeof x === 'string' && x.length > 0);
-                            if (urlRaw) {
-                                const jsURL = urlRaw.startsWith('//') ? 'https:' + urlRaw : urlRaw;
-                                const r = await fetch(jsURL);
-                                if (!r.ok) throw new Error('Interpreter JS fetch HTTP ' + r.status);
-                                interpreterJS = await r.text();
-                            }
-                        }
-                    } else if (Array.isArray(outer[0]) && outer[0].length >= 6) {
-                        // Legacy format
-                        const inner = outer[0];
-                        program = inner[4] || '';
-                        globalName = inner[5] || '';
-                        const urlRaw = (Array.isArray(inner[2]) ? inner[2] : [])
-                            .find(x => typeof x === 'string' && x.length > 0);
+                // ── Parse BgUtils v3.2 descrambled challenge ────────────────────────────
+                let interpreterJS = null, program = '', globalName = '';
+
+                if (typeof outer[1] === 'string' && outer[1].length > 0) {
+                    // Descramble: base64-decode → each byte + 97 (mod 256) → UTF-8 → JSON
+                    const encoded = outer[1];
+                    const rem = encoded.length % 4;
+                    const padded = rem === 0 ? encoded : encoded + '='.repeat(4 - rem);
+                    const bStr = atob(padded);
+                    const bytes = new Uint8Array(bStr.length);
+                    for (let i = 0; i < bStr.length; i++) bytes[i] = (bStr.charCodeAt(i) + 97) & 0xFF;
+                    const inner = JSON.parse(new TextDecoder().decode(bytes));
+                    program = inner[4] || '';
+                    globalName = inner[5] || '';
+                    const wrappedScript = Array.isArray(inner[1]) ? inner[1] : [];
+                    const wrappedUrl    = Array.isArray(inner[2]) ? inner[2] : [];
+                    const inlineJS = wrappedScript.find(x => typeof x === 'string' && x.length > 0);
+                    if (inlineJS) {
+                        interpreterJS = inlineJS;
+                    } else {
+                        const urlRaw = wrappedUrl.find(x => typeof x === 'string' && x.length > 0);
                         if (urlRaw) {
                             const jsURL = urlRaw.startsWith('//') ? 'https:' + urlRaw : urlRaw;
                             const r = await fetch(jsURL);
+                            if (!r.ok) throw new Error('Interpreter JS fetch HTTP ' + r.status);
                             interpreterJS = await r.text();
                         }
                     }
-
-                    if (!interpreterJS || !program) throw new Error('Challenge parse failed — no interpreter JS or program');
-
-                    // ── Phase 2: Load BotGuard VM in global scope ───────────────────────────
-                    // Indirect eval so BotGuard's globalName is set on globalThis.
-                    (0, eval)(interpreterJS);
-
-                    let vm = globalName ? globalThis[globalName] : null;
-                    if (!vm || typeof vm.a !== 'function') {
-                        for (const k of Object.keys(globalThis)) {
-                            const v = globalThis[k];
-                            if (v && typeof v === 'object' && typeof v.a === 'function' && k !== 'document') {
-                                vm = v; break;
-                            }
-                        }
+                } else if (Array.isArray(outer[0]) && outer[0].length >= 6) {
+                    // Legacy format
+                    const inner = outer[0];
+                    program = inner[4] || '';
+                    globalName = inner[5] || '';
+                    const urlRaw = (Array.isArray(inner[2]) ? inner[2] : [])
+                        .find(x => typeof x === 'string' && x.length > 0);
+                    if (urlRaw) {
+                        const jsURL = urlRaw.startsWith('//') ? 'https:' + urlRaw : urlRaw;
+                        const r = await fetch(jsURL);
+                        interpreterJS = await r.text();
                     }
-                    if (!vm || typeof vm.a !== 'function') throw new Error('BotGuard VM not found after eval');
-
-                    // ── Phase 3: vm.a() → get asyncSnapshotFn ───────────────────────────────
-                    let asyncSnapshotFn = null;
-                    await new Promise((resolve, reject) => {
-                        const t = setTimeout(() => reject(new Error('vm.a() timed out')), 15000);
-                        try {
-                            vm.a(program, (fn0) => {
-                                asyncSnapshotFn = fn0;
-                                clearTimeout(t);
-                                resolve();
-                            }, true, undefined, () => {}, [[], []]);
-                        } catch(e) { clearTimeout(t); reject(e); }
-                    });
-                    if (typeof asyncSnapshotFn !== 'function') throw new Error('asyncSnapshotFn not received');
-
-                    // ── Phase 4: asyncSnapshotFn → botguardResponse + webPoSignalOutput ─────
-                    const webPoSignalOutput = [];
-                    const botguardResponse = await new Promise((resolve, reject) => {
-                        const t = setTimeout(() => reject(new Error('snapshot timed out')), 25000);
-                        try {
-                            asyncSnapshotFn(
-                                (resp) => { clearTimeout(t); resolve(resp); },
-                                [undefined, undefined, webPoSignalOutput, undefined]
-                            );
-                        } catch(e) { clearTimeout(t); reject(e); }
-                    });
-                    if (!botguardResponse) throw new Error('botguardResponse is empty');
-
-                    // ── Phase 5: WAA GenerateIT ─────────────────────────────────────────────
-                    const genResp = await fetch(
-                        'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT',
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json+protobuf',
-                                'x-goog-api-key': '\(apiKey)',
-                                'x-user-agent': 'grpc-web-javascript/0.1'
-                            },
-                            body: JSON.stringify(['\(reqKey)', botguardResponse])
-                        }
-                    );
-                    if (!genResp.ok) throw new Error('WAA GenerateIT HTTP ' + genResp.status);
-                    const genJson = await genResp.json();
-
-                    const integrityToken  = genJson[0];  // null in JSC; hopefully non-null in WKWebView
-                    const websafeFallback = genJson.length > 3 ? genJson[3] : null;
-                    const ttl = genJson[1] || 3600;
-
-                    // ── Phase 6: getMinter → cache mintCallback ──────────────────────────────
-                    const getMinter = webPoSignalOutput[0];
-                    let hasMinter = false;
-
-                    if (typeof getMinter === 'function' && integrityToken) {
-                        try {
-                            // Decode integrityToken from URL-safe base64
-                            const b64 = integrityToken.replace(/-/g, '+').replace(/_/g, '/');
-                            const rem2 = b64.length % 4;
-                            const p2 = rem2 === 0 ? b64 : b64 + '='.repeat(4 - rem2);
-                            const bs2 = atob(p2);
-                            const tokenBytes = new Uint8Array(bs2.length);
-                            for (let i = 0; i < bs2.length; i++) tokenBytes[i] = bs2.charCodeAt(i);
-
-                            const mintCallback = await getMinter(tokenBytes);
-                            // Store for all future mintToken() calls from Swift.
-                            window.__bgMintCallback = mintCallback;
-                            window.__bgMintExpiry   = Date.now() + ttl * 1000;
-                            hasMinter = true;
-                        } catch(e) {
-                            // getMinter failed — will report hasMinter=false
-                        }
-                    }
-
-                    // ── Phase 7: WEB session visitorData (for canonical BotGuard identifier) ──
-                    // POST to www.youtube.com uses the WKWebView's youtube.com session cookies
-                    // automatically (same-origin request from robots.txt). The responseContext
-                    // .visitorData is the correct identifier for minting WEB BotGuard tokens —
-                    // it ties the minted token to the WKWebView's session, matching what the
-                    // CDN expects when it validates the pot= token against the session context.
-                    let webVisitorData = '';
-                    try {
-                        const guideResp = await fetch('https://www.youtube.com/youtubei/v1/guide', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-YouTube-Client-Name': '1',
-                                'X-YouTube-Client-Version': '2.20240101.00.00'
-                            },
-                            body: JSON.stringify({
-                                context: {
-                                    client: {
-                                        clientName: 'WEB',
-                                        clientVersion: '2.20240101.00.00',
-                                        gl: 'US',
-                                        hl: 'en'
-                                    }
-                                }
-                            })
-                        });
-                        if (guideResp.ok) {
-                            const guideJson = await guideResp.json();
-                            webVisitorData = guideJson?.responseContext?.visitorData || '';
-                        }
-                    } catch(e) {
-                        // Guide call failed — webVisitorData stays ''
-                    }
-
-                    send({
-                        type: 'prepare',
-                        success: true,
-                        hasMinter: hasMinter,
-                        websafeToken: hasMinter ? null : (websafeFallback || null),
-                        ttl: ttl,
-                        integrityTokenLen: integrityToken ? integrityToken.length : 0,
-                        webVisitorData: webVisitorData
-                    });
-
-                } catch(e) {
-                    send({ type: 'prepare', success: false, error: String(e), webVisitorData: '' });
                 }
-            })();
-            """
-    }
+
+                if (!interpreterJS || !program) throw new Error('Challenge parse failed — no interpreter JS or program');
+
+                // ── Phase 2: Load BotGuard VM in global scope ───────────────────────────
+                // Indirect eval so BotGuard's globalName is set on globalThis.
+                (0, eval)(interpreterJS);
+
+                let vm = globalName ? globalThis[globalName] : null;
+                if (!vm || typeof vm.a !== 'function') {
+                    for (const k of Object.keys(globalThis)) {
+                        const v = globalThis[k];
+                        if (v && typeof v === 'object' && typeof v.a === 'function' && k !== 'document') {
+                            vm = v; break;
+                        }
+                    }
+                }
+                if (!vm || typeof vm.a !== 'function') throw new Error('BotGuard VM not found after eval');
+
+                // ── Phase 3: vm.a() → get asyncSnapshotFn ───────────────────────────────
+                let asyncSnapshotFn = null;
+                await new Promise((resolve, reject) => {
+                    const t = setTimeout(() => reject(new Error('vm.a() timed out')), 15000);
+                    try {
+                        vm.a(program, (fn0) => {
+                            asyncSnapshotFn = fn0;
+                            clearTimeout(t);
+                            resolve();
+                        }, true, undefined, () => {}, [[], []]);
+                    } catch(e) { clearTimeout(t); reject(e); }
+                });
+                if (typeof asyncSnapshotFn !== 'function') throw new Error('asyncSnapshotFn not received');
+
+                // ── Phase 4: asyncSnapshotFn → botguardResponse + webPoSignalOutput ─────
+                const webPoSignalOutput = [];
+                const botguardResponse = await new Promise((resolve, reject) => {
+                    const t = setTimeout(() => reject(new Error('snapshot timed out')), 25000);
+                    try {
+                        asyncSnapshotFn(
+                            (resp) => { clearTimeout(t); resolve(resp); },
+                            [undefined, undefined, webPoSignalOutput, undefined]
+                        );
+                    } catch(e) { clearTimeout(t); reject(e); }
+                });
+                if (!botguardResponse) throw new Error('botguardResponse is empty');
+
+                // ── Phase 5: WAA GenerateIT ─────────────────────────────────────────────
+                const genResp = await fetch(
+                    'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json+protobuf',
+                            'x-goog-api-key': '\(waaAPIKey)',
+                            'x-user-agent': 'grpc-web-javascript/0.1'
+                        },
+                        body: JSON.stringify(['\(requestKey)', botguardResponse])
+                    }
+                );
+                if (!genResp.ok) throw new Error('WAA GenerateIT HTTP ' + genResp.status);
+                const genJson = await genResp.json();
+
+                const integrityToken  = genJson[0];  // null in JSC; hopefully non-null in WKWebView
+                const websafeFallback = genJson.length > 3 ? genJson[3] : null;
+                const ttl = genJson[1] || 3600;
+
+                // ── Phase 6: getMinter → cache mintCallback ──────────────────────────────
+                const getMinter = webPoSignalOutput[0];
+                let hasMinter = false;
+
+                if (typeof getMinter === 'function' && integrityToken) {
+                    try {
+                        // Decode integrityToken from URL-safe base64
+                        const b64 = integrityToken.replace(/-/g, '+').replace(/_/g, '/');
+                        const rem2 = b64.length % 4;
+                        const p2 = rem2 === 0 ? b64 : b64 + '='.repeat(4 - rem2);
+                        const bs2 = atob(p2);
+                        const tokenBytes = new Uint8Array(bs2.length);
+                        for (let i = 0; i < bs2.length; i++) tokenBytes[i] = bs2.charCodeAt(i);
+
+                        const mintCallback = await getMinter(tokenBytes);
+                        // Store for all future mintToken() calls from Swift.
+                        window.__bgMintCallback = mintCallback;
+                        window.__bgMintExpiry   = Date.now() + ttl * 1000;
+                        hasMinter = true;
+                    } catch(e) {
+                        // getMinter failed — will report hasMinter=false
+                    }
+                }
+
+                // ── Phase 7: WEB session visitorData (for canonical BotGuard identifier) ──
+                // POST to www.youtube.com uses the WKWebView's youtube.com session cookies
+                // automatically (same-origin request from robots.txt). The responseContext
+                // .visitorData is the correct identifier for minting WEB BotGuard tokens —
+                // it ties the minted token to the WKWebView's session, matching what the
+                // CDN expects when it validates the pot= token against the session context.
+                let webVisitorData = '';
+                try {
+                    const guideResp = await fetch('https://www.youtube.com/youtubei/v1/guide', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-YouTube-Client-Name': '1',
+                            'X-YouTube-Client-Version': '2.20240101.00.00'
+                        },
+                        body: JSON.stringify({
+                            context: {
+                                client: {
+                                    clientName: 'WEB',
+                                    clientVersion: '2.20240101.00.00',
+                                    gl: 'US',
+                                    hl: 'en'
+                                }
+                            }
+                        })
+                    });
+                    if (guideResp.ok) {
+                        const guideJson = await guideResp.json();
+                        webVisitorData = guideJson?.responseContext?.visitorData || '';
+                    }
+                } catch(e) {
+                    // Guide call failed — webVisitorData stays ''
+                }
+
+                send({
+                    type: 'prepare',
+                    success: true,
+                    hasMinter: hasMinter,
+                    websafeToken: hasMinter ? null : (websafeFallback || null),
+                    ttl: ttl,
+                    integrityTokenLen: integrityToken ? integrityToken.length : 0,
+                    webVisitorData: webVisitorData
+                });
+
+            } catch(e) {
+                send({ type: 'prepare', success: false, error: String(e), webVisitorData: '' });
+            }
+        })
+        """
 
     private func teardownWebView() {
         // Stop navigation but keep the script message handler and the JS context alive —
@@ -503,9 +487,9 @@ public final class BotGuardWebViewRunner: NSObject {
 
     /// Destroys the WKWebView entirely (call on TTL expiry or app backgrounding).
     private func invalidate() {
+        if let attemptID = prepareAttemptID { finishPreparation(attemptID: attemptID) }
         mintCallbackReady = false
         mintExpiry = nil
-        prepareTask = nil
         webView?.navigationDelegate = nil
         webView?.stopLoading()
         webView?.configuration.userContentController.removeAllScriptMessageHandlers()
@@ -516,6 +500,42 @@ public final class BotGuardWebViewRunner: NSObject {
 // MARK: - Shared preparation waiters
 
 extension BotGuardWebViewRunner {
+    func runPreparation(
+        waitForTimeout: @escaping @MainActor () async throws -> Void = {
+            try await Task.sleep(for: PlaybackTuning.botGuardPreparationTimeout)
+        },
+        launch: (UUID) -> Void
+    ) async -> PrepareResult {
+        let attemptID = UUID()
+        return await withCheckedContinuation { continuation in
+            prepareAttemptID = attemptID
+            prepareCont = continuation
+            prepareTimeoutTask = Task { [weak self] in
+                do { try await waitForTimeout() } catch { return }
+                guard let self, !Task.isCancelled, self.prepareAttemptID == attemptID else { return }
+                bgwvLog.notice(
+                    "[BotGuardWV] prepare() safety timeout after \(PlaybackTuning.botGuardPreparationTimeout)")
+                self.finishPreparation(attemptID: attemptID)
+            }
+            launch(attemptID)
+        }
+    }
+
+    func finishPreparation(attemptID: UUID, result: PrepareResult? = nil) {
+        guard prepareAttemptID == attemptID, let continuation = prepareCont else { return }
+        prepareAttemptID = nil
+        prepareCont = nil
+        prepareTimeoutTask?.cancel()
+        prepareTimeoutTask = nil
+        let result =
+            result
+            ?? PrepareResult(
+                hasMinter: false, websafeToken: nil, ttl: 3600, integrityTokenLen: 0, webVisitorData: "")
+        webVisitorData = result.webVisitorData
+        teardownWebView()
+        continuation.resume(returning: result)
+    }
+
     /// Only the initiating caller receives the result; joiners wait for cache publication.
     func prepare(using operation: @escaping @MainActor () async -> PrepareResult) async -> PrepareResult? {
         guard !Task.isCancelled, !isReady else { return nil }
@@ -546,8 +566,9 @@ extension BotGuardWebViewRunner {
 extension BotGuardWebViewRunner: WKNavigationDelegate {
 
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        guard webView === self.webView, let attemptID = prepareAttemptID else { return }
         bgwvLog.notice("[BotGuardWV] page loaded — injecting BotGuard pipeline JS")
-        webView.evaluateJavaScript(Self.pipelineJS(videoId: currentVideoId)) { [weak self] _, error in
+        webView.evaluateJavaScript(Self.pipelineJS(attemptID: attemptID)) { [weak self] _, error in
             if let error {
                 let msg = error.localizedDescription
                 // "JavaScript execution returned a result of an unsupported type" is EXPECTED
@@ -562,11 +583,7 @@ extension BotGuardWebViewRunner: WKNavigationDelegate {
                 }
                 // A genuine injection error (e.g. syntax error, WKWebView deallocated).
                 bgwvLog.error("[BotGuardWV] pipeline JS injection error: \(msg)")
-                self?.prepareCont?.resume(
-                    returning: PrepareResult(
-                        hasMinter: false, websafeToken: nil, ttl: 3600, integrityTokenLen: 0, webVisitorData: ""
-                    ))
-                self?.prepareCont = nil
+                self?.finishPreparation(attemptID: attemptID)
             }
         }
     }
@@ -576,12 +593,9 @@ extension BotGuardWebViewRunner: WKNavigationDelegate {
         didFail navigation: WKNavigation!,
         withError error: Error
     ) {
+        guard webView === self.webView, let attemptID = prepareAttemptID else { return }
         bgwvLog.error("[BotGuardWV] navigation failed: \(error.localizedDescription)")
-        prepareCont?.resume(
-            returning: PrepareResult(
-                hasMinter: false, websafeToken: nil, ttl: 3600, integrityTokenLen: 0, webVisitorData: ""
-            ))
-        prepareCont = nil
+        finishPreparation(attemptID: attemptID)
     }
 
     public func webView(
@@ -589,12 +603,9 @@ extension BotGuardWebViewRunner: WKNavigationDelegate {
         didFailProvisionalNavigation navigation: WKNavigation!,
         withError error: Error
     ) {
+        guard webView === self.webView, let attemptID = prepareAttemptID else { return }
         bgwvLog.error("[BotGuardWV] provisional navigation failed: \(error.localizedDescription)")
-        prepareCont?.resume(
-            returning: PrepareResult(
-                hasMinter: false, websafeToken: nil, ttl: 3600, integrityTokenLen: 0, webVisitorData: ""
-            ))
-        prepareCont = nil
+        finishPreparation(attemptID: attemptID)
     }
 }
 
@@ -606,7 +617,7 @@ extension BotGuardWebViewRunner: WKScriptMessageHandler {
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage
     ) {
-        guard message.name == "botguardRunner",
+        guard message.webView === webView, message.name == "botguardRunner",
             let bodyStr = message.body as? String,
             let data = bodyStr.data(using: .utf8),
             let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -626,7 +637,10 @@ extension BotGuardWebViewRunner: WKScriptMessageHandler {
         }
     }
 
-    private func handlePrepareMessage(_ json: [String: Any]) {
+    func handlePrepareMessage(_ json: [String: Any]) {
+        guard let rawID = json["attemptID"] as? String,
+            let attemptID = UUID(uuidString: rawID), attemptID == prepareAttemptID
+        else { return }
         let success = json["success"] as? Bool ?? false
         let hasMinter = json["hasMinter"] as? Bool ?? false
         let websafeToken = json["websafeToken"] as? String
@@ -643,19 +657,15 @@ extension BotGuardWebViewRunner: WKScriptMessageHandler {
             bgwvLog.notice("[BotGuardWV] prepare failed: \(err)")
         }
 
-        webVisitorData = webVD
-
-        prepareCont?.resume(
-            returning: PrepareResult(
+        finishPreparation(
+            attemptID: attemptID,
+            result: PrepareResult(
                 hasMinter: hasMinter,
                 websafeToken: websafeToken,
                 ttl: ttl,
                 integrityTokenLen: integrityTokenLen,
                 webVisitorData: webVD
             ))
-        prepareCont = nil
-
-        teardownWebView()
     }
 
     private func handleMintMessage(_ json: [String: Any]) {
