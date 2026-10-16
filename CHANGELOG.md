@@ -6,6 +6,11 @@ All notable changes to SmartTube are documented here.
 
 ## [Unreleased]
 
+### Changed — 2026-10-16
+
+- **Version 5.8 (26) (PLAN-0011)** identifies the resource and lifecycle fixes below.
+  The iOS/Catalyst and tvOS apps and embedded extensions inherit the same project version.
+
 ### Fixed — 2026-10-16
 
 - **Playback task ownership (PLAN-0011)** cancels background quality upgrades when
