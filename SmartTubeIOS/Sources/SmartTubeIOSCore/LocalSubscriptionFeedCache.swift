@@ -33,6 +33,7 @@ public actor LocalSubscriptionFeedCache {
 
     /// Stores a fetch result for `channelId`, stamped with the current time.
     public func store(videos: [Video], for channelId: String) {
+        guard !Task.isCancelled else { return }
         cache.set(videos, for: channelId)
     }
 

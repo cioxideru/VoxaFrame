@@ -14,6 +14,9 @@ All notable changes to SmartTube are documented here.
 - **BotGuard waiting (PLAN-0011)** lets a cancelled playback request stop waiting
   immediately while shared preparation continues for other callers. Timers and
   delayed WebView callbacks can only complete their original preparation attempt.
+- **Local subscriptions (PLAN-0011)** load at most four channels concurrently.
+  Cancellation stops queued work; failed RSS/fallback responses are not cached as
+  empty channels. Valid empty feeds remain cacheable.
 - **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
   restarts a queued load when the app becomes active. Cancelled queued loads skip
   their requests. Token refresh keeps the current cards and pagination instead

@@ -131,6 +131,7 @@ struct YouTubeRSSParserTests {
         let data = Self.emptyFeed.data(using: .utf8)!
         let result = parseYouTubeRSS(data, channelId: "UCempty")
         #expect(result.videos.isEmpty)
+        #expect(result.isValidFeed)
     }
 
     // MARK: - Malformed feed
@@ -141,6 +142,7 @@ struct YouTubeRSSParserTests {
         // Should not crash — may return partial or empty
         let result = parseYouTubeRSS(data, channelId: "UCbad")
         #expect(result.videos.count >= 0)  // any count is acceptable
+        #expect(!result.isValidFeed)
     }
 
     // MARK: - YouTubeRSS URL helpers

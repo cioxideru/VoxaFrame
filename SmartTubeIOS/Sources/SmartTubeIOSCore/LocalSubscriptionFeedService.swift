@@ -19,6 +19,8 @@ public struct LocalSubscriptionFeedService: Sendable {
     // MARK: - Dependencies
 
     let session: URLSession
+    static let maxConcurrentChannels = 4
+    private typealias ChannelResult = (channelId: String, feed: RSSParseResult)
 
     // MARK: - Init
 
@@ -42,50 +44,45 @@ public struct LocalSubscriptionFeedService: Sendable {
         api: any InnerTubeAPIProtocol
     ) async -> [Video] {
         let channels = await store.allChannels()
-        guard !channels.isEmpty else { return [] }
+        guard !channels.isEmpty, !Task.isCancelled else { return [] }
 
         // Force RSS-only when following many channels to avoid InnerTube rate limiting.
         // Matches FreeTube's 125-channel threshold.
         let forceRSS = channels.count >= 125
 
         var allVideos: [Video] = []
-        var metadataUpdates: [(channelId: String, name: String?, thumb: URL?)] = []
+        var metadataUpdates: [(channelId: String, name: String)] = []
 
-        await withTaskGroup(of: (channelId: String, videos: [Video], name: String?, thumb: URL?).self) { group in
-            for channel in channels {
-                let channelCopy = channel
-                let sessionCopy = session
-                group.addTask {
-                    // Cache hit — skip network
-                    if let cached = await cache.videos(for: channelCopy.id) {
-                        return (channelCopy.id, cached, nil, nil)
-                    }
-                    // Fetch from network
-                    let (videos, updatedName, updatedThumb) = await Self.fetchChannelVideos(
-                        channel: channelCopy,
-                        forceRSS: forceRSS,
-                        api: api,
-                        session: sessionCopy
-                    )
-                    await cache.store(videos: videos, for: channelCopy.id)
-                    return (channelCopy.id, videos, updatedName, updatedThumb)
-                }
+        await withTaskGroup(of: ChannelResult?.self) { group in
+            var remaining = channels.makeIterator()
+            for _ in 0..<Self.maxConcurrentChannels {
+                guard !Task.isCancelled, let channel = remaining.next() else { break }
+                group.addTask { await fetchChannel(channel, forceRSS: forceRSS, cache: cache, api: api) }
             }
-
             for await result in group {
-                allVideos.append(contentsOf: result.videos)
-                if result.name != nil || result.thumb != nil {
-                    metadataUpdates.append((result.channelId, result.name, result.thumb))
+                guard !Task.isCancelled else {
+                    group.cancelAll()
+                    break
+                }
+                if let result {
+                    allVideos.append(contentsOf: result.feed.videos)
+                    if let name = result.feed.channelName {
+                        metadataUpdates.append((result.channelId, name))
+                    }
+                }
+                if let channel = remaining.next() {
+                    group.addTask { await fetchChannel(channel, forceRSS: forceRSS, cache: cache, api: api) }
                 }
             }
         }
 
         // Persist any updated channel names / thumbnails from RSS
         for update in metadataUpdates {
+            guard !Task.isCancelled else { return [] }
             await store.updateMetadata(
                 channelId: update.channelId,
                 title: update.name,
-                thumbnailURL: update.thumb
+                thumbnailURL: nil
             )
         }
 
@@ -93,6 +90,7 @@ public struct LocalSubscriptionFeedService: Sendable {
         // than sorting by date so both the pinned shorts row and the regular video
         // grid show videos in the same order as they were fetched from each channel.
         var seen = Set<String>()
+        guard !Task.isCancelled else { return [] }
         return
             allVideos
             .filter { seen.insert($0.id).inserted }
@@ -100,25 +98,41 @@ public struct LocalSubscriptionFeedService: Sendable {
 
     // MARK: - Per-channel fetch (nonisolated — no actor state accessed)
 
+    private func fetchChannel(
+        _ channel: LocalChannel, forceRSS: Bool, cache: LocalSubscriptionFeedCache, api: any InnerTubeAPIProtocol
+    ) async -> ChannelResult? {
+        guard !Task.isCancelled else { return nil }
+        if let cached = await cache.videos(for: channel.id) {
+            return (channel.id, RSSParseResult(channelName: nil, videos: cached))
+        }
+        guard !Task.isCancelled,
+            let result = await Self.fetchChannelVideos(
+                channel: channel, forceRSS: forceRSS, api: api, session: session),
+            !Task.isCancelled
+        else { return nil }
+        await cache.store(videos: result.videos, for: channel.id)
+        return (channel.id, result)
+    }
+
     /// RSS primary → InnerTube fallback.
-    /// Returns (videos, updatedChannelName?, updatedThumbnailURL?).
+    /// Returns a successful feed, including a valid empty one; nil means failure or cancellation.
     private static func fetchChannelVideos(
         channel: LocalChannel,
         forceRSS: Bool,
         api: any InnerTubeAPIProtocol,
         session: URLSession
-    ) async -> ([Video], String?, URL?) {
+    ) async -> RSSParseResult? {
         // Try RSS first (no rate limiting, no auth)
         if let result = await fetchViaRSS(channel: channel, session: session) {
-            return (result.videos, result.channelName, nil)
+            return result
         }
 
         // RSS failed — fall back to InnerTube channel videos (no auth required)
-        if !forceRSS, let videos = await fetchViaInnerTube(channel: channel, api: api) {
-            return (videos, nil, nil)
+        if !Task.isCancelled, !forceRSS, let videos = await fetchViaInnerTube(channel: channel, api: api) {
+            return RSSParseResult(channelName: nil, videos: videos)
         }
 
-        return ([], nil, nil)
+        return nil
     }
 
     // MARK: - RSS fetch
@@ -138,6 +152,7 @@ public struct LocalSubscriptionFeedService: Sendable {
         // Await both concurrent fetches before any serial work.
         let primaryResult = await uploadsPrimary
         let shortsFetchResult = await shortsFetch
+        guard !Task.isCancelled else { return nil }
 
         // Resolve uploads: primary first, then fallback if needed.
         let uploads: RSSParseResult
@@ -166,13 +181,14 @@ public struct LocalSubscriptionFeedService: Sendable {
     }
 
     private static func fetchRSS(url: URL, channelId: String, session: URLSession) async -> RSSParseResult? {
+        guard !Task.isCancelled else { return nil }
         do {
             let (data, response) = try await session.data(from: url)
             guard let http = response as? HTTPURLResponse,
                 (200..<300).contains(http.statusCode)
             else { return nil }
             let result = parseYouTubeRSS(data, channelId: channelId)
-            return result.videos.isEmpty ? nil : result
+            return result.isValidFeed && !Task.isCancelled ? result : nil
         } catch {
             return nil
         }
@@ -181,9 +197,10 @@ public struct LocalSubscriptionFeedService: Sendable {
     // MARK: - InnerTube fallback
 
     private static func fetchViaInnerTube(channel: LocalChannel, api: any InnerTubeAPIProtocol) async -> [Video]? {
+        guard !Task.isCancelled else { return nil }
         do {
             let group = try await api.fetchChannelVideos(channelId: channel.id, continuationToken: nil)
-            return group.videos.isEmpty ? nil : group.videos
+            return Task.isCancelled ? nil : group.videos
         } catch {
             return nil
         }

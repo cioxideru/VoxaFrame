@@ -7,6 +7,14 @@ public struct RSSParseResult: Sendable {
     public let channelName: String?
     /// Videos extracted from <entry> elements, in feed order (newest first).
     public let videos: [Video]
+    /// False for malformed XML or a document whose root is not an Atom feed.
+    public let isValidFeed: Bool
+
+    init(channelName: String?, videos: [Video], isValidFeed: Bool = true) {
+        self.channelName = channelName
+        self.videos = videos
+        self.isValidFeed = isValidFeed
+    }
 }
 
 // MARK: - parseYouTubeRSS
@@ -32,8 +40,9 @@ public func parseYouTubeRSS(_ data: Data, channelId: String) -> RSSParseResult {
     let delegate = RSSParserDelegate(channelId: channelId)
     let parser = XMLParser(data: data)
     parser.delegate = delegate
-    parser.parse()
-    return RSSParseResult(channelName: delegate.channelName, videos: delegate.videos)
+    let parsed = parser.parse()
+    return RSSParseResult(
+        channelName: delegate.channelName, videos: delegate.videos, isValidFeed: parsed && delegate.isAtomFeed)
 }
 
 // MARK: - RSSParserDelegate
@@ -43,6 +52,8 @@ private final class RSSParserDelegate: NSObject, XMLParserDelegate, @unchecked S
     let channelId: String
     private(set) var channelName: String?
     private(set) var videos: [Video] = []
+    private(set) var isAtomFeed = false
+    private var sawRoot = false
 
     // Per-entry accumulator
     private var inEntry = false
@@ -79,6 +90,10 @@ private final class RSSParserDelegate: NSObject, XMLParserDelegate, @unchecked S
         attributes: [String: String] = [:]
     ) {
         currentText = ""
+        if !sawRoot {
+            sawRoot = true
+            isAtomFeed = elementName == "feed" && attributes["xmlns"] == "http://www.w3.org/2005/Atom"
+        }
 
         switch elementName {
         case "entry":

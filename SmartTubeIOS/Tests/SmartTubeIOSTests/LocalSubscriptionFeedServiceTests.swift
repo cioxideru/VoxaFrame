@@ -199,6 +199,115 @@ struct LocalSubscriptionFeedServiceTests {
 
     // MARK: - RSS XML builder
 
+    @Test("Valid empty RSS is cached without invoking fallback")
+    func validEmptyIsCached() async {
+        let channelId = "UCempty"
+        let store = makeStore()
+        let cache = makeCache()
+        let api = MockInnerTubeAPI()
+        await store.follow(makeChannel(id: channelId))
+        let service = makeService(with: [
+            YouTubeRSS.feedURL(for: channelId).absoluteString: rssXML(channelId: channelId, videoIds: [])
+        ])
+        defer { RouterURLProtocol.routes = [:] }
+        #expect(await service.fetchFeed(store: store, cache: cache, api: api).isEmpty)
+        #expect(await cache.videos(for: channelId)?.isEmpty == true)
+        RouterURLProtocol.routes = [:]
+        #expect(await service.fetchFeed(store: store, cache: cache, api: api).isEmpty)
+        #expect(api.calls.isEmpty)
+    }
+
+    @Test(arguments: ["<html><body>Error</body></html>", "<feed xmlns='http://www.w3.org/2005/Atom'>"])
+    func failedResponsesAreNotCached(body: String) async {
+        let channelId = "UCfailed"
+        let store = makeStore()
+        let cache = makeCache()
+        let api = MockInnerTubeAPI()
+        api.errorToThrow = URLError(.notConnectedToInternet)
+        await store.follow(makeChannel(id: channelId))
+        let service = makeService(with: [YouTubeRSS.feedURL(for: channelId).absoluteString: Data(body.utf8)])
+        defer { RouterURLProtocol.routes = [:] }
+        for _ in 0..<2 {
+            #expect(await service.fetchFeed(store: store, cache: cache, api: api).isEmpty)
+            #expect(await cache.videos(for: channelId) == nil)
+        }
+        #expect(api.calls.filter { $0.method == "fetchChannelVideos" }.count == 2)
+    }
+
+    @Test(arguments: [1, 20])
+    func cancelledFeedCanRetryWithoutCachedFailureOrFallback(channelCount: Int) async {
+        let channelId = "UCcancel"
+        let store = makeStore()
+        let cache = makeCache()
+        let api = MockInnerTubeAPI()
+        await store.follow(makeChannel(id: channelId, title: "Original"))
+        for index in 1..<channelCount { await store.follow(makeChannel(id: "UCcancel\(index)")) }
+        let service = makeService(with: [
+            YouTubeRSS.feedURL(for: channelId).absoluteString: rssXML(channelId: channelId, videoIds: ["retry"])
+        ])
+        RouterURLProtocol.reset(holding: true)
+        defer {
+            RouterURLProtocol.routes = [:]
+            RouterURLProtocol.reset(holding: false)
+        }
+        let task = Task { await service.fetchFeed(store: store, cache: cache, api: api) }
+        let expectedStarts = min(channelCount, LocalSubscriptionFeedService.maxConcurrentChannels) * 2
+        await waitUntil { RouterURLProtocol.startedCount == expectedStarts }
+        task.cancel()
+        #expect(await task.value.isEmpty)
+        #expect(await cache.videos(for: channelId) == nil)
+        #expect(api.calls.isEmpty)
+        #expect(RouterURLProtocol.startedCount == expectedStarts)
+        let channels = await store.allChannels()
+        #expect(channels.first(where: { $0.id == channelId })?.title == "Original")
+        for channel in channels { #expect(await cache.videos(for: channel.id) == nil) }
+        RouterURLProtocol.reset(holding: false)
+        let videos = await service.fetchFeed(store: store, cache: cache, api: api)
+        #expect(videos.map(\.id) == ["retry"])
+        #expect(await cache.videos(for: channelId)?.map(\.id) == ["retry"])
+    }
+
+    @Test func manyChannelsHaveBoundedActiveRequests() async {
+        let store = makeStore()
+        let cache = makeCache()
+        let api = MockInnerTubeAPI()
+        var routes: [String: Data] = [:]
+        for index in 0..<20 {
+            let id = "UCbound\(index)"
+            await store.follow(makeChannel(id: id))
+            routes[YouTubeRSS.feedURL(for: id).absoluteString] = rssXML(channelId: id, videoIds: ["v\(index)"])
+            routes[YouTubeRSS.shortsFeedURL(for: id).absoluteString] = rssXML(channelId: id, videoIds: [])
+        }
+        let service = makeService(with: routes)
+        RouterURLProtocol.reset(holding: true)
+        defer {
+            RouterURLProtocol.routes = [:]
+            RouterURLProtocol.reset(holding: false)
+        }
+        var completed = false
+        let task = Task {
+            let result = await service.fetchFeed(store: store, cache: cache, api: api)
+            completed = true
+            return result
+        }
+        await waitUntil { RouterURLProtocol.startedCount >= LocalSubscriptionFeedService.maxConcurrentChannels * 2 }
+        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+        while !completed, ContinuousClock.now < deadline {
+            RouterURLProtocol.releasePending()
+            await Task.yield()
+        }
+        if !completed { task.cancel() }
+        #expect(await task.value.count == 20)
+        #expect(RouterURLProtocol.peakCount <= LocalSubscriptionFeedService.maxConcurrentChannels * 2)
+        #expect(RouterURLProtocol.startedCount == 40)
+    }
+
+    private func waitUntil(_ condition: () -> Bool) async {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+        while !condition(), ContinuousClock.now < deadline { await Task.yield() }
+        #expect(condition())
+    }
+
     private func rssXML(channelId: String, videoIds: [String]) -> Data {
         let entries = videoIds.map { id in
             """
@@ -241,11 +350,53 @@ private final class AlwaysFailURLProtocol: URLProtocol {
 private final class RouterURLProtocol: URLProtocol {
     /// Map from URL absolute string → response body. Set before creating the session.
     nonisolated(unsafe) static var routes: [String: Data] = [:]
+    private static let lock = NSLock()
+    // Every read and write is protected by lock.
+    nonisolated(unsafe) private static var holding = false
+    // Every read and write is protected by lock.
+    nonisolated(unsafe) private static var pending: [ObjectIdentifier: RouterURLProtocol] = [:]
+    // Every read and write is protected by lock.
+    nonisolated(unsafe) private static var started = 0
+    // Every read and write is protected by lock.
+    nonisolated(unsafe) private static var peak = 0
+
+    static var startedCount: Int { lock.withLock { started } }
+    static var peakCount: Int { lock.withLock { peak } }
+
+    static func reset(holding shouldHold: Bool) {
+        lock.withLock {
+            holding = shouldHold
+            pending.removeAll()
+            started = 0
+            peak = 0
+        }
+    }
+
+    static func releasePending() {
+        let requests = lock.withLock {
+            let requests = Array(pending.values)
+            pending.removeAll()
+            return requests
+        }
+        for request in requests { request.respond() }
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
+        let held = Self.lock.withLock {
+            Self.started += 1
+            if Self.holding {
+                Self.pending[ObjectIdentifier(self)] = self
+                Self.peak = max(Self.peak, Self.pending.count)
+            }
+            return Self.holding
+        }
+        if !held { respond() }
+    }
+
+    private func respond() {
         let key = request.url?.absoluteString ?? ""
         if let data = Self.routes[key] {
             let response = HTTPURLResponse(
@@ -258,5 +409,7 @@ private final class RouterURLProtocol: URLProtocol {
             client?.urlProtocol(self, didFailWithError: URLError(.fileDoesNotExist))
         }
     }
-    override func stopLoading() {}
+    override func stopLoading() {
+        _ = Self.lock.withLock { Self.pending.removeValue(forKey: ObjectIdentifier(self)) }
+    }
 }

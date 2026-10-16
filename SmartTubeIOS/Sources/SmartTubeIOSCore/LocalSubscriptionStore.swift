@@ -75,6 +75,7 @@ public actor LocalSubscriptionStore: UserDefaultsBackedStore {
     /// Called after an RSS refresh to keep metadata fresh without a separate API call.
     /// No-op if the channel is not currently followed.
     public func updateMetadata(channelId: String, title: String?, thumbnailURL: URL?) {
+        guard !Task.isCancelled else { return }
         guard channels[channelId] != nil else { return }
         if let title, !title.isEmpty {
             channels[channelId]?.title = title
