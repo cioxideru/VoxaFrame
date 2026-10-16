@@ -252,6 +252,12 @@ public final class PlaybackViewModel {
     /// The video currently loaded (nil before first load).
     var currentVideo: Video? = nil
 
+    /// A ready item can keep rendering during stream recovery for the same video.
+    var displayedVideo: Video? {
+        guard !isLoading || player.currentItem?.status == .readyToPlay else { return nil }
+        return player.currentItem == nil ? nil : currentVideo
+    }
+
     // MARK: - AVPlayer
 
     public let player = AVPlayer()

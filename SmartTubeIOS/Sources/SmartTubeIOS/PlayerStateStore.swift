@@ -64,25 +64,14 @@ public final class PlayerStateStore {
 
     public internal(set) var presentation: Presentation = .hidden
 
-    /// The video that is currently loaded or playing. Non-nil when presentation != .hidden.
-    private(set) var currentVideo: Video? = nil
+    /// The active playback request; stop keeps the item parked but ends its presentation.
+    var currentVideo: Video? {
+        vm.parkedVideoId == nil ? vm.currentVideo : nil
+    }
 
-    /// The video whose frames the AVPlayer is actually rendering.
-    ///
-    /// During a load (`vm.isLoading == true`), `currentVideo` has already been updated to
-    /// the newly selected video but `AVPlayerItem` may not be ready yet — the player layer
-    /// is still showing the previous video's frames. `playingVideo` resolves this by
-    /// returning the last-confirmed playing video while the new one is loading, so the
-    /// MiniPlayer label stays in sync with the visual content.
-    ///
-    /// - When idle (`isLoading == false`): equals `currentVideo`.
-    /// - When loading (`isLoading == true`) and there is a previous video: equals that
-    ///   video (last entry in `vm.history` — pushed onto the stack just before the new
-    ///   video starts loading).
-    /// - When loading the very first video ever (history is empty): returns `nil` (the
-    ///   MiniPlayer is hidden during a first-play full-screen open, so this is harmless).
+    /// Loading a different video clears the old item; recovery can retain a ready item.
     var playingVideo: Video? {
-        vm.isLoading ? vm.history.last : currentVideo
+        currentVideo == nil ? nil : vm.displayedVideo
     }
 
     // MARK: - Imperative dismiss hook
@@ -139,7 +128,6 @@ public final class PlayerStateStore {
         {
             vm.load(video: video, incognito: incognito)
         }
-        currentVideo = video
         expand()
         storeLog.notice("[PlayerStateStore] play — presentation set to .fullScreen")
     }
@@ -174,7 +162,6 @@ public final class PlayerStateStore {
         pipRestoreCompletion = nil
         pipController?.stopPictureInPicture()
         vm.stop()
-        currentVideo = nil
         presentation = .hidden
         let action = dismissPlayerAction
         dismissPlayerAction = nil
