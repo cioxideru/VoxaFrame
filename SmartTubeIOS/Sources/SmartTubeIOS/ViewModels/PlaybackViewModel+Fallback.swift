@@ -21,6 +21,7 @@ extension PlaybackViewModel {
         videoURL: URL, audioURL: URL,
         for video: Video, info: PlayerInfo, label: String
     ) async -> Bool {
+        guard !Task.isCancelled, currentVideo?.id == video.id else { return false }
         guard let context = compositionRequestContext(videoURL: videoURL, audioURL: audioURL, label: label) else {
             return false
         }
@@ -49,6 +50,8 @@ extension PlaybackViewModel {
                     videoAsset: videoAsset, audioAsset: audioAsset, context: context, label: label)
             else { return false }
 
+            guard !Task.isCancelled, currentVideo?.id == video.id else { return false }
+
             guard let sourceVideoTrack = tracks.video.first,
                 let sourceAudioTrack = tracks.audio.first
             else {
@@ -57,6 +60,7 @@ extension PlaybackViewModel {
             }
 
             let videoDuration = try await videoAsset.load(.duration)
+            guard !Task.isCancelled, currentVideo?.id == video.id else { return false }
             let timeRange = CMTimeRange(start: .zero, duration: videoDuration)
             let composition = AVMutableComposition()
 

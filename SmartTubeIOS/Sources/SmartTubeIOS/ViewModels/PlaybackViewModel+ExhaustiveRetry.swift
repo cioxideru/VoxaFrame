@@ -251,8 +251,7 @@ extension PlaybackViewModel {
                 playerLog.notice(
                     "[AndroidVR] maxH=\(vrMaxH) < preferred \(min(preferredH, 480))p — scheduling background HLS quality upgrade"
                 )
-                let upgradeVideo = video
-                Task { [weak self] in await self?.backgroundQualityUpgrade(video: upgradeVideo) }
+                scheduleBackgroundQualityUpgrade(video: video)
             }
         default:
             playerLog.notice("[BotGuardWV] ✅ adaptive streaming via minted BotGuard token — exhaustiveRetry done")
@@ -541,8 +540,7 @@ extension PlaybackViewModel {
                 label: "Android[\(attempt)]/muxed")
             {
                 // Muxed playing — attempt quality upgrade in background while user watches.
-                let upgradeVideo = video
-                Task { [weak self] in await self?.backgroundQualityUpgrade(video: upgradeVideo) }
+                scheduleBackgroundQualityUpgrade(video: video)
                 return true
             }
             // Android muxed failed (possibly AVF -11828 "Cannot Open" on SABR/long-video URLs,

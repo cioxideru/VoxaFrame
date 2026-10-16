@@ -278,6 +278,7 @@ public final class PlaybackViewModel {
     var cacheStatusSummary: String = ""
     /// Task running the exhaustive retry loop; cancelled on new load or retryLoad.
     var exhaustiveRetryTask: Task<Void, Never>?
+    @ObservationIgnored var backgroundQualityUpgradeTask: Task<Void, Never>?
     /// Set after a Cannot-Decode failure on the Auto HLS master — forwarded to qualityManager.
     var hasAppliedH264Cap: Bool {
         get { qualityManager.hasAppliedH264Cap }
@@ -352,6 +353,7 @@ public final class PlaybackViewModel {
     public var sleepTimerMinutes: Int? { sleepTimer.sleepTimerMinutes }
     public func setSleepTimer(minutes: Int?) {
         sleepTimer.setSleepTimer(minutes: minutes) { [weak self] in
+            self?.cancelBackgroundQualityUpgrade()
             self?.cancelStallRecovery()
             self?.player.pause()
             self?.isPlaying = false
@@ -512,6 +514,7 @@ public final class PlaybackViewModel {
     }
 
     deinit {
+        backgroundQualityUpgradeTask?.cancel()
         if let obs = timeObserver { player.removeTimeObserver(obs) }
         rateObserver?.invalidate()
         airPlayObserver?.invalidate()

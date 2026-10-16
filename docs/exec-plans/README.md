@@ -19,6 +19,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
+- [PLAN-0011: Resource ownership and lifecycle](active/resource-quality.md) — twelve sequential architecture, concurrency and memory fixes; iPad Simulator acceptance.
+
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
 
 - [PLAN-0005: Home feed review fixes](active/home-review-fixes.md) — implementation and coordinator acceptance.

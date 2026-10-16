@@ -251,7 +251,21 @@ extension PlaybackViewModel {
     /// the user sees no gap (position is saved to `savedPositionToRestore` just before
     /// calling `attemptURL`, and consumed by `attemptURL`'s `.readyToPlay` handler).
     /// On failure, stays on the AndroidVR quality silently — no error shown to the user.
-    func backgroundQualityUpgrade(video: Video) async {
+    func scheduleBackgroundQualityUpgrade(video: Video) {
+        guard !Task.isCancelled, isPlaying, currentVideo?.id == video.id else { return }
+        cancelBackgroundQualityUpgrade()
+        backgroundQualityUpgradeTask = Task { [weak self] in
+            await self?.backgroundQualityUpgrade(video: video)
+            if !Task.isCancelled { self?.backgroundQualityUpgradeTask = nil }
+        }
+    }
+
+    func cancelBackgroundQualityUpgrade() {
+        backgroundQualityUpgradeTask?.cancel()
+        backgroundQualityUpgradeTask = nil
+    }
+
+    private func backgroundQualityUpgrade(video: Video) async {
         // Stabilisation delay — let readyToPlay fire and playback begin before replacing the item.
         try? await Task.sleep(nanoseconds: PlaybackTuning.qualityUpgradeDelayNanoseconds)
         guard !Task.isCancelled else { return }
@@ -262,24 +276,7 @@ extension PlaybackViewModel {
         }
 
         // 1. Try TVEmbedded HLS (WEB_EMBEDDED_PLAYER, nameID=56).
-        do {
-            let tvEmbedInfo = try await api.fetchPlayerInfoTVEmbedded(videoId: video.id)
-            guard !Task.isCancelled, currentVideo?.id == video.id else { return }
-            if let hlsURL = tvEmbedInfo.hlsURL {
-                playerLog.notice("[VR→HLS/upgrade] TVEmbedded HLS available — upgrading from AndroidVR quality")
-                // Capture position right before replacement so the stale window is minimal.
-                let pos = currentTime
-                if pos > 0.5 { savedPositionToRestore = pos }
-                if await attemptURL(hlsURL, for: video, info: tvEmbedInfo, label: "VR→HLS/upgrade/TVEmbed") {
-                    playerLog.notice("[VR→HLS/upgrade] ✅ quality upgrade via TVEmbedded HLS complete")
-                    return
-                }
-                // attemptURL returned false — clear the now-stale saved position.
-                savedPositionToRestore = nil
-            }
-        } catch {
-            playerLog.notice("[VR→HLS/upgrade] TVEmbedded fetch failed: \(ViewModelLogger.errorSummary(error))")
-        }
+        if await upgradeWithTVEmbedded(video: video) { return }
 
         guard !Task.isCancelled, currentVideo?.id == video.id else { return }
 
@@ -295,6 +292,7 @@ extension PlaybackViewModel {
                     playerLog.notice("[VR→HLS/upgrade] ✅ quality upgrade via MWEB HLS complete")
                     return
                 }
+                guard !Task.isCancelled, currentVideo?.id == video.id else { return }
                 savedPositionToRestore = nil
             }
         } catch {
@@ -304,6 +302,29 @@ extension PlaybackViewModel {
         if await upgradeWithAndroidVR(video: video) { return }
 
         playerLog.notice("[upgrade] no quality upgrade available — staying on muxed stream")
+    }
+
+    private func upgradeWithTVEmbedded(video: Video) async -> Bool {
+        do {
+            let tvEmbedInfo = try await api.fetchPlayerInfoTVEmbedded(videoId: video.id)
+            guard !Task.isCancelled, currentVideo?.id == video.id else { return true }
+            if let hlsURL = tvEmbedInfo.hlsURL {
+                playerLog.notice("[VR→HLS/upgrade] TVEmbedded HLS available — upgrading from AndroidVR quality")
+                // Capture position right before replacement so the stale window is minimal.
+                let pos = currentTime
+                if pos > 0.5 { savedPositionToRestore = pos }
+                if await attemptURL(hlsURL, for: video, info: tvEmbedInfo, label: "VR→HLS/upgrade/TVEmbed") {
+                    playerLog.notice("[VR→HLS/upgrade] ✅ quality upgrade via TVEmbedded HLS complete")
+                    return true
+                }
+                // attemptURL returned false — clear the now-stale saved position.
+                guard !Task.isCancelled, currentVideo?.id == video.id else { return true }
+                savedPositionToRestore = nil
+            }
+        } catch {
+            playerLog.notice("[VR→HLS/upgrade] TVEmbedded fetch failed: \(ViewModelLogger.errorSummary(error))")
+        }
+        return false
     }
 
     private func upgradeWithAndroidVR(video: Video) async -> Bool {
@@ -330,6 +351,7 @@ extension PlaybackViewModel {
                 playerLog.notice("[upgrade] ✅ quality upgrade via AndroidVR adaptive complete")
                 return true
             }
+            guard !Task.isCancelled, currentVideo?.id == video.id else { return true }
             savedPositionToRestore = nil
             // Upgrade failed: availableFormats now has AndroidVR's list (set by attemptComposition)
             // which is correct — user can see quality options and tap to trigger a retry.

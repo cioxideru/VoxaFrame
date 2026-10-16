@@ -13,6 +13,7 @@ private let playerLog = ViewModelLogger(category: "Player")
 extension PlaybackViewModel {
 
     public func togglePlayPause() {
+        if isPlaying { cancelBackgroundQualityUpgrade() }
         // Restarting a parked item (stop() keeps it, fix12) un-stops it without load(),
         // so resume() must work again afterwards.
         if videoEnded || !isPlaying { parkedVideoId = nil }

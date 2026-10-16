@@ -8,6 +8,9 @@ All notable changes to SmartTube are documented here.
 
 ### Fixed — 2026-10-16
 
+- **Playback task ownership (PLAN-0011)** cancels background quality upgrades when
+  stopping, pausing or replacing a video. Delayed results cannot restart playback
+  or overwrite a newer session, including a restart of the same video.
 - **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
   restarts a queued load when the app becomes active. Cancelled queued loads skip
   their requests. Token refresh keeps the current cards and pagination instead

@@ -143,6 +143,7 @@ extension PlaybackViewModel {
     }
 
     func resetPlaybackForLoad(video: Video, incognito: Bool) {
+        cancelBackgroundQualityUpgrade()
         audioOnlySwapTask?.cancel()
         // Report watchtime for the video being replaced before tearing it down.
         // This is the only opportunity when switching via load() directly (e.g. autoplay),
@@ -255,6 +256,7 @@ extension PlaybackViewModel {
     /// Pauses playback when the user has disabled background audio.
     public func handleBackground() {
         guard !settings.backgroundPlaybackEnabled else { return }
+        cancelBackgroundQualityUpgrade()
         // A pending stall recovery would otherwise resume playback in the background.
         cancelStallRecovery()
         guard isPlaying else { return }
@@ -268,6 +270,7 @@ extension PlaybackViewModel {
     /// Called when the PlayerView temporarily disappears (e.g. a sheet slides over it).
     /// Use `resume()` to restart playback, or `load(video:)` to switch videos.
     public func suspend() {
+        cancelBackgroundQualityUpgrade()
         audioOnlySwapTask?.cancel()
         playerLog.notice(
             "[suspend] suspend() called — currentVideo=\(self.currentVideo?.id ?? "nil") currentTime=\(Int(self.currentTime))s"
@@ -352,6 +355,7 @@ extension PlaybackViewModel {
     // MARK: - Cleanup
 
     public func stop() {
+        cancelBackgroundQualityUpgrade()
         audioOnlySwapTask?.cancel()
         // Release the presenting view before teardown; suspend() keeps its handler.
         onPlaybackEnd = nil

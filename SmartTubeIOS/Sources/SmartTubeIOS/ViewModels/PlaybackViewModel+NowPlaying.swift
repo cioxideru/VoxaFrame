@@ -45,6 +45,7 @@ extension PlaybackViewModel {
                     self.wasPlayingBeforeInterruption = self.isPlaying
                     self.isHandlingAudioInterruption = true
                     self.cancelStallRecovery()
+                    self.cancelBackgroundQualityUpgrade()
                     self.player.pause()
                     self.isPlaying = false
                     self.updateNowPlayingPlayback()
@@ -121,6 +122,7 @@ extension PlaybackViewModel {
         center.pauseCommand.addTarget { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.cancelStallRecovery()
+                self?.cancelBackgroundQualityUpgrade()
                 self?.player.pause()
                 self?.isPlaying = false
                 self?.updateNowPlayingPlayback()

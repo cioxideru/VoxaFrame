@@ -167,6 +167,7 @@ extension PlaybackViewModel {
     /// Tries a single URL in AVPlayer. Returns true if `.readyToPlay` is received.
     /// Stops waiting on readiness, failure or the shared stream-attempt deadline.
     func attemptURL(_ url: URL, for video: Video, info: PlayerInfo, label: String) async -> Bool {
+        guard !Task.isCancelled, currentVideo?.id == video.id else { return false }
         playerLog.notice("[\(label)]: \(ViewModelLogger.urlHost(url))")
 
         playerInfo = info
@@ -195,6 +196,7 @@ extension PlaybackViewModel {
 
         let (effectiveURL, applyHLSHints) = await resolvedAttemptURL(
             url, video: video, info: info, label: label, hlsPolicy: hlsPolicy)
+        guard !Task.isCancelled, currentVideo?.id == video.id else { return false }
 
         lastAttemptedStreamURL = effectiveURL
         // WebSafari HLS variant playlists are served from manifest.googlevideo.com and
