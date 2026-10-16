@@ -43,8 +43,9 @@ public final class BotGuardWebViewRunner: NSObject {
     private var webView: WKWebView?
     private var mintCallbackReady = false
     private var mintExpiry: Date?
-    /// Ongoing or completed prepare task; multiple callers `await` the same task.
-    private var prepareTask: Task<PrepareResult?, Never>?
+    /// Shared preparation outlives cancellation of any individual caller.
+    private var prepareTask: Task<Void, Never>?
+    private(set) var prepareWaiters: [UUID: AsyncStream<PrepareResult>.Continuation] = [:]
     /// The video ID passed to the most recent `launchWebView(videoId:)` call.
     private var currentVideoId: String = ""
     /// The WEB session's visitorData extracted from the WKWebView's youtube.com context.
@@ -82,19 +83,8 @@ public final class BotGuardWebViewRunner: NSObject {
     /// is ever launched. Returns `nil` if already ready; returns the `PrepareResult` on first run.
     @discardableResult
     public func prepare(for videoId: String = "") async -> PrepareResult? {
-        if isReady { return nil }
-
-        // If preparation is already running, wait for the same task to complete.
-        if let ongoing = prepareTask {
-            bgwvLog.notice("[BotGuardWV] prepare() — joining in-progress task")
-            _ = await ongoing.value
-            return nil
-        }
-
-        bgwvLog.notice("[BotGuardWV] prepare() starting — will load youtube.com context for BotGuard pipeline")
-
-        let task = Task<PrepareResult?, Never> { @MainActor [weak self] in
-            guard let self else { return nil }
+        await prepare {
+            bgwvLog.notice("[BotGuardWV] prepare() starting — will load youtube.com context for BotGuard pipeline")
             let result = await withCheckedContinuation { (cont: CheckedContinuation<PrepareResult, Never>) in
                 self.prepareCont = cont
                 self.launchWebView(videoId: videoId)
@@ -115,11 +105,8 @@ public final class BotGuardWebViewRunner: NSObject {
                     "[BotGuardWV] ⚠️ prepare() — hasMinter=false (WAA returned null integrityToken; websafe fallback path)"
                 )
             }
-            self.prepareTask = nil
             return result
         }
-        prepareTask = task
-        return await task.value
     }
 
     /// Mints a PO token using the cached WKWebView `mintCallback`.
@@ -523,6 +510,34 @@ public final class BotGuardWebViewRunner: NSObject {
         webView?.stopLoading()
         webView?.configuration.userContentController.removeAllScriptMessageHandlers()
         webView = nil
+    }
+}
+
+// MARK: - Shared preparation waiters
+
+extension BotGuardWebViewRunner {
+    /// Only the initiating caller receives the result; joiners wait for cache publication.
+    func prepare(using operation: @escaping @MainActor () async -> PrepareResult) async -> PrepareResult? {
+        guard !Task.isCancelled, !isReady else { return nil }
+        let id = UUID()
+        let (stream, continuation) = AsyncStream<PrepareResult>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        prepareWaiters[id] = continuation
+        defer { prepareWaiters.removeValue(forKey: id) }
+        let startsPreparation = prepareTask == nil
+        if startsPreparation {
+            prepareTask = Task {
+                let result = await operation()
+                self.prepareTask = nil
+                let waiters = self.prepareWaiters.values
+                self.prepareWaiters.removeAll()
+                for waiter in waiters {
+                    waiter.yield(result)
+                    waiter.finish()
+                }
+            }
+        }
+        let result = await stream.first(where: { @Sendable _ in true })
+        return startsPreparation && !Task.isCancelled ? result : nil
     }
 }
 
