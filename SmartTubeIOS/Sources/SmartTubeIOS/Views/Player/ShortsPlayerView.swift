@@ -35,6 +35,10 @@ public struct ShortsPlayerView: View {
     @State var isFetchingMore = false
     @State var fetchMoreTask: Task<Void, Never>?
     @State var isMuted = false
+    @State var showAudioTrackPicker = false
+    @State var nextPageToken: String?
+    @State var hasLoadedFeed = false
+    @State var consumedPageTokens: Set<String> = []
     /// True while the app is backgrounded — guards onDisappear from calling stop()
     /// when iOS fires it as a side-effect of backgrounding rather than navigation.
     @State var isInBackground = false
@@ -55,10 +59,13 @@ public struct ShortsPlayerView: View {
 
                 #if os(iOS) || os(tvOS)
                 // The video surface is passive; gestures belong to the layer above it.
-                PlayerAVLayerView(player: vm.player, videoGravity: .resizeAspectFill)
-                    .ignoresSafeArea()
-                    .accessibilityHidden(true)
-                    .allowsHitTesting(false)
+                PlayerAVLayerView(
+                    player: vm.player,
+                    videoGravity: store.settings.videoGravityMode == .fill ? .resizeAspectFill : .resizeAspect
+                )
+                .ignoresSafeArea()
+                .accessibilityHidden(true)
+                .allowsHitTesting(false)
                 #else
                 Color.black.ignoresSafeArea()
                 #endif
@@ -112,19 +119,23 @@ public struct ShortsPlayerView: View {
             .onPlayPauseCommand { vm.togglePlayPause() }
             // Siri Remote D-pad: up/down navigate prev/next short.
             .onMoveCommand { direction in
-                guard !isTransitioning else { return }
+                guard !isTransitioning, !showAudioTrackPicker else { return }
                 switch direction {
                 case .up:
                     if let next = ShortsNavigation.targetIndex(
                         vertical: -100, horizontal: 0, current: currentIndex, count: videos.count)
                     {
                         performVerticalTransition(direction: -1) { goTo(next) }
+                    } else {
+                        loadMoreIfNeeded(advanceWhenReady: true)
                     }
                 case .down:
                     if let prev = ShortsNavigation.targetIndex(
                         vertical: 100, horizontal: 0, current: currentIndex, count: videos.count)
                     {
                         performVerticalTransition(direction: 1) { goTo(prev) }
+                    } else {
+                        loadMoreAtStart()
                     }
                 default:
                     vm.toggleControls()
@@ -166,6 +177,11 @@ public struct ShortsPlayerView: View {
                         .transition(.opacity)
                 }
             }
+            .overlay {
+                if showAudioTrackPicker {
+                    PlayerAudioTrackPicker(vm: vm, showAudioTrackPicker: $showAudioTrackPicker)
+                }
+            }
             #if os(iOS)
             .navigationBarHidden(true)
             .statusBarHidden(true)
@@ -199,6 +215,12 @@ public struct ShortsPlayerView: View {
                 isTransitioning = false
                 slideOffset = 0
                 vm.stop()
+            }
+            .onChange(of: authService.sessionGeneration) { _, _ in
+                fetchMoreTask?.cancel()
+                transitionTask?.cancel()
+                vm.stop()
+                dismiss()
             }
             .onChange(of: scenePhase) { _, phase in
                 switch phase {

@@ -13,6 +13,8 @@ enum AccessibilityID {
     }
     static var pinKeypadDots: String { "pinKeypad.dots" }
     static var pinKeypadErrorMessage: String { "pinKeypad.errorMessage" }
+    static var playerAudioTrackPicker: String { "player.audioTrackPicker" }
+    static var playerTranslationLanguagePicker: String { "player.translationLanguagePicker" }
     static var playerAudioTrackPickerAuto: String { "player.audioTrackPicker.auto" }
     static var playerAudioKeepOriginalAudioToggle: String { "player.audioTrackPicker.keepOriginalAudioToggle" }
     static var playerAudioTrackPickerLivelyVoiceToggle: String { "player.audioTrackPicker.livelyVoiceToggle" }
@@ -68,6 +70,9 @@ enum AccessibilityID {
     static var shortsBackButton: String { "shorts.backButton" }
     static var shortsIndexLabel: String { "shorts.indexLabel" }
     static var shortsPlayPauseButton: String { "shorts.playPauseButton" }
+    static var shortsAudioTrackButton: String { "shorts.audioTrackButton" }
+    static var shortsVideoScaleButton: String { "shorts.videoScaleButton" }
+    static var shortsLoadMoreButton: String { "shorts.loadMoreButton" }
     static var shortsMuteButton: String { "shorts.muteButton" }
     static var shortsSeekBar: String { "shorts.seekBar" }
     static var shortsTimeLabel: String { "shorts.timeLabel" }
@@ -78,6 +83,7 @@ enum AccessibilityID {
     static var playerBackButton: String { "player.backButton" }
     static var playerPiPButton: String { "player.pipButton" }
     static var playerVideoScaleButton: String { "player.videoScaleButton" }
+    static var playerQuickAudioButton: String { "player.quickAccess.audioTrack" }
     static var playerQuickQualityButton: String { "player.quickAccess.quality" }
     static var playerQualityPicker: String { "player.qualityPicker" }
     static var playerNextButton: String { "player.nextBtn" }

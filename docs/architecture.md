@@ -90,6 +90,14 @@ PiP controller and delegate. Fullscreen and mini-player containers attach that
 same layer only when their presentation is active. PiP entry dismisses fullscreen;
 the UIKit presenter confirms restoration after presentation and layout finish.
 Shorts own a separate playback view model and stop the regular player on entry.
+Their audio/translation picker is shared with the regular player, and both read the
+same persisted Fit/Fill setting. Account Shorts come from authenticated subscription
+pages plus Shorts present in Home recommendations; signed-out discovery uses search.
+Home and Recommended reuse their subscription response instead of loading it twice.
+The Shorts player retains source-tagged continuation tokens and discards them when
+the account changes. Empty/duplicate page scanning is bounded per request; the
+Shorts section preserves its continuation for the user to request more. This is
+not a replica of YouTube's mobile reel ranking.
 Presentation reads video identity from the playback model, with no separate current-video
 copy. A stopped, parked item is excluded from presentation until explicitly reopened.
 

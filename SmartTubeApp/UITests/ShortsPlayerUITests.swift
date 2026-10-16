@@ -296,3 +296,140 @@ final class ShortsPlayerUITests: XCTestCase {
         )
     }
 }
+
+/// Shared controls and persisted scale on iPad, without requiring account credentials.
+final class ShortsAccountControlsUITests: XCTestCase {
+    private var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        app = XCUIApplication()
+        app.launchArguments = [
+            "--uitesting", "--uitesting-shorts", "--uitesting-reset-settings",
+            "--uitesting-show-controls", "--uitesting-disable-sponsorblock",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+    }
+
+    override func tearDownWithError() throws {
+        XCUIDevice.shared.orientation = .portrait
+        app.terminate()
+        app = nil
+    }
+
+    private var scale: XCUIElement { app.buttons[AccessibilityID.shortsVideoScaleButton] }
+    private var audio: XCUIElement { app.buttons[AccessibilityID.shortsAudioTrackButton] }
+    private var index: XCUIElement { app.staticTexts[AccessibilityID.shortsIndexLabel] }
+
+    private func swipeToNext() {
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.25))
+        start.press(forDuration: 0.05, thenDragTo: end)
+    }
+
+    private func expectIndex(_ value: String) {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", value), object: index)
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 8), .completed)
+    }
+
+    func testSharedAudioTranslationAndScaleSurviveNextRotationAndRelaunch() {
+        app.launch()
+        XCTAssertTrue(scale.waitForExistence(timeout: 15))
+        XCTAssertEqual(scale.value as? String, "Fit (letterbox)")
+        scale.tap()
+        XCTAssertEqual(scale.value as? String, "Fill (crop)")
+
+        audio.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.playerAudioTrackPickerAuto].waitForExistence(timeout: 5))
+        let language = app.buttons[AccessibilityID.playerTranslationLanguagePicker]
+        XCTAssertTrue(language.waitForExistence(timeout: 5))
+        language.tap()
+        app.buttons["Russian"].firstMatch.tap()
+        XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerLivelyVoiceToggle].exists)
+        XCTAssertTrue(app.switches[AccessibilityID.playerAudioKeepOriginalAudioToggle].exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Shorts audio and Yandex controls"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        app.buttons["Cancel"].firstMatch.tap()
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertTrue(scale.waitForExistence(timeout: 5))
+        XCTAssertEqual(scale.value as? String, "Fill (crop)")
+        XCUIDevice.shared.orientation = .portrait
+        swipeToNext()
+        expectIndex("2 / 3")
+        XCTAssertEqual(scale.value as? String, "Fill (crop)")
+        audio.tap()
+        XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].waitForExistence(timeout: 5))
+        app.buttons["Cancel"].firstMatch.tap()
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
+        app.launch()
+        XCTAssertTrue(scale.waitForExistence(timeout: 15))
+        XCTAssertEqual(scale.value as? String, "Fill (crop)")
+        audio.tap()
+        XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].waitForExistence(timeout: 5))
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-shorts" }
+        app.launchArguments.append("--uitesting-deeplink-video=fKopy74weus")
+        app.launch()
+        let regularAudio = app.buttons[AccessibilityID.playerQuickAudioButton]
+        XCTAssertTrue(regularAudio.waitForExistence(timeout: 20))
+        regularAudio.tap()
+        XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle].label.contains("Russian"))
+    }
+
+    func testShortsPaginationAdvancesBeyondFirstBatch() {
+        app.launchArguments.append("--uitesting-home-pagination")
+        app.launch()
+        XCTAssertTrue(index.waitForExistence(timeout: 15))
+        swipeToNext()
+        expectIndex("2 / 13")
+        // The end now consumes page-1, rather than fetching the initial ten items again.
+        for position in 3...12 {
+            swipeToNext()
+            expectIndex("\(position) / \(position < 12 ? 13 : 23)")
+        }
+    }
+
+    func testLiveShortsScaleDoesNotRestartPlayback() {
+        app.launchArguments.append("--uitesting-shorts-ids=fKopy74weus,9bZkp7q19f0")
+        app.launch()
+        XCTAssertTrue(scale.waitForExistence(timeout: 15))
+        let play = app.buttons[AccessibilityID.shortsPlayPauseButton]
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: play)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 45), .completed)
+        let time = app.staticTexts[AccessibilityID.shortsTimeLabel]
+        func seconds() -> Int {
+            let elapsed = time.label.components(separatedBy: " / ").first ?? ""
+            return elapsed.split(separator: ":").reduce(0) { $0 * 60 + (Int($1) ?? 0) }
+        }
+        let advancing = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in seconds() >= 2 }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 10), .completed)
+        let before = seconds()
+        scale.tap()
+        XCTAssertGreaterThanOrEqual(seconds(), before)
+        XCTAssertEqual(scale.value as? String, "Fill (crop)")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let stillPlaying = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in seconds() > before + 1 }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [stillPlaying], timeout: 10), .completed)
+        let landscape = XCTNSPredicateExpectation(
+            predicate: NSPredicate { [self] _, _ in
+                let frame = app.windows.firstMatch.frame
+                return frame.width > frame.height && scale.isHittable && audio.isHittable && play.isHittable
+            }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 10), .completed)
+        XCTAssertEqual(scale.value as? String, "Fill (crop)")
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Shorts Fill in landscape during playback"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+}

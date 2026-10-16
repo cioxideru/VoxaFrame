@@ -28,9 +28,9 @@ public final class HomeViewModel {
     // MARK: - State
 
     public private(set) var sections: [SectionState]
-    /// Shorts fetched explicitly via FEshorts (TV home feed never includes them).
+    /// Extra discovery Shorts for signed-out browsing. Account Shorts reuse the loaded shelves.
     public private(set) var shortsVideos: [Video] = []
-    /// Continuation token from the last FEshorts fetch; used by loadMoreShortsIfNeeded.
+    /// Continuation for the signed-out discovery source.
     private var shortsNextPageToken: String? = nil
     private var isLoadingMoreShorts: Bool = false
     private var requestedShortsCount = 0
@@ -138,17 +138,12 @@ public final class HomeViewModel {
     /// Used by `homeShelves` to populate the main grid (Shorts are shown separately).
     public var homeRegularVideos: [Video] { mergedVideos.filter { !$0.isShort } }
 
-    /// Short videos for the dedicated Shorts row.
-    /// Sources (in priority order, deduplicated by video ID):
-    ///  1. `shortsVideos` — from the FEshorts browse (when the API works)
-    ///  2. Subscriptions section shorts — pulled directly from the full subs list so
-    ///     they are not lost to the home/subs interleave ratio in `mergedVideos`
-    ///  3. `mergedVideos` shorts — catches any shorts from the home-rec feed
+    /// Account recommendations and subscriptions take precedence over signed-out discovery.
     public var homeShortsVideos: [Video] {
-        let subsShorts = sections.first { $0.section.type == .subscriptions }?.videos.filter { $0.isShort } ?? []
+        let homeShorts = sections.first { $0.section.type == .home }?.videos.filter(\.isShort) ?? []
+        let subsShorts = sections.first { $0.section.type == .subscriptions }?.videos.filter(\.isShort) ?? []
         var seen = Set<String>()
-        return (shortsVideos + subsShorts + mergedVideos.filter { $0.isShort })
-            .filter { seen.insert($0.id).inserted }
+        return (homeShorts + subsShorts + shortsVideos).filter { seen.insert($0.id).inserted }
     }
 
     // MARK: - Dependencies
@@ -250,9 +245,9 @@ public final class HomeViewModel {
 
         loadTask = Task {
             guard isCurrentLoad(generation) else { return }
-            // Fetch shorts via FEshorts in parallel with the home/subs feed.
-            // The TV home feed (FEwhat_to_watch) never includes a Shorts shelf.
-            async let fetchedShortsResult: ([Video], String?) = HomeViewModel.fetchShortsVideos(api: self.api)
+            // Signed-in Shorts reuse the account shelves instead of fetching subscriptions twice.
+            async let fetchedShortsResult: ([Video], String?) = HomeViewModel.fetchShortsVideos(
+                api: self.api, hasAccount: hasAuthToken)
 
             await withTaskGroup(of: (String, [Video], String?).self) { group in
                 for state in sections {
@@ -432,7 +427,6 @@ public final class HomeViewModel {
             await self.fetchShortsPages(generation: generation)
             guard self.isCurrentLoad(generation) else { return }
             self.isLoadingMoreShorts = false
-            self.resumeShortsDemand()
         }
     }
 
@@ -441,7 +435,11 @@ public final class HomeViewModel {
     }
 
     private func fetchShortsPages(generation: Int) async {
-        while isCurrentLoad(generation), homeShortsVideos.count < requestedShortsCount, hasShortsSource {
+        var pagesRemaining = InnerTubeClients.maxShortsPagesPerRequest
+        while isCurrentLoad(generation), homeShortsVideos.count < requestedShortsCount, hasShortsSource,
+            pagesRemaining > 0
+        {
+            pagesRemaining -= 1
             guard await fetchOneShortsPage(generation: generation) else {
                 homeLog.notice("loadShorts: waiting for subscriptions or sources exhausted")
                 break
@@ -450,7 +448,7 @@ public final class HomeViewModel {
         homeLog.notice("loadShorts: count=\(homeShortsVideos.count) target=\(requestedShortsCount)")
     }
 
-    /// Fetches one increment of Shorts content: a FEshorts search-continuation page
+    /// Fetches one increment of Shorts content: an anonymous search-continuation page
     /// if available, falling back to one subscriptions-continuation page if the
     /// search page is exhausted or returned nothing new. Search results land in
     /// `shortsVideos`; subs results land in `sections[subscriptions].videos` — both
@@ -509,7 +507,7 @@ public final class HomeViewModel {
         return false
     }
 
-    /// Auto-loads an additional page of FEshorts if the current count falls below
+    /// Auto-loads an additional Shorts page if the current count falls below
     /// the threshold needed to fill 2 horizontal screens.
     /// iOS: ~3 cards/screen → threshold = 6; tvOS: ~4 cards/screen → threshold = 8.
     private func loadMoreShortsIfNeeded(generation: Int) async {
@@ -536,9 +534,9 @@ extension HomeViewModel {
 
     // MARK: - Private fetch helpers
 
-    /// Fetches the FEshorts feed. Non-isolated so it runs concurrently with
-    /// the home/subs task group.
-    private static func fetchShortsVideos(api: any InnerTubeAPIProtocol) async -> ([Video], String?) {
+    /// Fetches signed-out discovery concurrently with the home/subs task group.
+    private static func fetchShortsVideos(api: any InnerTubeAPIProtocol, hasAccount: Bool) async -> ([Video], String?) {
+        guard !hasAccount else { return ([], nil) }
         do {
             let group = try await api.fetchShorts()
             let hasToken = group.nextPageToken != nil
@@ -563,7 +561,7 @@ extension HomeViewModel {
                 homeLog.notice(
                     "fetchVideos subs: total=\(group.videos.count) shorts=\(shortsCount) regular=\(group.videos.count - shortsCount)"
                 )
-                return (Array(group.videos.prefix(InnerTubeClients.maxVideoResults)), group.nextPageToken)
+                return (initialShelfVideos(group.videos), group.nextPageToken)
             case .home:
                 let rows = try await api.fetchHomeRows()
                 let token = rows.last(where: { $0.nextPageToken != nil })?.nextPageToken
@@ -576,15 +574,26 @@ extension HomeViewModel {
                 if deduped.isEmpty {
                     // Home feed empty (no watch history / feedNudgeRenderer) — fall back to popular
                     let popular = try await api.search(query: "popular")
-                    return (popular.videos, popular.nextPageToken)
+                    // Generic regular-video fallback must not leak discovery Shorts into account rows.
+                    return (popular.videos.filter { !$0.isShort }, popular.nextPageToken)
                 }
-                return (Array(deduped.prefix(InnerTubeClients.maxVideoResults)), token)
+                return (initialShelfVideos(deduped), token)
             default:
                 return ([], nil)
             }
         } catch {
             homeLog.error("HomeViewModel fetch \(String(describing: type)): \(ViewModelLogger.errorSummary(error))")
             return ([], nil)
+        }
+    }
+
+    /// Keep Shorts even when YouTube puts their shelf after the initial regular-video limit.
+    private static func initialShelfVideos(_ videos: [Video]) -> [Video] {
+        var regularCount = 0
+        return videos.filter { video in
+            if video.isShort { return true }
+            regularCount += 1
+            return regularCount <= InnerTubeClients.maxVideoResults
         }
     }
 

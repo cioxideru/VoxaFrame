@@ -24,10 +24,10 @@ public struct BrowseView: View {
 
     public var body: some View {
         Group {
-            if vm.isLoading && vm.videoGroups.isEmpty {
+            if vm.isLoading && vm.videoGroups.allSatisfy({ $0.videos.isEmpty }) {
                 ProgressView("Loading…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if vm.videoGroups.isEmpty && !vm.isLoading {
+            } else if vm.videoGroups.allSatisfy({ $0.videos.isEmpty }) && !vm.isLoading {
                 emptyState
             } else {
                 content
@@ -99,6 +99,11 @@ public struct BrowseView: View {
                     },
                     scrollAxis: axis
                 )
+                if vm.hasMoreShorts {
+                    Button("More") { vm.loadMoreShorts() }
+                        .disabled(vm.isLoadingMore)
+                        .accessibilityIdentifier(AccessibilityID.shortsLoadMoreButton)
+                }
                 if vm.isLoading {
                     ProgressView().frame(maxWidth: .infinity).padding()
                 }
@@ -164,8 +169,15 @@ public struct BrowseView: View {
                 Text("Nothing here yet")
                     .font(.title3)
                     .foregroundStyle(.secondary)
-                Button("Refresh") { vm.loadContent(refresh: true) }
-                    .buttonStyle(.borderedProminent)
+                if vm.hasMoreShorts {
+                    Button("More") { vm.loadMoreShorts() }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(vm.isLoadingMore)
+                        .accessibilityIdentifier(AccessibilityID.shortsLoadMoreButton)
+                } else {
+                    Button("Refresh") { vm.loadContent(refresh: true) }
+                        .buttonStyle(.borderedProminent)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

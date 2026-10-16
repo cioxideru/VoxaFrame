@@ -13,6 +13,8 @@ public enum AccessibilityID {
     }
     public static var pinKeypadDots: String { "pinKeypad.dots" }
     public static var pinKeypadErrorMessage: String { "pinKeypad.errorMessage" }
+    public static var playerAudioTrackPicker: String { "player.audioTrackPicker" }
+    public static var playerTranslationLanguagePicker: String { "player.translationLanguagePicker" }
     public static var playerAudioTrackPickerAuto: String { "player.audioTrackPicker.auto" }
     public static var playerAudioKeepOriginalAudioToggle: String { "player.audioTrackPicker.keepOriginalAudioToggle" }
     public static var playerAudioTrackPickerLivelyVoiceToggle: String { "player.audioTrackPicker.livelyVoiceToggle" }
@@ -69,6 +71,9 @@ public enum AccessibilityID {
     public static var shortsBackButton: String { "shorts.backButton" }
     public static var shortsIndexLabel: String { "shorts.indexLabel" }
     public static var shortsPlayPauseButton: String { "shorts.playPauseButton" }
+    public static var shortsAudioTrackButton: String { "shorts.audioTrackButton" }
+    public static var shortsVideoScaleButton: String { "shorts.videoScaleButton" }
+    public static var shortsLoadMoreButton: String { "shorts.loadMoreButton" }
     public static var shortsMuteButton: String { "shorts.muteButton" }
     public static var shortsSeekBar: String { "shorts.seekBar" }
     public static var shortsTimeLabel: String { "shorts.timeLabel" }
@@ -79,6 +84,7 @@ public enum AccessibilityID {
     public static var playerBackButton: String { "player.backButton" }
     public static var playerPiPButton: String { "player.pipButton" }
     public static var playerVideoScaleButton: String { "player.videoScaleButton" }
+    public static var playerQuickAudioButton: String { "player.quickAccess.audioTrack" }
     public static var playerQuickQualityButton: String { "player.quickAccess.quality" }
     public static var playerQualityPicker: String { "player.qualityPicker" }
     public static var playerNextButton: String { "player.nextBtn" }

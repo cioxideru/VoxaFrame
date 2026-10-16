@@ -45,6 +45,32 @@ private final class AudioSessionDriverProbe: @unchecked Sendable {
 
 @Suite("Serialized playback audio session (PLAN-0011)")
 struct PlaybackAudioSessionTests {
+    @Test @MainActor func voiceOverMuteSurvivesCancellationAndReplacement() {
+        let translation = VoiceOverTranslationController()
+        let player = AVPlayer()
+        player.volume = 0.7
+        var playbackIntents: [Bool] = []
+        translation.isMuted = true
+        for id in ["first-short", "next-short"] {
+            translation.start(
+                .init(
+                    videoId: id, duration: 30, sourceLanguage: "en", targetLanguage: "ru",
+                    livelyVoiceToken: nil, originalAudioURL: nil, originalAudioHLSURL: nil,
+                    originalAudioUserAgent: "test"),
+                mainPlayer: player, setVideoPlaying: { playbackIntents.append($0) })
+            #expect(translation.videoId == id)
+            #expect(translation.isMuted)
+            // Cancel synchronously before the translation task can start network work.
+            translation.cancelAndResume()
+            #expect(translation.state == .idle)
+            #expect(translation.videoId == nil)
+            #expect(player.volume == 0.7)
+        }
+        #expect(playbackIntents == [false, true, false, true])
+        translation.isMuted = false
+        #expect(!translation.isMuted)
+    }
+
     @Test @MainActor func deferredConfigurationAndOffMainOrdering() async throws {
         let probe = AudioSessionDriverProbe()
         let session = PlaybackAudioSession(driver: probe.driver)

@@ -27,6 +27,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0012: Account Shorts and shared playback controls](completed/shorts-account-controls.md) — account sources, bounded continuation, shared translation/audio and Fit/Fill; native checks, five iPad UI tests and iOS/tvOS builds pass.
+
 - [PLAN-0011: Resource ownership and lifecycle](completed/resource-quality.md) — twelve sequential fixes; native and iPad Simulator package tests, nine iPad UI tests and iOS/tvOS builds pass; physical device checks remain deferred.
 
 - [PLAN-0010: iPad performance](completed/ipad-performance.md) — redundant feed loads fixed; physical launch, scrolling, navigation and PiP checks passed, broader performance acceptance remains OQ-0013.

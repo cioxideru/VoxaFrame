@@ -442,8 +442,8 @@ struct HomeViewModelTests {
         #expect(ids.contains("srt11_FFFFF"))
     }
 
-    @Test("loadShorts(atLeast:) loops fetching pages until homeShortsVideos reaches the target")
-    func loadShortsLoopsUntilTarget() async {
+    @Test("loadShorts(atLeast:) reaches its target across bounded renewed requests")
+    func loadShortsUsesBoundedRequests() async {
         let mock = MockInnerTubeAPI()
         let initialShorts = (0..<3).map {
             Video(id: "srt\($0)_AAAAA", title: "Short \($0)", channelTitle: "Ch", isShort: true)
@@ -469,16 +469,15 @@ struct HomeViewModelTests {
         defer { vm.cancel() }
         vm.load()
         await waitForTasks(until: { !vm.isRefreshing })
-        vm.loadShorts(atLeast: 40)
-        await waitForTasks(until: { vm.homeShortsVideos.count >= 40 })
-
-        // 3 initial + repeated pages of 5 must reach the 40-item target.
+        for _ in 0..<3 where vm.homeShortsVideos.count < 40 {
+            let before = callCount
+            let expectedCount = min(40, vm.homeShortsVideos.count + 5 * InnerTubeClients.maxShortsPagesPerRequest)
+            vm.loadShorts(atLeast: 40)
+            await waitForTasks(until: { vm.homeShortsVideos.count >= expectedCount })
+            #expect(callCount - before <= InnerTubeClients.maxShortsPagesPerRequest)
+        }
         #expect(vm.homeShortsVideos.count >= 40)
-        // Reaching 40 from 3 (+5/page) requires looping across multiple pages,
-        // not just the single page loadMoreShortsIfNeeded fetches for its
-        // own (lower) threshold.
-        let shortsMoreCallCount = mock.calls.filter { $0.method == "fetchShortsMore" }.count
-        #expect(shortsMoreCallCount >= 7)
+        #expect(callCount == 8)
     }
 
     @Test("loadShorts(atLeast:) stops immediately when no continuation tokens remain")

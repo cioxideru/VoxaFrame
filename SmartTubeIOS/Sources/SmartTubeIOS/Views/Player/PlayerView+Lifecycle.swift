@@ -206,18 +206,6 @@ extension PlayerView {
     // Third split of the tvOS modifier chain.
     private var tvosPlayerChangeModifiers: some View {
         tvosPlayerOverlayModifiers
-            .onChange(of: showAudioTrackPicker) { _, visible in
-                playerLifecycleLog.notice("[tv] showAudioTrackPicker changed → \(visible)")
-                if visible {
-                    Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 50_000_000)
-                        audioTrackPickerFocused = true
-                        playerLifecycleLog.notice("[tv] audioTrackPickerFocused set → true")
-                    }
-                } else {
-                    audioTrackPickerFocused = false
-                }
-            }
             .onChange(of: vm.currentToastSegment) { _, segment in
                 playerLifecycleLog.notice(
                     "[tv] currentToastSegment changed → \(segment == nil ? "nil" : segment!.category.rawValue)")

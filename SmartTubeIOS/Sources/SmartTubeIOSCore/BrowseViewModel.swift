@@ -36,11 +36,11 @@ public final class BrowseViewModel {
     /// True while a pagination (loadMore) request is in flight. Distinct from `isLoading`,
     /// which covers the initial/refresh fetch. Keeping these separate prevents the preload
     /// cache work that follows the initial fetch from blocking subsequent loadMore calls.
-    private var isLoadingMore: Bool = false
+    public private(set) var isLoadingMore: Bool = false
     public var error: Error?
     /// True when the current section requires authentication and the user is not signed in.
     public internal(set) var isAuthRequired: Bool = false
-    /// Shorts fetched from FEshorts for the Recommended section.
+    /// Account Shorts reused from Home and subscriptions for the Recommended section.
     /// Always empty for all other sections.
     public internal(set) var recommendedShortsVideos: [Video] = []
     /// Timestamp of the last successful content fetch for the current section.
@@ -58,10 +58,6 @@ public final class BrowseViewModel {
     internal var enrichTask: Task<Void, Never>?
     /// When `false`, the History section returns empty content rather than fetching from YouTube.
     private var historyEnabled: Bool = true
-    /// Counts consecutive pages fetched for the Shorts chip that produced 0 new unique videos
-    /// (all results were already in the list). After 3 consecutive empty pages we clear the
-    /// nextPageToken so the scroll-trigger sentinel cannot loop forever on a sparse result set.
-    private var consecutiveEmptyShortPages: Int = 0
     /// True when the Recommended section fell back to a `/search?q=popular` result
     /// because the unauthenticated `/browse` home feed returned 0 videos.
     /// In this mode, pagination must also go through `/search` (not `/browse`).
@@ -193,7 +189,6 @@ public final class BrowseViewModel {
             subscribedChannels = []
             recommendedShortsVideos = []
             loadedAt = nil
-            consecutiveEmptyShortPages = 0
             enrichTask?.cancel()
             enrichTask = nil
         }
@@ -259,6 +254,17 @@ public final class BrowseViewModel {
         fetchTask = Task { await fetchNextPage(for: currentSection) }
     }
 
+    public var hasMoreShorts: Bool {
+        currentSection.type == .shorts && videoGroups.last?.nextPageToken != nil
+    }
+
+    /// Empty account pages still have a continuation, even without a last visible card.
+    public func loadMoreShorts() {
+        guard hasMoreShorts, !isLoading, !isLoadingMore else { return }
+        isLoadingMore = true
+        fetchTask = Task { await fetchNextPage(for: currentSection) }
+    }
+
     /// Refreshes the current section's feed if the last successful fetch was more than
     /// `threshold` seconds ago (default 15 min). The first load belongs to sign-in or selection.
     public func refreshIfStale(threshold: TimeInterval = 15 * 60) {
@@ -292,7 +298,7 @@ public final class BrowseViewModel {
             loadContent(refresh: true, source: "updateAuthToken")
         } else if token == nil && wasAuthenticated {
             // Signed out — reload auth-gated sections to show local content instead
-            let authSections: Set<BrowseSection.SectionType> = [.subscriptions, .channels]
+            let authSections: Set<BrowseSection.SectionType> = [.subscriptions, .channels, .shorts, .recommended]
             if authSections.contains(currentSection.type) {
                 loadContent(refresh: true, source: "updateAuthToken.signOut")
             }
@@ -375,8 +381,10 @@ extension BrowseViewModel {
             try await fetchChannelsSection()
 
         case .shorts:
-            let group = try await api.fetchShorts()
-            if !Task.isCancelled { videoGroups = group.videos.isEmpty ? [] : [group] }
+            let group = try await fetchShortsGroup()
+            if !Task.isCancelled {
+                videoGroups = group.videos.isEmpty && group.nextPageToken == nil ? [] : [group]
+            }
 
         case .music:
             let group = try await api.fetchMusic()
@@ -408,206 +416,60 @@ extension BrowseViewModel {
     }
 
     private func fetchNextPage(for section: BrowseSection, autoChainDepth: Int = 0) async {
-        guard let token = videoGroups.last?.nextPageToken else {
-            browseLog.notice("fetchNextPage: no token for section=\(section.title) — skipping")
-            return
-        }
-        browseLog.notice("fetchNextPage start: section=\(section.title) token=\(token.prefix(20))…")
+        guard let token = videoGroups.last?.nextPageToken else { return }
         isLoadingMore = true
         defer { isLoadingMore = false }
         do {
-            switch section.type {
-            case .home:
-                let newRows = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                    try await api.fetchHomeRows(continuationToken: token)
-                }
-                if Task.isCancelled {
-                    browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                } else {
-                    // Deduplicate new rows against all videos already in the feed.
-                    // YouTube continuation responses occasionally re-include videos
-                    // from earlier pages, causing blank cells in the grid.
-                    let existingIds = Set(videoGroups.flatMap(\.videos).map(\.id))
-                    var seenInPage = existingIds
-                    let filteredRows = newRows.map { row -> VideoGroup in
-                        var copy = row
-                        copy.videos = row.videos.filter { seenInPage.insert($0.id).inserted }
-                        return copy
-                    }.filter { !$0.videos.isEmpty }
-                    let count = filteredRows.flatMap(\.videos).count
-                    browseLog.notice(
-                        "fetchNextPage success: section=\(section.title) newVideos=\(count) nextToken=\(newRows.last?.nextPageToken != nil)"
-                    )
-                    videoGroups.append(contentsOf: filteredRows)
-                }
-            case .recommended:
-                if recommendedUsesSearchFallback {
-                    browseLog.notice("fetchNextPage: Recommended using search fallback path")
-                    let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                        try await api.search(query: "popular", continuationToken: token, filter: .default)
-                    }
-                    if Task.isCancelled {
-                        browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                    } else {
-                        browseLog.notice(
-                            "fetchNextPage success (search fallback): section=\(section.title) newVideos=\(group.videos.count) nextToken=\(group.nextPageToken != nil)"
-                        )
-                        mergeIntoFirstGroup(group)
-                    }
-                } else {
-                    let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                        try await api.fetchHome(continuationToken: token)
-                    }
-                    if Task.isCancelled {
-                        browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                    } else {
-                        browseLog.notice(
-                            "fetchNextPage success: section=\(section.title) newVideos=\(group.videos.count) nextToken=\(group.nextPageToken != nil)"
-                        )
-                        mergeIntoFirstGroup(group)
-                    }
-                }
-            case .subscriptions:
-                let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                    try await api.fetchSubscriptions(continuationToken: token)
-                }
-                if Task.isCancelled {
-                    browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                } else {
-                    browseLog.notice(
-                        "fetchNextPage success: section=\(section.title) newVideos=\(group.videos.count) nextToken=\(group.nextPageToken != nil)"
-                    )
-                    // Append new videos at the bottom without re-sorting. Re-sorting the
-                    // already-rendered feed after every page reorders visible rows mid-scroll,
-                    // which is jarring. The initial load (loadContent) sorts once before
-                    // anything is on screen; subsequent pages are simply appended in the
-                    // order the API returns them.
-                    mergeIntoFirstGroup(group)
-                }
-            case .history:
-                let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                    try await api.fetchHistory(continuationToken: token)
-                }
-                if Task.isCancelled {
-                    browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                } else {
-                    browseLog.notice(
-                        "fetchNextPage success: section=\(section.title) newVideos=\(group.videos.count) nextToken=\(group.nextPageToken != nil)"
-                    )
-                    mergeIntoFirstGroup(group)
-                    // Auto-chain: when every video on this page is a Short, the view's
-                    // .onAppear sentinel won't re-fire (the visible filtered list doesn't
-                    // grow). Immediately fetch the next page so history keeps loading.
-                    if autoChainDepth < 5,
-                        group.videos.allSatisfy(\.isShort),
-                        group.nextPageToken != nil
-                    {
-                        browseLog.notice(
-                            "fetchNextPage auto-chain (all-Shorts page): section=\(section.title) depth=\(autoChainDepth)"
-                        )
-                        await fetchNextPage(for: section, autoChainDepth: autoChainDepth + 1)
-                    }
-                }
-            case .channels:
-                break  // channel list doesn't paginate via videoGroups
-            case .shorts:
-                let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                    try await api.fetchShortsMore(continuationToken: token)
-                }
-                if Task.isCancelled {
-                    browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                } else {
-                    let before = videoGroups.first?.videos.count ?? 0
-                    mergeIntoFirstGroup(group)
-                    let after = videoGroups.first?.videos.count ?? 0
-                    let added = after - before
-                    browseLog.notice(
-                        "fetchNextPage success: section=\(section.title) newVideos=\(added) nextToken=\(group.nextPageToken != nil)"
-                    )
-                    if added == 0 {
-                        consecutiveEmptyShortPages += 1
-                        browseLog.notice("fetchNextPage: Shorts empty page #\(consecutiveEmptyShortPages)")
-                        if consecutiveEmptyShortPages >= 3 {
-                            // API is cycling through already-seen or empty results.
-                            // Clear the token so the scroll-trigger sentinel stops looping.
-                            browseLog.notice(
-                                "fetchNextPage: clearing Shorts token after \(consecutiveEmptyShortPages) consecutive empty pages"
-                            )
-                            videoGroups[0].nextPageToken = nil
-                            consecutiveEmptyShortPages = 0
-                        }
-                    } else {
-                        consecutiveEmptyShortPages = 0
-                    }
-                }
-            case .music:
-                let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                    try await api.fetchMusic()
-                }
-                if Task.isCancelled {
-                    browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                } else {
-                    browseLog.notice(
-                        "fetchNextPage success: section=\(section.title) newVideos=\(group.videos.count) nextToken=\(group.nextPageToken != nil)"
-                    )
-                    mergeIntoFirstGroup(group)
-                }
-            case .gaming:
-                let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                    try await api.fetchGaming()
-                }
-                if Task.isCancelled {
-                    browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                } else {
-                    browseLog.notice(
-                        "fetchNextPage success: section=\(section.title) newVideos=\(group.videos.count) nextToken=\(group.nextPageToken != nil)"
-                    )
-                    mergeIntoFirstGroup(group)
-                }
-            case .news:
-                let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                    try await api.fetchNews()
-                }
-                if Task.isCancelled {
-                    browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                } else {
-                    browseLog.notice(
-                        "fetchNextPage success: section=\(section.title) newVideos=\(group.videos.count) nextToken=\(group.nextPageToken != nil)"
-                    )
-                    mergeIntoFirstGroup(group)
-                }
-            case .live:
-                let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                    try await api.fetchLive()
-                }
-                if Task.isCancelled {
-                    browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                } else {
-                    browseLog.notice(
-                        "fetchNextPage success: section=\(section.title) newVideos=\(group.videos.count) nextToken=\(group.nextPageToken != nil)"
-                    )
-                    mergeIntoFirstGroup(group)
-                }
-            case .sports:
-                let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
-                    try await api.fetchSports()
-                }
-                if Task.isCancelled {
-                    browseLog.notice("fetchNextPage cancelled: section=\(section.title)")
-                } else {
-                    browseLog.notice(
-                        "fetchNextPage success: section=\(section.title) newVideos=\(group.videos.count) nextToken=\(group.nextPageToken != nil)"
-                    )
-                    mergeIntoFirstGroup(group)
-                }
-            default:
-                break
+            if section.type == .home {
+                try await fetchNextHomePage(token: token)
+                return
+            }
+            let group = try await retryWithBackoff(label: "BrowseVM[\(section.title)]") {
+                try await self.fetchContinuationGroup(for: section.type, token: token)
+            }
+            guard !Task.isCancelled, let group else { return }
+            // Append in server order so existing cards stay in place while scrolling.
+            mergeIntoFirstGroup(group)
+            // Hidden Shorts do not advance the History sentinel, so keep looking for regular videos.
+            if section.type == .history, autoChainDepth < 5,
+                group.videos.allSatisfy(\.isShort), group.nextPageToken != nil
+            {
+                await fetchNextPage(for: section, autoChainDepth: autoChainDepth + 1)
             }
         } catch {
             if !Task.isCancelled {
                 browseLog.error("fetchNextPage \(section.title): \(ViewModelLogger.errorSummary(error))")
                 self.error = error
             }
+        }
+    }
+
+    private func fetchContinuationGroup(for type: BrowseSection.SectionType, token: String) async throws -> VideoGroup?
+    {
+        switch type {
+        case .recommended:
+            if recommendedUsesSearchFallback {
+                return try await api.search(query: "popular", continuationToken: token, filter: .default)
+            }
+            return try await api.fetchHome(continuationToken: token)
+        case .subscriptions:
+            return try await api.fetchSubscriptions(continuationToken: token)
+        case .history:
+            return try await api.fetchHistory(continuationToken: token)
+        case .shorts:
+            return try await fetchShortsGroup(continuationToken: token)
+        case .music:
+            return try await api.fetchMusic()
+        case .gaming:
+            return try await api.fetchGaming()
+        case .news:
+            return try await api.fetchNews()
+        case .live:
+            return try await api.fetchLive()
+        case .sports:
+            return try await api.fetchSports()
+        default:
+            return nil
         }
     }
 

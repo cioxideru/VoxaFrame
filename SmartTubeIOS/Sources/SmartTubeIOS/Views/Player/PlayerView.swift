@@ -85,7 +85,6 @@ public struct PlayerView: View {
     @Namespace var speedPickerNamespace
     @Namespace var sleepTimerNamespace
     @Namespace var captionPickerNamespace
-    @Namespace var audioTrackPickerNamespace
     @Namespace var descriptionOverlayNamespace
     @Namespace var commentsOverlayNamespace
     /// Explicitly routes Siri Remote focus when overlays open programmatically.
@@ -96,7 +95,6 @@ public struct PlayerView: View {
     @FocusState var speedPickerFocused: Bool
     @FocusState var sleepTimerPickerFocused: Bool
     @FocusState var captionPickerFocused: Bool
-    @FocusState var audioTrackPickerFocused: Bool
     @FocusState var skipToastButtonFocused: Bool
     #endif
 

@@ -257,6 +257,25 @@ struct BrowseViewModelTests {
         #expect(!vm.isAuthRequired)
     }
 
+    @Test("Signed-in Recommended uses account Shorts without a duplicate subscription fetch")
+    func recommendedAccountShorts() async {
+        let api = MockInnerTubeAPI()
+        var homeShort = makeVideo("home-short")
+        homeShort.isShort = true
+        var subscriptionShort = makeVideo("subscription-short")
+        subscriptionShort.isShort = true
+        api.homeResult = VideoGroup(videos: [homeShort])
+        api.subscriptionsResult = VideoGroup(videos: [subscriptionShort, homeShort])
+        api.shortsResult = VideoGroup(videos: [makeVideo("global-search")])
+        let vm = BrowseViewModel(api: api)
+        await vm.updateAuthToken("account", reloadOnSignIn: false)
+        vm.select(section: BrowseSection(id: "recommended", title: "Recommended", type: .recommended))
+        await waitForTasks { !vm.isLoading }
+        #expect(vm.recommendedShortsVideos.map(\.id) == ["home-short", "subscription-short"])
+        #expect(api.calls.filter { $0.method == "fetchSubscriptions" }.count == 1)
+        #expect(!api.calls.contains { $0.method == "fetchShorts" })
+    }
+
     @Test("loadContent for .shorts calls fetchShorts")
     func loadShortsCallsFetch() async {
         let mock = MockInnerTubeAPI()
@@ -285,6 +304,47 @@ struct BrowseViewModelTests {
         // 1-element array with no videos is indistinguishable from "has content"
         // to sectionFeed's videoGroups.isEmpty check.
         #expect(vm.videoGroups.isEmpty)
+    }
+
+    @Test("Sparse account Shorts retain a continuation after each bounded request")
+    func sparseShortsCanResumeAfterEmptyInitialPages() async {
+        let mock = MockInnerTubeAPI()
+        mock.shortsResult = VideoGroup(title: "Shorts", videos: [], nextPageToken: "page-1")
+        mock.shortsMoreHandler = { token in
+            let page = Int(token.dropFirst("page-".count)) ?? 0
+            return VideoGroup(
+                title: "Shorts", videos: page == 4 ? [makeVideo("account-short")] : [],
+                nextPageToken: "page-\(page + 1)")
+        }
+        let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: .shorts))
+        vm.loadContent(refresh: true)
+        await waitForTasks { vm.loadedAt != nil && !vm.isLoading }
+        #expect(vm.videoGroups.flatMap(\.videos).isEmpty)
+        #expect(vm.videoGroups.last?.nextPageToken == "page-3")
+        #expect(vm.hasMoreShorts)
+        #expect(mock.calls.filter { $0.method == "fetchShortsMore" }.count == 2)
+
+        vm.loadMoreShorts()
+        vm.loadMoreShorts()
+        await waitForTasks { !vm.isLoadingMore }
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["account-short"])
+        #expect(
+            mock.calls.filter { $0.method == "fetchShortsMore" }.map(\.args) == [
+                ["page-1"], ["page-2"], ["page-3"], ["page-4"],
+            ])
+    }
+
+    @Test("Repeated Shorts continuation stops without an endless request loop")
+    func cyclicShortsContinuationStops() async {
+        let mock = MockInnerTubeAPI()
+        mock.shortsResult = VideoGroup(title: "Shorts", videos: [], nextPageToken: "same-page")
+        mock.shortsMoreResult = mock.shortsResult
+        let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: .shorts))
+        vm.loadContent(refresh: true)
+        await waitForTasks { vm.loadedAt != nil && !vm.isLoading }
+        #expect(vm.videoGroups.isEmpty)
+        #expect(!vm.hasMoreShorts)
+        #expect(mock.calls.filter { $0.method == "fetchShortsMore" }.count == 1)
     }
 
     @Test("Error on non-auth section sets error property")

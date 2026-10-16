@@ -144,6 +144,11 @@ extension HomeView {
                 #if os(tvOS)
                 .focusSection()
                 #endif
+                if sectionVM.hasMoreShorts {
+                    Button("More") { sectionVM.loadMoreShorts() }
+                        .disabled(sectionVM.isLoadingMore)
+                        .accessibilityIdentifier(AccessibilityID.shortsLoadMoreButton)
+                }
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {

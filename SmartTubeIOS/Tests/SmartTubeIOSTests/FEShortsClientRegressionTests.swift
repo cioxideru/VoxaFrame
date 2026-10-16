@@ -3,136 +3,156 @@ import Testing
 
 @testable import SmartTubeIOSCore
 
-// MARK: - FEShortsClientRegressionTests
-//
-// Regression tests for task #96: fetchShorts and fetchShortsMore must use the
-// TVHTML5 client context, not the WEB client context, when making authenticated
-// InnerTube browse requests.
-//
-// Root cause: the device-code OAuth token is bound to TVHTML5. When the WEB
-// client body is sent with this token, YouTube returns HTTP 400. All other auth
-// endpoints correctly use tvClientContext; fetchShorts and fetchShortsMore had
-// a regression that switched them to webClientContext, causing Shorts to show
-// no videos on cold launch.
-//
-// These tests intercept the outgoing URLRequest via URLProtocol and verify the
-// JSON body contains `"clientName": "TVHTML5"` — not `"WEB"`.
+/// Each request and reply is protected because URLSession callbacks use another thread.
+private final class ShortsRequestProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private var requests: [(URLRequest, Data)] = []
+    private var status = 200
+    private var response = Data()
 
-// MARK: - URLProtocol helper
-
-/// Intercepts the first outgoing POST request and captures its JSON body.
-/// Returns HTTP 400 so the caller's network path fails fast.
-private final class BodyCapturingURLProtocol: URLProtocol, @unchecked Sendable {
-
-    // The serialized suite resets before the request and reads after await; sequential callbacks capture only the first body.
-    nonisolated(unsafe) static var capturedBody: Data?
-
-    override class func canInit(with request: URLRequest) -> Bool {
-        request.httpMethod == "POST"
+    func reset(status: Int = 200, response: Data = Data()) {
+        lock.withLock {
+            requests = []
+            self.status = status
+            self.response = response
+        }
     }
 
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    func record(_ request: URLRequest, body: Data) -> (Int, Data) {
+        lock.withLock {
+            requests.append((request, body))
+            return (status, response)
+        }
+    }
+
+    var snapshot: [(URLRequest, Data)] { lock.withLock { requests } }
+}
+
+// URLProtocol owns per-request callbacks; shared mutable state lives in the locked probe.
+private final class ShortsURLProtocol: URLProtocol, @unchecked Sendable {
+    static let probe = ShortsRequestProbe()
+    override static func canInit(with request: URLRequest) -> Bool { true }
+    override static func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
-        // URLSession converts httpBody to httpBodyStream before handing the request
-        // to URLProtocol; httpBody is always nil here.
-        // Only capture the FIRST request — fetchShorts falls back to a second search
-        // request when the primary browse fails, and we must not let it overwrite
-        // the FEshorts browse body we already captured.
-        if BodyCapturingURLProtocol.capturedBody == nil {
-            if let stream = request.httpBodyStream {
-                stream.open()
-                var body = Data()
-                let bufferSize = 4096
-                let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-                defer {
-                    buffer.deallocate()
-                    stream.close()
-                }
-                // Use read-until-zero rather than hasBytesAvailable; the latter
-                // can return false prematurely for in-memory streams.
-                while true {
-                    let count = stream.read(buffer, maxLength: bufferSize)
-                    if count <= 0 { break }
-                    body.append(buffer, count: count)
-                }
-                BodyCapturingURLProtocol.capturedBody = body
-            } else if let bodyData = request.httpBody {
-                // Fallback: some configurations pass the body directly in httpBody.
-                BodyCapturingURLProtocol.capturedBody = bodyData
+        var body = request.httpBody ?? Data()
+        if let stream = request.httpBodyStream {
+            stream.open()
+            defer { stream.close() }
+            var buffer = [UInt8](repeating: 0, count: 4096)
+            while true {
+                let count = stream.read(&buffer, maxLength: buffer.count)
+                if count <= 0 { break }
+                body.append(contentsOf: buffer.prefix(count))
             }
         }
-
-        // Reply with a minimal HTTP 400 response so the API call fails fast.
-        let response = HTTPURLResponse(
-            url: request.url!,
-            statusCode: 400,
-            httpVersion: "HTTP/1.1",
-            headerFields: nil
-        )!
+        let (status, data) = Self.probe.record(request, body: body)
+        guard let url = request.url,
+            let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: nil, headerFields: nil)
+        else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: Data())
+        client?.urlProtocol(self, didLoad: data)
         client?.urlProtocolDidFinishLoading(self)
     }
-
     override func stopLoading() {}
 }
 
-// MARK: - Tests
-
-@Suite("FEshorts uses TV client — Regression #96", .serialized)
+@Suite("Account Shorts source and continuation (PLAN-0012)", .serialized)
 struct FEShortsClientRegressionTests {
-
-    // MARK: - Helpers
-
-    /// Returns an `InnerTubeAPI` wired to `BodyCapturingURLProtocol` via an ephemeral
-    /// `URLSession`. This avoids polluting the global URLProtocol registry.
-    private func makeTestAPI(authToken: String) -> InnerTubeAPI {
+    private func api(token: String? = "test-account") -> InnerTubeAPI {
         let config = URLSessionConfiguration.ephemeral
-        config.protocolClasses = [BodyCapturingURLProtocol.self]
-        let session = URLSession(configuration: config)
-        return InnerTubeAPI(authToken: authToken, session: session)
+        config.protocolClasses = [ShortsURLProtocol.self]
+        return InnerTubeAPI(authToken: token, session: URLSession(configuration: config))
     }
 
-    // fetchShorts no longer browses FEshorts (YouTube deprecated it, see InnerTubeAPI+Browse):
-    // it searches "#shorts", so only the continuation path still needs the TV client.
+    private func response() throws -> Data {
+        let contents: [[String: Any]] = [
+            [
+                "videoRenderer": [
+                    "videoId": "account-short", "title": ["simpleText": "Short"],
+                    "lengthText": ["simpleText": "0:45"],
+                    "navigationEndpoint": ["reelWatchEndpoint": ["videoId": "account-short"]],
+                ]
+            ],
+            [
+                "videoRenderer": [
+                    "videoId": "regular-short-video", "title": ["simpleText": "Regular"],
+                    "lengthText": ["simpleText": "0:45"],
+                ]
+            ],
+            [
+                "continuationItemRenderer": [
+                    "continuationEndpoint": ["continuationCommand": ["token": "next-account-page"]]
+                ]
+            ],
+        ]
+        return try JSONSerialization.data(withJSONObject: [
+            "contents": [
+                "sectionListRenderer": [
+                    "contents": [["itemSectionRenderer": ["contents": contents]]]
+                ]
+            ]
+        ])
+    }
 
-    // MARK: - fetchShortsMore
+    @Test func accountFeedAndContinuationStayAuthenticated() async throws {
+        ShortsURLProtocol.probe.reset(response: try response())
+        let api = api()
+        let first = try await api.fetchShorts()
+        #expect(first.videos.map(\.id) == ["account-short"])
+        let token = try #require(first.nextPageToken)
+        _ = try await api.fetchShortsMore(continuationToken: token)
+        let requests = ShortsURLProtocol.probe.snapshot
+        #expect(requests.count == 2)
+        for (index, entry) in requests.enumerated() {
+            let (request, body) = entry
+            #expect(request.url?.host == "youtubei.googleapis.com")
+            #expect(request.url?.path == "/youtubei/v1/browse")
+            #expect(request.url?.query?.contains("key=") != true)
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer test-account")
+            let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+            let context = json["context"] as? [String: Any]
+            #expect((context?["client"] as? [String: Any])?["clientName"] as? String == "TVHTML5")
+            if index == 0 {
+                #expect(json["browseId"] as? String == "FEsubscriptions")
+            } else {
+                #expect(json["continuation"] as? String == "next-account-page")
+            }
+        }
+    }
 
-    /// Continuation tokens must use their source client, with the routing prefix removed.
-    @Test(
-        "fetchShortsMore preserves legacy and tagged client routing",
-        arguments: ["", "stv:", "stvc:", "web:", "srch:"]
-    )
-    func fetchShortsMoreRoutesClient(prefix: String) async throws {
-        BodyCapturingURLProtocol.capturedBody = nil
-        let api = makeTestAPI(authToken: "fake-tv-oauth-token")
+    @Test func accountFailureNeverFallsBackToGlobalSearch() async {
+        ShortsURLProtocol.probe.reset(status: 401)
+        await #expect(throws: APIError.self) { try await api().fetchShorts() }
+        #expect(ShortsURLProtocol.probe.snapshot.count == 1)
+        #expect(ShortsURLProtocol.probe.snapshot.first?.0.url?.path == "/youtubei/v1/browse")
+    }
 
-        _ = try? await api.fetchShortsMore(continuationToken: prefix + "test-continuation-token-12345")
+    @Test func continuationCannotCrossAuthenticationBoundary() async {
+        ShortsURLProtocol.probe.reset()
+        await #expect(throws: APIError.self) {
+            try await api(token: nil).fetchShortsMore(continuationToken: "subs:account-page")
+        }
+        await #expect(throws: APIError.self) {
+            try await api().fetchShortsMore(continuationToken: "srch:anonymous-page")
+        }
+        await #expect(throws: APIError.self) {
+            try await api().fetchShortsMore(continuationToken: "unknown-source")
+        }
+        #expect(ShortsURLProtocol.probe.snapshot.isEmpty)
+    }
 
-        let bodyData = try #require(
-            BodyCapturingURLProtocol.capturedBody,
-            "URLProtocol should have captured the POST body"
-        )
-        let json = try #require(
-            try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
-            "Request body must be valid JSON"
-        )
-
-        let context = json["context"] as? [String: Any]
-        let clientDict = context?["client"] as? [String: Any]
-
-        let expectedClient = prefix == "web:" || prefix == "srch:" ? "WEB" : "TVHTML5"
-        #expect(
-            clientDict?["clientName"] as? String == expectedClient,
-            """
-            fetchShortsMore must use the source client for prefix \(prefix).
-            Found clientName=\(String(describing: clientDict?["clientName"]))
-            """
-        )
-        #expect(
-            json["continuation"] as? String == "test-continuation-token-12345",
-            "fetchShortsMore must forward the continuation token in the body"
-        )
+    @Test func signedOutDiscoveryRetainsSearchContinuation() async throws {
+        ShortsURLProtocol.probe.reset(response: try response())
+        let api = api(token: nil)
+        let first = try await api.fetchShorts()
+        _ = try await api.fetchShortsMore(continuationToken: #require(first.nextPageToken))
+        let requests = ShortsURLProtocol.probe.snapshot
+        #expect(requests.count == 2)
+        #expect(requests.allSatisfy { $0.0.url?.path == "/youtubei/v1/search" })
+        #expect(requests.allSatisfy { $0.0.value(forHTTPHeaderField: "Authorization") == nil })
     }
 }

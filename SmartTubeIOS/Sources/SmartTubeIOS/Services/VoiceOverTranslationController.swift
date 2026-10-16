@@ -49,6 +49,10 @@ final class VoiceOverTranslationController {
     var keepsOriginalAudio = true {
         didSet { if case .playing = state { mainPlayer?.volume = originalAudioVolume } }
     }
+    var isMuted: Bool {
+        get { voicePlayer.isMuted }
+        set { voicePlayer.isMuted = newValue }
+    }
     private var originalAudioVolume: Float { keepsOriginalAudio ? Self.duckedVolume : 0 }
     /// Re-seek the voice when it drifts further than this from the video.
     private static let maxDrift: Double = 0.35

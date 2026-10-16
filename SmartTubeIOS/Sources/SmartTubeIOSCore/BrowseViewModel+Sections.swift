@@ -2,6 +2,29 @@ import Foundation
 
 extension BrowseViewModel {
 
+    func fetchShortsGroup(continuationToken: String? = nil) async throws -> VideoGroup {
+        var token = continuationToken
+        var seenTokens = Set<String>()
+        var seenVideos = Set(continuationToken == nil ? [] : videoGroups.flatMap(\.videos).map(\.id))
+        var group = VideoGroup(title: "Shorts", videos: [])
+        for _ in 0..<InnerTubeClients.maxShortsPagesPerRequest {
+            try Task.checkCancellation()
+            if let token { seenTokens.insert(token) }
+            if let token {
+                group = try await api.fetchShortsMore(continuationToken: token)
+            } else {
+                group = try await api.fetchShorts()
+            }
+            group.videos = group.videos.filter { seenVideos.insert($0.id).inserted }
+            if let next = group.nextPageToken, seenTokens.contains(next) {
+                group.nextPageToken = nil
+            }
+            guard group.videos.isEmpty, let next = group.nextPageToken else { break }
+            token = next
+        }
+        return group
+    }
+
     func fetchHomeSection() async throws {
         let rows = try await api.fetchHomeRows()
         if !Task.isCancelled {
@@ -26,6 +49,21 @@ extension BrowseViewModel {
         }
     }
 
+    func fetchNextHomePage(token: String) async throws {
+        let newRows = try await retryWithBackoff(label: "BrowseVM[Home]") {
+            try await api.fetchHomeRows(continuationToken: token)
+        }
+        guard !Task.isCancelled else { return }
+        // Continuation responses can repeat videos both within and across shelves.
+        var seen = Set(videoGroups.flatMap(\.videos).map(\.id))
+        let filteredRows = newRows.map { row -> VideoGroup in
+            var copy = row
+            copy.videos = row.videos.filter { seen.insert($0.id).inserted }
+            return copy
+        }.filter { !$0.videos.isEmpty }
+        videoGroups.append(contentsOf: filteredRows)
+    }
+
     func fetchRecommendedSection() async throws {
         // UI-testing injection: bypass the network fetch when
         // `--uitesting-inject-recommended-ids=<id1,id2,...>` is present.
@@ -44,23 +82,16 @@ extension BrowseViewModel {
             return
         }
         let group = try await api.fetchHome()
-        // Fetch Shorts in parallel: dedicated search + subs feed.
-        // FEshorts browseId is deprecated (HTTP 400). The subs TV-browse
-        // (tileRenderer, ustreamerConfig "GgIIBQ==") is the most reliable
-        // source of many Shorts — mirrors HomeViewModel.homeShortsVideos.
-        async let shortsFetch: VideoGroup? = try? api.fetchShorts()
+        // Reuse subscriptions for account Shorts; global discovery belongs to signed-out browsing.
+        async let shortsFetch: VideoGroup? = hasAuthToken ? nil : try? api.fetchShorts()
         async let subsFetch: VideoGroup? = try? api.fetchSubscriptions()
         let (shortsGroup, subsGroup) = await (shortsFetch, subsFetch)
         if !Task.isCancelled {
-            let searchShorts = shortsGroup?.videos ?? []
-            let subsShorts = (subsGroup?.videos ?? []).filter { $0.isShort }
-            let homeShorts = group.videos.filter { $0.isShort }
+            let subsShorts = (subsGroup?.videos ?? []).filter(\.isShort)
+            let homeShorts = group.videos.filter(\.isShort)
             var seen = Set<String>()
-            recommendedShortsVideos = (searchShorts + subsShorts + homeShorts)
+            recommendedShortsVideos = (homeShorts + subsShorts + (shortsGroup?.videos ?? []))
                 .filter { seen.insert($0.id).inserted }
-            browseLog.notice(
-                "Recommended: \(recommendedShortsVideos.count) shorts (search=\(searchShorts.count) subs=\(subsShorts.count) home=\(homeShorts.count))"
-            )
             if group.videos.isEmpty {
                 isAuthRequired = true
                 recommendedUsesSearchFallback = true

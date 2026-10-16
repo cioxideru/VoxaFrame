@@ -21,6 +21,7 @@ extension ShortsPlayerView {
                 Button {
                     isMuted.toggle()
                     vm.player.isMuted = isMuted
+                    vm.voiceOver.isMuted = isMuted
                 } label: {
                     Image(systemName: isMuted ? AppSymbol.muted : AppSymbol.speaker)
                         .frame(minWidth: 44, minHeight: 44)
@@ -44,9 +45,47 @@ extension ShortsPlayerView {
             .padding()
             .background(.black.opacity(0.5))
 
+            if case .waiting = vm.voiceOver.state {
+                HStack {
+                    ProgressView().tint(.white)
+                    Text("Yandex translating")
+                    Button("Watch Without Translation") { vm.setVoiceOverForCurrentVideo(false) }
+                        .accessibilityIdentifier(AccessibilityID.playerVoiceOverCancelButton)
+                }
+                .font(.caption)
+                .padding(8)
+                .background(.black.opacity(0.5), in: Capsule())
+            }
+
             Spacer()
 
             VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 16) {
+                    Button {
+                        showAudioTrackPicker = true
+                    } label: {
+                        Label("Audio Track", systemImage: AppSymbol.audioTrack)
+                            .frame(minHeight: 44)
+                    }
+                    .accessibilityIdentifier(AccessibilityID.shortsAudioTrackButton)
+                    Spacer()
+                    Button {
+                        store.settings.videoGravityMode.toggle()
+                    } label: {
+                        Image(
+                            systemName: store.settings.videoGravityMode == .fill
+                                ? AppSymbol.videoFit : AppSymbol.videoFill
+                        )
+                        .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .accessibilityLabel(Text("Video Fit", bundle: .module))
+                    .accessibilityValue(
+                        store.settings.videoGravityMode == .fill
+                            ? Text("Fill (crop)", bundle: .module) : Text("Fit (letterbox)", bundle: .module)
+                    )
+                    .accessibilityIdentifier(AccessibilityID.shortsVideoScaleButton)
+                }
+                .buttonStyle(.borderless)
                 Text(vm.currentVideo?.title ?? "")
                     .font(.headline)
                     .lineLimit(2)
@@ -111,6 +150,9 @@ extension ShortsPlayerView {
                     loadMoreAtStart()
                 } else {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
+                    if -dy > abs(value.translation.width), currentIndex == videos.count - 1 {
+                        loadMoreIfNeeded(advanceWhenReady: true)
+                    }
                 }
             }
     }

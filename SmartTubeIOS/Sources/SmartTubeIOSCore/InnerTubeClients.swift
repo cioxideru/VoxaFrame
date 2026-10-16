@@ -138,4 +138,6 @@ package enum InnerTubeClients {
 
     /// Maximum number of videos fetched per shelf/related-videos request.
     package static let maxVideoResults = 20
+    /// Limit automatic scanning through mixed account pages for Shorts.
+    package static let maxShortsPagesPerRequest = 3
 }

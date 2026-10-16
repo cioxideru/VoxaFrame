@@ -26,6 +26,10 @@ enum HomePaginationUITestFixture {
                 Video(id: "\(prefix)-short-\($0)", title: "Short \($0)", channelTitle: "Fixture", isShort: true)
             }
         }
+        if subscriptions, !isMixedFeedEnabled {
+            let shorts = shortsPage(continuationToken: continuationToken)
+            return VideoGroup(title: prefix, videos: videos + shorts.videos, nextPageToken: shorts.nextPageToken)
+        }
         return VideoGroup(title: prefix, videos: videos)
     }
 

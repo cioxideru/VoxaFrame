@@ -47,48 +47,59 @@ extension ShortsPlayerView {
         }
     }
 
-    /// Fetches an additional batch of Shorts and appends them, deduplicating by id.
-    func loadMoreIfNeeded() {
-        guard !ProcessInfo.processInfo.arguments.contains("--uitesting") else { return }
-        guard !isFetchingMore else { return }
-        isFetchingMore = true
-        let existingIDs = Set(videos.map(\.id))
-        fetchMoreTask = Task { @MainActor in
-            defer { isFetchingMore = false }
-            guard let group = try? await api.fetchShorts(), !Task.isCancelled else { return }
-            let newVideos = group.videos.filter { !existingIDs.contains($0.id) }
-            guard !newVideos.isEmpty else { return }
-            videos.append(contentsOf: newVideos)
-        }
+    func loadMoreIfNeeded(advanceWhenReady: Bool = false) {
+        loadMore(prepending: false, advanceWhenReady: advanceWhenReady)
     }
 
-    /// Fetches a batch of Shorts, prepends them before the current video, adjusts
-    /// `currentIndex` to keep the current video in place, then animates down into
-    /// the last prepended video — giving the user new content above.
     func loadMoreAtStart() {
-        guard !ProcessInfo.processInfo.arguments.contains("--uitesting") else {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
-            return
-        }
-        guard !isFetchingMore else {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
-            return
-        }
-        isFetchingMore = true
-        // Spring back to centre while the fetch is in flight.
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
-        let existingIDs = Set(videos.map(\.id))
+        loadMore(prepending: true, advanceWhenReady: true)
+    }
+
+    private func loadMore(prepending: Bool, advanceWhenReady: Bool) {
+        let args = ProcessInfo.processInfo.arguments
+        guard !args.contains("--uitesting") || args.contains("--uitesting-home-pagination"),
+            !isFetchingMore, !hasLoadedFeed || nextPageToken != nil
+        else { return }
+        isFetchingMore = true
+        let session = authService.sessionGeneration
         fetchMoreTask = Task { @MainActor in
             defer { isFetchingMore = false }
-            guard let group = try? await api.fetchShorts(), !Task.isCancelled else { return }
-            let newVideos = group.videos.filter { !existingIDs.contains($0.id) }
-            guard !newVideos.isEmpty else { return }
-            // Prepend the new videos; re-anchor currentIndex so the on-screen
-            // video doesn't change, then animate down to the last prepended video.
-            videos.insert(contentsOf: newVideos, at: 0)
-            currentIndex += newVideos.count
-            if currentIndex == newVideos.count {
-                performVerticalTransition(direction: 1) { goTo(currentIndex - 1) }
+            // Bound empty/duplicate pages so a swipe never drains the account's entire feed.
+            for _ in 0..<InnerTubeClients.maxShortsPagesPerRequest {
+                guard !Task.isCancelled, session == authService.sessionGeneration else { return }
+                let token = nextPageToken
+                let group: VideoGroup
+                do {
+                    if let token {
+                        group = try await api.fetchShortsMore(continuationToken: token)
+                    } else {
+                        group = try await api.fetchShorts()
+                    }
+                } catch { return }  // Keep the token so a later swipe can retry.
+                guard !Task.isCancelled, session == authService.sessionGeneration else { return }
+                hasLoadedFeed = true
+                if let token { consumedPageTokens.insert(token) }
+                nextPageToken = group.nextPageToken.flatMap { consumedPageTokens.contains($0) ? nil : $0 }
+                var seen = Set(videos.map(\.id))
+                let added = group.videos.filter { seen.insert($0.id).inserted }
+                if !added.isEmpty {
+                    if prepending {
+                        videos.insert(contentsOf: added, at: 0)
+                        currentIndex += added.count
+                        if advanceWhenReady, currentIndex == added.count {
+                            performVerticalTransition(direction: 1) { goTo(currentIndex - 1) }
+                        }
+                    } else {
+                        let wasAtEnd = currentIndex == videos.count - 1
+                        videos.append(contentsOf: added)
+                        if advanceWhenReady, wasAtEnd {
+                            performVerticalTransition(direction: -1) { goTo(currentIndex + 1) }
+                        }
+                    }
+                    return
+                }
+                guard nextPageToken != nil else { return }
             }
         }
     }
@@ -115,7 +126,10 @@ extension ShortsPlayerView {
         let video = videos[index]
         vm.updateSettings(store.settings)
         vm.setPlaybackSpeed(store.settings.playbackSpeed)
+        showAudioTrackPicker = false
         vm.load(video: video)
+        vm.player.isMuted = isMuted
+        vm.voiceOver.isMuted = isMuted
         // Start lookahead on the first Short too, ahead of background feed-card requests.
         let lookahead = videos[(index + 1)..<min(index + 3, videos.count)].map(\.id)
         if !lookahead.isEmpty {

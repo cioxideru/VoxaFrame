@@ -49,6 +49,11 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 ## OQ-0005 — Playback device acceptance
 
 - Status: open; owner: playback/test maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
+- [PLAN-0012](exec-plans/completed/shorts-account-controls.md) adds account-sourced
+  Shorts and the regular player's translation/audio and Fit/Fill controls. Live
+  signed-in recommendation relevance, Yandex service audio/synchronization and
+  physical-device acceptance of these controls remain unverified. Request-routing
+  tests and Simulator UI checks do not establish those results.
 - [PLAN-0011](exec-plans/completed/resource-quality.md) passes package and UI checks
   on iPad Simulator. Its new audio-session ownership and idle player/WebView cleanup
   still need physical-device playback, interruption, voice-over and PiP acceptance;

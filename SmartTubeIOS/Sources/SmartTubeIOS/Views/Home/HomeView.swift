@@ -471,10 +471,10 @@ extension HomeView {
 
     @ViewBuilder
     var sectionFeed: some View {
-        if sectionVM.isLoading && sectionVM.videoGroups.isEmpty {
+        if sectionVM.isLoading && sectionVM.videoGroups.allSatisfy({ $0.videos.isEmpty }) {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if sectionVM.videoGroups.isEmpty && !sectionVM.isLoading {
+        } else if sectionVM.videoGroups.allSatisfy({ $0.videos.isEmpty }) && !sectionVM.isLoading {
             feedEmptyState
         } else {
             feedContent
@@ -517,8 +517,15 @@ extension HomeView {
                 Text("Nothing here yet")
                     .font(.title3)
                     .foregroundStyle(.secondary)
-                Button("Refresh") { sectionVM.loadContent(refresh: true) }
-                    .buttonStyle(.borderedProminent)
+                if sectionVM.hasMoreShorts {
+                    Button("More") { sectionVM.loadMoreShorts() }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(sectionVM.isLoadingMore)
+                        .accessibilityIdentifier(AccessibilityID.shortsLoadMoreButton)
+                } else {
+                    Button("Refresh") { sectionVM.loadContent(refresh: true) }
+                        .buttonStyle(.borderedProminent)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

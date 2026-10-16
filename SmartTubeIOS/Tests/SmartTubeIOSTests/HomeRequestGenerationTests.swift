@@ -26,6 +26,54 @@ private final class HomeResponseGate<Value: Sendable> {
 @Suite("Home request generations")
 @MainActor
 struct HomeRequestGenerationTests {
+    @Test("Signed-in Home reuses account shelves and never requests discovery Shorts", arguments: [false, true])
+    func accountShortsReuseShelves(homeEmpty: Bool) async {
+        let api = MockInnerTubeAPI()
+        let regular = (0..<30).map { makeVideo("regular-\($0)") }
+        api.homeRowsResult = homeEmpty ? [] : [VideoGroup(videos: regular + [short("recommended-short")])]
+        api.searchResult = VideoGroup(videos: [short("global-popular-short")])
+        api.subscriptionsResult = VideoGroup(videos: regular + [short("subscribed-short")])
+        api.shortsResult = VideoGroup(videos: [short("global-search-short")])
+        let home = HomeViewModel(api: api)
+        defer { home.cancel() }
+        await home.updateAuthToken("account", sessionID: 1)
+        await waitForTasks { home.loadedAt != nil }
+        #expect(home.homeShortsVideos.map(\.id) == (homeEmpty ? [] : ["recommended-short"]) + ["subscribed-short"])
+        #expect(api.calls.filter { $0.method == "fetchSubscriptions" }.count == 1)
+        #expect(!api.calls.contains { $0.method == "fetchShorts" })
+        await home.updateAuthToken(nil, sessionID: 2)
+        #expect(home.homeShortsVideos.isEmpty)
+    }
+
+    @Test("Shorts demand scans a bounded batch and resumes only on another request")
+    func boundsMixedAccountPages() async {
+        let api = MockInnerTubeAPI()
+        api.homeRowsResult = [VideoGroup(videos: [makeVideo("home")])]
+        api.subscriptionsResult = VideoGroup(videos: [makeVideo("initial")], nextPageToken: "1")
+        let home = HomeViewModel(api: api)
+        defer { home.cancel() }
+        await home.updateAuthToken("account", sessionID: 1)
+        await waitForTasks { home.loadedAt != nil }
+        var pages = 0
+        api.subscriptionsHandler = { _ in
+            pages += 1
+            return VideoGroup(videos: [makeVideo("page-\(pages)")], nextPageToken: String(pages + 1))
+        }
+        home.loadShorts(atLeast: 30)
+        await waitForTasks {
+            pages >= InnerTubeClients.maxShortsPagesPerRequest
+                && !home.sections.contains(where: \.isLoadingMore)
+        }
+        #expect(pages == InnerTubeClients.maxShortsPagesPerRequest)
+        #expect(home.homeShortsVideos.isEmpty)
+        home.loadShorts(atLeast: 40)
+        await waitForTasks {
+            pages >= 2 * InnerTubeClients.maxShortsPagesPerRequest
+                && !home.sections.contains(where: \.isLoadingMore)
+        }
+        #expect(pages == 2 * InnerTubeClients.maxShortsPagesPerRequest)
+    }
+
     @Test("Foreground refresh waits for auth preparation and does not duplicate the initial load")
     func foregroundDuringAuthPreparation() async {
         let api = MockInnerTubeAPI()
@@ -359,8 +407,14 @@ struct HomeRequestGenerationTests {
         #expect(second.nextPageToken == nil)
         for subscriptions in [false, true] {
             let regular = HomePaginationUITestFixture.regularPage(subscriptions: subscriptions, continuationToken: nil)
-            #expect(regular.nextPageToken == nil)
-            #expect(regular.videos.allSatisfy { !$0.isShort })
+            #expect(regular.nextPageToken == (subscriptions ? firstToken : nil))
+            #expect(regular.videos.filter(\.isShort).count == (subscriptions ? 10 : 0))
+            if subscriptions {
+                let next = HomePaginationUITestFixture.regularPage(
+                    subscriptions: true, continuationToken: firstToken)
+                #expect(next.videos == first.videos)
+                #expect(next.nextPageToken == secondToken)
+            }
         }
     }
     #endif

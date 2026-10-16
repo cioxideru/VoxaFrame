@@ -66,7 +66,7 @@ extension PlayerControlsOverlay {
                 quickAccessButton(
                     systemImage: AppSymbol.audioTrack,
                     label: audioTrackLabel,
-                    accessibilityId: "player.quickAccess.audioTrack"
+                    accessibilityId: AccessibilityID.playerQuickAudioButton
                 ) { showAudioTrackPicker = true }
             }
 

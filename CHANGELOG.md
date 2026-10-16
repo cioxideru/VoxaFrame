@@ -8,6 +8,14 @@ All notable changes to SmartTube are documented here.
 
 ### Changed — 2026-10-16
 
+- **Version 5.9 (27) (PLAN-0012)** adds the regular player's audio-track/Yandex
+  controls and persisted Fit/Fill mode to Shorts. Mute also silences translated audio.
+- **Account Shorts (PLAN-0012)** use Shorts from account recommendations and
+  subscriptions when signed in. Home and Recommended reuse their loaded account
+  shelves; anonymous `#shorts` search is reserved for signed-out discovery. Swiping
+  follows continuation pages instead of repeatedly fetching the first batch. Sparse
+  pages use bounded requests and retain a manual continuation; Home keeps Shorts
+  even when their shelf appears after the initial regular-video limit.
 - **Version 5.8 (26) (PLAN-0011)** identifies the resource and lifecycle fixes below.
   The iOS/Catalyst and tvOS apps and embedded extensions inherit the same project version.
 
