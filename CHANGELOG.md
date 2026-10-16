@@ -6,6 +6,14 @@ All notable changes to SmartTube are documented here.
 
 ## [Unreleased]
 
+### Fixed — 2026-10-17
+
+- **Version 5.11 (29), account feed pagination (PLAN-0014):** Home, Recommended
+  and subscription-backed Shorts keep the owning feed's continuation instead of
+  following a nested shelf. Only the active navigation tab contributes videos;
+  unrelated tabs no longer fill subsequent Shorts rows. An exhausted multi-shelf
+  feed does not switch to a remaining shelf cursor.
+
 ### Changed — 2026-10-17
 
 - **Version 5.10 (28) (PLAN-0013)** gives Shorts separate audio language,

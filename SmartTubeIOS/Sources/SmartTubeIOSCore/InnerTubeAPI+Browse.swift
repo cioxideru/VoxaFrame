@@ -31,7 +31,9 @@ extension InnerTubeAPI {
     public func fetchHome(continuationToken: String? = nil) async throws -> VideoGroup {
         #if DEBUG
         if HomePaginationUITestFixture.isMixedFeedEnabled {
-            return HomePaginationUITestFixture.regularPage(subscriptions: false, continuationToken: continuationToken)
+            let group = HomePaginationUITestFixture.regularPage(
+                subscriptions: false, continuationToken: continuationToken)
+            return try parseVideoGroup(from: HomePaginationUITestFixture.browseResponse(for: group), title: group.title)
         }
         #endif
         let isAuth = authToken != nil
@@ -56,7 +58,9 @@ extension InnerTubeAPI {
     public func fetchHomeRows(continuationToken: String? = nil) async throws -> [VideoGroup] {
         #if DEBUG
         if HomePaginationUITestFixture.isEnabled {
-            return [HomePaginationUITestFixture.regularPage(subscriptions: false, continuationToken: continuationToken)]
+            let group = HomePaginationUITestFixture.regularPage(
+                subscriptions: false, continuationToken: continuationToken)
+            return parseVideoGroupRows(from: HomePaginationUITestFixture.browseResponse(for: group))
         }
         #endif
         let isAuth = authToken != nil
@@ -90,7 +94,9 @@ extension InnerTubeAPI {
     public func fetchSubscriptions(continuationToken: String? = nil) async throws -> VideoGroup {
         #if DEBUG
         if HomePaginationUITestFixture.isEnabled {
-            return HomePaginationUITestFixture.regularPage(subscriptions: true, continuationToken: continuationToken)
+            let group = HomePaginationUITestFixture.regularPage(
+                subscriptions: true, continuationToken: continuationToken)
+            return try parseVideoGroup(from: HomePaginationUITestFixture.browseResponse(for: group), title: group.title)
         }
         #endif
         var body = makeBody(client: tvClientContext, continuationToken: continuationToken)

@@ -14,6 +14,81 @@ enum HomePaginationUITestFixture {
         return arguments.contains("--uitesting") && arguments.contains("--uitesting-mixed-feed")
     }
 
+    /// UI pagination must cross the parser boundary, including competing navigation/shelf cursors.
+    static func browseResponse(for group: VideoGroup) -> [String: Any] {
+        func renderer(_ video: Video) -> [String: Any] {
+            var fields: [String: Any] = [
+                "videoId": video.id, "title": ["simpleText": video.title],
+                "ownerText": ["simpleText": video.channelTitle],
+            ]
+            if video.isShort {
+                fields["navigationEndpoint"] = ["reelWatchEndpoint": ["videoId": video.id]]
+            }
+            return ["videoRenderer": fields]
+        }
+        var feed: [String: Any] = [
+            "contents": [
+                ["shelfRenderer": ["content": ["horizontalListRenderer": ["items": group.videos.map(renderer)]]]],
+                [
+                    "shelfRenderer": [
+                        "content": [
+                            "horizontalListRenderer": [
+                                "items": [],
+                                "continuations": [["nextContinuationData": ["continuation": "unrelated-shelf"]]],
+                            ]
+                        ]
+                    ]
+                ],
+            ]
+        ]
+        if let token = group.nextPageToken {
+            feed["continuations"] = [["nextContinuationData": ["continuation": token]]]
+        }
+        let unrelated = (0..<HomeFeedLayout.shortsPerRow).map {
+            renderer(Video(id: "unrelated-short-\($0)", title: "Unrelated", channelTitle: "Other tab", isShort: true))
+        }
+        return [
+            "contents": [
+                "tvBrowseRenderer": [
+                    "content": [
+                        "tvSecondaryNavRenderer": [
+                            "sections": [
+                                [
+                                    "tvSecondaryNavSectionRenderer": [
+                                        "tabs": [
+                                            [
+                                                "tabRenderer": [
+                                                    "selected": true, "content": ["sectionListRenderer": feed],
+                                                ]
+                                            ],
+                                            [
+                                                "tabRenderer": [
+                                                    "selected": false,
+                                                    "content": [
+                                                        "gridRenderer": [
+                                                            "items": unrelated,
+                                                            "continuations": [
+                                                                [
+                                                                    "nextContinuationData": [
+                                                                        "continuation": "unrelated-tab"
+                                                                    ]
+                                                                ]
+                                                            ],
+                                                        ]
+                                                    ],
+                                                ]
+                                            ],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    }
+
     static func regularPage(subscriptions: Bool, continuationToken: String?) -> VideoGroup {
         let prefix = subscriptions ? "subscription" : "recommended"
         var videos =

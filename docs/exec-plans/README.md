@@ -27,6 +27,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0014: Preserve account feed pagination](completed/shorts-feed-pagination.md) — active-tab and continuation ownership; native checks, four iPad UI tests and iOS/tvOS builds pass.
+
 - [PLAN-0013: Independent Shorts translation settings](completed/shorts-translation-settings.md) — separate persisted preferences; native checks, four focused iPad UI tests and iOS/tvOS builds pass.
 
 - [PLAN-0012: Account Shorts and shared playback controls](completed/shorts-account-controls.md) — account sources, bounded continuation, shared translation/audio and Fit/Fill; native checks, five iPad UI tests and iOS/tvOS builds pass.

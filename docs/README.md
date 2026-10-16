@@ -24,6 +24,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0015) | current | 2026-10-15 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/completed/shorts-feed-pagination.md](exec-plans/completed/shorts-feed-pagination.md) | PLAN-0014: preserve account feed pagination | current | 2026-10-17 |
 | [exec-plans/completed/shorts-translation-settings.md](exec-plans/completed/shorts-translation-settings.md) | PLAN-0013: independent Shorts translation settings | current | 2026-10-17 |
 | [exec-plans/completed/shorts-account-controls.md](exec-plans/completed/shorts-account-controls.md) | PLAN-0012: account Shorts and shared playback controls | current | 2026-10-16 |
 | [exec-plans/completed/resource-quality.md](exec-plans/completed/resource-quality.md) | PLAN-0011: resource ownership fixes and iPad Simulator acceptance | current | 2026-10-16 |

@@ -9,19 +9,22 @@ private final class ShortsRequestProbe: @unchecked Sendable {
     private var requests: [(URLRequest, Data)] = []
     private var status = 200
     private var response = Data()
+    private var pages: [String: Data] = [:]
 
-    func reset(status: Int = 200, response: Data = Data()) {
+    func reset(status: Int = 200, response: Data = Data(), pages: [String: Data] = [:]) {
         lock.withLock {
             requests = []
             self.status = status
             self.response = response
+            self.pages = pages
         }
     }
 
     func record(_ request: URLRequest, body: Data) -> (Int, Data) {
         lock.withLock {
             requests.append((request, body))
-            return (status, response)
+            let json = (try? JSONSerialization.jsonObject(with: body)) as? [String: Any]
+            return (status, pages[json?["continuation"] as? String ?? "initial"] ?? response)
         }
     }
 
@@ -120,6 +123,88 @@ struct FEShortsClientRegressionTests {
                 #expect(json["browseId"] as? String == "FEsubscriptions")
             } else {
                 #expect(json["continuation"] as? String == "next-account-page")
+            }
+        }
+    }
+
+    @Test("Three account pages never follow nested shelf cursors", arguments: ["home", "homeRows", "shorts"])
+    func laterPagesRetainAccountSource(source: String) async throws {
+        func page(_ number: Int) throws -> Data {
+            var list: [String: Any] = [
+                "contents": [
+                    [
+                        "shelfRenderer": [
+                            "content": [
+                                "horizontalListRenderer": [
+                                    "items": [
+                                        [
+                                            "reelItemRenderer": [
+                                                "videoId": "account-\(number)", "headline": ["simpleText": "Account"],
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    [
+                        "shelfRenderer": [
+                            "content": [
+                                "horizontalListRenderer": [
+                                    "items": [],
+                                    "continuations": [["nextContinuationData": ["continuation": "unrelated-shelf"]]],
+                                ]
+                            ]
+                        ]
+                    ],
+                ]
+            ]
+            if number < 3 {
+                list["continuations"] = [["nextContinuationData": ["continuation": "account-page-\(number + 1)"]]]
+            }
+            let response =
+                number == 1
+                ? ["contents": ["sectionListRenderer": list]]
+                : ["continuationContents": ["sectionListContinuation": list]]
+            return try JSONSerialization.data(withJSONObject: response)
+        }
+        ShortsURLProtocol.probe.reset(
+            response: try response(),
+            pages: [
+                "initial": try page(1), "account-page-2": try page(2), "account-page-3": try page(3),
+            ])
+        let api = api()
+        var token: String?
+        for number in 1...3 {
+            let groups: [VideoGroup]
+            switch source {
+            case "home": groups = [try await api.fetchHome(continuationToken: token)]
+            case "homeRows": groups = try await api.fetchHomeRows(continuationToken: token)
+            default:
+                groups =
+                    if let token {
+                        [try await api.fetchShortsMore(continuationToken: token)]
+                    } else {
+                        [try await api.fetchShorts()]
+                    }
+            }
+            #expect(groups.flatMap(\.videos).map(\.id) == ["account-\(number)"])
+            token = groups.last?.nextPageToken
+            if number < 3 { #expect(token != nil) }
+        }
+        #expect(token == nil)
+        let requests = ShortsURLProtocol.probe.snapshot
+        #expect(requests.count == 3)
+        for (index, entry) in requests.enumerated() {
+            let (request, body) = entry
+            #expect(request.url?.host == "youtubei.googleapis.com")
+            #expect(request.url?.path == "/youtubei/v1/browse")
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer test-account")
+            let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+            if index == 0 {
+                #expect(json["browseId"] as? String == (source == "shorts" ? "FEsubscriptions" : "FEwhat_to_watch"))
+            } else {
+                #expect(json["continuation"] as? String == "account-page-\(index + 1)")
             }
         }
     }

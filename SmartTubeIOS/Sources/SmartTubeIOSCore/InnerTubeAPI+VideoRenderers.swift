@@ -7,6 +7,67 @@ private let tubeLog = Logger(subsystem: appSubsystem, category: "InnerTube")
 
 extension InnerTubeAPI {
 
+    private func selectedVideoTab(_ tabs: [[String: Any]]) -> [String: Any]? {
+        let renderers = tabs.compactMap {
+            ($0["tabRenderer"] ?? $0["expandableTabRenderer"]) as? [String: Any]
+        }
+        return renderers.first { $0["selected"] as? Bool == true }
+            ?? renderers.first { $0["content"] != nil }
+    }
+
+    private func continuationItemToken(_ item: [String: Any]) -> String? {
+        let richItem = item["richItemRenderer"] as? [String: Any]
+        let content = richItem?["content"] as? [String: Any] ?? item
+        let renderer = content["continuationItemRenderer"] as? [String: Any]
+        let endpoint = renderer?["continuationEndpoint"] as? [String: Any]
+        let command = endpoint?["continuationCommand"] as? [String: Any]
+        return command?["token"] as? String
+    }
+
+    /// A feed's own cursor wins over its shelves; only a single navigation tab is active.
+    private func videoFeedContinuation(_ object: Any, depth: Int = 0) -> String? {
+        guard depth < 50 else { return nil }
+        if let items = object as? [[String: Any]] {
+            if let token = items.compactMap(continuationItemToken).first { return token }
+            for item in items {
+                // Independent shelves cannot stand in for an exhausted multi-shelf feed.
+                if items.count > 1,
+                    ["shelfRenderer", "richSectionRenderer", "richShelfRenderer", "reelShelfRenderer", "gridRenderer"]
+                        .contains(where: { item[$0] != nil })
+                {
+                    continue
+                }
+                if let token = videoFeedContinuation(item, depth: depth + 1) { return token }
+            }
+        } else if let dict = object as? [String: Any] {
+            if let token = continuationItemToken(dict) { return token }
+            if let continuations = dict["continuations"] as? [[String: Any]],
+                let next = continuations.first?["nextContinuationData"] as? [String: Any],
+                let token = next["continuation"] as? String
+            {
+                return token
+            }
+            if let tabs = dict["tabs"] as? [[String: Any]] {
+                return selectedVideoTab(tabs).flatMap { videoFeedContinuation($0, depth: depth + 1) }
+            }
+            // Ignore navigation endpoints, menus and metadata outside the feed's content.
+            for key in [
+                "continuationContents", "contents", "content", "items", "continuationItems",
+                "sections", "primaryContents", "rightColumn", "onResponseReceivedActions",
+                "onResponseReceivedEndpoints",
+                "appendContinuationItemsAction", "reloadContinuationItemsCommand",
+            ] {
+                if let value = dict[key] { return videoFeedContinuation(value, depth: depth + 1) }
+            }
+            for key in dict.keys.sorted() where key.hasSuffix("Renderer") || key.hasSuffix("Continuation") {
+                if let value = dict[key], let token = videoFeedContinuation(value, depth: depth + 1) {
+                    return token
+                }
+            }
+        }
+        return nil
+    }
+
     // MARK: - Testing hooks
 
     /// Internal accessor so unit tests can exercise the JSON parser without a live network.
@@ -26,7 +87,6 @@ extension InnerTubeAPI {
     /// If no shelves are found, falls back to the flat parser.
     func parseVideoGroupRows(from json: [String: Any]) -> [VideoGroup] {
         var rows: [VideoGroup] = []
-        var continuationToken: String? = nil
 
         // Renderer keys that are known ad/promoted slots — skip silently.
         let adRendererKeys: Set<String> = [
@@ -97,6 +157,10 @@ extension InnerTubeAPI {
                 return
             }
             if let dict = obj as? [String: Any] {
+                if let tabs = dict["tabs"] as? [[String: Any]] {
+                    walk(selectedVideoTab(tabs)?["content"] as Any, depth: depth + 1)
+                    return
+                }
                 if let shelf = dict["richShelfRenderer"] as? [String: Any] {
                     let title = (shelf["title"] as? [String: Any]).flatMap { extractText($0) }
                     let videos = walkShelfContents(shelf["contents"] as Any)
@@ -111,14 +175,6 @@ extension InnerTubeAPI {
                     if !videos.isEmpty {
                         rows.append(VideoGroup(title: title, videos: videos, layout: .row))
                     }
-                    return
-                }
-                if let contItem = dict["continuationItemRenderer"] as? [String: Any],
-                    let contEndpoint = contItem["continuationEndpoint"] as? [String: Any],
-                    let contCmd = contEndpoint["continuationCommand"] as? [String: Any],
-                    let ct = contCmd["token"] as? String
-                {
-                    continuationToken = ct
                     return
                 }
                 // Log any richSectionRenderer whose inner content is not a richShelfRenderer
@@ -154,7 +210,7 @@ extension InnerTubeAPI {
             if let flat = try? parseVideoGroup(from: json, title: BrowseSection.SectionType.home.defaultTitle) {
                 return [flat]
             }
-        } else if let token = continuationToken {
+        } else if let token = videoFeedContinuation(json) {
             // Attach continuation to the last row so BrowseViewModel can paginate
             rows[rows.count - 1].nextPageToken = token
         }
@@ -166,7 +222,7 @@ extension InnerTubeAPI {
 
     func parseVideoGroup(from json: [String: Any], title: String?) throws -> VideoGroup {
         var videos: [Video] = []
-        var nextPageToken: String? = nil
+        let nextPageToken = videoFeedContinuation(json)
         // Tracks the approximate watched/published date from section group headers.
         // History (and similar sections) use itemSectionRenderer with a header title
         // like "Today", "Yesterday", "This week" that is the closest available date
@@ -192,16 +248,9 @@ extension InnerTubeAPI {
                 return
             }
             if let dict = obj as? [String: Any] {
-                // TVHTML5 gridRenderer stores its continuation in
-                // gridRenderer.continuations[0].nextContinuationData.continuation.
-                // Check this independently of the renderer dispatch below so we still
-                // recurse into gridRenderer.items to collect the video tiles.
-                if let continuations = dict["continuations"] as? [[String: Any]],
-                    let token = continuations.first
-                        .flatMap({ $0["nextContinuationData"] as? [String: Any] })
-                        .flatMap({ $0["continuation"] as? String })
-                {
-                    nextPageToken = token
+                if let tabs = dict["tabs"] as? [[String: Any]] {
+                    walk(selectedVideoTab(tabs)?["content"] as Any, depth: depth + 1)
+                    return
                 }
 
                 // TVHTML5 top-level browse response wrapper — jump straight to content.
@@ -219,7 +268,7 @@ extension InnerTubeAPI {
                     return
                 }
                 if let r = dict["tvSecondaryNavSectionRenderer"] as? [String: Any] {
-                    walk(r["tabs"] as Any, depth: depth + 1)
+                    walk(r, depth: depth + 1)
                     return
                 }
                 if let r = dict["tabRenderer"] as? [String: Any] {
@@ -231,36 +280,14 @@ extension InnerTubeAPI {
                     return
                 }
                 if let r = dict["sectionListRenderer"] as? [String: Any] {
-                    // Check for TV-style continuation token here too.
-                    if let continuations = r["continuations"] as? [[String: Any]],
-                        let token = continuations.first
-                            .flatMap({ $0["nextContinuationData"] as? [String: Any] })
-                            .flatMap({ $0["continuation"] as? String })
-                    {
-                        nextPageToken = token
-                    }
                     walk(r["contents"] as Any, depth: depth + 1)
                     return
                 }
                 if let r = dict["shelfRenderer"] as? [String: Any] {
-                    // Extract shelf-level continuation if present.
-                    if let contToken = (r["continuations"] as? [[String: Any]])?.first
-                        .flatMap({ $0["nextContinuationData"] as? [String: Any] })
-                        .flatMap({ $0["continuation"] as? String })
-                    {
-                        nextPageToken = contToken
-                    }
                     walk(r["content"] as Any, depth: depth + 1)
                     return
                 }
                 if let r = dict["horizontalListRenderer"] as? [String: Any] {
-                    // Extract continuation from horizontalListRenderer.continuations if present.
-                    if let contToken = (r["continuations"] as? [[String: Any]])?.first
-                        .flatMap({ $0["nextContinuationData"] as? [String: Any] })
-                        .flatMap({ $0["continuation"] as? String })
-                    {
-                        nextPageToken = contToken
-                    }
                     walk(r["items"] as Any, depth: depth + 1)
                     return
                 }
@@ -337,13 +364,8 @@ extension InnerTubeAPI {
                         } else {
                             rendererMisses["richItem/lockupViewModel", default: 0] += 1
                         }
-                    } else if let contItem = content["continuationItemRenderer"] as? [String: Any],
-                        let endpoint = contItem["continuationEndpoint"] as? [String: Any],
-                        let command = endpoint["continuationCommand"] as? [String: Any],
-                        let token = command["token"] as? String
-                    {
-                        // Continuation token nested inside richItemRenderer
-                        nextPageToken = token
+                    } else if content["continuationItemRenderer"] != nil {
+                        return
                     } else {
                         // Unknown richItemRenderer content type — log keys once, then recurse
                         let unknownKeys = content.keys.sorted().joined(separator: ",")
@@ -386,12 +408,8 @@ extension InnerTubeAPI {
                     } else {
                         rendererMisses["shortsLockupViewModel", default: 0] += 1
                     }
-                } else if let contItem = dict["continuationItemRenderer"] as? [String: Any],
-                    let endpoint = contItem["continuationEndpoint"] as? [String: Any],
-                    let command = endpoint["continuationCommand"] as? [String: Any],
-                    let token = command["token"] as? String
-                {
-                    nextPageToken = token
+                } else if dict["continuationItemRenderer"] != nil {
+                    return
                 } else {
                     for value in dict.values { walk(value, depth: depth + 1) }
                 }

@@ -233,6 +233,7 @@ final class HomeShortsCountUITests: XCTestCase {
 
 /// The fixture supplies ten initial Shorts and two disjoint continuation pages.
 /// Regular shelves have no continuations, so only Shorts demand can fetch the new cards.
+/// Unselected tabs and nested shelf cursors must not enter later Shorts rows (PLAN-0014).
 final class HomeShortsEndlessUITests: XCTestCase {
 
     private var app: XCUIApplication!
@@ -280,6 +281,9 @@ final class HomeShortsEndlessUITests: XCTestCase {
         XCTAssertTrue(
             isVisible(card, inside: row.frame.intersection(app.windows.firstMatch.frame)),
             "Fetched card \(videoID) must be hittable and inside both the row and window viewport")
+        let unrelated = row.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.shortsCard("unrelated-short-0")).firstMatch
+        XCTAssertFalse(unrelated.exists, "An unselected feed must not fill later Shorts rows")
     }
 
     func testScrollingDownRevealsASecondShortsRow() {
