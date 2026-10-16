@@ -31,7 +31,7 @@ Do not push. Related device acceptance remains in
 | 2 | Cancel individual BotGuard waiters without blocking fallback timeout | Concurrency | Implemented and reviewed; 4 waiter tests; full check passes, 983 tests |
 | 3 | Bind BotGuard safety timer and completion to one attempt | Concurrency | Implemented and reviewed; controlled timer/stale callback tests and JS syntax check; full check, 986 tests |
 | 4 | Separate subscription cancellation/failure from empty results; bound work | Concurrency | Implemented and reviewed; cancellation/retry and 4-channel/8-request bound tests; full check, 990 tests |
-| 5 | Stream translation audio through bounded buffers and temporary files | Memory | Pending |
+| 5 | Stream translation audio through bounded buffers and temporary files | Memory | Implemented and reviewed; 34 focused tests cover bytes/order, bounds and cleanup; full check, 998 tests |
 | 6 | Bound and atomically invalidate WK-HLS cache entries | Memory | Pending |
 | 7 | Apply History settings to the actual Home section model | Architecture | Pending |
 | 8 | Remove stale duplicated current-video state from presentation | Architecture | Pending |
@@ -58,4 +58,8 @@ measurements distinct from correctness tests and do not infer a device speedup.
   duplicate Home loading for widgets and settings wired to the wrong feed instance.
 - Cleanup direction: prove behavior per step, then remove the replaced path in that same step.
 
-Next deliverable: item 5, bounded translation audio transfer.
+Next deliverable: item 6, WK-HLS cache eviction and expiry.
+
+Translation transfer keeps six downloaded segment files at most, copies audio with
+a 64 KiB buffer and reads one upload part at a time (a short tail joins the preceding
+part). Playlist metadata still scales with segment count; no measured MB saving is claimed.

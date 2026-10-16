@@ -17,6 +17,10 @@ All notable changes to SmartTube are documented here.
 - **Local subscriptions (PLAN-0011)** load at most four channels concurrently.
   Cancellation stops queued work; failed RSS/fallback responses are not cached as
   empty channels. Valid empty feeds remain cacheable.
+- **Voice-over audio upload (PLAN-0011)** downloads source audio to temporary files,
+  assembles at most six HLS segments at a time and uploads one part at a time.
+  It preserves byte order and short-tail handling, and removes temporary files
+  after success, failure or cancellation.
 - **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
   restarts a queued load when the app becomes active. Cancelled queued loads skip
   their requests. Token refresh keeps the current cards and pagination instead

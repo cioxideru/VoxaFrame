@@ -31,12 +31,50 @@ struct YandexVOTClientTests {
         #expect(throws: YandexVOTClient.VOTError.self) { try ProtoReader.decode(Data([0x1A, 0x05, 0x61])) }
     }
 
-    @Test("audio chunks are at least the vot.js minimum except a single short file")
-    func audioChunking() {
+    @Test(
+        "file chunks preserve bytes and merge only the short tail",
+        arguments: [0, 1, 100, 5_295_307, 5_295_308, 5_295_309, 10_590_616, 10_590_626])
+    func audioChunking(length: Int) async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        var source = Data(repeating: 42, count: length)
+        for offset in stride(from: 0, to: length, by: YandexVOTClient.audioChunkSize) {
+            source[offset] = UInt8(offset / YandexVOTClient.audioChunkSize)
+        }
+        try source.write(to: url)
+        let recorder = AudioChunkRecorder()
+        try await YandexVOTClient.readAudioChunks(fileURL: url) { index, count, data in
+            await recorder.append(index: index, count: count, data: data)
+        }
         let size = YandexVOTClient.audioChunkSize
-        #expect(YandexVOTClient.audioChunks(Data(count: 100)).map(\.count) == [100])
-        #expect(YandexVOTClient.audioChunks(Data(count: size * 2 + 10)).map(\.count) == [size, size + 10])
-        #expect(YandexVOTClient.audioChunks(Data(count: size * 2)).map(\.count) == [size, size])
+        let count = length == 0 ? 0 : max(1, length / size)
+        let parts = await recorder.parts
+        #expect(parts.count == count)
+        #expect(parts.map(\.index) == Array(0..<count))
+        #expect(parts.allSatisfy { $0.count == count && $0.data.count < size * 2 })
+        #expect(parts.dropLast().allSatisfy { $0.data.count == size })
+        #expect(parts.reduce(into: Data()) { $0.append($1.data) } == source)
+    }
+
+    @Test("upload failure or cancellation stops reading subsequent parts", arguments: [false, true])
+    func stopsUpload(cancel: Bool) async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data(count: YandexVOTClient.audioChunkSize * 3).write(to: url)
+        let recorder = AudioChunkRecorder()
+        let task = Task {
+            try await YandexVOTClient.readAudioChunks(fileURL: url) { index, count, data in
+                await recorder.append(index: index, count: count, data: data)
+                if cancel { withUnsafeCurrentTask { $0?.cancel() } } else { throw URLError(.cannotWriteToFile) }
+            }
+        }
+        do {
+            try await task.value
+            Issue.record("Expected failure")
+        } catch {
+            #expect(cancel ? error is CancellationError : error is URLError)
+        }
+        #expect(await recorder.parts.count == 1)
     }
 
     @Test("request signature is hex HMAC-SHA256")
@@ -44,5 +82,17 @@ struct YandexVOTClientTests {
         let signature = YandexVOTClient.signature(Data("body".utf8))
         #expect(signature.count == 64)
         #expect(signature.allSatisfy { $0.isHexDigit })
+    }
+}
+
+private actor AudioChunkRecorder {
+    struct Part: Sendable {
+        let index: Int
+        let count: Int
+        let data: Data
+    }
+    var parts: [Part] = []
+    func append(index: Int, count: Int, data: Data) {
+        parts.append(Part(index: index, count: count, data: data))
     }
 }

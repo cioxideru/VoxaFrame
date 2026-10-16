@@ -55,8 +55,6 @@ final class VoiceOverTranslationController {
     private static let pollInterval: ClosedRange<Int> = 5...30
     /// Consecutive network errors tolerated before giving up on the translation.
     private static let maxRequestErrors = 3
-    /// HLS audio segments fetched concurrently when the direct stream is refused.
-    private static let parallelSegmentDownloads = 6
 
     @ObservationIgnored private let client = YandexVOTClient()
     @ObservationIgnored private let voicePlayer = AVPlayer()
@@ -187,73 +185,12 @@ final class VoiceOverTranslationController {
         if wasWaiting { setVideoPlaying(true) }
     }
 
-    /// Downloads the original audio (direct stream, else the HLS audio rendition) and uploads it.
+    /// Downloads the original audio to disk and uploads bounded parts.
     private func uploadOriginalAudio(_ request: Request, translationId: String) async throws {
-        let audio: Data
-        do {
-            audio = try await downloadDirectAudio(request)
-        } catch let error where request.originalAudioHLSURL != nil && !Task.isCancelled {
-            // Usually a 403 past the first ~256 KB; also no direct URL, an expired one, a network drop.
-            votLog.notice("direct audio download failed (\(error)) — downloading the HLS audio rendition")
-            audio = try await downloadHLSAudio(request)
-        }
-        votLog.notice("downloaded \(audio.count) bytes of original audio for \(request.videoId, privacy: .public)")
-        try await client.uploadAudio(videoId: request.videoId, translationId: translationId, audio: audio)
-    }
-
-    /// googlevideo serves the adaptive stream in `range=` slices.
-    private func downloadDirectAudio(_ request: Request) async throws -> Data {
-        guard let url = request.originalAudioURL else { throw YandexVOTClient.VOTError.malformedResponse }
-        let rangeSize = 10_000_000
-        var audio = Data()
-        while true {
-            guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { break }
-            let otherItems = (components.queryItems ?? []).filter { $0.name != "range" }
-            components.queryItems =
-                otherItems + [URLQueryItem(name: "range", value: "\(audio.count)-\(audio.count + rangeSize - 1)")]
-            guard let rangeURL = components.url else { break }
-            let data = try await Self.fetch(rangeURL, userAgent: request.originalAudioUserAgent)
-            audio.append(data)
-            if data.count < rangeSize { break }
-        }
-        return audio
-    }
-
-    /// The HLS audio rendition (what AVPlayer plays) as one ADTS AAC stream.
-    private func downloadHLSAudio(_ request: Request) async throws -> Data {
-        // HLS specification names the multivariant playlist a master playlist. swiftlint:disable:next inclusive_language
-        guard let masterURL = request.originalAudioHLSURL else { throw YandexVOTClient.VOTError.malformedResponse }
-        let userAgent = request.originalAudioUserAgent
-        // HLS term; preserve lossy UTF-8 decoding. swiftlint:disable:next inclusive_language optional_data_string_conversion
-        let master = String(decoding: try await Self.fetch(masterURL, userAgent: userAgent), as: UTF8.self)
-        guard let playlistURL = hlsOriginalAudioPlaylistURL(in: master, baseURL: masterURL) else {
-            throw YandexVOTClient.VOTError.malformedResponse
-        }
-        // Decode malformed UTF-8 lossily, preserving replacement characters. swiftlint:disable:next optional_data_string_conversion
-        let playlist = String(decoding: try await Self.fetch(playlistURL, userAgent: userAgent), as: UTF8.self)
-        let segments = hlsSegmentURLs(in: playlist, baseURL: playlistURL)
-        // Hundreds of ~4 s segments: a few in flight at once, reassembled in playlist order.
-        let parts = try await withThrowingTaskGroup(of: (Int, Data).self, returning: [Data].self) { group in
-            var parts = [Data](repeating: Data(), count: segments.count)
-            for (index, url) in segments.enumerated() {
-                if index >= Self.parallelSegmentDownloads, let (done, data) = try await group.next() {
-                    parts[done] = data
-                }
-                group.addTask { (index, strippingLeadingID3Tag(try await Self.fetch(url, userAgent: userAgent))) }
-            }
-            for try await (done, data) in group { parts[done] = data }
-            return parts
-        }
-        return parts.reduce(into: Data()) { $0.append($1) }
-    }
-
-    nonisolated private static func fetch(_ url: URL, userAgent: String) async throws -> Data {
-        var urlRequest = URLRequest(url: url, timeoutInterval: 60)
-        urlRequest.setValue(userAgent, forHTTPHeaderField: "User-Agent")
-        let (data, response) = try await URLSession.shared.data(for: urlRequest)
-        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-        guard (200..<300).contains(status) else { throw YandexVOTClient.VOTError.http(status) }
-        return data
+        try await client.uploadOriginalAudio(
+            videoId: request.videoId, translationId: translationId,
+            directURL: request.originalAudioURL, hlsURL: request.originalAudioHLSURL,
+            userAgent: request.originalAudioUserAgent)
     }
 
     // MARK: - Playback sync

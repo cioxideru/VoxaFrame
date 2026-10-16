@@ -316,11 +316,15 @@ public func hlsSegmentURLs(in playlist: String, baseURL: URL) -> [URL] {
 /// tags, YouTube's AAC segments leave ID3 blocks mid-stream and Yandex never finishes
 /// decoding the upload; stripped, they form one plain ADTS AAC stream.
 public func strippingLeadingID3Tag(_ segment: Data) -> Data {
-    let header = [UInt8](segment.prefix(10))
-    guard header.count == 10, header.starts(with: Array("ID3".utf8)) else { return segment }
-    // Size is a 28-bit "syncsafe" integer: 7 bits per byte.
+    Data(segment.dropFirst(min(leadingID3TagLength(header: segment.prefix(10)), segment.count)))
+}
+
+/// Length from the ID3 header; callers clamp it to the available file or segment size.
+func leadingID3TagLength(header data: Data) -> Int {
+    let header = [UInt8](data.prefix(10))
+    guard header.count == 10, header.starts(with: Array("ID3".utf8)) else { return 0 }
     let size = header[6...9].reduce(0) { $0 << 7 | Int($1 & 0x7F) }
-    return Data(segment.dropFirst(min(10 + size, segment.count)))  // rebased: indices start at 0
+    return 10 + size
 }
 
 private func hlsMediaLineIsOriginalAudio(_ line: String) -> Bool {

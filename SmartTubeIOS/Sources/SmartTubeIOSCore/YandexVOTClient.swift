@@ -113,43 +113,57 @@ public actor YandexVOTClient {
         return translation
     }
 
-    /// Uploads the original audio track after an AUDIO_REQUESTED status, in vot.js-sized chunks.
-    public func uploadAudio(videoId: String, translationId: String, audio: Data) async throws {
-        let chunks = Self.audioChunks(audio)
+    /// Keeps the temporary audio file alive only while its parts are being uploaded.
+    public func uploadOriginalAudio(
+        videoId: String, translationId: String, directURL: URL?, hlsURL: URL?, userAgent: String
+    ) async throws {
+        try await VOTAudioFile.withAudioFile(directURL: directURL, hlsURL: hlsURL, userAgent: userAgent) { url in
+            try await self.uploadAudio(videoId: videoId, translationId: translationId, fileURL: url)
+        }
+    }
+
+    /// Uploads one file part at a time; a short tail joins the preceding part.
+    public func uploadAudio(videoId: String, translationId: String, fileURL: URL) async throws {
         let fileId = "random-web_abr-\(UUID().uuidString.lowercased())"
-        for (index, chunk) in chunks.enumerated() {
+        try await Self.readAudioChunks(fileURL: fileURL) { index, count, chunk in
             var buffer = ProtoWriter()
-            buffer.int(1, index)  // chunkId
+            buffer.int(1, index)
             buffer.bytes(2, chunk)
             var partial = ProtoWriter()
             partial.message(1, buffer)
-            partial.int(2, chunks.count)  // audioPartsLength
+            partial.int(2, count)
             partial.string(3, fileId)
-            partial.int(4, 1)  // version
+            partial.int(4, 1)
             var body = ProtoWriter()
             body.string(1, translationId)
             body.string(2, Self.videoURL(videoId))
             body.message(4, partial)
-            _ = try await signedRequest(path: "/video-translation/audio", method: "PUT", body: body.data)
+            _ = try await self.signedRequest(path: "/video-translation/audio", method: "PUT", body: body.data)
         }
-        votLog.notice(
-            "uploaded \(audio.count) bytes of audio in \(chunks.count) chunk(s) for \(videoId, privacy: .public)")
     }
 
     // MARK: - Internals
 
     static func videoURL(_ videoId: String) -> String { "https://youtu.be/\(videoId)" }
 
-    /// Splits `audio` into chunks of at least `audioChunkSize` bytes (a short tail joins the previous chunk).
-    static func audioChunks(_ audio: Data) -> [Data] {
-        var chunks = stride(from: 0, to: audio.count, by: audioChunkSize).map {
-            audio.subdata(in: $0..<min($0 + audioChunkSize, audio.count))
+    nonisolated static func readAudioChunks(
+        fileURL: URL, send: @Sendable (Int, Int, Data) async throws -> Void
+    ) async throws {
+        let file = try FileHandle(forReadingFrom: fileURL)
+        defer { try? file.close() }
+        let size = try file.seekToEnd()
+        try file.seek(toOffset: 0)
+        let chunkSize = UInt64(audioChunkSize)
+        let count = size == 0 ? 0 : max(1, Int(size / chunkSize))
+        for index in 0..<count {
+            try Task.checkCancellation()
+            let length = index == count - 1 ? Int(size - UInt64(index) * chunkSize) : audioChunkSize
+            let chunk = try file.read(upToCount: length) ?? Data()
+            guard chunk.count == length else { throw VOTError.malformedResponse }
+            try await send(index, count, chunk)
+            try Task.checkCancellation()
         }
-        if chunks.count > 1, let tail = chunks.last, tail.count < audioChunkSize {
-            chunks.removeLast()
-            chunks[chunks.count - 1].append(tail)
-        }
-        return chunks
+        try file.close()
     }
 
     static func signature(_ data: Data) -> String {
@@ -175,6 +189,7 @@ public actor YandexVOTClient {
     private func signedRequest(
         path: String, method: String, body: Data, extraHeaders: [String: String] = [:]
     ) async throws -> [Int: ProtoValue] {
+        try Task.checkCancellation()
         let (uuid, secretKey) = try await currentSession()
         let token = "\(uuid):\(path):\(Self.componentVersion)"
         var headers = extraHeaders
@@ -192,6 +207,7 @@ public actor YandexVOTClient {
         guard let url = URL(string: Self.host + path) else {
             preconditionFailure("A Yandex API path must form a valid URL")
         }
+        try Task.checkCancellation()
         var request = URLRequest(url: url, timeoutInterval: 60)
         request.httpMethod = method
         request.httpBody = body
