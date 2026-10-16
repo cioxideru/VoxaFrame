@@ -28,6 +28,7 @@ enum AccessibilityID {
     static var settingsDisableLiquidGlassToggle: String { "settings.disableLiquidGlassToggle" }
     static var settingsGridColumnsLandscapePicker: String { "settings.gridColumnsLandscapePicker" }
     static var settingsGridColumnsPortraitPicker: String { "settings.gridColumnsPortraitPicker" }
+    static var settingsHistoryPicker: String { "settings.historyPicker" }
     static var settingsH264Toggle: String { "settings.h264Toggle" }
     static var settingsHideWatchedThresholdStepper: String { "settings.hideWatchedThresholdStepper" }
     static var settingsHideWatchedVideosToggle: String { "settings.hideWatchedVideosToggle" }
@@ -54,6 +55,10 @@ enum AccessibilityID {
 
     static func feedVideoBlock(_ section: String, _ index: Int) -> String {
         "feed.\(section).videos.\(index)"
+    }
+
+    static func videoCard(_ videoId: String) -> String {
+        "video.card.\(videoId)"
     }
 
     static func shortsCard(_ videoId: String) -> String {

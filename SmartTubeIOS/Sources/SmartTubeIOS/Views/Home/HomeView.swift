@@ -130,12 +130,17 @@ public struct HomeView: View {
                 selectedSection = first
             }
         }
+        .onChange(of: store.settings.historyState, initial: true) { _, state in
+            sectionVM.updateHistoryEnabled(state == .enabled)
+        }
         .task(id: auth.accessToken) {
+            sectionVM.updateHistoryEnabled(store.settings.historyState == .enabled)
             await homeVM.updateAuthToken(auth.accessToken)
             // Home has its own feed; load the section model only when its chip is visible.
             await sectionVM.updateAuthToken(auth.accessToken, reloadOnSignIn: selectedSection.type != .home)
         }
         .task(id: selectedSection) {
+            sectionVM.updateHistoryEnabled(store.settings.historyState == .enabled)
             // Reset auto-retry flags when switching sections to prevent stale
             // triggers from a previous section firing on the new section's content.
             needsMoreShorts = false
@@ -262,6 +267,7 @@ extension HomeView {
     }
 
     private func select(_ section: BrowseSection) {
+        sectionVM.updateHistoryEnabled(store.settings.historyState == .enabled)
         selectedSection = section
         if section.type != .home { sectionVM.select(section: section) }
     }

@@ -132,6 +132,13 @@ extension InnerTubeAPI {
 
     /// Fetches watch history (requires auth).
     public func fetchHistory(continuationToken: String? = nil) async throws -> VideoGroup {
+        #if DEBUG
+        if HomePaginationUITestFixture.isMixedFeedEnabled {
+            return VideoGroup(
+                title: "History",
+                videos: [Video(id: "history-fixture", title: "History fixture", channelTitle: "Fixture")])
+        }
+        #endif
         var body = makeBody(client: tvClientContext, continuationToken: continuationToken)
         if continuationToken == nil {
             body["browseId"] = "FEhistory"

@@ -223,6 +223,7 @@ public struct SettingsView: View {
                 Text("Enabled").tag(AppSettings.HistoryState.enabled)
                 Text("Disabled").tag(AppSettings.HistoryState.disabled)
             }
+            .accessibilityIdentifier(AccessibilityID.settingsHistoryPicker)
             if !LocalWatchHistoryStore.shared.entries.isEmpty {
                 Button("Clear Watch History on This Device", role: .destructive) {
                     LocalWatchHistoryStore.shared.clear()

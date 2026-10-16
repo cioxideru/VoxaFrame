@@ -28,6 +28,7 @@ public enum AccessibilityID {
     public static var settingsDisableLiquidGlassToggle: String { "settings.disableLiquidGlassToggle" }
     public static var settingsGridColumnsLandscapePicker: String { "settings.gridColumnsLandscapePicker" }
     public static var settingsGridColumnsPortraitPicker: String { "settings.gridColumnsPortraitPicker" }
+    public static var settingsHistoryPicker: String { "settings.historyPicker" }
     public static var settingsH264Toggle: String { "settings.h264Toggle" }
     public static var settingsHideWatchedThresholdStepper: String { "settings.hideWatchedThresholdStepper" }
     public static var settingsHideWatchedVideosToggle: String { "settings.hideWatchedVideosToggle" }

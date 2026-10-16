@@ -318,6 +318,41 @@ final class MixedFeedLayoutUITests: XCTestCase {
 
     override func tearDownWithError() throws { app = nil }
 
+    func testHistoryDisabledAppliesToHomeAndPersistsAcrossLaunch() {
+        selectSection("history", title: "History")
+        let historyCard = app.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.videoCard("history-fixture")).firstMatch
+        XCTAssertTrue(historyCard.waitForExistence(timeout: 10))
+        setHistory("Disabled")
+        UITestHelpers.tapTab(named: "Home", in: app)
+        selectSection("history", title: "History")
+        XCTAssertTrue(app.staticTexts["Nothing here yet"].waitForExistence(timeout: 10))
+        XCTAssertFalse(historyCard.exists)
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
+        app.launch()
+        UITestHelpers.tapTab(named: "Home", in: app)
+        selectSection("history", title: "History")
+        XCTAssertTrue(app.staticTexts["Nothing here yet"].waitForExistence(timeout: 10))
+        XCTAssertFalse(historyCard.exists)
+        setHistory("Enabled")
+        UITestHelpers.tapTab(named: "Home", in: app)
+        selectSection("history", title: "History")
+        XCTAssertTrue(historyCard.waitForExistence(timeout: 10))
+    }
+
+    private func setHistory(_ value: String) {
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        let picker = app.buttons[AccessibilityID.settingsHistoryPicker]
+        for _ in 0..<12 where !picker.isHittable { app.swipeUp() }
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        picker.tap()
+        let option = app.buttons[value]
+        XCTAssertTrue(option.waitForExistence(timeout: 5))
+        option.tap()
+    }
+
     func testHomeSpacing() { assertSpacing(section: "home", title: "Home") }
     func testSubscriptionsSpacing() { assertSpacing(section: "subscriptions", title: "Subscriptions") }
     func testRecommendedSpacing() { assertSpacing(section: "recommended", title: "Recommended") }

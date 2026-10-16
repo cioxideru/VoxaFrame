@@ -24,6 +24,9 @@ All notable changes to SmartTube are documented here.
 - **WK-HLS cache (PLAN-0011)** shares the existing 30-video limit and removes URLs,
   tokens and extraction flags together on expiry or eviction. Token updates do not
   extend an old URL's lifetime; recently read entries retain priority.
+- **Home history (PLAN-0011)** applies the saved History setting before loading the
+  visible section. Disabling it clears that section, cancels pending requests and
+  ignores late responses, including pagination.
 - **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
   restarts a queued load when the app becomes active. Cancelled queued loads skip
   their requests. Token refresh keeps the current cards and pagination instead

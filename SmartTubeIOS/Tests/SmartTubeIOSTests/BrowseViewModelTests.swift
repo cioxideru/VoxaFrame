@@ -171,6 +171,62 @@ struct BrowseViewModelTests {
         #expect(received == [])
     }
 
+    @Test("Disabled history is empty before authentication and selection, and can be enabled again")
+    func disabledHistoryBeforeLoading() async throws {
+        let mock = MockInnerTubeAPI()
+        mock.historyResult = VideoGroup(title: "History", videos: [makeVideo("remote-history")])
+        let local = LocalWatchHistoryStore(
+            defaults: try #require(UserDefaults(suiteName: "history-\(UUID().uuidString)")))
+        local.record(makeVideo("local-history"))
+        let vm = BrowseViewModel(api: mock, localHistory: local)
+        vm.updateHistoryEnabled(false)
+        await vm.updateAuthToken("token", reloadOnSignIn: false)
+        vm.select(section: BrowseSection(type: .history))
+        await waitForTasks { !vm.isLoading }
+        #expect(vm.videoGroups.isEmpty)
+        #expect(!mock.calls.contains { $0.method == "fetchHistory" })
+
+        vm.updateHistoryEnabled(true)
+        await waitForTasks { !vm.isLoading }
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["local-history", "remote-history"])
+        vm.updateHistoryEnabled(false)
+        #expect(vm.videoGroups.isEmpty)
+        await waitForTasks { !vm.isLoading }
+        #expect(mock.calls.filter { $0.method == "fetchHistory" }.count == 1)
+    }
+
+    @Test(
+        "Disabling History cancels an initial load or continuation and ignores its late result",
+        arguments: [false, true])
+    func disableInFlightHistory(pagination: Bool) async throws {
+        let mock = MockInnerTubeAPI()
+        let local = LocalWatchHistoryStore(
+            defaults: try #require(UserDefaults(suiteName: "history-\(UUID().uuidString)")))
+        let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: .history), localHistory: local)
+        let first = makeVideo("first")
+        if pagination {
+            mock.historyResult = VideoGroup(title: "History", videos: [first], nextPageToken: "next")
+            vm.loadContent(refresh: true)
+            await waitForTasks { !vm.isLoading }
+        }
+        var response: CheckedContinuation<VideoGroup, Never>?
+        var returnedCancelled = false
+        mock.historyHandler = { _ in
+            let result = await withCheckedContinuation { response = $0 }
+            returnedCancelled = Task.isCancelled
+            return result
+        }
+        if pagination { vm.loadMoreIfNeeded(lastVideo: first) } else { vm.loadContent(refresh: true) }
+        await waitForTasks { response != nil }
+        vm.updateHistoryEnabled(false)
+        #expect(vm.videoGroups.isEmpty)
+        let count = mock.calls.filter { $0.method == "fetchHistory" }.count
+        response?.resume(returning: VideoGroup(title: "Late", videos: [makeVideo("late")]))
+        await waitForTasks { returnedCancelled && !vm.isLoading }
+        #expect(vm.videoGroups.isEmpty)
+        #expect(mock.calls.filter { $0.method == "fetchHistory" }.count == count)
+    }
+
     @Test("loadContent for .history calls fetchHistory")
     func loadHistoryCallsFetch() async throws {
         let mock = MockInnerTubeAPI()
