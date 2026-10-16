@@ -74,7 +74,7 @@ public actor InnerTubeAPI {
 
     /// Returns the cached PO token for `videoId`, or nil if none is available.
     /// Phase -1a uses this to recover the BotGuard-minted token when
-    /// `VideoPreloadCache.wkHLSPoTokenCache` is empty (e.g. for videos that have no
+    /// `VideoPreloadCache` has no cached WK-HLS token (e.g. for videos that have no
     /// `serviceIntegrityDimensions.poToken` in their player API response — the WKWebView
     /// extractor stores nil in the cache, but BotGuard may have minted a token separately
     /// during the 2 s prefetchPoToken window in loadAsync).

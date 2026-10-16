@@ -32,7 +32,7 @@ Do not push. Related device acceptance remains in
 | 3 | Bind BotGuard safety timer and completion to one attempt | Concurrency | Implemented and reviewed; controlled timer/stale callback tests and JS syntax check; full check, 986 tests |
 | 4 | Separate subscription cancellation/failure from empty results; bound work | Concurrency | Implemented and reviewed; cancellation/retry and 4-channel/8-request bound tests; full check, 990 tests |
 | 5 | Stream translation audio through bounded buffers and temporary files | Memory | Implemented and reviewed; 34 focused tests cover bytes/order, bounds and cleanup; full check, 998 tests |
-| 6 | Bound and atomically invalidate WK-HLS cache entries | Memory | Pending |
+| 6 | Bound and atomically invalidate WK-HLS cache entries | Memory | Implemented and reviewed; clock-driven expiry, shared LRU, token-only and replay tests; full check, 1005 tests |
 | 7 | Apply History settings to the actual Home section model | Architecture | Pending |
 | 8 | Remove stale duplicated current-video state from presentation | Architecture | Pending |
 | 9 | Share one Home feed result with its widget | Architecture | Pending |
@@ -58,7 +58,7 @@ measurements distinct from correctness tests and do not infer a device speedup.
   duplicate Home loading for widgets and settings wired to the wrong feed instance.
 - Cleanup direction: prove behavior per step, then remove the replaced path in that same step.
 
-Next deliverable: item 6, WK-HLS cache eviction and expiry.
+Next deliverable: item 7, History settings in the visible Home model.
 
 Translation transfer keeps six downloaded segment files at most, copies audio with
 a 64 KiB buffer and reads one upload part at a time (a short tail joins the preceding

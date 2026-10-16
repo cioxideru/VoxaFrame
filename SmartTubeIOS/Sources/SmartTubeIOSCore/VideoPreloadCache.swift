@@ -63,6 +63,7 @@ public actor VideoPreloadCache {
     private let api: InnerTubeAPI
     private let sponsorBlock: SponsorBlockService
     private let deArrow: DeArrowService
+    private let wkHLSNow: @Sendable () -> Date
 
     // MARK: - TTL constants
 
@@ -80,7 +81,8 @@ public actor VideoPreloadCache {
     // MARK: - LRU cap
 
     /// Maximum number of distinct video IDs kept in memory.
-    private static let maxVideoEntries = 30
+    static let maxVideoEntries = 30
+    static let wkHLSTTL: TimeInterval = 4 * 3_600
 
     // MARK: - Cache entry
 
@@ -99,20 +101,14 @@ public actor VideoPreloadCache {
     private var endCardsCache: [String: CacheEntry<[EndCard]>] = [:]
     private var sponsorCache: [String: CacheEntry<[SponsorSegment]>] = [:]
     private var deArrowCache: [String: CacheEntry<DeArrowService.BrandingInfo>] = [:]
-    /// WKWebView-extracted HLS master manifest URLs keyed by videoId.
-    /// NOT cleared by consume() — persists so that re-plays and neighbour navigation
-    /// skip the 5–9 s WKWebView extraction step when the URL is still fresh.
-    private var wkHLSCache: [String: CacheEntry<URL>] = [:]
-    /// BotGuard proof-of-origin tokens keyed by videoId, stored alongside the HLS URL.
-    /// These survive the YouTubeWebViewHLSExtractor.extractedPoToken reset that happens
-    /// at the start of each new extractHLSURL call, so Phase -1a can always retrieve
-    /// the preWarm-extracted token regardless of when wkHLSEarlyTask resets the field.
-    private var wkHLSPoTokenCache: [String: String] = [:]
-    /// Tracks whether the wkHLS URL was stored by a background preWarm extraction (true)
-    /// or by a live race playback path (false). Phase -1a skips the probe for preWarm + pot=nil
-    /// entries because preWarm URLs contain `pfa/1` in variant playlist paths, which causes
-    /// segment-level 403s when no pot= is available. Live-race URLs do not have this restriction.
-    private var wkHLSIsPreWarmCache: [String: Bool] = [:]
+    /// URL, token and extraction origin share one lifetime, including token-first writes.
+    private struct WKHLSCacheEntry {
+        var url: URL?
+        var poToken: String?
+        var isPreWarm = false
+        var storedAt: Date
+    }
+    private var wkHLSCache: [String: WKHLSCacheEntry] = [:]
 
     // MARK: - Access order (LRU)
 
@@ -154,11 +150,13 @@ public actor VideoPreloadCache {
     init(
         api: InnerTubeAPI = InnerTubeAPI(),
         sponsorBlock: SponsorBlockService = SponsorBlockService(),
-        deArrow: DeArrowService = DeArrowService()
+        deArrow: DeArrowService = DeArrowService(),
+        wkHLSNow: @escaping @Sendable () -> Date = Date.init
     ) {
         self.api = api
         self.sponsorBlock = sponsorBlock
         self.deArrow = deArrow
+        self.wkHLSNow = wkHLSNow
         pathMonitor.pathUpdateHandler = { [weak self] path in
             Task { await self?.updatePath(path) }
         }
@@ -438,7 +436,7 @@ public actor VideoPreloadCache {
 
     /// Stores the WKWebView-extracted HLS master manifest URL for a video.
     /// TTL matches the `expire=` lifetime of signed manifest URLs (~6h) with a 2h safety margin.
-    /// NOT subject to consume() eviction — survives across multiple load() calls.
+    /// Survives consume() reads for replay, subject to the shared LRU limit.
     /// - Parameter isPreWarm: Pass `true` when called from background `preWarm()` extraction,
     ///   `false` when called from a live race playback path (tryWebViewHLS / Path B win).
     ///   Phase -1a consults this flag to skip the HEAD probe for preWarm + pot=nil entries.
@@ -446,25 +444,24 @@ public actor VideoPreloadCache {
         cacheLog.notice(
             "[store] wkHLS \(videoId) origin=\(isPreWarm ? "preWarm" : "liveRace") url=\(url.absoluteString.prefix(80))"
         )
-        wkHLSCache[videoId] = CacheEntry(value: url, storedAt: .init(), ttl: 4 * 3_600)
-        wkHLSIsPreWarmCache[videoId] = isPreWarm
+        var entry = freshWKHLS(for: videoId) ?? WKHLSCacheEntry(storedAt: wkHLSNow())
+        entry.url = url
+        entry.isPreWarm = isPreWarm
+        entry.storedAt = wkHLSNow()
+        wkHLSCache[videoId] = entry
+        touch(videoId)
     }
 
     /// Returns `true` when the cached wkHLS URL was stored by a background preWarm extraction.
     /// Returns `false` for live-race extracted URLs or when no URL is cached.
     public func cachedWKHLSIsPreWarm(for videoId: String) -> Bool {
-        wkHLSIsPreWarmCache[videoId] ?? false
+        freshWKHLS(for: videoId)?.isPreWarm ?? false
     }
 
     /// Returns the cached WKWebView HLS master manifest URL if still within TTL, else nil.
     public func cachedWKHLSURL(for videoId: String) -> URL? {
         if DebugFlags.cachingDisabled { return nil }
-        guard let entry = wkHLSCache[videoId] else { return nil }
-        if entry.isExpired {
-            wkHLSCache.removeValue(forKey: videoId)
-            return nil
-        }
-        return entry.value
+        return freshWKHLS(for: videoId)?.url
     }
 
     /// Returns true if the cached WKWebView HLS URL was stored within the last `seconds` seconds.
@@ -472,23 +469,26 @@ public actor VideoPreloadCache {
     /// guaranteed fresh (CDN session active) and the probe round-trip (~0.22s) is wasted work.
     /// Default threshold: 10s (covers the double-preWarm window before the heartbeat fires).
     public func isWKHLSURLFresh(for videoId: String, within seconds: TimeInterval = 10) -> Bool {
-        guard let entry = wkHLSCache[videoId] else { return false }
-        return Date().timeIntervalSince(entry.storedAt) < seconds
+        guard let entry = freshWKHLS(for: videoId), entry.url != nil else { return false }
+        return wkHLSNow().timeIntervalSince(entry.storedAt) < seconds
     }
 
     /// Stores the BotGuard pot= token that accompanied the WKWebView HLS URL extraction.
-    /// The token is NOT subject to TTL — it's evicted together with the HLS URL in
-    /// `invalidateWKHLSURL(for:)`. This is the stable storage point for Phase -1a:
+    /// The token shares the URL lifetime; updating it does not extend URL freshness.
+    /// Token-only entries have the same TTL and LRU bound. This is the stable storage point for Phase -1a:
     /// unlike `YouTubeWebViewHLSExtractor.extractedPoToken`, this entry survives the
     /// nil-reset that happens at the start of every new `extractHLSURL` call.
     public func store(wkHLSPoToken token: String, for videoId: String) {
-        wkHLSPoTokenCache[videoId] = token
+        var entry = freshWKHLS(for: videoId) ?? WKHLSCacheEntry(storedAt: wkHLSNow())
+        entry.poToken = token
+        wkHLSCache[videoId] = entry
+        touch(videoId)
     }
 
     /// Returns the cached pot= token for a video, or nil if none was stored.
     public func cachedPoToken(for videoId: String) -> String? {
         if DebugFlags.cachingDisabled { return nil }
-        return wkHLSPoTokenCache[videoId]
+        return freshWKHLS(for: videoId)?.poToken
     }
 
     // MARK: - Public: auth invalidation
@@ -523,11 +523,8 @@ public actor VideoPreloadCache {
     /// Evicting forces a fresh WKWebView extraction on the next load of this video.
     /// Also clears the associated pot= token so Phase -1a won't use an orphaned token.
     public func invalidateWKHLSURL(for videoId: String) {
-        guard wkHLSCache[videoId] != nil else { return }
         cacheLog.notice("[evict] 403 — invalidating wkHLSCache for \(videoId, privacy: .public)")
         wkHLSCache.removeValue(forKey: videoId)
-        wkHLSPoTokenCache.removeValue(forKey: videoId)
-        wkHLSIsPreWarmCache.removeValue(forKey: videoId)
     }
 
     // MARK: - Private: prefetch implementation
@@ -598,9 +595,20 @@ public actor VideoPreloadCache {
             endCardsCache.removeValue(forKey: evict)
             sponsorCache.removeValue(forKey: evict)
             deArrowCache.removeValue(forKey: evict)
+            wkHLSCache.removeValue(forKey: evict)
             prefetchTasks[evict]?.cancel()
             prefetchTasks.removeValue(forKey: evict)
         }
+    }
+
+    private func freshWKHLS(for videoId: String) -> WKHLSCacheEntry? {
+        guard let entry = wkHLSCache[videoId] else { return nil }
+        guard wkHLSNow().timeIntervalSince(entry.storedAt) <= Self.wkHLSTTL else {
+            wkHLSCache.removeValue(forKey: videoId)
+            return nil
+        }
+        touch(videoId)
+        return entry
     }
 
     private func fresh<T: Sendable>(_ entry: CacheEntry<T>?) -> T? {
