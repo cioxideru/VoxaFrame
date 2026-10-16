@@ -11,7 +11,7 @@ import SwiftUI
 //                      dedicated BrowseViewModel instance.
 
 public struct HomeView: View {
-    @State private var homeVM: HomeViewModel
+    @Environment(HomeViewModel.self) private var homeVM
     @State var sectionVM: BrowseViewModel
     @Environment(AuthService.self) private var auth
     @Environment(SettingsStore.self) var store
@@ -68,7 +68,6 @@ public struct HomeView: View {
     }
 
     public init(api: InnerTubeAPI) {
-        _homeVM = State(initialValue: HomeViewModel(api: api))
         _sectionVM = State(initialValue: BrowseViewModel(api: api))
     }
 
@@ -135,7 +134,6 @@ public struct HomeView: View {
         }
         .task(id: auth.accessToken) {
             sectionVM.updateHistoryEnabled(store.settings.historyState == .enabled)
-            await homeVM.updateAuthToken(auth.accessToken)
             // Home has its own feed; load the section model only when its chip is visible.
             await sectionVM.updateAuthToken(auth.accessToken, reloadOnSignIn: selectedSection.type != .home)
         }
@@ -392,7 +390,6 @@ extension HomeView {
                 #endif
             }
         }
-        .task { homeVM.refreshIfStale() }
     }
 
     @ViewBuilder

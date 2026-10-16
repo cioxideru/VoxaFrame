@@ -35,7 +35,7 @@ Do not push. Related device acceptance remains in
 | 6 | Bound and atomically invalidate WK-HLS cache entries | Memory | Implemented and reviewed; clock-driven expiry, shared LRU, token-only and replay tests; full check, 1005 tests |
 | 7 | Apply History settings to the actual Home section model | Architecture | Implemented and reviewed; initial disabled and cancellation regressions pass; 1007 tests and iOS/tvOS UI-target builds pass; UI execution pending |
 | 8 | Remove stale duplicated current-video state from presentation | Architecture | Implemented and reviewed; Next/Previous/autoplay and recovery tests pass; full check, 1009 tests; iOS build passes; iOS presentation tests await Simulator |
-| 9 | Share one Home feed result with its widget | Architecture | Pending |
+| 9 | Share one Home feed result with its widget | Architecture | Implemented and reviewed; 55 Home tests cover shared publication, auth/foreground ordering and late writes after sign-out; 1012 tests and iOS/tvOS UI-target builds pass |
 | 10 | Move UI/AVPlayer responsibilities out of Core and check the boundary | Architecture | Pending |
 | 11 | Release inactive parked player/WebView resources on idle/pressure | Memory | Pending |
 | 12 | Measure and serialize audio-session transitions outside UI work | Concurrency | Pending |
@@ -58,7 +58,7 @@ measurements distinct from correctness tests and do not infer a device speedup.
   duplicate Home loading for widgets and settings wired to the wrong feed instance.
 - Cleanup direction: prove behavior per step, then remove the replaced path in that same step.
 
-Next deliverable: item 9, one Home feed owner for the visible screen and widget.
+Next deliverable: item 10, move UI/player adapters out of Core and guard the boundary.
 
 Translation transfer keeps six downloaded segment files at most, copies audio with
 a 64 KiB buffer and reads one upload part at a time (a short tail joins the preceding

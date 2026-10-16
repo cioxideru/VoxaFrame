@@ -5,6 +5,7 @@ import SwiftUI
 struct SmartTubeApp: App {
     @State private var api: InnerTubeAPI
     @State private var authService: AuthService
+    @State private var homeViewModel: HomeViewModel
     @State private var browseViewModel: BrowseViewModel
     @State private var settingsStore: SettingsStore
     /// Shared download service used by video cards. Lives at the app scope so
@@ -18,6 +19,11 @@ struct SmartTubeApp: App {
 
     init() {
         let api = InnerTubeAPI()
+        let homeViewModel = HomeViewModel(api: api)
+        _homeViewModel = State(initialValue: homeViewModel)
+        #if os(iOS)
+        HomeWidgetPublisher.attach(to: homeViewModel)
+        #endif
         _api = State(initialValue: api)
         _authService = State(initialValue: AuthService())
         _browseViewModel = State(initialValue: BrowseViewModel(api: api))
@@ -42,12 +48,19 @@ struct SmartTubeApp: App {
             let root = RootView()
                 .environment(authService)
                 .environment(browseViewModel)
+                .environment(homeViewModel)
+                .task(id: authService.sessionState) {
+                    await homeViewModel.updateAuthToken(
+                        authService.accessToken, signedIn: authService.isSignedIn,
+                        sessionID: authService.sessionGeneration)
+                }
                 .environment(settingsStore)
                 .environment(\.innerTubeAPI, api)
                 .onChange(of: authService.accessToken, initial: true) { _, newToken in
                     Task {
                         await api.setAuthToken(newToken)
-                        await browseViewModel.updateAuthToken(newToken)
+                        await browseViewModel.updateAuthToken(
+                            newToken, reloadOnSignIn: browseViewModel.currentSection.type != .home)
                     }
                 }
                 .onChange(of: settingsStore.settings.enabledSections) { _, newSections in

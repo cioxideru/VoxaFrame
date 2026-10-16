@@ -118,23 +118,32 @@ public struct HomeWidgetStore: Sendable {
             return false
         }
 
-        try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+        var thumbnails: [String: Data] = [:]
         for video in videos where !fm.fileExists(atPath: thumbnailURL(for: video.id).path) {
+            try Task.checkCancellation()
             guard let source = video.thumbnailURL,
                 let data = try? await fetch(source),
                 let jpeg = Self.downscaledJPEG(data, maxWidth: Self.thumbnailWidth)
             else { continue }
-            try? jpeg.write(to: thumbnailURL(for: video.id), options: .atomic)
+            thumbnails[video.id] = jpeg
         }
-
+        let preparedThumbnails = thumbnails
         let snapshot = HomeWidgetSnapshot(items: items, updatedAt: now)
-        try JSONEncoder().encode(snapshot).write(to: snapshotURL, options: .atomic)
-        removeStaleThumbnails(keeping: Set(items.map(\.id)))
-        return true
+        // Serialize the final writes with sign-out clear, while fetch/decode stay off the main actor.
+        return try await MainActor.run {
+            try Task.checkCancellation()
+            try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+            for (id, jpeg) in preparedThumbnails {
+                try? jpeg.write(to: thumbnailURL(for: id), options: .atomic)
+            }
+            try JSONEncoder().encode(snapshot).write(to: snapshotURL, options: .atomic)
+            removeStaleThumbnails(keeping: Set(items.map(\.id)))
+            return true
+        }
     }
 
     /// Removes the snapshot and thumbnails (sign-out).
-    public func clear() {
+    @MainActor public func clear() {
         try? FileManager.default.removeItem(at: directory)
     }
 

@@ -29,8 +29,20 @@ let authLog = ViewModelLogger(category: "Auth")
 @Observable
 public final class AuthService {
 
+    public struct SessionState: Hashable {
+        public let generation: Int
+        public let accessToken: String?
+        public let signedIn: Bool
+    }
+
+    public var sessionState: SessionState {
+        SessionState(generation: sessionGeneration, accessToken: accessToken, signedIn: isSignedIn)
+    }
+
     // MARK: - Observable state
 
+    /// Changes only when the account session changes, never for an access-token refresh.
+    public internal(set) var sessionGeneration = 0
     public internal(set) var isSignedIn: Bool = false
     public internal(set) var accountName: String?
     public internal(set) var accountAvatarURL: URL?
@@ -223,6 +235,7 @@ public final class AuthService {
     }
 
     public func signOut() {
+        sessionGeneration += 1
         pollTask?.cancel()
         pollTask = nil
         tokenRefreshTask?.cancel()
@@ -243,6 +256,7 @@ public final class AuthService {
     /// Used by `--uitesting-sign-out` so UI tests can verify signed-out UI on a
     /// simulator that has real credentials stored in the keychain.
     public func clearSession() {
+        sessionGeneration += 1
         pollTask?.cancel()
         pollTask = nil
         tokenRefreshTask?.cancel()

@@ -131,6 +131,7 @@ extension AuthService {
             tokenExpiry = Date().addingTimeInterval(exp - 60)
         }
         isSignedIn = accessToken != nil
+        sessionGeneration += 1
         saveToKeychain()
         scheduleProactiveRefresh()
     }

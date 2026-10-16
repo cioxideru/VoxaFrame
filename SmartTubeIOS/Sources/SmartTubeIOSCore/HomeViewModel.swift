@@ -37,6 +37,11 @@ public final class HomeViewModel {
     /// Shorts paging started by `loadShorts(atLeast:)`. Cancelled on the next `load()`.
     private var shortsPreloadTask: Task<Void, Never>? = nil
     public private(set) var isRefreshing: Bool = false
+    /// Publishes the current Home result, including an empty result when the session clears.
+    @ObservationIgnored public var onHomeLoaded: (@MainActor ([Video]) -> Void)?
+    private var sessionID = 0
+    private var authRevision = 0
+    private var isUpdatingAuth = false
     /// Timestamp of the last successful load. Used for staleness checks.
     public private(set) var loadedAt: Date? = nil
     /// Frozen snapshot of the interleaved home feed. Updated once both sections
@@ -290,6 +295,7 @@ public final class HomeViewModel {
             guard isCurrentLoad(generation) else { return }
             isRefreshing = false
             loadedAt = Date()
+            onHomeLoaded?(mergedVideos)
             resumeShortsDemand()
             let merged = self.mergedVideos
             let mergedShorts = merged.filter { $0.isShort }.count
@@ -303,22 +309,45 @@ public final class HomeViewModel {
         generation == loadGeneration && !Task.isCancelled
     }
 
-    public func updateAuthToken(_ token: String?) async {
-        let wasAuthenticated = hasAuthToken
-        hasAuthToken = token != nil
-        await api.setAuthToken(token)
-        if token != nil && !wasAuthenticated {
-            // Only reload on sign-in (nil → token). Token refreshes that happen
-            // during video playback keep the same sign-in state and must not
-            // wipe and reload the home feed.
-            load()
+    public func updateAuthToken(_ token: String?, signedIn: Bool? = nil, sessionID: Int = 0) async {
+        authRevision += 1
+        let revision = authRevision
+        isUpdatingAuth = true
+        defer {
+            if revision == authRevision { isUpdatingAuth = false }
         }
+        var authenticated = (signedIn ?? true) && token != nil
+        #if DEBUG
+        if signedIn == true, HomePaginationUITestFixture.isEnabled { authenticated = true }
+        #endif
+        let changedSession = self.sessionID != sessionID
+        let needsLoad = authenticated && (!hasAuthToken || changedSession || (loadedAt == nil && !isRefreshing))
+        self.sessionID = sessionID
+        hasAuthToken = authenticated
+        if !authenticated || changedSession {
+            loadGeneration += 1
+            loadTask?.cancel()
+            shortsPreloadTask?.cancel()
+            sections = Self.shelfSections.map { SectionState(section: $0, isLoading: false) }
+            mergedVideos = []
+            shortsVideos = []
+            shortsNextPageToken = nil
+            requestedShortsCount = 0
+            isLoadingMoreShorts = false
+            isRefreshing = false
+            loadedAt = nil
+            feedGeneration += 1
+            onHomeLoaded?([])
+        }
+        await api.setAuthToken(token)
+        guard revision == authRevision, !Task.isCancelled else { return }
+        if needsLoad && !isRefreshing { load() }
     }
 
     /// Refreshes both shelves if the last successful load was more than
     /// `threshold` seconds ago (default 15 min). No-op while loading.
     public func refreshIfStale(threshold: TimeInterval = 15 * 60) {
-        guard !isRefreshing else { return }
+        guard hasAuthToken, !isUpdatingAuth, !isRefreshing else { return }
         let age = loadedAt.map { Date().timeIntervalSince($0) } ?? .infinity
         guard age > threshold else { return }
         let ageDesc = age.isFinite ? "\(Int(age))s" : "never loaded"

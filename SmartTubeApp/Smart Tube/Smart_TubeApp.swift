@@ -10,6 +10,7 @@ struct SmartTubeTVApp: App {
     // Declared without default values so that init() can build them from settingsStore.
     @State private var api: InnerTubeAPI
     @State private var authService: AuthService
+    @State private var homeViewModel: HomeViewModel
     @State private var browseViewModel: BrowseViewModel
     @State private var settingsStore: SettingsStore
     /// Shared download service — required by RootView and VideoCardView even on
@@ -29,6 +30,8 @@ struct SmartTubeTVApp: App {
             return BotGuardClient()
         }()
         let api = InnerTubeAPI(authToken: nil, poTokenProvider: poTokenProvider)
+        let homeViewModel = HomeViewModel(api: api)
+        _homeViewModel = State(initialValue: homeViewModel)
         _api = State(initialValue: api)
         _authService = State(initialValue: AuthService())
         _browseViewModel = State(initialValue: BrowseViewModel(api: api))
@@ -43,12 +46,19 @@ struct SmartTubeTVApp: App {
             let root = RootView()
                 .environment(authService)
                 .environment(browseViewModel)
+                .environment(homeViewModel)
+                .task(id: authService.sessionState) {
+                    await homeViewModel.updateAuthToken(
+                        authService.accessToken, signedIn: authService.isSignedIn,
+                        sessionID: authService.sessionGeneration)
+                }
                 .environment(settingsStore)
                 .environment(\.innerTubeAPI, api)
                 .onChange(of: authService.accessToken, initial: true) { _, newToken in
                     Task {
                         await api.setAuthToken(newToken)
-                        await browseViewModel.updateAuthToken(newToken)
+                        await browseViewModel.updateAuthToken(
+                            newToken, reloadOnSignIn: browseViewModel.currentSection.type != .home)
                     }
                 }
                 .onChange(of: authService.sapisid, initial: true) { _, newSapisid in

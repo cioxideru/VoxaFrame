@@ -37,8 +37,36 @@ private func tempStore() -> HomeWidgetStore {
             .appendingPathComponent("HomeWidgetTests-\(UUID().uuidString)", isDirectory: true))
 }
 
+@MainActor
+private final class WidgetThumbnailGate {
+    var continuation: CheckedContinuation<Data, Never>?
+    func fetch() async -> Data {
+        await withCheckedContinuation { continuation = $0 }
+    }
+}
+
+@MainActor
 @Suite("Home widget snapshot (#353)")
 struct HomeWidgetSnapshotTests {
+    @Test("A cancelled thumbnail fetch cannot recreate a cleared personal snapshot")
+    func cancelledSaveAfterClear() async throws {
+        let store = tempStore()
+        defer { store.clear() }
+        let gate = WidgetThumbnailGate()
+        let png = try makePNG(width: 64, height: 36)
+        let saving = Task { try await store.save([video("private")], fetch: { _ in await gate.fetch() }) }
+        await waitForTasks { gate.continuation != nil }
+        saving.cancel()
+        store.clear()
+        gate.continuation?.resume(returning: png)
+        do {
+            _ = try await saving.value
+            Issue.record("Cancelled save must not commit")
+        } catch is CancellationError {
+            #expect(store.load() == nil)
+            #expect(!FileManager.default.fileExists(atPath: store.directory.path))
+        }
+    }
 
     @Test("widget videos skip Shorts, upcoming premieres and duplicates, capped at maxItems")
     func widgetVideosFiltering() {

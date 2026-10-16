@@ -15,9 +15,9 @@ private let widgetLog = Logger(subsystem: "com.void.smarttube.app", category: "H
 public enum HomeWidgetPublisher {
     private static var saveTask: Task<Void, Never>?
 
-    /// Hooks the publisher to `browseViewModel` so every Home load refreshes the widget.
-    public static func attach(to browseViewModel: BrowseViewModel) {
-        browseViewModel.onHomeLoaded = { videos in publish(videos) }
+    /// Hooks the publisher to `homeViewModel` so every Home load refreshes the widget.
+    public static func attach(to homeViewModel: HomeViewModel) {
+        homeViewModel.onHomeLoaded = { videos in publish(videos) }
     }
 
     static func publish(_ videos: [Video]) {

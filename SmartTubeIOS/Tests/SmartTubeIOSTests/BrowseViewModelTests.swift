@@ -24,17 +24,14 @@ struct BrowseViewModelTests {
         #expect(mock.calls.filter { $0.method == "fetchHomeRows" }.count == 1)
     }
 
-    @Test("Signed-out startup clears the widget without fetching a Home feed")
+    @Test("Signed-out startup does not fetch a Home feed")
     func signedOutStartupClearsWidgetWithoutFetching() async {
         let mock = MockInnerTubeAPI()
         let vm = BrowseViewModel(api: mock)
-        var widgetVideos: [Video]?
-        vm.onHomeLoaded = { widgetVideos = $0 }
 
         await vm.updateAuthToken(nil)
         vm.refreshIfStale()
 
-        #expect(widgetVideos == [])
         #expect(!vm.isLoading)
         #expect(mock.calls == [.init(method: "setAuthToken", args: ["nil"])])
     }
@@ -115,13 +112,10 @@ struct BrowseViewModelTests {
         let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: .channels))
         await vm.updateAuthToken("first-token", reloadOnSignIn: false)
         vm.subscribedChannels = [Channel(id: "account-channel", title: "Account Channel")]
-        var widgetVideos: [Video]?
-        vm.onHomeLoaded = { widgetVideos = $0 }
 
         await vm.updateAuthToken(nil, reloadOnSignIn: false)
 
         #expect(vm.subscribedChannels.isEmpty)
-        #expect(widgetVideos == [])
         #expect(!vm.hasAuthToken)
         await waitForTasks(until: { vm.loadedAt != nil && !vm.isLoading })
         #expect(!mock.calls.contains { $0.method == "fetchSubscribedChannels" })
@@ -141,34 +135,6 @@ struct BrowseViewModelTests {
         #expect(mock.calls.contains { $0.method == "fetchSubscriptions" })
         #expect(!vm.videoGroups.isEmpty)
         #expect(vm.videoGroups[0].videos[0].id == "subvid_AAAA")
-    }
-
-    @Test("Home load hands its videos to onHomeLoaded (#353 widget)")
-    func homeLoadNotifiesWidgetHook() async {
-        let mock = MockInnerTubeAPI()
-        mock.homeRowsResult = [VideoGroup(title: "Rec", videos: [makeVideo("vid_0000001"), makeVideo("vid_0000002")])]
-        let section = BrowseSection(id: "home", title: "Home", type: .home)
-        let vm = BrowseViewModel(api: mock, initialSection: section)
-        var received: [String]?
-        vm.onHomeLoaded = { received = $0.map(\.id) }
-        vm.loadContent(for: section, refresh: true, source: "test")
-        await waitForTasks(until: { received != nil })
-        #expect(received == ["vid_0000001", "vid_0000002"])
-    }
-
-    @Test("signed-out Home gives onHomeLoaded nothing, not the popular-search fallback (#353)")
-    func signedOutHomeGivesWidgetNothing() async {
-        let mock = MockInnerTubeAPI()
-        mock.homeRowsResult = []
-        mock.searchResult = VideoGroup(title: "Search", videos: [makeVideo("popular_001")])
-        let section = BrowseSection(id: "home", title: "Home", type: .home)
-        let vm = BrowseViewModel(api: mock, initialSection: section)
-        var received: [String]?
-        vm.onHomeLoaded = { received = $0.map(\.id) }
-        vm.loadContent(for: section, refresh: true, source: "test")
-        await waitForTasks(until: { received != nil })
-        #expect(vm.isAuthRequired)
-        #expect(received == [])
     }
 
     @Test("Disabled history is empty before authentication and selection, and can be enabled again")

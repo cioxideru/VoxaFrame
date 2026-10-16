@@ -22,6 +22,7 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
 
     // MARK: - Configurable return values
 
+    var authTokenHandler: (@MainActor (String?) async -> Void)?
     var homeRowsHandler: (@MainActor (String?) async -> [VideoGroup])?
     var subscriptionsHandler: (@MainActor (String?) async -> VideoGroup)?
     var shortsHandler: (@MainActor () async -> VideoGroup)?
@@ -58,6 +59,7 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
 
     func setAuthToken(_ token: String?) async {
         calls.append(Call(method: "setAuthToken", args: [token ?? "nil"]))
+        await authTokenHandler?(token)
     }
 
     func setSAPISID(_ value: String?) async {

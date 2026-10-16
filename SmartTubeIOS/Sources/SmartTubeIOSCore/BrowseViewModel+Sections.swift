@@ -23,9 +23,6 @@ extension BrowseViewModel {
                 }.filter { !$0.videos.isEmpty }
                 videoGroups = dedupedRows
             }
-            // Signed out, Home shows a sign-in prompt over a "popular" search fallback;
-            // the widget gets nothing (and clears) rather than those search results.
-            onHomeLoaded?(isAuthRequired ? [] : videoGroups.flatMap(\.videos))
         }
     }
 

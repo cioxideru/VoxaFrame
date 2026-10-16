@@ -30,6 +30,10 @@ All notable changes to SmartTube are documented here.
 - **Player metadata (PLAN-0011)** comes from the active playback model after Next,
   Previous and autoplay. Mini-player and fullscreen no longer retain a separate
   copy of the previous video; recovery can keep the ready item's metadata visible.
+- **Home and widget ownership (PLAN-0011)** uses one Home model for the screen and
+  widget snapshot. Startup waits for a usable token, foreground refresh does not
+  duplicate authentication loading, and token rotation preserves the feed. Sign-out
+  clears the snapshot; late feed or thumbnail results cannot restore the old account.
 - **Feed loading (PLAN-0010)** no longer starts a hidden Home feed on sign-in or
   restarts a queued load when the app becomes active. Cancelled queued loads skip
   their requests. Token refresh keeps the current cards and pagination instead

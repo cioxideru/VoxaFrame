@@ -49,10 +49,6 @@ public final class BrowseViewModel {
     /// A video to open immediately via deeplink / URL interception.
     /// Cleared by the UI after the player is presented.
     public var deepLinkedVideo: Video?
-    /// Called with the Home page's videos after each successful Home load (empty when
-    /// signed out). The iOS app uses it to refresh the Home Screen widget (task #353).
-    @ObservationIgnored public var onHomeLoaded: (@MainActor ([Video]) -> Void)?
-
     // MARK: - Dependencies
 
     internal let api: any InnerTubeAPIProtocol
@@ -292,7 +288,6 @@ public final class BrowseViewModel {
         let wasAuthenticated = hasAuthToken
         hasAuthToken = token != nil
         await api.setAuthToken(token)
-        if token == nil { onHomeLoaded?([]) }
         if token != nil && !wasAuthenticated && reloadOnSignIn {
             loadContent(refresh: true, source: "updateAuthToken")
         } else if token == nil && wasAuthenticated {

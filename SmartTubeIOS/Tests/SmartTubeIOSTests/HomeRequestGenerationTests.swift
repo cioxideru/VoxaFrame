@@ -26,6 +26,88 @@ private final class HomeResponseGate<Value: Sendable> {
 @Suite("Home request generations")
 @MainActor
 struct HomeRequestGenerationTests {
+    @Test("Foreground refresh waits for auth preparation and does not duplicate the initial load")
+    func foregroundDuringAuthPreparation() async {
+        let api = MockInnerTubeAPI()
+        let gate = HomeResponseGate<Void>()
+        api.authTokenHandler = { _ in await gate.value() }
+        let home = HomeViewModel(api: api)
+        defer { home.cancel() }
+        let authentication = Task { await home.updateAuthToken("ready", signedIn: true, sessionID: 1) }
+        await waitForTasks { gate.started }
+        home.refreshIfStale()
+        #expect(!api.calls.contains { $0.method == "fetchHomeRows" })
+        gate.resolve(())
+        await authentication.value
+        await waitForTasks { home.loadedAt != nil }
+        #expect(api.calls.filter { $0.method == "fetchHomeRows" }.count == 1)
+    }
+
+    @Test("An expired token waits for refresh, then loads Home only once")
+    func expiredTokenStartup() async {
+        let api = MockInnerTubeAPI()
+        let home = HomeViewModel(api: api)
+        defer { home.cancel() }
+        await home.updateAuthToken(nil, signedIn: true, sessionID: 1)
+        home.refreshIfStale()
+        #expect(!api.calls.contains { $0.method == "fetchHomeRows" })
+        await home.updateAuthToken("ready", signedIn: true, sessionID: 1)
+        await waitForTasks { home.loadedAt != nil }
+        await home.updateAuthToken("rotated", signedIn: true, sessionID: 1)
+        #expect(api.calls.filter { $0.method == "fetchHomeRows" }.count == 1)
+    }
+
+    @Test("One composed Home owner loads once, publishes visible refresh, and clears on sign-out")
+    func sharedHomePublishesRefresh() async {
+        let api = MockInnerTubeAPI()
+        api.homeRowsResult = [VideoGroup(videos: [makeVideo("first")])]
+        let browse = BrowseViewModel(api: api)
+        let home = HomeViewModel(api: api)
+        defer { home.cancel() }
+        var snapshot: [Video] = []
+        home.onHomeLoaded = { snapshot = $0 }
+        await browse.updateAuthToken("token", reloadOnSignIn: browse.currentSection.type != .home)
+        await home.updateAuthToken("token", sessionID: 1)
+        await waitForTasks { home.loadedAt != nil }
+        #expect(api.calls.filter { $0.method == "fetchHomeRows" }.count == 1)
+        #expect(snapshot == home.mergedVideos)
+        #expect(snapshot.map(\.id) == ["first"])
+        await home.updateAuthToken("refreshed-token", sessionID: 1)
+        #expect(api.calls.filter { $0.method == "fetchHomeRows" }.count == 1)
+        api.homeRowsResult = [VideoGroup(videos: [makeVideo("refreshed")])]
+        await home.refresh()
+        #expect(snapshot.map(\.id) == ["refreshed"])
+        let count = api.calls.filter { $0.method == "fetchHomeRows" }.count
+        await home.updateAuthToken(nil, sessionID: 2)
+        home.refreshIfStale()
+        #expect(snapshot.isEmpty)
+        #expect(home.mergedVideos.isEmpty)
+        #expect(api.calls.filter { $0.method == "fetchHomeRows" }.count == count)
+    }
+
+    @Test("An old account's response cannot republish after sign-out or account replacement", arguments: [false, true])
+    func accountChangeRejectsLateHome(replacement: Bool) async {
+        let api = MockInnerTubeAPI()
+        let gate = HomeResponseGate<[VideoGroup]>()
+        let home = HomeViewModel(api: api)
+        defer { home.cancel() }
+        var snapshot: [Video] = []
+        home.onHomeLoaded = { snapshot = $0 }
+        await home.updateAuthToken("old", sessionID: 1)
+        await waitForTasks { home.loadedAt != nil }
+        api.homeRowsHandler = { _ in await gate.value() }
+        let oldRefresh = Task { await home.refresh() }
+        await waitForTasks { gate.started }
+        api.homeRowsHandler = nil
+        api.homeRowsResult = [VideoGroup(videos: [makeVideo("new-account")])]
+        await home.updateAuthToken(replacement ? "new" : nil, sessionID: 2)
+        if replacement { await waitForTasks { home.loadedAt != nil } }
+        gate.resolve([VideoGroup(videos: [makeVideo("private-old-account")])])
+        await oldRefresh.value
+        #expect(snapshot.map(\.id) == (replacement ? ["new-account"] : []))
+        #expect(home.mergedVideos == snapshot)
+    }
+
     @Test("An obsolete full load cannot finish a replacement refresh", arguments: [false, true])
     func obsoleteFullLoad(shortsPending: Bool) async {
         let mock = MockInnerTubeAPI()

@@ -17,6 +17,7 @@ struct AppEntry: App {
     // Declared without default values so that init() can build them from settingsStore.
     @State private var api: InnerTubeAPI
     @State private var authService: AuthService
+    @State private var homeViewModel: HomeViewModel
     @State private var browseViewModel: BrowseViewModel
     @State private var settingsStore: SettingsStore
     #if os(iOS)
@@ -56,6 +57,8 @@ struct AppEntry: App {
             return BotGuardClient()
         }()
         let api = InnerTubeAPI(authToken: nil, poTokenProvider: poTokenProvider)
+        let homeViewModel = HomeViewModel(api: api)
+        _homeViewModel = State(initialValue: homeViewModel)
         _api = State(initialValue: api)
         _authService = State(initialValue: AuthService())
         let browseViewModel = BrowseViewModel(api: api)
@@ -71,7 +74,7 @@ struct AppEntry: App {
         #endif
         #if os(iOS)
         // Task #353: keep the Home Screen widget's snapshot in step with the Home page.
-        HomeWidgetPublisher.attach(to: browseViewModel)
+        HomeWidgetPublisher.attach(to: homeViewModel)
         // Player-control App Intents (play/pause, skip, next) act on these stores.
         PlayerRemote.attach(playerState: playerStateStore)
         #endif
@@ -125,12 +128,19 @@ struct AppEntry: App {
             let root = RootView()
                 .environment(authService)
                 .environment(browseViewModel)
+                .environment(homeViewModel)
+                .task(id: authService.sessionState) {
+                    await homeViewModel.updateAuthToken(
+                        authService.accessToken, signedIn: authService.isSignedIn,
+                        sessionID: authService.sessionGeneration)
+                }
                 .environment(settingsStore)
                 .environment(\.innerTubeAPI, api)
                 .onChange(of: authService.accessToken, initial: true) { _, newToken in
                     Task {
                         await api.setAuthToken(newToken)
-                        await browseViewModel.updateAuthToken(newToken)
+                        await browseViewModel.updateAuthToken(
+                            newToken, reloadOnSignIn: browseViewModel.currentSection.type != .home)
                     }
                 }
                 .onChange(of: authService.sapisid, initial: true) { _, newSapisid in
@@ -145,7 +155,7 @@ struct AppEntry: App {
                 .onChange(of: settingsStore.settings.perDeviceRecommendationsEnabled) { _, enabled in
                     Task {
                         if !enabled { await api.resetVisitorData() }
-                        browseViewModel.loadContent(refresh: true, source: "perDeviceRecommendationsChanged")
+                        homeViewModel.refreshIfStale(threshold: 0)
                     }
                 }
                 .onOpenURL { url in handleOpenURL(url) }
@@ -154,7 +164,8 @@ struct AppEntry: App {
                         consumeQueueInjectFromLaunchArgs()
                         consumeDeepLinkFromLaunchArgs()
                         authService.handleForeground()
-                        browseViewModel.refreshIfStale()
+                        homeViewModel.refreshIfStale()
+                        if browseViewModel.currentSection.type != .home { browseViewModel.refreshIfStale() }
                     }
                 }
                 .onAppear {
@@ -180,12 +191,19 @@ struct AppEntry: App {
             let root = RootView()
                 .environment(authService)
                 .environment(browseViewModel)
+                .environment(homeViewModel)
+                .task(id: authService.sessionState) {
+                    await homeViewModel.updateAuthToken(
+                        authService.accessToken, signedIn: authService.isSignedIn,
+                        sessionID: authService.sessionGeneration)
+                }
                 .environment(settingsStore)
                 .environment(\.innerTubeAPI, api)
                 .onChange(of: authService.accessToken, initial: true) { _, newToken in
                     Task {
                         await api.setAuthToken(newToken)
-                        await browseViewModel.updateAuthToken(newToken)
+                        await browseViewModel.updateAuthToken(
+                            newToken, reloadOnSignIn: browseViewModel.currentSection.type != .home)
                     }
                 }
                 .onChange(of: authService.sapisid, initial: true) { _, newSapisid in
@@ -200,7 +218,7 @@ struct AppEntry: App {
                 .onChange(of: settingsStore.settings.perDeviceRecommendationsEnabled) { _, enabled in
                     Task {
                         if !enabled { await api.resetVisitorData() }
-                        browseViewModel.loadContent(refresh: true, source: "perDeviceRecommendationsChanged")
+                        homeViewModel.refreshIfStale(threshold: 0)
                     }
                 }
             withDownloads(root)
@@ -218,6 +236,12 @@ struct AppEntry: App {
                 let root = RootView()
                     .environment(authService)
                     .environment(browseViewModel)
+                    .environment(homeViewModel)
+                    .task(id: authService.sessionState) {
+                        await homeViewModel.updateAuthToken(
+                            authService.accessToken, signedIn: authService.isSignedIn,
+                            sessionID: authService.sessionGeneration)
+                    }
                     .environment(settingsStore)
                     .environment(\.innerTubeAPI, api)
                     .onChange(of: authService.accessToken, initial: true) { _, newToken in
@@ -226,7 +250,8 @@ struct AppEntry: App {
                         #endif
                         Task {
                             await api.setAuthToken(newToken)
-                            await browseViewModel.updateAuthToken(newToken)
+                            await browseViewModel.updateAuthToken(
+                                newToken, reloadOnSignIn: browseViewModel.currentSection.type != .home)
                         }
                     }
                     .onChange(of: authService.sapisid, initial: true) { _, newSapisid in
@@ -244,7 +269,7 @@ struct AppEntry: App {
                     .onChange(of: settingsStore.settings.perDeviceRecommendationsEnabled) { _, enabled in
                         Task {
                             if !enabled { await api.resetVisitorData() }
-                            browseViewModel.loadContent(refresh: true, source: "perDeviceRecommendationsChanged")
+                            homeViewModel.refreshIfStale(threshold: 0)
                         }
                     }
                     .onOpenURL { url in handleOpenURL(url) }
@@ -257,7 +282,8 @@ struct AppEntry: App {
                             consumeQueueInjectFromLaunchArgs()
                             consumeBotGuardProbeFromLaunchArgs()
                             authService.handleForeground()
-                            browseViewModel.refreshIfStale()
+                            homeViewModel.refreshIfStale()
+                            if browseViewModel.currentSection.type != .home { browseViewModel.refreshIfStale() }
                             consumePendingRSSFeedURL()
                             #if os(iOS)
                             consumePendingWatchLaterID()
