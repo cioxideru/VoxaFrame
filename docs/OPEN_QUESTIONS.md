@@ -49,6 +49,10 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 ## OQ-0005 — Playback device acceptance
 
 - Status: open; owner: playback/test maintainer; basis: [ADR-0010](adr/0010-remove-iframe-player.md).
+- [PLAN-0011](exec-plans/completed/resource-quality.md) passes package and UI checks
+  on iPad Simulator. Its new audio-session ownership and idle player/WebView cleanup
+  still need physical-device playback, interruption, voice-over and PiP acceptance;
+  earlier device results below do not cover these changes.
 - [PLAN-0009](exec-plans/completed/player-shorts-stability.md) adds persistent Shorts
   controls and repairs loading state, video-layer attachment and PiP restoration.
   iPad simulator checks cover real feed Shorts, seeking, mute, pause and repeated
@@ -146,6 +150,10 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Status: targeted physical-device checks complete; broader reported slowdown remains unconfirmed;
   owner: playback / release maintainer;
   basis: [ADR-0010](adr/0010-remove-iframe-player.md) and [PLAN-0006](exec-plans/completed/feed-version-shorts.md).
+- [PLAN-0011](exec-plans/completed/resource-quality.md) fixes twelve resource and
+  ownership issues and passes iPad Simulator acceptance. Before/after launch,
+  scrolling, CPU and memory measurements on the physical iPad remain pending;
+  the user deferred physical testing until all twelve implementation items were complete.
 - PLAN-0006 removes recurring card-driven WebView/BotGuard warmup on iOS, starts card
   prefetch from scroll visibility on iOS 18+, and uses the same VISIONOS HLS client as playback.
   Browser extraction now starts only after native playback fails. iOS 17 retains the existing

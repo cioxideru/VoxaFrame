@@ -1,6 +1,6 @@
 # PLAN-0011: Resource ownership and lifecycle fixes
 
-Status: active
+Status: completed
 
 Owner: Codex coordinator with Astra agents, one implementation task at a time.
 Git boundary: `mac/resource-quality`, based on `9e82c1d`, in a managed worktree.
@@ -33,7 +33,7 @@ Do not push. Related device acceptance remains in
 | 4 | Separate subscription cancellation/failure from empty results; bound work | Concurrency | Implemented and reviewed; cancellation/retry and 4-channel/8-request bound tests; full check, 990 tests |
 | 5 | Stream translation audio through bounded buffers and temporary files | Memory | Implemented and reviewed; 34 focused tests cover bytes/order, bounds and cleanup; full check, 998 tests |
 | 6 | Bound and atomically invalidate WK-HLS cache entries | Memory | Implemented and reviewed; clock-driven expiry, shared LRU, token-only and replay tests; full check, 1005 tests |
-| 7 | Apply History settings to the actual Home section model | Architecture | Implemented and reviewed; initial disabled and cancellation regressions pass; 1007 tests and iOS/tvOS UI-target builds pass; UI execution pending |
+| 7 | Apply History settings to the actual Home section model | Architecture | Implemented and reviewed; initial disabled and cancellation regressions pass; 1007 tests and iOS/tvOS UI-target builds pass; final iPad UI test confirms disable, relaunch persistence and re-enable |
 | 8 | Remove stale duplicated current-video state from presentation | Architecture | Implemented and reviewed; Next/Previous/autoplay and recovery tests pass; full check, 1009 tests; iOS presentation tests pass in the final iPad package run |
 | 9 | Share one Home feed result with its widget | Architecture | Implemented and reviewed; 55 Home tests cover shared publication, auth/foreground ordering and late writes after sign-out; 1012 tests and iOS/tvOS UI-target builds pass |
 | 10 | Move UI/AVPlayer responsibilities out of Core and check the boundary | Architecture | Implemented and reviewed; 65 focused tests include seek cancellation and 192 queue-move comparisons; 1016 tests, import guard and iOS/tvOS UI-target builds pass |
@@ -56,6 +56,18 @@ iOS test runner. The actual Keychain roundtrip passes in the full native macOS
 check (1041 tests); production token storage is unchanged. The first iPad run
 exposed stale KVO delivery and remote-command flags, both fixed and regression-tested.
 
+The final iPad UI run passes all nine selected tests: both `HomeShortsEndlessUITests`
+and all seven `MixedFeedLayoutUITests`. These cover additional Shorts rows, History
+disable/relaunch/re-enable, feed spacing, the recommendations grid and horizontal
+and vertical gestures. They use deterministic signed-in feed fixtures. Both iOS
+and tvOS applications and their UI-test targets build successfully. Strict lint,
+formatting, repository rules and the Core import guard also pass.
+
+Acceptance was completed on 2026-10-16. Physical iPad, system PiP, hardware codec
+decoding and before/after CPU or RAM measurements were not run in this plan.
+They remain follow-up acceptance in OQ-0005 and OQ-0013; Simulator correctness is
+not evidence of a measured physical-device speedup.
+
 ## Ownership direction
 
 - Runtime owners: playback view model, presentation store, feed models and platform services.
@@ -66,7 +78,8 @@ exposed stale KVO delivery and remote-command flags, both fixed and regression-t
   duplicate Home loading for widgets and settings wired to the wrong feed instance.
 - Cleanup direction: prove behavior per step, then remove the replaced path in that same step.
 
-Next deliverable: iPad Simulator UI acceptance, then local master integration.
+All twelve checkpoints are accepted for local master integration. Device acceptance
+is deferred as requested; there is no remote push in this delivery.
 
 Translation transfer keeps six downloaded segment files at most, copies audio with
 a 64 KiB buffer and reads one upload part at a time (a short tail joins the preceding

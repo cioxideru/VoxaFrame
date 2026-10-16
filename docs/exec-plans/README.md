@@ -19,8 +19,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0011: Resource ownership and lifecycle](active/resource-quality.md) — twelve sequential architecture, concurrency and memory fixes; iPad Simulator acceptance.
-
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
 
 - [PLAN-0005: Home feed review fixes](active/home-review-fixes.md) — implementation and coordinator acceptance.
@@ -28,6 +26,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0011: Resource ownership and lifecycle](completed/resource-quality.md) — twelve sequential fixes; native and iPad Simulator package tests, nine iPad UI tests and iOS/tvOS builds pass; physical device checks remain deferred.
 
 - [PLAN-0010: iPad performance](completed/ipad-performance.md) — redundant feed loads fixed; physical launch, scrolling, navigation and PiP checks passed, broader performance acceptance remains OQ-0013.
 
