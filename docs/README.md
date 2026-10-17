@@ -22,6 +22,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [../SmartTubeIOS/README.md](../SmartTubeIOS/README.md) | Package entry point and links to canonical guides | current | 2026-10-15 |
 | [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-15 |
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
+| [design/VoxaFrame-Functionality.ru.md](design/VoxaFrame-Functionality.ru.md) | DESIGN-0002: standalone Russian functional brief for redesigning VoxaFrame on four Apple platforms | current | 2026-10-17 |
 | [design/claude-design/README.md](design/claude-design/README.md) | DESIGN-0001: VoxaFrame Claude Design import bundle and visual references | current | 2026-10-17 |
 | [design/claude-design/HANDOFF.ru.md](design/claude-design/HANDOFF.ru.md) | Colleague handoff: import files, save the system and check the four platforms | current | 2026-10-17 |
 | [design/claude-design/CLAUDE_IMPORT.md](design/claude-design/CLAUDE_IMPORT.md) | Apple 27 design-system specification, platform rules, components and provenance | current | 2026-10-17 |
