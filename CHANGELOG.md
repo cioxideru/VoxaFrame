@@ -6,6 +6,18 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Fixed — 2026-10-17
+
+- **VoxaFrame 5.16 (36), physical iPad offline cleanup (PLAN-0028):** restored protected HLS
+  paths keep the physical app-container location instead of a `/var` symlink. Previously saved
+  downloads can be played and deleted after relaunch; a pending failed deletion resumes on update.
+  Storage failures log error codes without signed URLs or credentials.
+- **Bounded offline downloads (PLAN-0028):** direct streams use sequential 10 MiB HTTP ranges
+  with exact range/length validation and partial-file cleanup. A physical iPad downloaded the
+  selected 732 MB video in about 82 seconds; the previous whole response transferred only
+  366 MB in about 21 minutes. Cancellation cannot start another range after removing a task.
+  HTTP failures retain their status rather than appearing as corrupt-media errors.
+
 ### Added — 2026-10-17
 
 - **VoxaFrame 5.16 (35), delete all offline media (PLAN-0026):** Offline videos has a confirmed

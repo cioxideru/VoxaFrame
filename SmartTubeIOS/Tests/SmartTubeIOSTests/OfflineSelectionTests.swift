@@ -10,6 +10,25 @@ struct OfflineSelectionTests {
     private let picture = OfflineTrack(id: "720", kind: .video, label: "720p H.264")
     private let sound = OfflineTrack(id: "en", kind: .audio, label: "English")
 
+    @Test func serverRejectionIsNotReportedAsCorruptMedia() throws {
+        let url = try #require(URL(string: "https://example.invalid/video"))
+        func response(_ code: Int) throws -> HTTPURLResponse {
+            try #require(HTTPURLResponse(url: url, statusCode: code, httpVersion: nil, headerFields: nil))
+        }
+        for code in [200, 206] {
+            try OfflineDownloadTransport.validateDownload(response: response(code), fileSize: 1024)
+        }
+        do {
+            try OfflineDownloadTransport.validateDownload(response: response(403), fileSize: 0)
+            Issue.record("A rejected request must not become a saved media file")
+        } catch APIError.httpError(let code) {
+            #expect(code == 403)
+        }
+        #expect(throws: OfflineLibraryError.self) {
+            try OfflineDownloadTransport.validateDownload(response: response(200), fileSize: 0)
+        }
+    }
+
     @Test func explicitVideoAudioAndOptionalTranslationNeverQueueTheCatalog() throws {
         let other = OfflineTrack(id: "fr", kind: .audio, label: "French")
         let catalog = [picture, sound, other, .automatic]

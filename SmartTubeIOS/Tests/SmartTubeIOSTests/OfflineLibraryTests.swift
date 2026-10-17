@@ -18,7 +18,9 @@ struct OfflineLibraryTests {
         return url
     }
     @Test func noFollowPackageKeepsProtectionAcrossManifestReloadAndRejectsEscapes() async throws {
-        let root = try directory().resolvingSymlinksInPath()
+        let physicalRoot = try #require(realpath(try directory().path, nil))
+        defer { free(physicalRoot) }
+        let root = URL(fileURLWithPath: String(cString: physicalRoot), isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let home = root.appendingPathComponent("Home", isDirectory: true)
         let library = home.appendingPathComponent("Library", isDirectory: true)
@@ -37,25 +39,19 @@ struct OfflineLibraryTests {
             !OfflineLibraryStore.isSystemPackage(URL(fileURLWithPath: "/.nofollow" + escape.path), homeDirectory: home))
         #expect(!OfflineLibraryStore.isSystemPackage(escape, homeDirectory: home))
         let directory = home.appendingPathComponent("Documents/Offline", isDirectory: true)
-        // Native host tests do not have the simulator's protected-root mapping. Model only
-        // existence at that boundary; the returned I/O URL must keep the original prefix.
-        let exists: @Sendable (URL) -> Bool = { url in
-            let path = url.path.hasPrefix("/.nofollow/") ? String(url.path.dropFirst("/.nofollow".count)) : url.path
-            return FileManager.default.fileExists(atPath: path)
-        }
-        let store = OfflineLibraryStore(directory: directory, homeDirectory: home, fileExists: exists)
+        let store = OfflineLibraryStore(directory: directory, homeDirectory: home)
         let hls = OfflineTrack(id: "hls", kind: .hls, label: "Adaptive", hasAudio: true)
         let job = try await store.enqueue(video: video, tracks: [hls]).jobs[0]
         try await store.update(attempt: job.attempt, state: .downloading)
         try await store.finish(attempt: job.attempt, staged: protected, systemPackage: true)
-        let restored = OfflineLibraryStore(directory: directory, homeDirectory: home, fileExists: exists)
+        let restored = OfflineLibraryStore(directory: directory, homeDirectory: home)
         let asset = try await restored.snapshot().entries[0].assets[0]
         #expect(asset.systemNoFollow == true)
         #expect(asset.systemRelativePath == "Library/HLS%20sample.movpkg")
         let file = try await restored.fileURL(asset)
         #expect(file.path.hasPrefix("/.nofollow/"))
         #expect(file.path == protected.path)
-        #expect(exists(file))
+        #expect(FileManager.default.fileExists(atPath: file.path))
         // A stale completion may spell the same published package without the protected prefix.
         await restored.discard(attempt: UUID(), url: package, systemPackage: true)
         #expect(FileManager.default.fileExists(atPath: package.path))
@@ -69,6 +65,27 @@ struct OfflineLibraryTests {
                 track: hls, filename: "file.movpkg", systemRelativePath: badPath, systemNoFollow: true)
             await #expect(throws: OfflineLibraryError.self) { try await restored.fileURL(invalid) }
         }
+    }
+
+    @Test func protectedPackageDeletionUsesPhysicalHomeAfterReload() async throws {
+        let root = URL(fileURLWithPath: "/private/tmp", isDirectory: true).appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let home = root.appendingPathComponent("Home", isDirectory: true)
+        let package = home.appendingPathComponent("Library/Media/Adaptive%20sample.movpkg", isDirectory: true)
+        try FileManager.default.createDirectory(at: package, withIntermediateDirectories: true)
+        try Data([1, 2, 3]).write(to: package.appendingPathComponent("segment"))
+        let protected = URL(fileURLWithPath: "/.nofollow" + package.path, isDirectory: true)
+        let directory = home.appendingPathComponent("Documents/Offline", isDirectory: true)
+        let store = OfflineLibraryStore(directory: directory, homeDirectory: home)
+        let hls = OfflineTrack(id: "hls-auto", kind: .hls, label: "Adaptive", hasAudio: true)
+        let job = try await store.enqueue(video: video, tracks: [hls]).jobs[0]
+        try await store.update(attempt: job.attempt, state: .downloading)
+        try await store.finish(attempt: job.attempt, staged: protected, systemPackage: true)
+        try await store.beginRemoval(videoID: nil)
+        let restored = OfflineLibraryStore(directory: directory, homeDirectory: home)
+        let result = try await restored.completeRemovals()
+        #expect(result.entries.isEmpty && result.jobs.isEmpty && result.pendingRemovals == nil)
+        #expect(!FileManager.default.fileExists(atPath: package.path))
     }
 
     @Test func relativeSystemPackageURLRetainsOwnershipAndLiteralPercentEncoding() throws {

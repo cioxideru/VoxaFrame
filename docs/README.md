@@ -28,6 +28,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [design/claude-design/HANDOFF.ru.md](design/claude-design/HANDOFF.ru.md) | Colleague handoff: import files, save the system and check the four platforms | current | 2026-10-17 |
 | [design/claude-design/CLAUDE_IMPORT.md](design/claude-design/CLAUDE_IMPORT.md) | Apple 27 design-system specification, platform rules, components and provenance | current | 2026-10-17 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0019) | current | 2026-10-17 |
+| [exec-plans/completed/offline-ipad-cleanup.md](exec-plans/completed/offline-ipad-cleanup.md) | PLAN-0028: physical iPad offline download and cleanup | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
 | [exec-plans/active/voxaframe-redesign.md](exec-plans/active/voxaframe-redesign.md) | PLAN-0027: VoxaFrame redesign in SwiftUI, staged | current | 2026-10-17 |
 | [exec-plans/completed/offline-delete-all.md](exec-plans/completed/offline-delete-all.md) | PLAN-0026: delete all offline videos, tasks and cache | current | 2026-10-17 |

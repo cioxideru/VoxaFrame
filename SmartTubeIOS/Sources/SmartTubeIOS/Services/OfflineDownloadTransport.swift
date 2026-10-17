@@ -37,7 +37,10 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
     private var videoSizes: [UUID: [OfflineVideoSize]] = [:]
     private var lastProgress: [UUID: Int] = [:]
     private let completionLock = NSLock()
-    private var completedAttempts: Set<UUID> = []
+    private var retainedAttempts: Set<UUID> = []
+    private var cancelledAttempts: Set<UUID> = []
+    private var nextChunks: [UUID: URLRequest] = [:]
+    private var pressureYielding = false
     private var pressureRevision: UInt64 = 0
     private var stagingErrors: [UUID: String] = [:]
 
@@ -72,7 +75,7 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
 
     func activeAttempts() async -> Set<UUID> {
         let active = Set(await allTasks().compactMap { $0.taskDescription.flatMap(UUID.init(uuidString:)) })
-        return active.union(completionLock.withLock { completedAttempts })
+        return active.union(completionLock.withLock { retainedAttempts })
     }
 
     func start(_ source: OfflineSource, attempt: UUID, yielding: Bool) async throws {
@@ -95,11 +98,14 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         } else {
             var request = URLRequest(url: source.url)
             request.setValue(source.userAgent, forHTTPHeaderField: "User-Agent")
-            task = files.downloadTask(with: request)
+            task = files.downloadTask(with: OfflineDownloadChunk.prepare(request))
         }
-        task.taskDescription = attempt.uuidString
-        task.priority = URLSessionTask.lowPriority
-        if !yielding { task.resume() }
+        completionLock.withLock {
+            retainedAttempts.insert(attempt)
+            task.taskDescription = attempt.uuidString
+            task.priority = URLSessionTask.lowPriority
+            if cancelledAttempts.contains(attempt) { task.cancel() } else if !yielding { task.resume() }
+        }
     }
 
     #if os(iOS)
@@ -163,14 +169,26 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
     }
     #endif
 
-    func acknowledge(_ attempt: UUID) { completionLock.withLock { _ = completedAttempts.remove(attempt) } }
+    func acknowledge(_ attempt: UUID) {
+        completionLock.withLock {
+            retainedAttempts.remove(attempt)
+            cancelledAttempts.remove(attempt)
+        }
+    }
 
     func cancel(_ attempt: UUID) async {
-        for task in await allTasks() where task.taskDescription == attempt.uuidString { task.cancel() }
+        completionLock.withLock { _ = cancelledAttempts.insert(attempt) }
+        let tasks = await allTasks().filter { $0.taskDescription == attempt.uuidString }
+        for task in tasks { task.cancel() }
+        completionLock.withLock {
+            // An unstarted queued job has no terminal callback; active ranges keep cancellation until it arrives.
+            if tasks.isEmpty, !retainedAttempts.contains(attempt) { cancelledAttempts.remove(attempt) }
+        }
     }
 
     func setYielding(_ yielding: Bool) async {
         let revision = completionLock.withLock {
+            pressureYielding = yielding
             pressureRevision += 1
             return pressureRevision
         }
@@ -188,37 +206,74 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         _ session: URLSession, downloadTask: URLSessionDownloadTask,
         didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64
     ) {
-        guard totalBytesExpectedToWrite > 0, let id = downloadTask.taskDescription.flatMap(UUID.init(uuidString:))
+        guard let id = downloadTask.taskDescription.flatMap(UUID.init(uuidString:)),
+            let progress = OfflineDownloadChunk.progress(
+                request: downloadTask.originalRequest, written: totalBytesWritten, expected: totalBytesExpectedToWrite)
         else { return }
-        publishProgress(id, Double(totalBytesWritten) / Double(totalBytesExpectedToWrite))
+        publishProgress(id, progress)
     }
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let id = downloadTask.taskDescription.flatMap(UUID.init(uuidString:)) else { return }
         do {
-            guard let response = downloadTask.response as? HTTPURLResponse, (200..<300).contains(response.statusCode),
-                (try location.resourceValues(forKeys: [.fileSizeKey])).fileSize ?? 0 > 0
-            else {
-                throw OfflineLibraryError.invalidFile
-            }
+            guard !completionLock.withLock({ cancelledAttempts.contains(id) }) else { throw CancellationError() }
+            let size = (try location.resourceValues(forKeys: [.fileSizeKey])).fileSize ?? 0
+            try Self.validateDownload(response: downloadTask.response, fileSize: size)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             let ext = downloadTask.response?.mimeType?.contains("audio/mpeg") == true ? "mp3" : "mp4"
             let destination = directory.appendingPathComponent("\(id.uuidString).\(ext)")
-            try FileManager.default.moveItem(at: location, to: destination)
             finished[id] = (destination, false)
+            if let request = downloadTask.originalRequest, request.value(forHTTPHeaderField: "Range") != nil,
+                let response = downloadTask.response as? HTTPURLResponse
+            {
+                let chunk = try OfflineDownloadChunk(response: response, request: request, fileSize: Int64(size))
+                try OfflineTransferReceipt(attempt: id, url: destination, systemPackage: false, isPartial: true)
+                    .persist(in: directory)
+                try chunk.append(location, to: destination)
+                nextChunks[id] = chunk.nextRequest(after: request)
+            } else {
+                try FileManager.default.moveItem(at: location, to: destination)
+            }
         } catch { stagingErrors[id] = error.localizedDescription }
+    }
+
+    static func validateDownload(response: URLResponse?, fileSize: Int) throws {
+        guard let response = response as? HTTPURLResponse else { throw OfflineLibraryError.invalidFile }
+        guard (200..<300).contains(response.statusCode) else {
+            offlineTransportLog.error("Download rejected: HTTP \(response.statusCode)")
+            throw APIError.httpError(response.statusCode)
+        }
+        guard fileSize > 0 else { throw OfflineLibraryError.invalidFile }
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let id = task.taskDescription.flatMap(UUID.init(uuidString:)) else { return }
+        let next = nextChunks.removeValue(forKey: id)
+        if error == nil, stagingErrors[id] == nil, let next {
+            let continued = completionLock.withLock {
+                guard !cancelledAttempts.contains(id) else { return false }
+                retainedAttempts.insert(id)
+                let chunk = files.downloadTask(with: next)
+                chunk.taskDescription = id.uuidString
+                chunk.priority = URLSessionTask.lowPriority
+                if !pressureYielding { chunk.resume() }
+                return true
+            }
+            if continued { return }
+        }
+        let cancelled = completionLock.withLock { cancelledAttempts.contains(id) }
         completionLock.withLock {
-            _ = completedAttempts.insert(id)
+            _ = retainedAttempts.insert(id)
             #if os(iOS)
             expectedHLS[id] = nil
             #endif
         }
         lastProgress[id] = nil
-        let staged = finished.removeValue(forKey: id)
+        var staged = finished.removeValue(forKey: id)
+        if staged == nil, error != nil || stagingErrors[id] != nil || cancelled {
+            let partial = directory.appendingPathComponent("\(id.uuidString).mp4")
+            if FileManager.default.fileExists(atPath: partial.path) { staged = (partial, false) }
+        }
         let sizes = videoSizes.removeValue(forKey: id)
         let diagnostic = error.map { failure -> String in
             let error = failure as NSError
@@ -230,7 +285,9 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
             }
             return "Download failed (\(error.domain), \(error.code)). Retry when connected."
         }
-        let failure = stagingErrors.removeValue(forKey: id) ?? diagnostic
+        let failure =
+            stagingErrors.removeValue(forKey: id) ?? diagnostic
+            ?? (cancelled ? "Download cancelled." : nil)
         if let failure {
             if let staged { discardStaged(staged, attempt: id) }
             continuation.yield(.failed(id, failure))

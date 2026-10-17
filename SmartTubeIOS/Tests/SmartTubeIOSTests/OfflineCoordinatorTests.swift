@@ -11,6 +11,7 @@ private final class OfflineFakeTransport: OfflineTransporting, @unchecked Sendab
     private let lock = NSLock()
     private var started: [UUID] = []
     private var cancelled: Set<UUID> = []
+    private var acknowledged: Set<UUID> = []
     init() {
         let stream = AsyncStream<OfflineTransferEvent>.makeStream()
         events = stream.stream
@@ -21,7 +22,8 @@ private final class OfflineFakeTransport: OfflineTransporting, @unchecked Sendab
         lock.withLock { started.append(attempt) }
     }
     func cancel(_ attempt: UUID) { lock.withLock { _ = cancelled.insert(attempt) } }
-    func acknowledge(_ attempt: UUID) {}
+    func acknowledge(_ attempt: UUID) { lock.withLock { _ = acknowledged.insert(attempt) } }
+    func isAcknowledged(_ attempt: UUID) -> Bool { lock.withLock { acknowledged.contains(attempt) } }
     func setYielding(_ yielding: Bool) {}
 }
 private struct OfflineFakeResolver: OfflineResolving {
@@ -120,10 +122,12 @@ struct OfflineCoordinatorTests {
         coordinator.remove(videoID: job.videoID, jobID: job.id)
         #expect(await wait { coordinator.snapshot.jobs.isEmpty })
         #expect(!transport.activeAttempts().contains(job.attempt))
+        #expect(!transport.isAcknowledged(job.attempt))
         let late = directory.appendingPathComponent(job.attempt.uuidString + ".mp4")
         try Data([1]).write(to: late)
         transport.continuation.yield(.finished(job.attempt, late, systemPackage: false))
         #expect(await wait { !FileManager.default.fileExists(atPath: late.path) })
+        #expect(await wait { transport.isAcknowledged(job.attempt) })
         #expect(coordinator.snapshot.entries.isEmpty)
     }
 

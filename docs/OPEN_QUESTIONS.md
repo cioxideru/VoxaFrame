@@ -269,14 +269,22 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 ## OQ-0018 — Offline library and playback priority on physical iPad
 
-- Status: hardware and live-service acceptance pending; owner: playback maintainer.
-  Basis: PLAN-0020 and PLAN-0021; the user deferred physical-device acceptance.
+- Status: partial physical acceptance; owner: playback maintainer.
+  Basis: PLAN-0020, PLAN-0021 and [PLAN-0028](exec-plans/completed/offline-ipad-cleanup.md).
+- On 2026-10-17, the physical iPad completed an explicitly selected 720p H.264 video,
+  original Russian audio and Yandex English translation. The video played with Wi-Fi off;
+  the saved translation attached locally. The user confirmed audible English after explicitly
+  selecting it. Legacy protected HLS deletion and Delete all of the three new files passed;
+  queue, receipts and owned media were empty afterward. Offline listening and synchronization
+  still need confirmation beyond the remote video image.
 - Simulator fixtures exercise the real system download sessions and local AVPlayer; they do not
   establish current YouTube signed-URL availability, Yandex translation generation, physical
   background-session wakeup or audio synchronization under device load.
-- Next check: save a real video with VOT, background the app, verify notification and retained
-  progress, relaunch, then play in airplane mode and add another quality/audio track online.
-  Separately compare startup/buffering with competing downloads on the same connection.
+- Next checks: confirm offline translation listening/synchronization, verify background
+  completion notification and retained progress (fresh-URL retries at 21:40–21:41 returned HTTP 403;
+  their two failed test jobs need UI cleanup after the Mac is unlocked),
+  then add another quality/audio track online. Separately compare startup/buffering with
+  competing downloads on the same connection.
 - Source resolution and translation preparation need a running app. Accepted media transfers
   use system background sessions; force-quitting the app does not promise continued downloads.
 - HLS uses its included audio with optional local VOT. External audio-file overrides require a

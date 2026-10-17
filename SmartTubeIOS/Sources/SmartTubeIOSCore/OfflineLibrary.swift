@@ -401,9 +401,17 @@ public actor OfflineLibraryStore {
                 throw OfflineLibraryError.invalidFile
             }
             let home = Self.comparisonURL(homeDirectory)
-            let base =
-                asset.systemNoFollow == true
-                ? URL(fileURLWithPath: Self.noFollowPrefix + home.path, isDirectory: true) : home
+            let base: URL
+            if asset.systemNoFollow == true {
+                // Foundation may shorten /private/var to the /var symlink, which /.nofollow rejects.
+                guard let physicalHome = realpath(home.path, nil) else {
+                    throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+                }
+                defer { free(physicalHome) }
+                base = URL(fileURLWithPath: Self.noFollowPrefix + String(cString: physicalHome), isDirectory: true)
+            } else {
+                base = home
+            }
             url = base.appendingPathComponent(relative)
         } else {
             url = directory.appendingPathComponent(asset.filename)

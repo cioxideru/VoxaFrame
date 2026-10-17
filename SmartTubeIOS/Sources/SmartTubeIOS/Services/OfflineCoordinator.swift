@@ -1,6 +1,9 @@
 import Foundation
 import Observation
 import SmartTubeIOSCore
+import os
+
+private let offlineLibraryLog = Logger(subsystem: appSubsystem, category: "OfflineLibrary")
 
 #if !os(tvOS)
 import UserNotifications
@@ -137,6 +140,11 @@ public final class OfflineCoordinator {
         snapshot = next
     }
     private func blockPersistence(_ failure: Error) {
+        let failureInfo = failure as NSError
+        let underlying = failureInfo.userInfo[NSUnderlyingErrorKey] as? NSError
+        offlineLibraryLog.error(
+            "Storage failed: \(failureInfo.domain, privacy: .public) \(failureInfo.code); underlying \(underlying?.domain ?? "none", privacy: .public) \(underlying?.code ?? 0)"
+        )
         error = failure.localizedDescription
         persistenceBlocked = true
         resolverTask?.cancel()
@@ -445,7 +453,6 @@ extension OfflineCoordinator {
                 resolvingAttempt = nil
             }
             await transport.cancel(attempt)
-            transport.acknowledge(attempt)
         }
         apply(try await store.completeRemovals())
     }
