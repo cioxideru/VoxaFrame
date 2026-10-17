@@ -1,11 +1,13 @@
-# SmartTube
+# VoxaFrame
+
+A maintained fork of [SmartTubeIOS by milika](https://github.com/milika/SmartTubeIOS), licensed under [GPLv3](LICENSE). The fork keeps upstream attribution and uses its own name and icon.
 
 A native Swift/SwiftUI YouTube client for **iPhone**, **iPad**, **macOS**, and **Apple TV**.  
 Zero ads. SponsorBlock auto-skip. DeArrow community titles. Google sign-in. Up to 8K.
 
-[![iOS 17+](https://img.shields.io/badge/iOS-17%2B-black?logo=apple)](https://apps.apple.com/us/app/smart-tube-bdp/id6761388918) [![tvOS 17+](https://img.shields.io/badge/tvOS-17%2B-black?logo=apple)](https://apps.apple.com/us/app/smart-tube-bdp/id6761388918) [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)](https://apps.apple.com/us/app/smart-tube-bdp/id6761388918) [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)](https://swift.org) [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/milikadelic)
+[![iOS 17+](https://img.shields.io/badge/iOS-17%2B-black?logo=apple)](https://github.com/cioxideru/SmartTubeIOS) [![tvOS 17+](https://img.shields.io/badge/tvOS-17%2B-black?logo=apple)](https://github.com/cioxideru/SmartTubeIOS) [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)](https://github.com/cioxideru/SmartTubeIOS) [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)](https://swift.org) [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/milikadelic)
 
-[![Download on the App Store](https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg)](https://apps.apple.com/us/app/smart-tube-bdp/id6761388918)
+Build this fork with Xcode; the upstream App Store release is a separate product.
 
 Inspired by the original [SmartTube Android app](https://github.com/yuliskov/SmartTube).
 
@@ -61,9 +63,11 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 
 ### Integrations
 - Google OAuth sign-in (YouTube TV device-code flow)
-- Safari Web Extension — auto-redirects YouTube, Shorts, and Music links to SmartTube
-- Share Extension — share YouTube links from any app directly into SmartTube
-- Video downloads with live-activity progress; Downloads screen in Library
+- Safari Web Extension — auto-redirects YouTube, Shorts, and Music links to VoxaFrame
+- Share Extension — share YouTube links from any app directly into VoxaFrame
+- Offline videos with a persistent download queue, progress page and completion notifications
+- Save additional video qualities, original/dubbed audio and Yandex voice-over tracks; play downloaded media locally
+- Downloads and speculative preloading yield while active playback prepares or buffers
 - WatchTime reporting and Like / Dislike support
 - VPN / IP-block detection with a clear, non-retrying error banner
 - Comments, Stats for Nerds
@@ -92,7 +96,7 @@ SmartTube.xcworkspace/ Xcode workspace (references both above)
 | iOS / iPadOS | 17.0 |
 | macOS | 14.0 (Sonoma) |
 | tvOS | 17.0 |
-| Xcode | 16.0 |
+| Xcode | 27.0 (project toolchain) |
 | Swift | 6.0 |
 
 ---
@@ -100,7 +104,7 @@ SmartTube.xcworkspace/ Xcode workspace (references both above)
 ## Getting Started
 
 ```bash
-git clone https://github.com/milika/SmartTubeIOS
+git clone https://github.com/cioxideru/SmartTubeIOS
 cd SmartTubeIOS
 open SmartTube.xcworkspace
 ```
@@ -135,7 +139,7 @@ See [CHANGELOG.md](CHANGELOG.md) for a full version history.
 
 ## Support
 
-If SmartTube is useful to you and you'd like to support its development, there's a [Ko-fi](https://ko-fi.com/milikadelic).
+Support the original SmartTubeIOS author through [milika's Ko-fi](https://ko-fi.com/milikadelic).
 
 ---
 
