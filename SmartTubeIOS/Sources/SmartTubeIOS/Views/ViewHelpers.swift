@@ -70,8 +70,14 @@ extension EnvironmentValues {
 // MARK: - Accent color
 
 extension AppSettings.AccentColorChoice {
-    /// `nil` falls back to the `AccentColor` asset.
+    /// iPhone and iPad: the design's light/dark pair for every choice (`VFColorPair.action(for:)`); System is the coral.
+    /// macOS: `nil` keeps the user's system accent and the named choices are the system colours.
+    /// tvOS: as macOS. White on the dark coral is 2.07:1 on an unfocused `.borderedProminent`, and so is coral on the white
+    /// focus platter; switching needs a tvOS runtime or device to check focused and unfocused contrast (OQ-0019).
     public var color: Color? {
+        #if os(iOS)
+        return Self.prominentColors[self]?.fill
+        #else
         switch self {
         case .system: return nil
         case .red: return .red
@@ -85,7 +91,19 @@ extension AppSettings.AccentColorChoice {
         case .purple: return .purple
         case .pink: return .pink
         }
+        #endif
     }
+
+    #if os(iOS)
+    /// Label on a `color` fill (`.vfProminent`).
+    var onColor: Color { Self.prominentColors[self]?.label ?? VFColor.onAction }
+
+    /// Built once, so `.tint` gets an equal `Color` on every update.
+    private static let prominentColors = Dictionary(
+        uniqueKeysWithValues: allCases.map {
+            ($0, (fill: Color(VFColorPair.action(for: $0)), label: Color(VFColorPair.onAction(for: $0))))
+        })
+    #endif
 
     var displayName: String {
         switch self {
@@ -110,7 +128,7 @@ extension AppSettings.AccentColorChoice {
         let base = UIImage(systemName: AppSymbol.colorSwatch) ?? UIImage()
         return Image(uiImage: base.withTintColor(tint, renderingMode: .alwaysOriginal))
         #else
-        let tint = color.map { NSColor($0) } ?? NSColor(named: "AccentColor") ?? .systemBlue
+        let tint = color.map { NSColor($0) } ?? .controlAccentColor
         let base = NSImage(systemSymbolName: AppSymbol.colorSwatch, accessibilityDescription: nil)?
             .withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [tint]))
         return Image(nsImage: base ?? NSImage())

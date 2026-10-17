@@ -331,7 +331,10 @@ public struct SearchView: View {
 
 // MARK: - FilterChip
 
-private struct FilterChip: View {
+struct FilterChip: View {
+    /// Accent wash behind the chip. The label stays `.primary`: accent text on its own wash drops under 4.5:1.
+    static let fillOpacity = 0.15
+
     let label: LocalizedStringKey
     let onRemove: () -> Void
 
@@ -343,11 +346,12 @@ private struct FilterChip: View {
                 Image(systemName: AppSymbol.xmark)
                     .font(.caption2)
             }
+            .accessibilityLabel(Text("Remove filter", bundle: .module))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(.tint.opacity(0.15), in: Capsule())
-        .foregroundStyle(.tint)
+        .background(.tint.opacity(Self.fillOpacity), in: Capsule())
+        .foregroundStyle(.primary)
     }
 }
 

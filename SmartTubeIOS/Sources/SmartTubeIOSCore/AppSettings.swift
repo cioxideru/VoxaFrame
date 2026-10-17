@@ -234,7 +234,8 @@ public struct AppSettings: Codable {
 
     public static let availableGridColumnCounts: ClosedRange<Int> = 1...3
 
-    /// `.system` keeps the `AccentColor` asset from the app bundle.
+    /// `.system` is the VoxaFrame coral on iPhone and iPad and the platform accent on macOS and tvOS.
+    /// The UI target resolves each choice to a colour (on iPhone and iPad, the design's contrast-safe pair).
     public enum AccentColorChoice: String, Codable, CaseIterable, Sendable {
         case system, red, orange, yellow, green, mint, teal, blue, indigo, purple, pink
     }

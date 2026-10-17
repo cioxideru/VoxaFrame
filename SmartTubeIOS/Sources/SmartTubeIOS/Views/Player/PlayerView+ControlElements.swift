@@ -367,7 +367,7 @@ struct PlayerControlsOverlay: View {
                     } label: {
                         Image(systemName: store.settings.audioOnlyMode ? "video" : AppSymbol.audioOnly)
                             .font(.system(size: 18 * controlScale))
-                            .foregroundStyle(store.settings.audioOnlyMode ? Color.accentColor : .white)
+                            .foregroundStyle(VFColor.onMedia)
                             .padding(8)
                             .background(.black.opacity(0.4))
                             .clipShape(Circle())

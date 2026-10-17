@@ -1,3 +1,4 @@
+import SmartTubeIOSCore
 import SwiftUI
 
 #if canImport(UIKit)
@@ -21,6 +22,31 @@ struct VFColorPair: Sendable, Equatable {
     static let success = VFColorPair(light: 0x236A3C, dark: 0x82D99E)
     static let warning = VFColorPair(light: 0x805300, dark: 0xF7CE7D)
     static let danger = VFColorPair(light: 0xB42318, dark: 0xFFB4A9)
+    /// Label on a named accent fill (`action(for:)`).
+    static let onAccent = VFColorPair(light: 0xFFFFFF, dark: 0x000000)
+
+    /// Fill and text colour of a user accent on iPhone and iPad (Settings › Accent Color; mockups/vf.css):
+    /// darkened in light so it reads as text on every surface, lightened in dark under a black label.
+    static func action(for accent: AppSettings.AccentColorChoice) -> VFColorPair {
+        switch accent {
+        case .system: .action
+        case .red: VFColorPair(light: 0xD80B00, dark: 0xFF5F56)
+        case .orange: VFColorPair(light: 0x9E5C00, dark: 0xFF9F0A)
+        case .yellow: VFColorPair(light: 0x826800, dark: 0xFFD60A)
+        case .green: VFColorPair(light: 0x207A37, dark: 0x30D158)
+        case .mint: VFColorPair(light: 0x007873, dark: 0x63E6E2)
+        case .teal: VFColorPair(light: 0x207685, dark: 0x40C8E0)
+        case .blue: VFColorPair(light: 0x0068D9, dark: 0x3398FF)
+        case .indigo: VFColorPair(light: 0x5856D6, dark: 0x8E8DED)
+        case .purple: VFColorPair(light: 0xA134D8, dark: 0xC76FF4)
+        case .pink: VFColorPair(light: 0xD80029, dark: 0xFF5B7C)
+        }
+    }
+
+    /// Label on `action(for:)`: plum on the dark coral, black on the other dark fills, white in light.
+    static func onAction(for accent: AppSettings.AccentColorChoice) -> VFColorPair {
+        accent == .system ? .onAction : .onAccent
+    }
 }
 
 // MARK: - VFColor
@@ -64,7 +90,7 @@ enum VFColor {
 }
 
 extension Color {
-    fileprivate init(_ pair: VFColorPair) {
+    init(_ pair: VFColorPair) {
         #if canImport(UIKit)
         self.init(
             uiColor: UIColor { traits in

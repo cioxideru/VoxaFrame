@@ -304,7 +304,7 @@ public struct LibraryView: View {
                 Button("Search") {
                     NotificationCenter.default.post(name: .navigateToSearch, object: nil)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.vfProminent)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -331,7 +331,7 @@ public struct LibraryView: View {
             NavigationLink("Sign In") {
                 SignInView()
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.vfProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

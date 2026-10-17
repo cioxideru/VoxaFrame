@@ -16821,6 +16821,24 @@
         }
       }
     },
+    "Remove filter" : {
+      "comment" : "VoiceOver label of the x button on a search filter chip",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove filter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убрать фильтр"
+          }
+        }
+      }
+    },
     "Remove from Watch Later" : {
       "localizations" : {
         "ar" : {

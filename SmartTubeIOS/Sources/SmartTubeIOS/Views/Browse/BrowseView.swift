@@ -141,7 +141,7 @@ public struct BrowseView: View {
             }
             Spacer()
             Button("Sign In") { showSignIn = true }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.vfProminent)
                 .controlSize(.small)
         }
         .padding(.horizontal)
@@ -164,19 +164,19 @@ public struct BrowseView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                 Button("Sign In") { showSignIn = true }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.vfProminent)
             } else {
                 Text("Nothing here yet")
                     .font(.title3)
                     .foregroundStyle(.secondary)
                 if vm.hasMoreShorts {
                     Button("More") { vm.loadMoreShorts() }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.vfProminent)
                         .disabled(vm.isLoadingMore)
                         .accessibilityIdentifier(AccessibilityID.shortsLoadMoreButton)
                 } else {
                     Button("Refresh") { vm.loadContent(refresh: true) }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.vfProminent)
                 }
             }
         }

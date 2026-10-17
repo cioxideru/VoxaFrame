@@ -156,7 +156,7 @@ public struct ShortsPlayerView: View {
                             .multilineTextAlignment(.center)
                             .accessibilityIdentifier(AccessibilityID.shortsErrorBanner)
                         Button("Retry") { vm.retryLoad() }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.vfProminent)
                             .accessibilityIdentifier(AccessibilityID.shortsRetryButton)
                     }
                     .foregroundStyle(.white)

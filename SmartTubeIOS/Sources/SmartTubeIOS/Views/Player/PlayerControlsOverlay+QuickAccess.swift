@@ -20,7 +20,7 @@ extension PlayerControlsOverlay {
             ) {
                 Image(systemName: symbol)
                     .font(.system(size: 18 * controlScale))
-                    .foregroundStyle(isFilled ? Color.accentColor : .white)
+                    .foregroundStyle(VFColor.onMedia)
             }
             #else
             Button {
@@ -29,7 +29,7 @@ extension PlayerControlsOverlay {
             } label: {
                 Image(systemName: symbol)
                     .font(.system(size: 18 * controlScale))
-                    .foregroundStyle(isFilled ? Color.accentColor : .white)
+                    .foregroundStyle(VFColor.onMedia)
                     .frame(width: 44, height: 44)
                     .background(.black.opacity(0.4), in: Circle())
             }

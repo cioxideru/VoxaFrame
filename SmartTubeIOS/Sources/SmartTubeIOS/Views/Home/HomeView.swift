@@ -386,7 +386,7 @@ extension HomeView {
                 .font(.headline)
                 .foregroundStyle(.secondary)
             Button("Sign In") { showSignIn = true }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.vfProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
@@ -563,7 +563,7 @@ extension HomeView {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                 Button("Sign In") { showSignIn = true }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.vfProminent)
             } else if !auth.isSignedIn && (selectedSection.type == .subscriptions || selectedSection.type == .channels)
             {
                 Image(systemName: "person.badge.plus")
@@ -578,7 +578,7 @@ extension HomeView {
                 Button("Search") {
                     NotificationCenter.default.post(name: .navigateToSearch, object: nil)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.vfProminent)
             } else {
                 Image(systemName: AppSymbol.tvPlay)
                     .font(.system(size: 60))
@@ -588,12 +588,12 @@ extension HomeView {
                     .foregroundStyle(.secondary)
                 if sectionVM.hasMoreShorts {
                     Button("More") { sectionVM.loadMoreShorts() }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.vfProminent)
                         .disabled(sectionVM.isLoadingMore)
                         .accessibilityIdentifier(AccessibilityID.shortsLoadMoreButton)
                 } else {
                     Button("Refresh") { sectionVM.loadContent(refresh: true) }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.vfProminent)
                 }
             }
         }

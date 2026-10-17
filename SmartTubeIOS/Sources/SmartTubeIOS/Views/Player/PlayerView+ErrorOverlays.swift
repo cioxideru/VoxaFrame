@@ -44,6 +44,7 @@ extension PlayerView {
                     Button("Skip \(seg.category.displayName)") {
                         vm.skipToastSegment()
                     }
+                    // System style on purpose: the fill is the segment colour, not the accent `.vfProminent` pairs with.
                     .buttonStyle(.borderedProminent)
                     .tint(seg.category.color)
                     #if os(tvOS)

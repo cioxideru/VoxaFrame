@@ -248,7 +248,7 @@ public struct SignInView: View {
                     Label("Open Activation Page", systemImage: "arrow.up.right")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.vfProminent)
                 .controlSize(.large)
 
                 // ── Or: scan from another device ────────────────────────────
