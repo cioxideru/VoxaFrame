@@ -19,6 +19,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
+- [PLAN-0022: Initial stream source boundary](active/stream-source-boundary.md) — isolate initial metadata acquisition without changing fallback order.
+
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
 
 - [PLAN-0005: Home feed review fixes](active/home-review-fixes.md) — implementation and coordinator acceptance.
