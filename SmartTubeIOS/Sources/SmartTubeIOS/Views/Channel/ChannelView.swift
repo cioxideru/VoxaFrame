@@ -90,38 +90,6 @@ public struct ChannelView: View {
         } message: {
             Text(vm.channel?.title ?? "")
         }
-        .toolbar {
-            if let channel = vm.channel {
-                #if os(macOS)
-                ToolbarItem(placement: .automatic) {
-                    let isExcluded = store.settings.sponsorBlockExcludedChannels[channel.id] != nil
-                    Button {
-                        toggleSponsorBlockExclusion(for: channel)
-                    } label: {
-                        Label(
-                            isExcluded ? "Remove SponsorBlock Exclusion" : "Exclude from SponsorBlock",
-                            systemImage: isExcluded
-                                ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.minus"
-                        )
-                    }
-                }
-                #else
-                ToolbarItem(placement: .topBarTrailing) {
-                    let isExcluded = store.settings.sponsorBlockExcludedChannels[channel.id] != nil
-                    Button {
-                        toggleSponsorBlockExclusion(for: channel)
-                    } label: {
-                        Label(
-                            isExcluded ? "Remove SponsorBlock Exclusion" : "Exclude from SponsorBlock",
-                            systemImage: isExcluded
-                                ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.minus"
-                        )
-                    }
-                    .accessibilityIdentifier("channel.sponsorBlockButton")
-                }
-                #endif
-            }
-        }
     }
 
     private var content: some View {
@@ -264,14 +232,6 @@ public struct ChannelView: View {
     private func selectShort(_ video: Video, from videos: [Video]) {
         let idx = videos.firstIndex(where: { $0.id == video.id }) ?? 0
         shortsPresentation = ShortsPresentation(videos: videos, startIndex: idx)
-    }
-
-    private func toggleSponsorBlockExclusion(for channel: Channel) {
-        if store.settings.sponsorBlockExcludedChannels[channel.id] != nil {
-            store.settings.sponsorBlockExcludedChannels.removeValue(forKey: channel.id)
-        } else {
-            store.settings.sponsorBlockExcludedChannels[channel.id] = channel.title
-        }
     }
 
     private func channelHeader(_ channel: Channel) -> some View {

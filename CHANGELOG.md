@@ -48,6 +48,10 @@ All notable changes to SmartTube are documented here.
 
 ### Changed — 2026-10-17
 
+- **Channel controls (PLAN-0017):** removed the SponsorBlock exclusion toolbar icon
+  that looked like a second subscription control, along with its obsolete Settings hint.
+  The channel header retains Subscribe/Unsubscribe; saved SponsorBlock exclusions remain intact.
+
 - **Version 5.12 (30), Shorts preloading (PLAN-0015):** prepare the next native video
   while the current Short plays, reuse its player and buffer on swipe, and release speculative
   work on background, memory pressure, expiry or dismissal. Retained feed/history/cursors stay

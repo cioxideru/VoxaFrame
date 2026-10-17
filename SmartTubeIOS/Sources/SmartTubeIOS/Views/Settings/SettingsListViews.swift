@@ -80,7 +80,7 @@ struct SectionsSettingsView: View {
 // MARK: - SponsorBlockExcludedChannelsView
 
 /// Lists channels excluded from SponsorBlock processing.
-/// Channels can be added from ChannelView and removed here via swipe-to-delete.
+/// Saved exclusions can be removed here via swipe-to-delete.
 struct SponsorBlockExcludedChannelsView: View {
     @Environment(SettingsStore.self) private var store
 
@@ -92,9 +92,7 @@ struct SponsorBlockExcludedChannelsView: View {
             if sortedChannels.isEmpty {
                 ContentUnavailableView(
                     "No Excluded Channels",
-                    systemImage: AppSymbol.personCircleMinus,
-                    description: Text(
-                        "Open a channel and tap \u{201C}Exclude from SponsorBlock\u{201D} to add it here.")
+                    systemImage: AppSymbol.personCircleMinus
                 )
             } else {
                 ForEach(sortedChannels, id: \.key) { _, title in
