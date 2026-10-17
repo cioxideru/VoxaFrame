@@ -65,6 +65,8 @@ rotation, relaunch and unchanged media-request counts during saved playback. The
 has both muxed audio and a two-resolution master with separate English/Russian audio groups;
 request counters reject downloads of an unselected resolution or language. It fails if its
 fixture is absent. Tests use unique video IDs and can scroll through entries from earlier runs.
+The bulk-deletion test also checks Cancel, confirmation from Downloads, an empty Library and
+Downloads after relaunch. Run it only in a test container: it removes every offline entry and cache.
 
 Build these test products with `CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-` on Simulator.
 An unsigned app can be rejected by the system background-session daemon (XPC 4097 / missing

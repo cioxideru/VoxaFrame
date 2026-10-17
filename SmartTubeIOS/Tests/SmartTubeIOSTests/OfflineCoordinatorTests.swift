@@ -127,6 +127,39 @@ struct OfflineCoordinatorTests {
         #expect(coordinator.snapshot.entries.isEmpty)
     }
 
+    @Test func deleteAllCancelsQueuedAndActiveTransfersAndRejectsLateCompletions() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let transport = OfflineFakeTransport()
+        defer { transport.continuation.finish() }
+        let resolver = OfflineFakeResolver()
+        let coordinator = OfflineCoordinator(
+            store: OfflineLibraryStore(directory: directory), transport: transport, resolver: resolver,
+            notifications: OfflineFakeNotifications(),
+            demand: PlaybackDemandCoordinator(waitForRecovery: {}, waitForBudget: {}), validate: { _, _, _ in })
+        let first = Video(id: "first", title: "First", channelTitle: "Test")
+        coordinator.enqueue(video: first)
+        #expect(await wait { coordinator.snapshot.jobs.first?.state == .downloading })
+        coordinator.enqueue(video: Video(id: "second", title: "Second", channelTitle: "Test"))
+        #expect(await wait { coordinator.snapshot.jobs.count == 2 })
+        let attempts = coordinator.snapshot.jobs.map(\.attempt)
+        let orphan = UUID()
+        try transport.start(resolver.resolve(video: first, track: .automatic), attempt: orphan, yielding: false)
+        coordinator.remove(videoID: nil)
+        #expect(await wait { coordinator.snapshot.jobs.isEmpty })
+        #expect(coordinator.snapshot.entries.isEmpty)
+        #expect(transport.activeAttempts().isEmpty)
+        for attempt in attempts + [orphan] {
+            let late = directory.appendingPathComponent(attempt.uuidString + ".mp4")
+            try Data([1]).write(to: late)
+            transport.continuation.yield(.finished(attempt, late, systemPackage: false))
+            #expect(await wait { !FileManager.default.fileExists(atPath: late.path) })
+        }
+        #expect(coordinator.snapshot.entries.isEmpty)
+        coordinator.enqueue(video: first)
+        #expect(await wait { coordinator.snapshot.jobs.first?.state == .downloading })
+    }
+
     @Test func failureAllowsNextVideoToDownload() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

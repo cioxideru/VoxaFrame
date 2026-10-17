@@ -64,7 +64,7 @@ public struct OfflineJob: Codable, Sendable, Identifiable {
     public var resolutionAttempts: Int = 0
 }
 public struct OfflineRemoval: Codable, Sendable {
-    let videoID: String
+    public let videoID: String?
     public let jobIDs: Set<UUID>
     let assetIDs: Set<String>
 }
@@ -150,7 +150,7 @@ public actor OfflineLibraryStore {
         video: Video, tracks: [OfflineTrack], batch: UUID = UUID()
     ) throws -> OfflineSnapshot {
         var next = try snapshot()
-        guard !(next.pendingRemovals ?? []).contains(where: { $0.videoID == video.id }) else {
+        guard !(next.pendingRemovals ?? []).contains(where: { $0.videoID == nil || $0.videoID == video.id }) else {
             throw OfflineLibraryError.unavailable
         }
         if !next.entries.contains(where: { $0.id == video.id }) {
@@ -310,11 +310,11 @@ public actor OfflineLibraryStore {
         if !result.isEmpty { try commit(next) }
         return result
     }
-    /// Invalidate attempts durably before cancellation; retained references let cleanup retry after disk errors.
-    public func beginRemoval(videoID: String, jobID: UUID? = nil) throws -> OfflineSnapshot {
+    /// Invalidate attempts durably before cancellation; nil videoID includes all videos and orphaned transfer cache.
+    public func beginRemoval(videoID: String?, jobID: UUID? = nil) throws -> OfflineSnapshot {
         var next = try snapshot()
-        let jobs = next.jobs.filter { $0.videoID == videoID && (jobID == nil || $0.id == jobID) }
-        let assets = next.entries.first { $0.id == videoID }?.assets ?? []
+        let jobs = next.jobs.filter { (videoID == nil || $0.videoID == videoID) && (jobID == nil || $0.id == jobID) }
+        let assets = next.entries.filter { videoID == nil || $0.id == videoID }.flatMap(\.assets)
         let selected = assets.filter { asset in
             guard let jobID else { return true }
             guard let job = jobs.first(where: { $0.id == jobID }) else { return false }
@@ -338,10 +338,12 @@ public actor OfflineLibraryStore {
         var next = try snapshot()
         for removal in next.pendingRemovals ?? [] {
             let attempts = Set(next.jobs.filter { removal.jobIDs.contains($0.id) }.map(\.attempt))
-            let assets = next.entries.first { $0.id == removal.videoID }?.assets ?? []
+            let removesAll = removal.videoID == nil
+            let assets = next.entries.filter { removesAll || $0.id == removal.videoID }.flatMap(\.assets)
             let preserved = try next.entries.flatMap { entry in
-                try entry.assets.filter { entry.id != removal.videoID || !removal.assetIDs.contains($0.id) }
-                    .map { try assetURL($0) }
+                try entry.assets.filter {
+                    (!removesAll && entry.id != removal.videoID) || !removal.assetIDs.contains($0.id)
+                }.map { try assetURL($0) }
             }
             func removeOwned(_ url: URL) throws {
                 if !preserved.contains(where: { Self.sameLocalFile($0, url) }) { try removeIfPresent(url) }
@@ -349,7 +351,7 @@ public actor OfflineLibraryStore {
             for asset in assets where removal.assetIDs.contains(asset.id) {
                 try removeOwned(try assetURL(asset))
             }
-            for receipt in try pendingReceipts() where attempts.contains(receipt.attempt) {
+            for receipt in try pendingReceipts() where removesAll || attempts.contains(receipt.attempt) {
                 let owned =
                     receipt.systemPackage
                     ? Self.isSystemPackage(receipt.url, homeDirectory: homeDirectory)
@@ -361,16 +363,19 @@ public actor OfflineLibraryStore {
             }
             // A process can exit between staging a direct file and writing its receipt.
             for url in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
-            where UUID(uuidString: url.deletingPathExtension().lastPathComponent).map(attempts.contains) == true {
+            where UUID(uuidString: url.deletingPathExtension().lastPathComponent).map({
+                removesAll || attempts.contains($0)
+            }) == true {
                 guard Self.contains(url, in: directory) else { throw OfflineLibraryError.invalidFile }
                 try removeOwned(url)
             }
             next.jobs.removeAll { removal.jobIDs.contains($0.id) }
-            if let index = next.entries.firstIndex(where: { $0.id == removal.videoID }) {
+            for index in next.entries.indices where removesAll || next.entries[index].id == removal.videoID {
                 next.entries[index].assets.removeAll { removal.assetIDs.contains($0.id) }
-                if next.entries[index].assets.isEmpty && !next.jobs.contains(where: { $0.videoID == removal.videoID }) {
-                    next.entries.remove(at: index)
-                }
+            }
+            next.entries.removeAll { entry in
+                (removesAll || entry.id == removal.videoID) && entry.assets.isEmpty
+                    && !next.jobs.contains(where: { $0.videoID == entry.id })
             }
         }
         guard !(next.pendingRemovals ?? []).isEmpty else { return next }

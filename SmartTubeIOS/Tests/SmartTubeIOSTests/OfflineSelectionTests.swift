@@ -139,6 +139,54 @@ struct OfflineSelectionTests {
         #expect(!FileManager.default.fileExists(atPath: late.path))
     }
 
+    @Test func deleteAllResumesAfterFailedCommitAndRemovesOwnedOrphanCache() async throws {
+        let root = try directory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let directory = root.appendingPathComponent("Documents/Offline")
+        let store = OfflineLibraryStore(directory: directory, homeDirectory: root)
+        let jobs = try await store.enqueue(video: video, tracks: [picture, sound, .translation("ru")]).jobs
+        let files = try await complete(jobs, store: store, directory: directory)
+        _ = try await store.takeCompletedBatches()
+        let other = Video(id: "other", title: "Other", channelTitle: "Test")
+        let hls = OfflineTrack(id: "hls", kind: .hls, label: "HLS", hasAudio: true)
+        let job = try #require(try await store.enqueue(video: other, tracks: [hls]).jobs.last)
+        let package = root.appendingPathComponent("Library/Media/saved.movpkg")
+        let partial = root.appendingPathComponent("Library/Media/partial.movpkg")
+        let unrelated = root.appendingPathComponent("Library/Media/unrelated.movpkg")
+        for url in [package, partial, unrelated] {
+            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            try Data([1]).write(to: url.appendingPathComponent("segment"))
+        }
+        try await store.update(attempt: job.attempt, state: .downloading)
+        try await store.finish(attempt: job.attempt, staged: package, systemPackage: true)
+        let orphan = try file(UUID(), in: directory)
+        let receipt = OfflineTransferReceipt(attempt: UUID(), url: partial, systemPackage: true, isPartial: true)
+        try receipt.persist(in: directory)
+        let intent = try await store.beginRemoval(videoID: nil)
+        #expect(intent.jobs.allSatisfy { $0.state == .cancelled })
+        await #expect(throws: OfflineLibraryError.self) {
+            try await store.enqueue(video: Video(id: "new", title: "New", channelTitle: "Test"), tracks: [picture])
+        }
+        let failing = OfflineLibraryStore(
+            directory: directory, homeDirectory: root,
+            writeManifest: { _, _ in
+                throw CocoaError(.fileWriteOutOfSpace)
+            })
+        await #expect(throws: (any Error).self) { try await failing.completeRemovals() }
+        let restored = OfflineLibraryStore(directory: directory, homeDirectory: root)
+        #expect(try await restored.snapshot().pendingRemovals?.count == 1)
+        let result = try await restored.completeRemovals()
+        #expect(result.entries.isEmpty && result.jobs.isEmpty && result.notifiedBatches.isEmpty)
+        #expect(result.pendingRemovals == nil)
+        for url in files + [package, partial, orphan, OfflineTransferReceipt.location(receipt.attempt, in: directory)] {
+            #expect(!FileManager.default.fileExists(atPath: url.path))
+        }
+        #expect(FileManager.default.fileExists(atPath: unrelated.path))
+        try await restored.beginRemoval(videoID: nil)
+        #expect(try await restored.completeRemovals().entries.isEmpty)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: directory.path) == ["manifest.json"])
+    }
+
     @Test func partialHLSPackageIsNotCompletionAndDeletionRemovesItsCache() async throws {
         let root = try directory()
         defer { try? FileManager.default.removeItem(at: root) }

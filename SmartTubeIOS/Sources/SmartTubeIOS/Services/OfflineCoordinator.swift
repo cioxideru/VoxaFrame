@@ -419,7 +419,7 @@ public final class OfflineCoordinator {
 }
 
 extension OfflineCoordinator {
-    func remove(videoID: String, jobID: UUID? = nil) {
+    func remove(videoID: String?, jobID: UUID? = nil) {
         guard !persistenceBlocked else { return }
         Task {
             do {
@@ -431,15 +431,21 @@ extension OfflineCoordinator {
         }
     }
     private func finishRemovals() async throws {
-        let ids = Set((snapshot.pendingRemovals ?? []).flatMap { $0.jobIDs })
-        for job in snapshot.jobs where ids.contains(job.id) {
-            if resolvingAttempt == job.attempt {
+        let removals = snapshot.pendingRemovals ?? []
+        let ids = Set(removals.flatMap { $0.jobIDs })
+        var attempts = Set(snapshot.jobs.filter { ids.contains($0.id) }.map(\.attempt))
+        if removals.contains(where: { $0.videoID == nil }) {
+            attempts.formUnion(await transport.activeAttempts())
+            if let resolvingAttempt { attempts.insert(resolvingAttempt) }
+        }
+        for attempt in attempts {
+            if resolvingAttempt == attempt {
                 resolverTask?.cancel()
                 resolverTask = nil
                 resolvingAttempt = nil
             }
-            await transport.cancel(job.attempt)
-            transport.acknowledge(job.attempt)
+            await transport.cancel(attempt)
+            transport.acknowledge(attempt)
         }
         apply(try await store.completeRemovals())
     }

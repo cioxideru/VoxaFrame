@@ -25,6 +25,7 @@ public enum AccessibilityID {
     public static var offlineWatch: String { "offline.watch" }
     public static var offlinePage: String { "offline.page" }
     public static var offlinePagePicker: String { "offline.pagePicker" }
+    public static var offlineDeleteAll: String { "offline.deleteAll" }
     public static var offlineAudioPicker: String { "offline.audioPicker" }
     public static var offlineTranslationPicker: String { "offline.translationPicker" }
     public static func offlineEntry(_ id: String) -> String { "offline.entry.\(id)" }

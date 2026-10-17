@@ -8,6 +8,11 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Added — 2026-10-17
 
+- **VoxaFrame 5.16 (35), delete all offline media (PLAN-0026):** Offline videos has a confirmed
+  Delete all action on both tabs. It cancels all offline transfers and removes saved video, audio,
+  translations, protected HLS packages and unfinished transfer cache. Cleanup survives relaunch
+  and disk-write failures; unrelated app data stays intact.
+
 - **VoxaFrame 5.16 (34), offline choices and cleanup (PLAN-0025):** Offline watch now
   asks for video resolution/codec, a compatible audio track, and optional Yandex translation
   language. HLS downloads bind one video variant and one audio selection; direct downloads

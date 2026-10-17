@@ -187,6 +187,66 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter().wait(for: [deleted], timeout: 10), .completed)
     }
 
+    func testDeleteAllConfirmsAndClearsBothPagesAfterRelaunch() {
+        let first = "offline-ui-bulk-hls-" + UUID().uuidString
+        launch(videoID: first)
+        saveFromPlayer()
+        openEntry(first)
+        waitForSavedVideo("fixture-360")
+        app.buttons[AccessibilityID.offlineFindVariants].tap()
+        download("fixture-hls")
+        waitForSavedVideo("fixture-hls")
+        app.terminate()
+
+        let second = "offline-ui-bulk-tracks-" + UUID().uuidString
+        launch(videoID: second)
+        saveFromPlayer(selectTracks: true)
+        openEntry(second)
+        waitForSavedVideo("fixture-720")
+        let translation = app.buttons[AccessibilityID.offlineDownloadTranslation("ru")]
+        reveal(translation)
+        XCTAssertTrue(translation.waitForExistence(timeout: 5))
+        waitUntilDisabled(translation)
+        app.navigationBars.buttons.firstMatch.tap()
+
+        let remove = app.buttons[AccessibilityID.offlineDeleteAll]
+        XCTAssertTrue(remove.waitForExistence(timeout: 5))
+        remove.tap()
+        let cancel = app.buttons["Cancel"].firstMatch
+        if cancel.exists {
+            cancel.tap()
+        } else {
+            // iPad confirmation popovers cancel through the outside dismiss region.
+            let dismiss = app.otherElements["PopoverDismissRegion"]
+            XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
+            dismiss.tap()
+        }
+        XCTAssertTrue(app.buttons[AccessibilityID.offlineDeleteEntry(second)].exists)
+        let pages = app.segmentedControls[AccessibilityID.offlinePagePicker]
+        pages.buttons["Downloads"].tap()
+        remove.tap()
+        let confirm = app.buttons["Delete all"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = "Confirm deletion of all offline videos and cache"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        confirm.tap()
+        pages.buttons["Library"].tap()
+        let empty = app.staticTexts[
+            "Choose Offline watch from a video's menu. Accepted downloads continue when you leave this page."]
+        XCTAssertTrue(empty.waitForExistence(timeout: 15))
+        app.terminate()
+        launch(videoID: nil)
+        UITestHelpers.tapTab(named: "Offline videos", in: app)
+        XCTAssertTrue(empty.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons[AccessibilityID.offlineEntry(first)].exists)
+        XCTAssertFalse(app.buttons[AccessibilityID.offlineEntry(second)].exists)
+        pages.buttons["Downloads"].tap()
+        XCTAssertFalse(app.staticTexts[first].exists)
+        XCTAssertFalse(app.staticTexts[second].exists)
+    }
+
     private func launch(videoID: String?) {
         app = XCUIApplication()
         app.launchArguments = [

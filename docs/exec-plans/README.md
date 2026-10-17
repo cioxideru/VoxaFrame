@@ -27,6 +27,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0026: Delete all offline videos](completed/offline-delete-all.md) — confirmed bulk cancellation and cache cleanup.
+
 - [PLAN-0025: Offline selection and deletion](completed/offline-selection-cleanup.md) — explicit video/audio/translation choices and file cleanup.
 
 - [PLAN-0024: Full-screen level gestures](completed/player-level-gestures.md) — brightness/volume adjustment, iPhone/iPad gesture conflict checks and physical iPad calibration.

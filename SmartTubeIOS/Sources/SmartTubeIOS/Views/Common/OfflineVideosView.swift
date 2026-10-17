@@ -21,6 +21,7 @@ struct OfflineWatchButton: View {
 struct OfflineVideosView: View {
     @State private var coordinator = OfflineCoordinator.shared
     @State private var showsProgress = false
+    @State private var showsDeleteAll = false
     @State private var deletion: (videoID: String, jobID: UUID?)?
     var body: some View {
         VStack {
@@ -38,6 +39,30 @@ struct OfflineVideosView: View {
             if showsProgress { progressList } else { libraryList }
         }
         .navigationTitle("Offline videos")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(role: .destructive) {
+                    showsDeleteAll = true
+                } label: {
+                    Label("Delete all offline videos", systemImage: AppSymbol.trash)
+                }
+                .accessibilityIdentifier(AccessibilityID.offlineDeleteAll)
+                .disabled(
+                    !coordinator.ready || coordinator.persistenceBlocked
+                        || !(coordinator.snapshot.pendingRemovals ?? []).isEmpty
+                )
+                .confirmationDialog(
+                    "Delete all offline videos?", isPresented: $showsDeleteAll, titleVisibility: .visible
+                ) {
+                    Button("Delete all", role: .destructive) { coordinator.remove(videoID: nil) }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text(
+                        "This cancels all offline downloads and deletes every saved video, audio track, translation, and their cache. This cannot be undone."
+                    )
+                }
+            }
+        }
         .task { coordinator.start() }
         .confirmationDialog(
             "Delete downloaded files?",

@@ -21,6 +21,7 @@ enum AccessibilityID {
     static var offlineWatch: String { "offline.watch" }
     static var offlinePage: String { "offline.page" }
     static var offlinePagePicker: String { "offline.pagePicker" }
+    static var offlineDeleteAll: String { "offline.deleteAll" }
     static var offlineAudioPicker: String { "offline.audioPicker" }
     static var offlineTranslationPicker: String { "offline.translationPicker" }
     static var offlinePlaybackStatus: String { "offline.playbackStatus" }
