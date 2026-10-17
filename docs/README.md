@@ -23,11 +23,13 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-15 |
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
 | [design/VoxaFrame-Functionality.ru.md](design/VoxaFrame-Functionality.ru.md) | DESIGN-0002: standalone Russian functional brief for redesigning VoxaFrame on four Apple platforms | current | 2026-10-17 |
+| [design/voxaframe-redesign/START-HERE.md](design/voxaframe-redesign/START-HERE.md) | DESIGN-0003: VoxaFrame redesign handoff — screen map, tokens, component contracts, mockups | current | 2026-10-17 |
 | [design/claude-design/README.md](design/claude-design/README.md) | DESIGN-0001: VoxaFrame Claude Design import bundle and visual references | current | 2026-10-17 |
 | [design/claude-design/HANDOFF.ru.md](design/claude-design/HANDOFF.ru.md) | Colleague handoff: import files, save the system and check the four platforms | current | 2026-10-17 |
 | [design/claude-design/CLAUDE_IMPORT.md](design/claude-design/CLAUDE_IMPORT.md) | Apple 27 design-system specification, platform rules, components and provenance | current | 2026-10-17 |
-| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0018) | current | 2026-10-17 |
+| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0019) | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/active/voxaframe-redesign.md](exec-plans/active/voxaframe-redesign.md) | PLAN-0027: VoxaFrame redesign in SwiftUI, staged | current | 2026-10-17 |
 | [exec-plans/completed/offline-delete-all.md](exec-plans/completed/offline-delete-all.md) | PLAN-0026: delete all offline videos, tasks and cache | current | 2026-10-17 |
 | [exec-plans/completed/offline-selection-cleanup.md](exec-plans/completed/offline-selection-cleanup.md) | PLAN-0025: explicit offline streams, audio and file deletion | current | 2026-10-17 |
 | [exec-plans/completed/player-level-gestures.md](exec-plans/completed/player-level-gestures.md) | PLAN-0024: full-screen brightness/volume gestures | accepted | 2026-10-17 |
@@ -56,6 +58,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [design/2026-06-11-tos-player-shorts-design.md](design/2026-06-11-tos-player-shorts-design.md) | Historical Shorts embed design and reconciliation; superseded by ADR-0010 | archived | 2026-10-15 |
 | [adr/README.md](adr/README.md) | ADR index, statuses and preservation rules | current | 2026-10-15 |
 | [adr/0011-bounded-native-shorts-preloading.md](adr/0011-bounded-native-shorts-preloading.md) | 0011 — native Shorts preparation and resource ownership | current | 2026-10-17 |
+| [adr/0012-redesign-availability-and-tokens.md](adr/0012-redesign-availability-and-tokens.md) | 0012 — availability fallbacks and token ownership for the redesign (proposed) | current | 2026-10-17 |
 | [adr/template.md](adr/template.md) | ADR form: stable ID, Status, Date, Context, Decision, Consequences | current | 2026-10-15 |
 | [explanation/swift-style.md](explanation/swift-style.md) | Swift conventions | current | 2026-10-15 |
 | [explanation/solid.md](explanation/solid.md) | SOLID principles reference | current | 2026-10-15 |

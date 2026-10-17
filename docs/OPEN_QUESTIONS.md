@@ -281,3 +281,19 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   use system background sessions; force-quitting the app does not promise continued downloads.
 - HLS uses its included audio with optional local VOT. External audio-file overrides require a
   direct video file; the UI explains this platform limit rather than attempting HLS composition.
+
+## OQ-0019 — VoxaFrame redesign follow-ups
+
+- Status: open; owner: UI maintainer; basis: [PLAN-0027](exec-plans/active/voxaframe-redesign.md), [ADR-0012](adr/0012-redesign-availability-and-tokens.md).
+- Mini-player as a tab-bar bottom accessory (iOS 26+) is unproven: the current overlay exists because the persistent UIKit
+  player layer must not be duplicated across tabs. Stage 2 spikes this first; if the layer is duplicated, iOS 26+ keeps the overlay.
+- Not implemented, still labelled in the mockups: A3, A6–A12, B4–B8 (including the Mac keyboard map and shortcuts), C1.
+  The macOS menu bar gets entries for existing actions only.
+- Device-only checks, `NOT RUN`: VoiceOver order and the timeline adjustable action, tvOS focus restore after Back, glass
+  legibility over bright frames, PiP, Dynamic Type up to AX5 on iPad, Mac and TV, RTL.
+- Assumption to confirm: the iPhone/iPad tab order puts Search last on every OS version, not only where the search role renders apart.
+- The package's HTML/CSS (`mockups/*.dc.html`, `mockups/vf.css`, `design-system/components/*/preview.html`, `bundle.css`) is not committed:
+  the apple-hig commit gate asks for a passing `/hig-review` on staged UI files. Decide: review them, or commit with an explicit bypass.
+- `docs/design/voxaframe-redesign/docs/VoxaFrame-Functionality.ru.md` is byte-identical to DESIGN-0002 and is not committed, so the brief has one source;
+  the package's relative reference to it resolves only in the handoff copy.
+- `docs/design/claude-design/HANDOFF.ru.md` still says "Mac Catalyst"; the target is native macOS.
