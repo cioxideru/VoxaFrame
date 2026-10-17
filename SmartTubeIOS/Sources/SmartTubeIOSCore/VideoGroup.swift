@@ -194,10 +194,13 @@ public struct VideoFormat: Identifiable, Hashable, Sendable {
     public var mimeType: String
     public var url: URL?
     public var bitrate: Int?
+    public var audioTrackID: String?
+    public var audioLanguage: String?
+    public var isOriginalAudio: Bool?
 
     public init(
         id: UUID = UUID(), label: String, width: Int, height: Int, fps: Int, mimeType: String, url: URL? = nil,
-        bitrate: Int? = nil
+        bitrate: Int? = nil, audioTrackID: String? = nil, audioLanguage: String? = nil, isOriginalAudio: Bool? = nil
     ) {
         self.id = id
         self.label = label
@@ -207,6 +210,9 @@ public struct VideoFormat: Identifiable, Hashable, Sendable {
         self.mimeType = mimeType
         self.url = url
         self.bitrate = bitrate
+        self.audioTrackID = audioTrackID
+        self.audioLanguage = audioLanguage
+        self.isOriginalAudio = isOriginalAudio
     }
 
     public var qualityLabel: String { "\(height)p\(fps > 30 ? "\(fps)" : "")" }

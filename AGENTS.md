@@ -1,4 +1,4 @@
-# SmartTube — agent guide
+# VoxaFrame (SmartTube fork) — agent guide
 
 Native Swift/SwiftUI YouTube client for iOS/iPadOS (17+), macOS Catalyst (14+) and tvOS (17+).
 Package `SmartTubeIOS/` (targets `SmartTubeIOSCore` = models/API/stores (Foundation-only boundary is the target),
@@ -22,6 +22,7 @@ text and IDs; put unresolved work in the register, and closed outcomes in the ch
 - `xcrun swift-format format --in-place --recursive --configuration .swift-format <paths from scripts/ci.sh>` — format.
 
 ## Rules that differ from defaults
+- Use the installed Xcode 27.0 toolchain. Do not install or switch to older Xcode versions.
 - Swift 6 strict concurrency everywhere. View models are `@MainActor @Observable`. No `ObservableObject`, `@Published`, Combine, `DispatchQueue`, completion handlers in new code.
 - `SmartTubeIOSCore` must stay Foundation-only (no SwiftUI/UIKit/AVFoundation/WebKit). Put platform code in `SmartTubeIOS`.
 - One definition per constant/identifier/threshold. Accessibility identifiers come from `AccessibilityID`; SF Symbols from `AppSymbol`; playback timeouts from `PlaybackTuning`.

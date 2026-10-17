@@ -104,7 +104,7 @@ public final class SpotlightIndexer {
             let attributes = CSSearchableItemAttributeSet(contentType: .content)
             attributes.title = item.title
             attributes.contentDescription = item.detail
-            attributes.keywords = item.keywords + ["SmartTube", "YouTube"]
+            attributes.keywords = item.keywords + ["VoxaFrame", "YouTube"]
             if let url = item.thumbnail,
                 let (data, _) = try? await URLSession.shared.data(from: url),
                 let jpeg = HomeWidgetStore.downscaledJPEG(data, maxWidth: 240)

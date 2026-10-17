@@ -117,7 +117,7 @@ public struct SignInView: View {
                         .font(.system(size: 56))
                         .foregroundStyle(.red)
 
-                    Text("Sign in to SmartTube")
+                    Text("Sign in to VoxaFrame")
                         .font(.largeTitle).fontWeight(.bold)
 
                     Text("On any device, open the link below and enter the code.")
@@ -225,7 +225,7 @@ public struct SignInView: View {
                     .foregroundStyle(.red)
 
                 VStack(spacing: 6) {
-                    Text("Activate SmartTube")
+                    Text("Activate VoxaFrame")
                         .font(.title2).fontWeight(.bold)
                     Text(
                         "On this device, tap the button below — the sign-in page opens with your code already filled in."

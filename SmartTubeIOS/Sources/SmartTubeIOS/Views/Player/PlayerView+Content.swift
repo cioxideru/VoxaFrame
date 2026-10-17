@@ -245,6 +245,16 @@ extension PlayerView {
                     .transition(.opacity)
                 }
 
+                #if DEBUG
+                if OfflineUITestFixture.baseURL != nil {
+                    Text(OfflineUITestFixture.status(vm))
+                        .font(.caption2)
+                        .accessibilityIdentifier(AccessibilityID.offlinePlaybackStatus)
+                        .allowsHitTesting(false)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                }
+                #endif
+
                 // Hold-to-speed badge — shown while user long-presses to boost to 2×
                 #if os(iOS) || os(tvOS)
                 if vm.isHoldingToSpeed {

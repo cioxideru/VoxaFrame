@@ -11,6 +11,21 @@ public enum AccessibilityID {
     public static var playerProgressBar: String { "player.progressBar" }
     public static var playerBrightnessGesture: String { "player.brightnessGesture" }
     public static var playerVolumeGesture: String { "player.volumeGesture" }
+    public static var offlinePlaybackStatus: String { "offline.playbackStatus" }
+    public static var offlineFindVariants: String { "offline.findVariants" }
+    public static func offlineDownload(_ id: String) -> String { "offline.download.\(id)" }
+    public static func offlineDownloadTranslation(_ language: String) -> String { "offline.translation.\(language)" }
+    public static var offlineWatch: String { "offline.watch" }
+    public static var offlinePage: String { "offline.page" }
+    public static var offlinePagePicker: String { "offline.pagePicker" }
+    public static var offlineAudioPicker: String { "offline.audioPicker" }
+    public static var offlineTranslationPicker: String { "offline.translationPicker" }
+    public static func offlineEntry(_ id: String) -> String { "offline.entry.\(id)" }
+    public static func offlinePlay(_ id: String) -> String { "offline.play.\(id)" }
+    public static func offlineJob(_ id: UUID) -> String { "offline.job.\(id)" }
+    public static func offlineCancel(_ id: UUID) -> String { "offline.cancel.\(id)" }
+    public static func offlineRetry(_ id: UUID) -> String { "offline.retry.\(id)" }
+
     public static var homeChipBar: String { "home.chipBar" }
     public static func homeSectionChip(_ title: String) -> String { "chip.\(title)" }
     public static var channelSubscriptionButton: String { "channel.followButton" }

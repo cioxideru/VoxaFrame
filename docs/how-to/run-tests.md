@@ -54,6 +54,24 @@ directory: on Xcode 27 this cleared the whole app data container despite the des
 Keep a device-container backup before hardware tests; remove only the exact fixture files from
 the running app/debugger, or leave them for the next calibration.
 
+## Local offline-library acceptance
+
+Run `python3 scripts/shorts-media-fixture.py --port 18766` with the same FFmpeg requirement,
+then select `-only-testing:SmartTubeUITests/DownloadsPlaybackUITests` on an iPad Simulator.
+This suite uses real background URLSession/AVAssetDownloadURLSession and local AVPlayer/VOT
+playback; only source resolution points at synthetic loopback media. It checks MP4, extra AAC
+and translation tracks, HLS selected resolution, rotation, relaunch and unchanged media-request
+counts during saved playback. It fails if its fixture is absent.
+
+Build these test products with `CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-` on Simulator.
+An unsigned app can be rejected by the system background-session daemon (XPC 4097 / missing
+client bundle identifier), even when ordinary foreground playback works. Keep parallel work
+isolated with explicit `SYMROOT` and `OBJROOT` as well as `-derivedDataPath`; global Xcode output
+settings can otherwise redirect separate worktrees into the same Build/Products directory.
+Use a prepared `.xctestproducts` bundle for subsequent `test-without-building` runs.
+
+This is not a physical-device, live YouTube/Yandex, airplane-mode or background-wakeup result.
+
 ## Target simulator
 
 The following is the previously recorded development destination, not a portable requirement.
@@ -162,3 +180,7 @@ Screenshots and window/button geometry are retained in the result bundle.
 Subscription content is a fixture. The suite retains the device's real account and does not
 reset SmartTube settings on physical hardware. Do not interact with the iPad during the run.
 See [PLAN-0016](../exec-plans/completed/ipad-menu-overlap.md) for evidence and remaining limits.
+
+For rotation assertions use `app.frame`, not `app.windows.firstMatch.frame`: XCTest may expose
+an empty auxiliary window first. Capture `XCUIScreen.main.screenshot()` after the new bounds
+and advancing playback are observed, so the attachment includes the settled screen.

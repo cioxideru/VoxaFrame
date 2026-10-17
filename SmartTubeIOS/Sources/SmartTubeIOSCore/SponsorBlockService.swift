@@ -117,6 +117,8 @@ public actor DeArrowService {
         self.session = URLSession(configuration: config)
     }
 
+    init(session: URLSession) { self.session = session }
+
     public struct BrandingInfo: Sendable, Codable {
         public let title: String?
         public let thumbnailTimestamp: Double?

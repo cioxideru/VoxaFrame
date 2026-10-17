@@ -215,6 +215,7 @@ extension PlaybackViewModel {
     /// The audio output went away (e.g. headphones unplugged) and AVPlayer paused itself.
     /// Record it as a deliberate pause so neither stall path resumes on the speaker.
     func handleAudioOutputLost() {
+        playbackDemand.pause()
         cancelPendingAudioPlayback()
         cancelBackgroundQualityUpgrade()
         cancelStallRecovery()

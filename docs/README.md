@@ -22,9 +22,13 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [../SmartTubeIOS/README.md](../SmartTubeIOS/README.md) | Package entry point and links to canonical guides | current | 2026-10-15 |
 | [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-15 |
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
-| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0017) | current | 2026-10-17 |
+| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0018) | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
 | [exec-plans/completed/player-level-gestures.md](exec-plans/completed/player-level-gestures.md) | PLAN-0024: full-screen brightness/volume gestures | accepted | 2026-10-17 |
+| [exec-plans/completed/voxaframe-branding.md](exec-plans/completed/voxaframe-branding.md) | PLAN-0023: chosen app name, icon and preserved technical identity | current | 2026-10-17 |
+| [exec-plans/completed/playback-priority.md](exec-plans/completed/playback-priority.md) | PLAN-0020: shared playback demand and bounded optional transfers | current | 2026-10-17 |
+| [exec-plans/completed/stream-source-boundary.md](exec-plans/completed/stream-source-boundary.md) | PLAN-0022: isolate initial metadata acquisition without changing fallback order | current | 2026-10-17 |
+| [exec-plans/completed/offline-library.md](exec-plans/completed/offline-library.md) | PLAN-0021: background media downloads and saved audio translations | current | 2026-10-17 |
 | [exec-plans/completed/shorts-playback-speed.md](exec-plans/completed/shorts-playback-speed.md) | PLAN-0019: independent Shorts playback speed and translation sync | current | 2026-10-17 |
 | [exec-plans/completed/subscriptions.md](exec-plans/completed/subscriptions.md) | PLAN-0017: subscriptions and channel management | current | 2026-10-17 |
 | [exec-plans/completed/ipad-menu-overlap.md](exec-plans/completed/ipad-menu-overlap.md) | PLAN-0016: iPad navigation menu overlap | current | 2026-10-17 |

@@ -22,12 +22,15 @@ extension PlaybackViewModel {
     func beginPlaybackAudioSession() {
         cancelPendingAudioPlayback()
         audioSessionID = audioSession.begin()
+        playbackDemand.resume()
+        updatePlaybackDemand()
     }
 
     func cancelPendingAudioPlayback() {
         if audioPlaybackTask != nil, let audioSessionID { audioSession.invalidate(audioSessionID) }
         audioPlaybackTask?.cancel()
         audioPlaybackTask = nil
+        updatePlaybackDemand()
     }
 
     /// Call after pausing the player and voice-over I/O.

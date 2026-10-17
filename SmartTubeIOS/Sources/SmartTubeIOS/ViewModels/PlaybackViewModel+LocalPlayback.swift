@@ -14,49 +14,39 @@ private let playerLog = ViewModelLogger(category: "Player")
 extension PlaybackViewModel {
 
     func startLocalPlayback(video: Video) -> Bool {
-        var localURL = video.localFileURL
-        #if DEBUG
-        localURL = localURL ?? ShortsPlaybackUITestFixture.localFileURL
-        #endif
-        // Local-file fast path — bypass all network fetches for downloaded videos.
-        // The path must be inside Documents/SmartTubeDownloads/ to prevent path-traversal
-        // from a crafted Video object.
-        if let localURL {
-            let downloadsDir = FileManager.default
-                .urls(for: .documentDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("SmartTubeDownloads").path
-            if localURL.path.hasPrefix(downloadsDir),
-                FileManager.default.fileExists(atPath: localURL.path)
-            {
-                let item = AVPlayerItem(url: localURL)
+        guard video.localFileURL != nil else { return false }
+        relatedVideos = []
+        hasNext = false
+        itemObserverTask?.cancel()
+        itemObserverTask = Task { [weak self] in
+            do {
+                let item = try await OfflineMedia.item(video: video)
+                let localDuration = try await item.asset.load(.duration).seconds
+                guard let self, !Task.isCancelled, currentVideo?.hasSamePlaybackSource(as: video) == true else {
+                    return
+                }
+                if localDuration.isFinite, localDuration > 0 { duration = localDuration }
                 item.audioTimePitchAlgorithm = .spectral
-                // Wire up observers BEFORE replaceCurrentItem (task-80 rule).
+                itemObserverTask = nil
                 observeLocalPlayerItem(item, video: video)
                 player.replaceCurrentItem(with: item)
                 observePlaybackEndAndStalls(for: item)
                 #if canImport(UIKit)
                 setupRemoteCommandCenter()
-                #endif
-                resumePreparedItem()
-                // Downloaded videos have no related videos — clear any stale state from a
-                // previous YouTube session so autoplay does not fire a YouTube video when
-                // the download ends. (Bug #224: wrong video played after local file ends.)
-                relatedVideos = []
-                hasNext = false
-                #if canImport(UIKit)
                 UIApplication.shared.isIdleTimerDisabled = true
                 updateNowPlayingInfo()
                 #endif
-                playerLog.notice("[loadAsync] local-file fast path: playing host=\(ViewModelLogger.urlHost(localURL))")
-                return true
+                resumePreparedItem()
+            } catch {
+                guard let self, !Task.isCancelled, currentVideo?.hasSamePlaybackSource(as: video) == true else {
+                    return
+                }
+                self.error = error
+                isLoading = false
             }
-            // File missing or path invalid — fall through to network re-stream.
-            playerLog.notice(
-                "[loadAsync] localFileURL set but file not accessible, falling through: host=\(ViewModelLogger.urlHost(localURL))"
-            )
         }
-
-        return false
+        // A local request never falls through to a remote stream, even if its file is gone.
+        return true
     }
 
     private func observeLocalPlayerItem(_ item: AVPlayerItem, video: Video) {
@@ -69,6 +59,12 @@ extension PlaybackViewModel {
                     playerLog.notice(
                         "[benchmark] readyToPlay — local-file — videoId=\(video.id) title=\(video.title)")
                     self.loadAudioTracks(from: item)
+                    if let translation = video.localTranslationFileURL {
+                        self.voiceOver.keepsOriginalAudio = self.settings.yandexVOTKeepOriginalAudio
+                        self.voiceOver.startLocal(
+                            url: translation, videoID: video.id, mainPlayer: self.player,
+                            setVideoPlaying: { [weak self] playing in self?.setPlayingForVoiceOver(playing) })
+                    }
                     self.isLoading = false
                 case .failed:
                     playerLog.error("❌ local-file AVPlayerItem failed: \(ViewModelLogger.errorSummary(item.error))")

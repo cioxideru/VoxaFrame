@@ -22,6 +22,10 @@ public final class PlayerRouter {
     /// Open `video` in the AVPlayer pipeline. `incognito` (#94) skips history,
     /// watchtime and resume-position recording for this video only.
     public func open(video: Video, api: InnerTubeAPI, incognito: Bool = false) {
+        #if DEBUG
+        var video = video
+        video.localFileURL = video.localFileURL ?? ShortsPlaybackUITestFixture.localFileURL
+        #endif
         playerState.play(video: video, settings: settingsStore.settings, incognito: incognito)
     }
 }

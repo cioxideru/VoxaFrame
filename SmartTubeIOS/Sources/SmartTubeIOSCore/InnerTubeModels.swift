@@ -194,7 +194,8 @@ public struct PlayerInfo: Sendable {
                 fps: fmt.fps,
                 mimeType: fmt.mimeType,
                 url: append(fmt.url),
-                bitrate: fmt.bitrate
+                bitrate: fmt.bitrate, audioTrackID: fmt.audioTrackID, audioLanguage: fmt.audioLanguage,
+                isOriginalAudio: fmt.isOriginalAudio
             )
         }
         return PlayerInfo(

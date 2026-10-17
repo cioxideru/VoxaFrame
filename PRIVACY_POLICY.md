@@ -1,10 +1,10 @@
 # Privacy Policy
 
-Last updated: October 15, 2026
+Last updated: October 17, 2026
 
 This Privacy Policy describes Our policies and procedures regarding Your use of the Service and tells You about Your privacy rights and how the law protects You.
 
-We believe in full transparency: **Smart Tube does not collect any personal data or usage data for Us.** The app contains no analytics, crash reporting, or telemetry. It talks directly to the services that provide the content You ask for, as described below.
+We believe in full transparency: **VoxaFrame does not collect any personal data or usage data for Us.** The app contains no analytics, crash reporting, or telemetry. It talks directly to the services that provide the content You ask for, as described below.
 
 ## Interpretation and Definitions
 
@@ -16,9 +16,8 @@ The words whose initial letters are capitalized have meanings defined under the 
 
 For the purposes of this Privacy Policy:
 
-- **Application** refers to Smart Tube, the software program provided by the Company.
-- **Company** (referred to as either "the Company", "We", "Us" or "Our" in this Privacy Policy) refers to Smart Tube BDP.
-- **Country** refers to: Serbia
+- **Application** refers to VoxaFrame, the software program provided by the Company.
+- **Company** (referred to as either "the Company", "We", "Us" or "Our" in this Privacy Policy) refers to the maintainers of this VoxaFrame fork.
 - **Device** means any device that can access the Service such as a computer, a cell phone or a digital tablet.
 - **Personal Data** (or "Personal Information") is any information that relates to an identified or identifiable individual.
 - **Service** refers to the Application.
@@ -49,6 +48,8 @@ To browse and play videos, the app sends requests directly from Your Device to t
 
 Settings, watch progress, local history and queues are stored on Your Device. Sign-in tokens for Google and Yandex are stored in the system Keychain. None of this is sent to Us.
 
+Offline videos, audio tracks, downloaded Yandex translations and download progress are stored locally. Requesting a translation uses the Yandex service described above; playing a saved translation does not request a new translation. Completion notifications are local notifications delivered by the operating system. Offline media is not included in the app's iCloud synchronization.
+
 ### No Retention of Personal Data
 
 Because We do not collect any Personal Data, there is nothing for Us to retain, transfer, or delete. Data held by YouTube/Google, SponsorBlock or Yandex is governed by their policies.
@@ -77,4 +78,4 @@ You are advised to review this Privacy Policy periodically for any changes. Chan
 
 If you have any questions about this Privacy Policy, You can contact us:
 
-- By visiting this page on our website: [https://github.com/milika/SmartTubeIOS](https://github.com/milika/SmartTubeIOS)
+- By visiting this page on our website: [https://github.com/cioxideru/SmartTubeIOS](https://github.com/cioxideru/SmartTubeIOS)

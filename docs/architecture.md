@@ -83,6 +83,12 @@ The current AVPlayer path still uses an ordered cascade. [ADR-0005](adr/0005-str
 3. `exhaustiveRetry` now lives in `PlaybackViewModel+ExhaustiveRetry.swift`; concurrent paths live in `+FallbackRace.swift`, with stream loading, attempts, and observer helpers in separate extensions. Splitting files has not replaced the ordered cascade with `ResolutionPipeline`.
 4. Successful paths perform `.readyToPlay` bookkeeping: duration refresh, seek restore, audio-track loading, loading-state reset, and timing. Parity and ownership work remain tracked in [OQ-0002](OPEN_QUESTIONS.md#oq-0002--stream-pipeline-and-contributor-guide).
 
+`InitialPlayerInfoSource` owns initial metadata acquisition: cached info, an existing shared fetch, then VISIONOS and the existing legacy operation. It returns the source origin so the view model retains the correct HLS hint. It does not own an AVPlayer or replace the remaining fallback cascade.
+
+`PlaybackDemandCoordinator` is the single Foundation-only policy owner for optional transfer priority. The AVPlayer adapter publishes preparation, actual playback, later buffering and deliberate pause. Cache prefetch, native Shorts preparation and offline transfers subscribe to the same signal. Owner tokens, stable recovery and a bounded later-buffer wait prevent stale events and repeated pauses from monopolizing the connection.
+
+Offline state belongs to `OfflineLibraryStore`: an actor writes an atomic local manifest with stable job IDs and distinct retry attempts. `OfflineCoordinator` projects that state into the UI and serializes admission. `OfflineDownloadTransport` uses system background URLSession downloads and iOS AVAssetDownloadURLSession for complete HLS packages; durable completion receipts connect system delivery to the manifest. HLS packages stay at Apple's provided location. VOT preparation polls are deferred in the durable queue so another video can proceed while translation is being prepared. Downloaded original audio and VOT audio are separate assets; local playback never enters the online stream fallback.
+
 Shorts use `ShortsPlayerView` over `PlaybackViewModel` on every platform. The proposed `PlaybackSession` remains [open](OPEN_QUESTIONS.md#oq-0009--architecture-debt).
 
 On iOS, `PlayerStateStore` owns the regular player's persistent `AVPlayerLayer`,

@@ -118,6 +118,10 @@ public actor VideoPreloadCache {
     // MARK: - Active prefetch tasks
 
     private var prefetchTasks: [String: Task<Void, Never>] = [:]
+    private var activeRequests: [String: PrefetchRequest] = [:]
+    private var workerIDs: [String: UUID] = [:]
+    private var demandTask: Task<Void, Never>?
+    private var isYieldingToPlayback = false
 
     // MARK: - In-flight coalescing
     //
@@ -136,7 +140,7 @@ public actor VideoPreloadCache {
     internal static let maxQueueDepth = 20  // internal for tests + Phase K
     internal static let maxWorkersWiFi = 5  // internal for Phase K override
     internal static let maxWorkersCellular = 2  // internal for Phase K override
-    private var activeWorkerCount = 0
+    private(set) var activeWorkerCount = 0
 
     // MARK: - Disk cache (Phase J)
 
@@ -151,7 +155,8 @@ public actor VideoPreloadCache {
         api: InnerTubeAPI = InnerTubeAPI(),
         sponsorBlock: SponsorBlockService = SponsorBlockService(),
         deArrow: DeArrowService = DeArrowService(),
-        wkHLSNow: @escaping @Sendable () -> Date = Date.init
+        wkHLSNow: @escaping @Sendable () -> Date = Date.init,
+        monitorNetwork: Bool = true
     ) {
         self.api = api
         self.sponsorBlock = sponsorBlock
@@ -160,7 +165,12 @@ public actor VideoPreloadCache {
         pathMonitor.pathUpdateHandler = { [weak self] path in
             Task { await self?.updatePath(path) }
         }
-        pathMonitor.start(queue: .global(qos: .background))
+        if monitorNetwork { pathMonitor.start(queue: .global(qos: .background)) }
+    }
+
+    deinit {
+        demandTask?.cancel()
+        pathMonitor.cancel()
     }
 
     // MARK: - Public: auth token
@@ -242,6 +252,8 @@ public actor VideoPreloadCache {
         prefetchQueue.removeAll { $0.videoId == videoId }
         prefetchTasks[videoId]?.cancel()
         prefetchTasks.removeValue(forKey: videoId)
+        activeRequests.removeValue(forKey: videoId)
+        workerIDs.removeValue(forKey: videoId)
     }
 
     // MARK: - Private: worker pool drain
@@ -278,28 +290,6 @@ public actor VideoPreloadCache {
         return ["playerInfo", "nextInfo", "sponsorSegments", "endCards", "deArrowBranding"]
     }
 
-    /// Starts worker tasks up to the current cap until the queue is empty.
-    /// Called by `prefetch()` and by each worker on completion.
-    func drainQueue(workerCap: Int? = nil) {
-        let cap = workerCap ?? networkCap
-        guard cap > 0 else { return }  // paused when offline
-        while activeWorkerCount < cap, !prefetchQueue.isEmpty {
-            let request = prefetchQueue.removeFirst()
-            guard prefetchTasks[request.videoId] == nil else { continue }
-            activeWorkerCount += 1
-            let task = Task(priority: .background) {
-                await self.runPrefetch(
-                    videoId: request.videoId,
-                    sponsorCategories: request.sponsorCategories,
-                    authToken: request.authToken
-                )
-                self.activeWorkerCount = max(0, self.activeWorkerCount - 1)
-                self.drainQueue()
-            }
-            prefetchTasks[request.videoId] = task
-        }
-    }
-
     // MARK: - Public: in-flight coalescing
 
     /// Returns a shared Task that resolves to the player info for `videoId`.
@@ -310,10 +300,12 @@ public actor VideoPreloadCache {
             cacheLog.notice("[coalesce] returning existing in-flight task for \(videoId, privacy: .public)")
             return existing
         }
+        if let cached = fresh(playerInfoCache[videoId]) { return Task { cached } }
         cacheLog.notice("[coalesce] creating new in-flight task for \(videoId, privacy: .public)")
         let task = Task<PlayerInfo?, Never>(priority: .userInitiated) {
             let result = try? await self.api.fetchPlayerInfoVisionOS(videoId: videoId)
             self.inFlightPlayerFetches.removeValue(forKey: videoId)
+            defer { self.drainQueue() }
             guard !Task.isCancelled, let result, result.hlsURL != nil else { return nil }
             // Publish the stream before optional metadata finishes, so the next Short can start.
             self.store(playerInfo: result, for: videoId)
@@ -559,6 +551,7 @@ public actor VideoPreloadCache {
 
         let (next, cards, sponsor, dearrow) =
             await (nextResult, endCardsResult, sponsorResult, deArrowResult)
+        guard !Task.isCancelled else { return }
         let player = await playerFetchTask.value
 
         guard !Task.isCancelled else { return }
@@ -576,7 +569,6 @@ public actor VideoPreloadCache {
         cacheLog.notice(
             "[prefetch] DONE \(videoId, privacy: .public) elapsed=\(elapsed, privacy: .public) playerInfo=\(player != nil, privacy: .public) tracking=\(tracking != nil, privacy: .public) next=\(next != nil, privacy: .public) endCards=\(cards != nil, privacy: .public) sponsor=\(sponsor.count, privacy: .public) deArrow=\(dearrow != nil, privacy: .public)"
         )
-        prefetchTasks.removeValue(forKey: videoId)
     }
 
     // MARK: - Private: LRU helpers
@@ -596,8 +588,7 @@ public actor VideoPreloadCache {
             sponsorCache.removeValue(forKey: evict)
             deArrowCache.removeValue(forKey: evict)
             wkHLSCache.removeValue(forKey: evict)
-            prefetchTasks[evict]?.cancel()
-            prefetchTasks.removeValue(forKey: evict)
+            cancelPrefetch(for: evict)
         }
     }
 
@@ -627,6 +618,80 @@ public actor VideoPreloadCache {
         if entry.isExpired { staleFields.insert(dataType) }
         return entry.value
     }
+}
+
+// MARK: - Playback demand and queue scheduling
+
+extension VideoPreloadCache {
+    public func observePlaybackDemand(_ demand: PlaybackDemandCoordinator) async {
+        guard demandTask == nil else { return }
+        let changes = await demand.changes()
+        guard demandTask == nil else { return }
+        demandTask = Task { [weak self] in
+            for await yielding in changes {
+                guard !Task.isCancelled else { return }
+                await self?.setPlaybackYielding(yielding)
+            }
+        }
+    }
+
+    func setPlaybackYielding(_ yielding: Bool) {
+        guard isYieldingToPlayback != yielding else { return }
+        isYieldingToPlayback = yielding
+        if yielding {
+            for (videoID, request) in activeRequests {
+                // Only optional children are cancelled. The shared stream task survives promotion.
+                prefetchTasks[videoID]?.cancel()
+                if !prefetchQueue.contains(where: { $0.videoId == videoID }) {
+                    prefetchQueue.append(request)
+                }
+            }
+            prefetchQueue.sort {
+                $0.priority == $1.priority ? $0.enqueuedAt < $1.enqueuedAt : $0.priority > $1.priority
+            }
+            prefetchQueue = Array(prefetchQueue.prefix(Self.maxQueueDepth))
+        } else {
+            drainQueue()
+        }
+    }
+
+    /// Starts worker tasks up to the current cap until the queue is empty.
+    /// Called by `prefetch()` and by each worker on completion.
+    func drainQueue(workerCap: Int? = nil) {
+        let cap = workerCap ?? networkCap
+        guard cap > 0, !isYieldingToPlayback else { return }
+        while activeWorkerCount < cap,
+            let index = prefetchQueue.firstIndex(where: { request in
+                guard prefetchTasks[request.videoId] == nil else { return false }
+                // Cancelled workers may leave streams owned by foreground consumers.
+                let occupied = Set(inFlightPlayerFetches.keys).union(activeRequests.keys)
+                return occupied.contains(request.videoId)
+                    || fresh(playerInfoCache[request.videoId]) != nil || occupied.count < cap
+            })
+        {
+            let request = prefetchQueue.remove(at: index)
+            activeWorkerCount += 1
+            let workerID = UUID()
+            workerIDs[request.videoId] = workerID
+            activeRequests[request.videoId] = request
+            let task = Task(priority: .background) {
+                await self.runPrefetch(
+                    videoId: request.videoId,
+                    sponsorCategories: request.sponsorCategories,
+                    authToken: request.authToken
+                )
+                self.activeWorkerCount = max(0, self.activeWorkerCount - 1)
+                if self.workerIDs[request.videoId] == workerID {
+                    self.prefetchTasks.removeValue(forKey: request.videoId)
+                    self.activeRequests.removeValue(forKey: request.videoId)
+                    self.workerIDs.removeValue(forKey: request.videoId)
+                }
+                self.drainQueue()
+            }
+            prefetchTasks[request.videoId] = task
+        }
+    }
+
 }
 
 // MARK: - CachedVideoData

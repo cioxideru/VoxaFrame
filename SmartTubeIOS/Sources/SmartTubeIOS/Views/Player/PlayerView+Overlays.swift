@@ -481,6 +481,10 @@ extension PlayerView {
     }
 
     @ViewBuilder private var moreMenuDownloadRow: some View {
+        OfflineWatchButton(video: vm.currentVideo ?? video)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+        Divider()
         #if !os(tvOS) && ENABLE_DOWNLOADS
         Button {
             showMoreMenu = false

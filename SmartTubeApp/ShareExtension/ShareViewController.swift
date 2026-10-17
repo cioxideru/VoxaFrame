@@ -38,7 +38,7 @@ final class ShareViewController: UIViewController {
 
     private let openButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "Open in SmartTube"
+        config.title = "Open in VoxaFrame"
         config.cornerStyle = .large
         config.baseBackgroundColor = UIColor(red: 0.40, green: 0.20, blue: 0.80, alpha: 1)
         let b = UIButton(configuration: config)
@@ -113,7 +113,7 @@ final class ShareViewController: UIViewController {
 
     private let titleLabel: UILabel = {
         let l = UILabel()
-        l.text = "SmartTube"
+        l.text = "VoxaFrame"
         l.font = .systemFont(ofSize: 17, weight: .semibold)
         l.textColor = .label
         l.translatesAutoresizingMaskIntoConstraints = false

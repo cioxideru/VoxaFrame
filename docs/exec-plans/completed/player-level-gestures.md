@@ -78,3 +78,16 @@ Catalyst is excluded explicitly with `targetEnvironment(macCatalyst)`, including
 its iPad-style interface idiom. Its existing downward minimize gesture is preserved.
 The current scheme does not expose a Catalyst destination; this branch has policy
 unit coverage but no Catalyst runtime/build acceptance.
+
+Final integration with Main's `e6cf0ef` preserves its offline media validation,
+separate audio/translation files, source identity checks, background session
+callback and coordinator setup. The DEBUG device fixture URL is assigned in
+`PlayerRouter` before `PlayerStateStore.play`, so the state store and view model
+receive the same playback source. Existing local URLs are not replaced.
+
+The combined tree passes 1141 package tests in 158 suites, strict SwiftLint
+(0 violations in 434 files), the iOS app/UI-target build and all five iPad gesture
+scenarios (106 seconds) in `/private/tmp/smarttube-gestures-integrated-ui.xcresult`.
+The combined tvOS app/UI-target build also passes; log:
+`/private/tmp/smarttube-gestures-integrated-tvos.log`. The final integration does
+not access the physical iPad. Its current queue remains as the user requested.

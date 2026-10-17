@@ -2097,80 +2097,80 @@
         }
       }
     },
-    "Activate SmartTube" : {
+    "Activate VoxaFrame" : {
       "comment" : "Sign-in activation screen heading (iOS)",
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تفعيل SmartTube"
+            "value" : "تفعيل VoxaFrame"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube aktivieren"
+            "value" : "VoxaFrame aktivieren"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activar SmartTube"
+            "value" : "Activar VoxaFrame"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activer SmartTube"
+            "value" : "Activer VoxaFrame"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube सक्रिय करें"
+            "value" : "VoxaFrame सक्रिय करें"
           }
         },
         "hr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aktivirajte SmartTube"
+            "value" : "Aktivirajte VoxaFrame"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aktifkan SmartTube"
+            "value" : "Aktifkan VoxaFrame"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Attiva SmartTube"
+            "value" : "Attiva VoxaFrame"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTubeを有効化"
+            "value" : "VoxaFrameを有効化"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube 활성화"
+            "value" : "VoxaFrame 활성화"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ativar SmartTube"
+            "value" : "Ativar VoxaFrame"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Активировать SmartTube"
+            "value" : "Активировать VoxaFrame"
           }
         },
         "sr" : {
@@ -2182,13 +2182,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube'yu Etkinleştir"
+            "value" : "VoxaFrame'yu Etkinleştir"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "激活 SmartTube"
+            "value" : "激活 VoxaFrame"
           }
         }
       }
@@ -20864,80 +20864,80 @@
         }
       }
     },
-    "Sign in to SmartTube" : {
+    "Sign in to VoxaFrame" : {
       "comment" : "tvOS activation screen heading",
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تسجيل الدخول إلى SmartTube"
+            "value" : "تسجيل الدخول إلى VoxaFrame"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bei SmartTube anmelden"
+            "value" : "Bei VoxaFrame anmelden"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Iniciar sesión en SmartTube"
+            "value" : "Iniciar sesión en VoxaFrame"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se connecter à SmartTube"
+            "value" : "Se connecter à VoxaFrame"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube में साइन इन करें"
+            "value" : "VoxaFrame में साइन इन करें"
           }
         },
         "hr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prijavite se na SmartTube"
+            "value" : "Prijavite se na VoxaFrame"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Masuk ke SmartTube"
+            "value" : "Masuk ke VoxaFrame"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Accedi a SmartTube"
+            "value" : "Accedi a VoxaFrame"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTubeにサインイン"
+            "value" : "VoxaFrameにサインイン"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube에 로그인"
+            "value" : "VoxaFrame에 로그인"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Entrar no SmartTube"
+            "value" : "Entrar no VoxaFrame"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вход в SmartTube"
+            "value" : "Вход в VoxaFrame"
           }
         },
         "sr" : {
@@ -20949,13 +20949,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube'ya Oturum Aç"
+            "value" : "VoxaFrame'ya Oturum Aç"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "登录 SmartTube"
+            "value" : "登录 VoxaFrame"
           }
         }
       }
@@ -21632,80 +21632,80 @@
         }
       }
     },
-    "SmartTube" : {
+    "VoxaFrame" : {
       "comment" : "App name shown in macOS sidebar navigation title — do not translate",
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "hr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "sr" : {
@@ -21717,91 +21717,91 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube"
+            "value" : "VoxaFrame"
           }
         }
       }
     },
-    "SmartTube on GitHub" : {
+    "VoxaFrame on GitHub" : {
       "comment" : "tvOS GitHub QR sheet title",
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube على GitHub"
+            "value" : "VoxaFrame على GitHub"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube auf GitHub"
+            "value" : "VoxaFrame auf GitHub"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube en GitHub"
+            "value" : "VoxaFrame en GitHub"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube sur GitHub"
+            "value" : "VoxaFrame sur GitHub"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHub पर SmartTube"
+            "value" : "GitHub पर VoxaFrame"
           }
         },
         "hr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube na GitHubu"
+            "value" : "VoxaFrame na GitHubu"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube di GitHub"
+            "value" : "VoxaFrame di GitHub"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube su GitHub"
+            "value" : "VoxaFrame su GitHub"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHubのSmartTube"
+            "value" : "GitHubのVoxaFrame"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHub의 SmartTube"
+            "value" : "GitHub의 VoxaFrame"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube no GitHub"
+            "value" : "VoxaFrame no GitHub"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube на GitHub"
+            "value" : "VoxaFrame на GitHub"
           }
         },
         "sr" : {
@@ -21813,13 +21813,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHub'da SmartTube"
+            "value" : "GitHub'da VoxaFrame"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SmartTube on GitHub"
+            "value" : "VoxaFrame on GitHub"
           }
         }
       }
@@ -25738,7 +25738,7 @@
         }
       }
     },
-    "Watch history is saved on this device. SmartTube also tries to report watches to your YouTube account, but YouTube may not always record them." : {
+    "Watch history is saved on this device. VoxaFrame also tries to report watches to your YouTube account, but YouTube may not always record them." : {
 
     },
     "Watch Without Translation" : {

@@ -268,33 +268,28 @@ extension PlaybackViewModel {
     private func initialPlayerInfo(
         video: Video, cached: CachedVideoData
     ) async throws -> (PlayerInfo, PlayerInfo?) {
-        let info: PlayerInfo
-        var visionOSHLSInfo: PlayerInfo?
-        if let cachedInfo = cached.playerInfo {
+        let source = InitialPlayerInfoSource(
+            inFlight: { await VideoPreloadCache.shared.inFlightPlayerFetch(videoId: $0) },
+            visionOS: { try await self.api.fetchPlayerInfoVisionOS(videoId: $0) },
+            legacy: { _ in
+                self.prepareLegacyStreamLoading(video: video)
+                return try await self.fetchPrimaryPlayerInfo(video: video)
+            },
+            store: { await VideoPreloadCache.shared.store(playerInfo: $0, for: $1) }
+        )
+        let result = try await source.resolve(videoId: video.id, cached: cached.playerInfo)
+        switch result.origin {
+        case .cache:
+            let cachedInfo = result.info
             playerLog.notice(
                 "PREFETCH_HIT: playerInfo for \(video.id) — skipping network (hls=\(cachedInfo.hlsURL != nil) dash=\(cachedInfo.dashURL != nil) formats=\(cachedInfo.formats.count))"
             )
-            info = cachedInfo
-        } else if let inFlight = await VideoPreloadCache.shared.inFlightPlayerFetch(videoId: video.id),
-            let coalescedInfo = await inFlight.value
-        {
+        case .inFlight:
             playerLog.notice("PREFETCH_COALESCE: playerInfo for \(video.id) — joined in-flight prefetch task")
-            info = coalescedInfo
-        } else if let visionInfo = try? await api.fetchPlayerInfoVisionOS(videoId: video.id),
-            visionInfo.hlsURL != nil
-        {
-            // VISIONOS first: token-free HLS in one request. The iOS → TV → Android chain
-            // below returns SABR-only / 360p-only responses for most videos and costs ~2 s.
-            info = visionInfo
-            visionOSHLSInfo = visionInfo
-            await VideoPreloadCache.shared.store(playerInfo: info, for: video.id)
-        } else {
-            try Task.checkCancellation()
-            prepareLegacyStreamLoading(video: video)
-            info = try await fetchPrimaryPlayerInfo(video: video)
-            await VideoPreloadCache.shared.store(playerInfo: info, for: video.id)
+        case .visionOS, .legacy:
+            break
         }
-        return (info, visionOSHLSInfo)
+        return (result.info, result.directVisionOSHLS)
     }
 
     private func applyInitialPlayerInfo(_ info: PlayerInfo) {
