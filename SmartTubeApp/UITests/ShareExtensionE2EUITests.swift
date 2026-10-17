@@ -58,7 +58,7 @@ final class ShareExtensionE2EUITests: XCTestCase {
     }
 
     private func miniPlayerBar(in app: XCUIApplication) -> XCUIElement {
-        app.otherElements["miniPlayer.bar"]
+        app.otherElements[AccessibilityID.miniPlayerBar]
     }
 
     // MARK: - Tests

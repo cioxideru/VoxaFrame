@@ -107,7 +107,7 @@ final class HomeInteractionsUITests: XCTestCase {
             _ = app.buttons["Home"].waitForExistence(timeout: 3)
         }
         // Dismiss mini-player if present.
-        let closeButton = app.buttons["miniPlayer.closeButton"].firstMatch
+        let closeButton = app.buttons[AccessibilityID.miniPlayerClose].firstMatch
         if closeButton.waitForExistence(timeout: 2) {
             closeButton.tap()
         }

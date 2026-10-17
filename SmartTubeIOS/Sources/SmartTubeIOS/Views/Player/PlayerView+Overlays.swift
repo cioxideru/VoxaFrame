@@ -574,28 +574,27 @@ extension PlayerView {
         }
     }
 
+    /// Always offered: the sheet also shows the full title and channel, which the one-line title bar truncates,
+    /// and says "No description available." when there is none.
     @ViewBuilder private var moreMenuDescriptionRow: some View {
-        let currentVideo = vm.playerInfo?.video ?? video
-        if !(currentVideo.description ?? "").isEmpty {
-            Button {
-                showMoreMenu = false
-                showDescriptionSheet = true
-            } label: {
-                Label("Description", systemImage: "text.alignleft")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(.primary)
-            .accessibilityIdentifier("player.moreMenu.descriptionRow")
-            #if os(tvOS)
-            .background(moreMenuFocusedRow == .description ? Color.gray.opacity(0.35) : .clear)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .focused($moreMenuFocusedRow, equals: .description)
-            #endif
-            Divider()
+        Button {
+            showMoreMenu = false
+            showDescriptionSheet = true
+        } label: {
+            Label("Description", systemImage: "text.alignleft")
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .foregroundStyle(.primary)
+        .accessibilityIdentifier(AccessibilityID.playerMoreMenuDescriptionRow)
+        #if os(tvOS)
+        .background(moreMenuFocusedRow == .description ? Color.gray.opacity(0.35) : .clear)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .focused($moreMenuFocusedRow, equals: .description)
+        #endif
+        Divider()
     }
 
     @ViewBuilder private var moreMenuCommentsRow: some View {

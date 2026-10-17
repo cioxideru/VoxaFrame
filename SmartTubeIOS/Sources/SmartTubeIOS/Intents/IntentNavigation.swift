@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Navigation requests from App Intents / Spotlight
 //
 // AppEntry.handleOpenURL turns `smarttube://search` and `smarttube://section/…` routes into
-// these notifications; MainTabView (RootView.swift) switches tab and section.
+// these notifications; MainTabView (Views/Shell/MainTabView.swift) switches tab and section.
 
 extension Notification.Name {
     /// userInfo: "query" (String)

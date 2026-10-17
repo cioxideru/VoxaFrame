@@ -51,7 +51,7 @@ final class LibraryUITests: XCTestCase {
             _ = app.buttons["Home"].waitForExistence(timeout: 3)
         }
         // Close mini-player if visible.
-        let closeButton = app.buttons["miniPlayer.closeButton"].firstMatch
+        let closeButton = app.buttons[AccessibilityID.miniPlayerClose].firstMatch
         if closeButton.waitForExistence(timeout: 2) {
             closeButton.tap()
         }

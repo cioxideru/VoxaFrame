@@ -48,19 +48,19 @@ final class PlayerAndMiniPlayerUITests: XCTestCase {
     private var app: XCUIApplication { Self.sharedApp }
 
     private var miniPlayerBar: XCUIElement {
-        app.otherElements["miniPlayer.bar"].firstMatch
+        app.otherElements[AccessibilityID.miniPlayerBar].firstMatch
     }
 
     private var miniPlayerPlayPause: XCUIElement {
-        app.buttons["miniPlayer.playPauseButton"].firstMatch
+        app.buttons[AccessibilityID.miniPlayerPlayPause].firstMatch
     }
 
     private var miniPlayerClose: XCUIElement {
-        app.buttons["miniPlayer.closeButton"].firstMatch
+        app.buttons[AccessibilityID.miniPlayerClose].firstMatch
     }
 
     private var miniPlayerTitle: XCUIElement {
-        app.staticTexts["miniPlayer.titleLabel"].firstMatch
+        app.staticTexts[AccessibilityID.miniPlayerTitle].firstMatch
     }
 
     private var backButton: XCUIElement {
@@ -89,7 +89,7 @@ final class PlayerAndMiniPlayerUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 1.0)
         }
         // Close mini-player if present.
-        let close = a.buttons["miniPlayer.closeButton"].firstMatch
+        let close = a.buttons[AccessibilityID.miniPlayerClose].firstMatch
         if close.waitForExistence(timeout: 3), close.isHittable {
             close.tap()
             Thread.sleep(forTimeInterval: 0.5)
@@ -389,11 +389,11 @@ final class PlayerAndMiniPlayerUITests: XCTestCase {
             backButton.waitForExistence(timeout: 5),
             "player.backButton must be present")
         backButton.tap()
-        let miniPlayerBar = app.otherElements["miniPlayer.bar"].firstMatch
+        let miniPlayerBar = app.otherElements[AccessibilityID.miniPlayerBar].firstMatch
         XCTAssertTrue(
             miniPlayerBar.waitForExistence(timeout: 5),
             "miniPlayer.bar should appear after tapping the back button")
-        let miniPlayerClose = app.buttons["miniPlayer.closeButton"].firstMatch
+        let miniPlayerClose = app.buttons[AccessibilityID.miniPlayerClose].firstMatch
         guard miniPlayerClose.waitForExistence(timeout: 3) else {
             try captureAndSkip("miniPlayer.closeButton not found — in-app PiP may not be active on this build", in: app)
         }
@@ -539,4 +539,61 @@ final class PlayerAndMiniPlayerUITests: XCTestCase {
             "Wrong video loaded after seek-bar drag")
     }
     #endif
+}
+
+// MARK: - Mini-player reserve (PLAN-0027 stage 2a)
+
+extension PlayerAndMiniPlayerUITests {
+    /// The mini-player reserve reaches a pushed screen, and a tab that is off screen when the mini player closes
+    /// gives the space back. Opens the video by deep link, so it needs no signed-in feed; the link comes first
+    /// because `open(_:)` reconnects the scene and drops whatever was pushed before it.
+    func testMiniPlayerReserveOnPushedScreenAcrossTabs() throws {
+        app.open(try XCTUnwrap(URL(string: "smarttube://video/aqz-KE-bpKQ")))
+        XCTAssertTrue(playerTitle.waitForExistence(timeout: 15), "Player did not open from the deep link")
+        minimizePlayer()
+        XCTAssertTrue(miniPlayerBar.waitForExistence(timeout: 5), "miniPlayer.bar did not appear")
+
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        let link = app.buttons[AccessibilityID.settingsVisibleSectionsLink].firstMatch
+        for _ in 0..<8 where !(link.exists && link.isHittable) { app.swipeUp() }
+        XCTAssertTrue(link.waitForExistence(timeout: 5), "Settings → Visible Sections link not found")
+        link.tap()
+        let list = app.collectionViews[AccessibilityID.settingsVisibleSectionsList].firstMatch
+        XCTAssertTrue(list.waitForExistence(timeout: 5), "Visible Sections did not open")
+        XCTAssertTrue(miniPlayerBar.exists, "The mini player must stay over the pushed screen")
+
+        let reservedRow = lastRowAfterScrollingToEnd(of: list).frame
+        let miniPlayerFrame = miniPlayerBar.frame
+        XCTAssertLessThanOrEqual(
+            reservedRow.maxY, miniPlayerFrame.minY + 1,
+            "Last row (maxY \(reservedRow.maxY)) must end above the mini player (minY \(miniPlayerFrame.minY))")
+
+        UITestHelpers.tapTab(named: "Home", in: app)
+        XCTAssertTrue(miniPlayerClose.waitForExistence(timeout: 5), "miniPlayer.closeButton not found on Home")
+        miniPlayerClose.tap()
+        let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: miniPlayerBar)
+        XCTAssertEqual(XCTWaiter().wait(for: [gone], timeout: 5), .completed, "miniPlayer.bar must disappear")
+
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        XCTAssertTrue(list.waitForExistence(timeout: 5), "Settings must come back on Visible Sections")
+        let freedRow = lastRowAfterScrollingToEnd(of: list).frame
+        XCTAssertGreaterThan(
+            freedRow.maxY, reservedRow.maxY + miniPlayerFrame.height / 2,
+            "After closing, the last row (maxY \(freedRow.maxY)) must move into the freed space "
+                + "(was \(reservedRow.maxY), mini player \(miniPlayerFrame.height) pt)")
+
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+    }
+
+    /// Swipes `list` up until its last cell stops moving, then returns that cell.
+    private func lastRowAfterScrollingToEnd(of list: XCUIElement) -> XCUIElement {
+        var previous = CGRect.null
+        for _ in 0..<8 {
+            list.swipeUp(velocity: .fast)
+            let last = list.cells.element(boundBy: list.cells.count - 1)
+            if last.frame == previous { return last }
+            previous = last.frame
+        }
+        return list.cells.element(boundBy: list.cells.count - 1)
+    }
 }

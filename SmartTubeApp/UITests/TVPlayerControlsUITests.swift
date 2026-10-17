@@ -277,7 +277,7 @@ final class TVPlayerControlsUITests: XCTestCase {
     /// must close the panel, not exit the app.
     func testDescriptionPanelClosesWithMenu() throws {
         try waitForMoreMenu()
-        let descriptionRow = element(identifier: "player.moreMenu.descriptionRow")
+        let descriptionRow = element(identifier: AccessibilityID.playerMoreMenuDescriptionRow)
         guard descriptionRow.waitForExistence(timeout: 5) else {
             try captureAndSkip("player.moreMenu.descriptionRow not found", in: app)
         }

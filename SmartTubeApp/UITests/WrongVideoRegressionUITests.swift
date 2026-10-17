@@ -97,7 +97,7 @@ final class WrongVideoRegressionUITests: XCTestCase {
         if backBtn.waitForExistence(timeout: 5) {
             backBtn.tap()
         }
-        let miniClose = app.buttons["miniPlayer.closeButton"].firstMatch
+        let miniClose = app.buttons[AccessibilityID.miniPlayerClose].firstMatch
         if miniClose.waitForExistence(timeout: 3) {
             miniClose.tap()
         }

@@ -55,7 +55,7 @@ final class ChannelViewUITests: XCTestCase {
             backButton.tap()
         }
         // Dismiss mini-player if present.
-        let miniClose = app.buttons["miniPlayer.closeButton"].firstMatch
+        let miniClose = app.buttons[AccessibilityID.miniPlayerClose].firstMatch
         if miniClose.waitForExistence(timeout: 2) {
             miniClose.tap()
         }

@@ -347,7 +347,7 @@ public struct SettingsView: View {
                 SectionsSettingsView()
                     .environment(store)
             }
-            .accessibilityIdentifier("settings.visibleSectionsLink")
+            .accessibilityIdentifier(AccessibilityID.settingsVisibleSectionsLink)
         }
     }
 

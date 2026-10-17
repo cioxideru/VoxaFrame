@@ -294,7 +294,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         let back = app.buttons[AccessibilityID.playerBackButton].firstMatch
         XCTAssertTrue(back.waitForExistence(timeout: 5))
         back.tap()
-        let close = app.buttons["miniPlayer.closeButton"].firstMatch
+        let close = app.buttons[AccessibilityID.miniPlayerClose].firstMatch
         if close.waitForExistence(timeout: 3) {
             close.tap()
             let closed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: close)

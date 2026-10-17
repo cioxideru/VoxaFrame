@@ -277,7 +277,7 @@ final class PlayerVideoScaleUITests: XCTestCase {
             showControls()
             let before = seconds()
             app.buttons[AccessibilityID.playerBackButton].firstMatch.tap()
-            let mini = app.otherElements["miniPlayer.bar"].firstMatch
+            let mini = app.otherElements[AccessibilityID.miniPlayerBar].firstMatch
             XCTAssertTrue(mini.waitForExistence(timeout: 5))
             XCTAssertTrue(
                 app.scrollViews["home.chipBar"].isHittable,

@@ -67,6 +67,7 @@ struct SectionsSettingsView: View {
                 }
             }
         }
+        .accessibilityIdentifier(AccessibilityID.settingsVisibleSectionsList)
         .navigationTitle("Visible Sections")
         #if os(iOS)
         .toolbar(.visible, for: .navigationBar)

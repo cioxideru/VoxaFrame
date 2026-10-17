@@ -5,8 +5,16 @@ enum AccessibilityID {
     static var playerStatsOverlay: String { "player.statsOverlay" }
     static var playerHoldSpeedBadge: String { "player.holdSpeedBadge" }
     static var playerMoreMenuCancelButton: String { "player.moreMenu.cancel" }
+    static var playerMoreMenuDescriptionRow: String { "player.moreMenu.descriptionRow" }
     static var playerMoreButton: String { "player.moreButton" }
     static var miniPlayerBar: String { "miniPlayer.bar" }
+    static var miniPlayerTitle: String { "miniPlayer.titleLabel" }
+    static var miniPlayerPlayPause: String { "miniPlayer.playPauseButton" }
+    static var miniPlayerClose: String { "miniPlayer.closeButton" }
+    static func tab(_ name: String) -> String { "tab.\(name.lowercased())" }
+    static var uiTestingReopenDeeplinkVideo: String { "uitesting.reopenDeeplinkVideoButton" }
+    static var settingsVisibleSectionsLink: String { "settings.visibleSectionsLink" }
+    static var settingsVisibleSectionsList: String { "settings.visibleSectionsList" }
     static var playerToast: String { "player.toast" }
     static var playerProgressBar: String { "player.progressBar" }
     static var playerBrightnessGesture: String { "player.brightnessGesture" }

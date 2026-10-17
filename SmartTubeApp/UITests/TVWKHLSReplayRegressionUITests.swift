@@ -166,7 +166,7 @@ final class TVWKHLSReplayRegressionUITests: XCTestCase {
             }
 
             // Close mini-player if it appeared.
-            let miniPlayerBar = app.otherElements["miniPlayer.bar"].firstMatch
+            let miniPlayerBar = app.otherElements[AccessibilityID.miniPlayerBar].firstMatch
             if miniPlayerBar.waitForExistence(timeout: 3) {
                 // Menu to dismiss mini-player on tvOS.
                 remote.press(.menu)

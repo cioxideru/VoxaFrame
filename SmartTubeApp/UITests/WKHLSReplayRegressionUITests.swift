@@ -229,7 +229,7 @@ final class WKHLSReplayRegressionUITests: XCTestCase {
             backButton.tap()
 
             // 8. Wait for mini-player and close it (calls stop()).
-            let miniPlayerBar = app.otherElements["miniPlayer.bar"].firstMatch
+            let miniPlayerBar = app.otherElements[AccessibilityID.miniPlayerBar].firstMatch
             guard miniPlayerBar.waitForExistence(timeout: 8) else {
                 // Mini-player did not appear — might have already dismissed or
                 // the build doesn't show a mini-player. Skip close step.
@@ -238,7 +238,7 @@ final class WKHLSReplayRegressionUITests: XCTestCase {
                 continue
             }
 
-            let miniClose = app.buttons["miniPlayer.closeButton"].firstMatch
+            let miniClose = app.buttons[AccessibilityID.miniPlayerClose].firstMatch
             XCTAssertTrue(
                 miniClose.waitForExistence(timeout: 5),
                 "Cycle \(cycle): miniPlayer.closeButton not found"

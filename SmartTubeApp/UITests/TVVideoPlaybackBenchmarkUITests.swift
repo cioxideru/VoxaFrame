@@ -126,7 +126,7 @@ final class TVVideoPlaybackBenchmarkUITests: XCTestCase {
                 Thread.sleep(forTimeInterval: 1.0)
 
                 // Close mini-player if it appeared.
-                let miniPlayer = app.otherElements["miniPlayer.bar"].firstMatch
+                let miniPlayer = app.otherElements[AccessibilityID.miniPlayerBar].firstMatch
                 if miniPlayer.exists {
                     remote.press(.menu)
                     Thread.sleep(forTimeInterval: 0.5)

@@ -81,13 +81,13 @@ final class VideoPlaybackRegressionUITests: XCTestCase {
         XCTAssertTrue(backButton.waitForExistence(timeout: 3), "player.backButton not found")
         backButton.tap()
 
-        let miniPlayerBar = homeApp.otherElements["miniPlayer.bar"].firstMatch
+        let miniPlayerBar = homeApp.otherElements[AccessibilityID.miniPlayerBar].firstMatch
         guard miniPlayerBar.waitForExistence(timeout: 5) else {
             try captureAndSkip("miniPlayer.bar did not appear — mini-player may be disabled on this build", in: app)
         }
 
         // 4. Tap X on the mini-player — calls stop().
-        let miniPlayerClose = homeApp.buttons["miniPlayer.closeButton"].firstMatch
+        let miniPlayerClose = homeApp.buttons[AccessibilityID.miniPlayerClose].firstMatch
         XCTAssertTrue(miniPlayerClose.waitForExistence(timeout: 5), "miniPlayer.closeButton not found")
         miniPlayerClose.tap()
 
@@ -161,11 +161,11 @@ final class VideoPlaybackRegressionUITests: XCTestCase {
         backButton.tap()
 
         // 4. Wait for the mini-player bar to appear, then tap its close button to stop.
-        let miniPlayerBar = app.otherElements["miniPlayer.bar"].firstMatch
+        let miniPlayerBar = app.otherElements[AccessibilityID.miniPlayerBar].firstMatch
         guard miniPlayerBar.waitForExistence(timeout: 5) else {
             try captureAndSkip("miniPlayer.bar did not appear — mini-player may be disabled on this build", in: app)
         }
-        let miniPlayerClose = app.buttons["miniPlayer.closeButton"].firstMatch
+        let miniPlayerClose = app.buttons[AccessibilityID.miniPlayerClose].firstMatch
         XCTAssertTrue(miniPlayerClose.waitForExistence(timeout: 5), "miniPlayer.closeButton not found after minimizing")
         miniPlayerClose.tap()
 
@@ -176,7 +176,7 @@ final class VideoPlaybackRegressionUITests: XCTestCase {
 
         // 6. Re-open the same video in-session via the uitesting overlay button.
         //    This is the exact code path that was broken: same video ID, item=nil after stop().
-        let reopenButton = app.buttons["uitesting.reopenDeeplinkVideoButton"].firstMatch
+        let reopenButton = app.buttons[AccessibilityID.uiTestingReopenDeeplinkVideo].firstMatch
         XCTAssertTrue(
             reopenButton.waitForExistence(timeout: 3), "uitesting.reopenDeeplinkVideoButton not found — overlay missing"
         )

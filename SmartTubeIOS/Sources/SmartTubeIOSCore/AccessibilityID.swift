@@ -5,8 +5,15 @@ public enum AccessibilityID {
     public static var playerStatsOverlay: String { "player.statsOverlay" }
     public static var playerHoldSpeedBadge: String { "player.holdSpeedBadge" }
     public static var playerMoreMenuCancelButton: String { "player.moreMenu.cancel" }
+    public static var playerMoreMenuDescriptionRow: String { "player.moreMenu.descriptionRow" }
     public static var playerMoreButton: String { "player.moreButton" }
     public static var miniPlayerBar: String { "miniPlayer.bar" }
+    public static var miniPlayerTitle: String { "miniPlayer.titleLabel" }
+    public static var miniPlayerPlayPause: String { "miniPlayer.playPauseButton" }
+    public static var miniPlayerClose: String { "miniPlayer.closeButton" }
+    /// Content of a root tab; `name` is the `AppSection` raw value.
+    public static func tab(_ name: String) -> String { "tab.\(name.lowercased())" }
+    public static var uiTestingReopenDeeplinkVideo: String { "uitesting.reopenDeeplinkVideoButton" }
     public static var playerToast: String { "player.toast" }
     public static var playerProgressBar: String { "player.progressBar" }
     public static var playerBrightnessGesture: String { "player.brightnessGesture" }
@@ -81,6 +88,8 @@ public enum AccessibilityID {
     public static var settingsSetPINButton: String { "settings.setPINButton" }
     public static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }
     public static var settingsVp9Toggle: String { "settings.vp9Toggle" }
+    public static var settingsVisibleSectionsLink: String { "settings.visibleSectionsLink" }
+    public static var settingsVisibleSectionsList: String { "settings.visibleSectionsList" }
     public static var settingsYandexVOTKeepOriginalAudioToggle: String { "settings.yandexVOTKeepOriginalAudioToggle" }
     public static var settingsYandexVOTLivelyVoiceToggle: String { "settings.yandexVOTLivelyVoiceToggle" }
     public static var settingsYandexVOTToggle: String { "settings.yandexVOTToggle" }
