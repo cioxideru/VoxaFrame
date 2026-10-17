@@ -1,11 +1,13 @@
 # VoxaFrame
 
+Repository: [cioxideru/VoxaFrame](https://github.com/cioxideru/VoxaFrame).
+
 A maintained fork of [SmartTubeIOS by milika](https://github.com/milika/SmartTubeIOS), licensed under [GPLv3](LICENSE). The fork keeps upstream attribution and uses its own name and icon.
 
 A native Swift/SwiftUI YouTube client for **iPhone**, **iPad**, **macOS**, and **Apple TV**.  
 Zero ads. SponsorBlock auto-skip. DeArrow community titles. Google sign-in. Up to 8K.
 
-[![iOS 17+](https://img.shields.io/badge/iOS-17%2B-black?logo=apple)](https://github.com/cioxideru/SmartTubeIOS) [![tvOS 17+](https://img.shields.io/badge/tvOS-17%2B-black?logo=apple)](https://github.com/cioxideru/SmartTubeIOS) [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)](https://github.com/cioxideru/SmartTubeIOS) [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)](https://swift.org) [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/milikadelic)
+[![iOS 17+](https://img.shields.io/badge/iOS-17%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![tvOS 17+](https://img.shields.io/badge/tvOS-17%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)](https://swift.org) [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/milikadelic)
 
 Build this fork with Xcode; the upstream App Store release is a separate product.
 
@@ -104,8 +106,8 @@ SmartTube.xcworkspace/ Xcode workspace (references both above)
 ## Getting Started
 
 ```bash
-git clone https://github.com/cioxideru/SmartTubeIOS
-cd SmartTubeIOS
+git clone https://github.com/cioxideru/VoxaFrame.git
+cd VoxaFrame
 open SmartTube.xcworkspace
 ```
 

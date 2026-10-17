@@ -347,7 +347,7 @@ final class HideWatchedSettingsUITests: XCTestCase {
         let link = app.descendants(matching: .any).matching(identifier: AccessibilityID.settingsGitHubLink).firstMatch
         UITestHelpers.scrollUntilVisible(link, in: app.collectionViews.firstMatch, maxSwipes: 16)
         XCTAssertTrue(link.waitForExistence(timeout: 5))
-        XCTAssertEqual(link.value as? String, "https://github.com/cioxideru/SmartTubeIOS")
+        XCTAssertEqual(link.value as? String, "https://github.com/cioxideru/VoxaFrame")
     }
 
     func testFilteringHomeSectionsShortsAndHistory() {

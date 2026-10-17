@@ -2,7 +2,7 @@ import AuthenticationServices
 import SmartTubeIOSCore
 import SwiftUI
 
-private let settingsGitHubURL = URL(string: "https://github.com/cioxideru/SmartTubeIOS")!
+private let settingsGitHubURL = URL(string: "https://github.com/cioxideru/VoxaFrame")!
 
 // MARK: - SettingsView
 //

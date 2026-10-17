@@ -12,6 +12,11 @@ Keep this map under 200 lines. Every Markdown document must be linked from this 
 [document index](docs/README.md); update links and the index when moving files. Keep accepted ADR
 text and IDs; put unresolved work in the register, and closed outcomes in the changelog or an ADR.
 
+## Repository
+- Canonical repository: [cioxideru/VoxaFrame](https://github.com/cioxideru/VoxaFrame); upstream: [milika/SmartTubeIOS](https://github.com/milika/SmartTubeIOS).
+- In the maintained local checkout, `fork` points to `https://github.com/cioxideru/VoxaFrame.git` and `origin` points to upstream. Check `git remote -v` before remote operations: a fresh clone uses `origin` for VoxaFrame.
+- The GitHub rename does not rename the Swift package, targets, workspace or existing local checkout (`SmartTubeIOS`). Keep their existing names and paths.
+
 ## Commands (scripts in `scripts/`, safe from any cwd)
 - `scripts/ci.sh` — secrets + doc links + swift-format check + package unit tests. Run before every commit, with SwiftLint:
   `swiftlint lint --strict --baseline .swiftlint.baseline --config .swiftlint.yml` (fails only on new violations).
