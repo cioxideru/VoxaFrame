@@ -8,6 +8,8 @@ import Foundation
 // importing the SmartTubeIOS UI module.
 
 public extension Notification.Name {
+    /// Sent only after a subscription change succeeds; channel, subscribed and signedIn identify the change.
+    static let subscriptionsDidChange = Notification.Name("com.smarttube.subscriptionsDidChange")
     /// Posted when a specific video should be removed from the current feed.
     /// userInfo key: "videoId" (String)
     static let hideVideoFromFeed = Notification.Name("com.smarttube.hideVideoFromFeed")

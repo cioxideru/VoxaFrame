@@ -44,7 +44,7 @@ public struct BrowseView: View {
             PlaylistView(playlistId: stub.id, playlistTitle: stub.title, api: api)
         }
         .navigationDestination(item: $channelDestination) { dest in
-            ChannelView(channelId: dest.channelId)
+            ChannelView(channelId: dest.channelId, api: api)
         }
         .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
             guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }

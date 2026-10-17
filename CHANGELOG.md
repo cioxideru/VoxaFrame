@@ -8,6 +8,18 @@ All notable changes to SmartTube are documented here.
 
 ### Fixed — 2026-10-17
 
+- **Subscription management (PLAN-0017):** account channel pages can subscribe and
+  unsubscribe through the current authenticated API. Channels offers an accessible
+  removal button and swipe action with confirmation, refresh and visible failures.
+  Membership comes from TV subscription navigation, including channels without
+  recent uploads, with pagination and avatar URL normalization. Failed changes
+  preserve the list; late refreshes cannot undo a successful change. Local following
+  remains separate from the account.
+- **iPad menu placement (PLAN-0016):** wide iPad layouts reserve the native top
+  navigation region when returning to Home. Regression coverage checks channel
+  and Settings round trips, tab changes and both orientations. Physical-iPad
+  channel/tab returns also pass; the rare original sequence remains unconfirmed.
+
 - **Version 5.11 (29), account feed pagination (PLAN-0014):** Home, Recommended
   and subscription-backed Shorts keep the owning feed's continuation instead of
   following a nested shelf. Only the active navigation tab contributes videos;

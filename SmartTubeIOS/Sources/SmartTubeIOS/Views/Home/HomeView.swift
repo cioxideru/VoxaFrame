@@ -1,6 +1,10 @@
 import SmartTubeIOSCore
 import SwiftUI
 
+#if os(iOS)
+import UIKit
+#endif
+
 // MARK: - HomeView
 //
 // YouTube-style home tab.  A horizontal chip bar at the top lets the user
@@ -21,6 +25,7 @@ public struct HomeView: View {
     @Environment(\.isLandscapeLayout) private var isLandscapeLayout
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
 
     // "Home" is always first; its type is .home.
@@ -71,6 +76,17 @@ public struct HomeView: View {
         _sectionVM = State(initialValue: BrowseViewModel(api: api))
     }
 
+    #if os(iOS)
+    private var navigationBarVisibility: Visibility {
+        #if !targetEnvironment(macCatalyst)
+        if #available(iOS 18.0, *), UIDevice.current.userInterfaceIdiom == .pad, horizontalSizeClass == .regular {
+            return .visible
+        }
+        #endif
+        return .hidden
+    }
+    #endif
+
     // MARK: - Body
 
     public var body: some View {
@@ -89,15 +105,17 @@ public struct HomeView: View {
                     PlaylistView(playlistId: stub.id, playlistTitle: stub.title, api: api)
                 }
                 .navigationDestination(item: $channelDestination) { dest in
-                    ChannelView(channelId: dest.channelId)
+                    ChannelView(channelId: dest.channelId, api: api)
                 }
                 #if os(tvOS)
             .focusSection()
             #endif
         }
         #if os(iOS)
+        // Keep the shared iPad tab/navigation-bar region reserved after returning from a destination.
+        .toolbar(navigationBarVisibility, for: .navigationBar)
+        .navigationBarTitleDisplayMode(navigationBarVisibility == .visible ? .inline : .automatic)
         // Player cover is centralised in MainTabView; deep-link handled there too.
-        .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(item: $shortsPresentation) { target in
             ShortsPlayerView(videos: target.videos, startIndex: target.startIndex, api: api)
         }
@@ -136,6 +154,21 @@ public struct HomeView: View {
             sectionVM.updateHistoryEnabled(store.settings.historyState == .enabled)
             // Home has its own feed; load the section model only when its chip is visible.
             await sectionVM.updateAuthToken(auth.accessToken, reloadOnSignIn: selectedSection.type != .home)
+        }
+        .onAppear {
+            if selectedSection.type == .channels && !sectionVM.isLoading {
+                sectionVM.loadContent(source: "channelsReturn")
+            }
+        }
+        .task {
+            for await note in NotificationCenter.default.notifications(named: .subscriptionsDidChange) {
+                guard let channel = note.userInfo?["channel"] as? Channel,
+                    let subscribed = note.userInfo?["subscribed"] as? Bool,
+                    note.userInfo?["signedIn"] as? Bool == auth.isSignedIn
+                else { continue }
+                sectionVM.applySubscriptionChange(channel: channel, subscribed: subscribed)
+                if auth.isSignedIn { await homeVM.refresh() }
+            }
         }
         .task(id: selectedSection) {
             sectionVM.updateHistoryEnabled(store.settings.historyState == .enabled)
@@ -181,7 +214,7 @@ extension HomeView {
         .focusSection()
         .defaultFocus($focusedSection, selectedSection)
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("home.chipBar")
+        .accessibilityIdentifier(AccessibilityID.homeChipBar)
         #else
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
@@ -199,7 +232,7 @@ extension HomeView {
                 withAnimation { proxy.scrollTo(section.id, anchor: .center) }
             }
         }
-        .accessibilityIdentifier("home.chipBar")
+        .accessibilityIdentifier(AccessibilityID.homeChipBar)
         #endif
     }
 
@@ -240,7 +273,7 @@ extension HomeView {
         .animation(.easeInOut(duration: 0.15), value: selectedSection)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         .accessibilityLabel(section.title)
-        .accessibilityIdentifier("chip.\(section.title)")
+        .accessibilityIdentifier(AccessibilityID.homeSectionChip(section.title))
         .focused($focusedSection, equals: section)
         #else
         return Button(action: action) {
@@ -261,6 +294,7 @@ extension HomeView {
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.15), value: selectedSection)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        .accessibilityIdentifier(AccessibilityID.homeSectionChip(section.title))
         #endif
     }
 
@@ -299,7 +333,6 @@ extension HomeView {
             }
         } else if selectedSection.type == .channels {
             channelListFeed
-                .accessibilityIdentifier("home.sectionContainer")
         } else {
             sectionFeed
                 .accessibilityIdentifier("home.sectionContainer")
@@ -311,15 +344,30 @@ extension HomeView {
         if sectionVM.isLoading && sectionVM.subscribedChannels.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if sectionVM.subscribedChannels.isEmpty && !sectionVM.isLoading {
-            feedEmptyState
         } else {
-            ChannelListView(channels: sectionVM.subscribedChannels) { channel in
-                channelDestination = ChannelDestination(channelId: channel.id)
+            VStack(spacing: 12) {
+                if let error = sectionVM.error {
+                    Text(error.localizedDescription)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Retry") { sectionVM.loadContent() }
+                        .accessibilityIdentifier(AccessibilityID.subscriptionRetry)
+                }
+                if sectionVM.subscribedChannels.isEmpty && sectionVM.error == nil {
+                    feedEmptyState
+                } else if !sectionVM.subscribedChannels.isEmpty {
+                    ChannelListView(
+                        channels: sectionVM.subscribedChannels,
+                        changingIDs: sectionVM.changingSubscriptionIDs,
+                        onSelect: { channel in
+                            channelDestination = ChannelDestination(channelId: channel.id)
+                        },
+                        onUnsubscribe: { channel in
+                            await sectionVM.unsubscribe(from: channel, signedIn: auth.isSignedIn)
+                        },
+                        onRefresh: { await sectionVM.refreshChannels() })
+                }
             }
-            #if os(iOS)
-            .modifier(sectionSwipe)
-            #endif
         }
     }
 
@@ -503,7 +551,7 @@ extension HomeView {
                 Text("Follow channels to see their latest videos here")
                     .font(.title3)
                     .multilineTextAlignment(.center)
-                Text("Search for a channel and tap Follow.")
+                Text("Search for a channel and tap Subscribe.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Button("Search") {

@@ -9,41 +9,100 @@ import SwiftUI
 
 struct ChannelListView: View {
     let channels: [Channel]
+    let changingIDs: Set<String>
     let onSelect: (Channel) -> Void
+    let onUnsubscribe: (Channel) async -> Void
+    let onRefresh: () async -> Void
+    @State private var pendingRemoval: Channel?
+    @State private var confirmUnsubscribe = false
     #if os(tvOS)
     @FocusState private var focusedChannelId: String?
     #endif
 
     var body: some View {
+        #if os(tvOS)
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(channels) { channel in
-                    #if os(tvOS)
-                    Button {
-                        onSelect(channel)
-                    } label: {
-                        ChannelListRow(channel: channel)
-                            .background(
-                                focusedChannelId == channel.id
-                                    ? Color.primary.opacity(0.12)
-                                    : Color.clear
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .focused($focusedChannelId, equals: channel.id)
-                    #else
-                    ChannelListRow(channel: channel)
-                        .contentShape(Rectangle())
-                        .onTapGesture { onSelect(channel) }
-                    #endif
+                    row(channel)
                     Divider()
                         .padding(.leading, 72)
                 }
             }
         }
-        #if os(tvOS)
         .focusSection()
+        .confirmationDialog("Unsubscribe?", isPresented: $confirmUnsubscribe, titleVisibility: .visible) {
+            confirmationButtons
+        } message: {
+            Text(pendingRemoval?.title ?? "")
+        }
+        #else
+        List(channels) { channel in
+            row(channel)
+                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button {
+                        requestRemoval(channel)
+                    } label: {
+                        Label("Unsubscribe", systemImage: AppSymbol.personCircleMinus)
+                    }
+                    .tint(.red)
+                    .disabled(changingIDs.contains(channel.id))
+                }
+        }
+        .listStyle(.plain)
+        .refreshable { await onRefresh() }
+        .accessibilityIdentifier(AccessibilityID.subscriptionList)
+        .confirmationDialog("Unsubscribe?", isPresented: $confirmUnsubscribe, titleVisibility: .visible) {
+            confirmationButtons
+        } message: {
+            Text(pendingRemoval?.title ?? "")
+        }
         #endif
+    }
+
+    private func row(_ channel: Channel) -> some View {
+        HStack(spacing: 12) {
+            Button {
+                onSelect(channel)
+            } label: {
+                ChannelListRow(channel: channel)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(changingIDs.contains(channel.id))
+            .accessibilityIdentifier(AccessibilityID.subscriptionRow(channel.id))
+            #if os(tvOS)
+            .focused($focusedChannelId, equals: channel.id)
+            #endif
+            Button {
+                requestRemoval(channel)
+            } label: {
+                Label("Unsubscribe", systemImage: AppSymbol.personCircleMinus)
+                    .labelStyle(.iconOnly)
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(.red)
+            .disabled(changingIDs.contains(channel.id))
+            .accessibilityLabel(Text("Unsubscribe from \(channel.title)"))
+            .accessibilityIdentifier(AccessibilityID.subscriptionRemove(channel.id))
+        }
+    }
+
+    private func requestRemoval(_ channel: Channel) {
+        pendingRemoval = channel
+        confirmUnsubscribe = true
+    }
+
+    @ViewBuilder
+    private var confirmationButtons: some View {
+        Button("Unsubscribe", role: .destructive) {
+            if let channel = pendingRemoval { Task { await onUnsubscribe(channel) } }
+        }
+        .accessibilityIdentifier(AccessibilityID.subscriptionConfirm)
+        Button("Cancel", role: .cancel) { pendingRemoval = nil }
+            .accessibilityIdentifier(AccessibilityID.subscriptionCancel)
     }
 }
 
@@ -66,11 +125,10 @@ private struct ChannelListRow: View {
                 }
             }
             Spacer()
-            Image(systemName: "chevron.right")
+            Image(systemName: AppSymbol.chevronRight)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
-        .padding(.horizontal)
         .padding(.vertical, 12)
     }
 

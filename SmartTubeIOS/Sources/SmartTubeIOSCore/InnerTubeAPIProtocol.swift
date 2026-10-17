@@ -32,6 +32,7 @@ public protocol InnerTubeAPIProtocol: AnyObject, Sendable {
     // MARK: Library
     func fetchUserPlaylists() async throws -> [PlaylistInfo]
     func fetchSubscribedChannels() async throws -> [Channel]
+    func setSubscribed(channelId: String, subscribed: Bool) async throws
 
     // MARK: Channel
     func fetchChannelThumbnailURL(channelId: String) async throws -> URL?

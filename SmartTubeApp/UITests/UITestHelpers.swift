@@ -2,6 +2,16 @@ import XCTest
 
 // UI-test targets do not link SmartTubeIOSCore. Keep these values in sync with its AccessibilityID.
 enum AccessibilityID {
+    static var popoverDismissRegion: String { "PopoverDismissRegion" }
+    static var homeChipBar: String { "home.chipBar" }
+    static func homeSectionChip(_ title: String) -> String { "chip.\(title)" }
+    static var channelSubscriptionButton: String { "channel.followButton" }
+    static var subscriptionConfirm: String { "subscription.confirm" }
+    static var subscriptionCancel: String { "subscription.cancel" }
+    static var subscriptionRetry: String { "subscription.retry" }
+    static var subscriptionList: String { "subscription.list" }
+    static func subscriptionRow(_ id: String) -> String { "subscription.row.\(id)" }
+    static func subscriptionRemove(_ id: String) -> String { "subscription.remove.\(id)" }
     static var homeSubscriptionsChannelFilter: String { "home.subscriptionsChannelFilter" }
     static var parentalControlsConfirmNew: String { "parentalControls.confirmNew" }
     static var parentalControlsEnterNew: String { "parentalControls.enterNew" }

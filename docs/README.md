@@ -22,8 +22,10 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [../SmartTubeIOS/README.md](../SmartTubeIOS/README.md) | Package entry point and links to canonical guides | current | 2026-10-15 |
 | [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-15 |
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
-| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0015) | current | 2026-10-15 |
+| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0017) | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/completed/subscriptions.md](exec-plans/completed/subscriptions.md) | PLAN-0017: subscriptions and channel management | current | 2026-10-17 |
+| [exec-plans/completed/ipad-menu-overlap.md](exec-plans/completed/ipad-menu-overlap.md) | PLAN-0016: iPad navigation menu overlap | current | 2026-10-17 |
 | [exec-plans/completed/shorts-preloading.md](exec-plans/completed/shorts-preloading.md) | PLAN-0015: bounded native Shorts preloading and Simulator evidence | current | 2026-10-17 |
 | [exec-plans/completed/shorts-feed-pagination.md](exec-plans/completed/shorts-feed-pagination.md) | PLAN-0014: preserve account feed pagination | current | 2026-10-17 |
 | [exec-plans/completed/shorts-translation-settings.md](exec-plans/completed/shorts-translation-settings.md) | PLAN-0013: independent Shorts translation settings | current | 2026-10-17 |

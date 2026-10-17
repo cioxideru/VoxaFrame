@@ -111,29 +111,28 @@ extension InnerTubeAPI {
         return group
     }
 
-    /// Fetches the list of channels the authenticated user subscribes to (requires auth).
-    ///
-    /// Strategy:
-    ///  1. `/guide` endpoint with TV client + auth — returns the TV sidebar guide which
-    ///     includes every subscribed channel with avatar thumbnail URLs via guideEntryRenderer.
-    ///  2. If that yields no channels, fall back to parsing unique channels from the
-    ///     TVHTML5 video-tile subscription feed (channel IDs + names, no avatars).
+    /// TV subscriptions navigation owns membership; video authors are not a complete list.
     public func fetchSubscribedChannels() async throws -> [Channel] {
-        // Primary: TV guide sidebar — includes subscribed channels with avatar thumbnails
-        let guideBody = makeBody(client: tvClientContext)
-        let guideData = try await postTV(endpoint: "guide", body: guideBody)
-        let guideKeys = Array(guideData.keys.sorted().prefix(8))
-        tubeLog.notice("fetchSubscribedChannels guide top-level keys: \(guideKeys, privacy: .public)")
-        let guideChannels = parseGuideChannels(from: guideData)
-        tubeLog.notice("fetchSubscribedChannels guide → \(guideChannels.count, privacy: .public) channels")
-        if !guideChannels.isEmpty { return guideChannels }
-
-        // Fallback: TV subscription video-tile feed — extract unique channels (no avatars)
-        tubeLog.notice("fetchSubscribedChannels: guide returned 0 — falling back to video tile parse")
-        var tvBody = makeBody(client: tvClientContext)
-        tvBody["browseId"] = "FEsubscriptions"
-        let tvData = try await postTV(endpoint: "browse", body: tvBody)
-        return parseSubscribedChannels(from: tvData)
+        guard let accountToken = authToken else { throw APIError.notAuthenticated }
+        var body = makeBody(client: tvClientContext)
+        body["browseId"] = "FEsubscriptions"
+        var channels: [Channel] = []
+        var seenIDs = Set<String>()
+        var seenTokens = Set<String>()
+        while true {
+            try Task.checkCancellation()
+            let response = try await postTV(endpoint: "browse", body: body, explicitBearerToken: accountToken)
+            try Task.checkCancellation()
+            try checkSubscriptionResponse(response)
+            let page = try parseSubscriptionNavigation(response)
+            channels += page.channels.filter { seenIDs.insert($0.id).inserted }
+            guard let token = page.continuation else { break }
+            guard seenTokens.insert(token).inserted else {
+                throw APIError.decodingError("Repeated subscriptions continuation.")
+            }
+            body = makeBody(client: tvClientContext, continuationToken: token)
+        }
+        return channels.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
     }
 
     /// Fetches watch history (requires auth).

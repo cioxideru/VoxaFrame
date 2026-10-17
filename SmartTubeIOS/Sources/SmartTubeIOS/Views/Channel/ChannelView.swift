@@ -15,22 +15,24 @@ private enum ChannelFilter: String, CaseIterable {
 
 public struct ChannelView: View {
     public let channelId: String
-    @State private var vm = ChannelViewModel()
+    @State private var vm: ChannelViewModel
     @State private var selectedVideo: Video?
     @State private var shortsPresentation: ShortsPresentation?
     @State private var channelDestination: ChannelDestination?
     @State private var filter: ChannelFilter = .all
-    @State private var isFollowedLocally = false
+    @State private var confirmUnsubscribe = false
     @Environment(SettingsStore.self) private var store
     @Environment(AuthService.self) private var auth
-    @Environment(\.innerTubeAPI) private var api
+    private let api: InnerTubeAPI
     @Environment(\.isLandscapeLayout) private var isLandscapeLayout
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
     #endif
 
-    public init(channelId: String) {
+    public init(channelId: String, api: InnerTubeAPI) {
         self.channelId = channelId
+        self.api = api
+        _vm = State(initialValue: ChannelViewModel(api: api))
     }
 
     public var body: some View {
@@ -44,10 +46,9 @@ public struct ChannelView: View {
             }
         }
         .navigationTitle(vm.channel?.title ?? "Channel")
-        .onAppear { vm.load(channelId: channelId) }
-        .task(id: vm.channel?.id) {
-            guard let id = vm.channel?.id else { return }
-            isFollowedLocally = await LocalSubscriptionStore.shared.isFollowing(id)
+        .task(id: auth.accessToken) {
+            await api.setAuthToken(auth.accessToken)
+            vm.load(channelId: channelId, signedIn: auth.isSignedIn)
         }
         #if !os(iOS) && !os(macOS)
         .fullScreenCover(item: $selectedVideo) { video in
@@ -60,7 +61,7 @@ public struct ChannelView: View {
         }
         #endif
         .navigationDestination(item: $channelDestination) { dest in
-            ChannelView(channelId: dest.channelId)
+            ChannelView(channelId: dest.channelId, api: api)
         }
         .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
             guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
@@ -71,11 +72,23 @@ public struct ChannelView: View {
             ShortsPlayerView(videos: target.videos, startIndex: target.startIndex, api: api)
         }
         #endif
-        .alert("Error", isPresented: .constant(vm.error != nil), presenting: vm.error) { _ in
-            Button("Retry") { vm.load(channelId: channelId) }
-            Button("Dismiss", role: .cancel) {}
+        .alert(
+            "Error",
+            isPresented: Binding(get: { vm.error != nil }, set: { if !$0 { vm.error = nil } }),
+            presenting: vm.error
+        ) { _ in
+            Button("Retry") { vm.load(channelId: channelId, signedIn: auth.isSignedIn) }
+            Button("Dismiss", role: .cancel) { vm.error = nil }
         } message: { err in
             Text(err.localizedDescription)
+        }
+        .confirmationDialog("Unsubscribe?", isPresented: $confirmUnsubscribe, titleVisibility: .visible) {
+            Button("Unsubscribe", role: .destructive) { Task { await vm.setSubscribed(false) } }
+                .accessibilityIdentifier(AccessibilityID.subscriptionConfirm)
+            Button("Cancel", role: .cancel) {}
+                .accessibilityIdentifier(AccessibilityID.subscriptionCancel)
+        } message: {
+            Text(vm.channel?.title ?? "")
         }
         .toolbar {
             if let channel = vm.channel {
@@ -142,7 +155,7 @@ public struct ChannelView: View {
                 }
             }
         }
-        .refreshable { vm.load(channelId: channelId) }
+        .refreshable { await vm.refresh(channelId: channelId, signedIn: auth.isSignedIn) }
         .accessibilityIdentifier("channel.view")
     }
 
@@ -289,36 +302,26 @@ public struct ChannelView: View {
                 }
             }
             Spacer()
-            if !auth.isSignedIn {
-                Button {
-                    Task { await toggleFollow(channel) }
-                } label: {
-                    Label(
-                        isFollowedLocally ? "Unfollow" : "Follow",
-                        systemImage: isFollowedLocally ? "bell.slash" : "bell"
-                    )
+            Button {
+                if channel.isSubscribed {
+                    confirmUnsubscribe = true
+                } else {
+                    Task { await vm.setSubscribed(true) }
                 }
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("channel.followButton")
+            } label: {
+                Label(
+                    channel.isSubscribed ? "Unsubscribe" : "Subscribe",
+                    systemImage: channel.isSubscribed ? AppSymbol.personCircleMinus : AppSymbol.addCircle
+                )
             }
+            .buttonStyle(.bordered)
+            .disabled(!vm.isSubscriptionLoaded || vm.isChangingSubscription || vm.isLoading)
+            .accessibilityIdentifier(AccessibilityID.channelSubscriptionButton)
         }
         .padding()
         .background(.background)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("channel.header")
     }
 
-    private func toggleFollow(_ channel: Channel) async {
-        if isFollowedLocally {
-            await LocalSubscriptionStore.shared.unfollow(channelId: channel.id)
-            isFollowedLocally = false
-        } else {
-            let local = LocalChannel(
-                id: channel.id,
-                title: channel.title,
-                thumbnailURL: channel.thumbnailURL
-            )
-            await LocalSubscriptionStore.shared.follow(local)
-            isFollowedLocally = true
-        }
-    }
 }

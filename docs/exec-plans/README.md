@@ -27,6 +27,10 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0017: Subscriptions](completed/subscriptions.md) — account operations and complete channel lists; five fixture UI tests, live subscribe/unsubscribe with restoration, native checks and platform builds.
+
+- [PLAN-0016: iPad menu overlap](completed/ipad-menu-overlap.md) — delegated correction; simulator and physical navigation checks pass, rare sequence remains OQ-0017.
+
 - [PLAN-0015: Bounded Shorts preloading](completed/shorts-preloading.md) — native next-video preparation, bounded retention; 1069 native tests, five iPad UI tests, four memory graphs and iOS/tvOS builds.
 
 - [PLAN-0014: Preserve account feed pagination](completed/shorts-feed-pagination.md) — active-tab and continuation ownership; native checks, four iPad UI tests and iOS/tvOS builds pass.

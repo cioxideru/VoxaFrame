@@ -25,6 +25,8 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
     var authTokenHandler: (@MainActor (String?) async -> Void)?
     var homeRowsHandler: (@MainActor (String?) async -> [VideoGroup])?
     var subscriptionsHandler: (@MainActor (String?) async -> VideoGroup)?
+    var subscribedChannelsHandler: (@MainActor () async -> [Channel])?
+    var setSubscribedHandler: (@MainActor (String, Bool) async -> Void)?
     var shortsHandler: (@MainActor () async -> VideoGroup)?
     var shortsMoreAsyncHandler: (@MainActor (String) async throws -> VideoGroup)?
     var homeResult: VideoGroup = VideoGroup(title: "Home", videos: [])
@@ -147,7 +149,14 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
     func fetchSubscribedChannels() async throws -> [Channel] {
         calls.append(Call(method: "fetchSubscribedChannels", args: []))
         if let error = errorToThrow { throw error }
+        if let subscribedChannelsHandler { return await subscribedChannelsHandler() }
         return channelsResult
+    }
+
+    func setSubscribed(channelId: String, subscribed: Bool) async throws {
+        calls.append(Call(method: "setSubscribed", args: [channelId, String(subscribed)]))
+        if let error = errorToThrow { throw error }
+        await setSubscribedHandler?(channelId, subscribed)
     }
 
     func fetchChannelThumbnailURL(channelId: String) async throws -> URL? {

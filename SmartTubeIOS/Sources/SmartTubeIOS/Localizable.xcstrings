@@ -1,6 +1,62 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Unsubscribe?" : {
+      "generatesSymbol" : false,
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отписаться?"
+          }
+        }
+      }
+    },
+    "Unsubscribe from %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отписаться от %@"
+          }
+        }
+      }
+    },
+    "Unsubscribe" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отписаться"
+          }
+        }
+      }
+    },
+    "Subscribe" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подписаться"
+          }
+        }
+      }
+    },
+    "Search for a channel and tap Subscribe." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найдите канал и нажмите «Подписаться»."
+          }
+        }
+      }
+    },
     "" : {
 
     },

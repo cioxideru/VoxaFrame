@@ -187,28 +187,78 @@ public final class ChannelViewModel {
     public private(set) var videos: [Video] = []
     public private(set) var isLoading: Bool = false
     public var error: Error?
+    public private(set) var isSubscriptionLoaded = false
+    public private(set) var isChangingSubscription = false
 
     private let api: any InnerTubeAPIProtocol
+    private let localSubscriptions: LocalSubscriptionStore
+    private var signedIn = false
+    private var loadTask: Task<Void, Never>?
     private var nextPageToken: String?
     private var hideObserverTasks: [Task<Void, Never>] = []
 
-    public init(api: any InnerTubeAPIProtocol = InnerTubeAPI()) {
+    public init(
+        api: any InnerTubeAPIProtocol = InnerTubeAPI(),
+        localSubscriptions: LocalSubscriptionStore = .shared
+    ) {
         self.api = api
+        self.localSubscriptions = localSubscriptions
         observeFeedHideNotifications()
     }
 
-    public func load(channelId: String) {
-        Task { await loadAsync(channelId: channelId) }
+    public func load(channelId: String, signedIn: Bool = false) {
+        loadTask?.cancel()
+        loadTask = Task { await loadAsync(channelId: channelId, signedIn: signedIn) }
     }
 
-    private func loadAsync(channelId: String) async {
+    public func refresh(channelId: String, signedIn: Bool) async {
+        load(channelId: channelId, signedIn: signedIn)
+        await loadTask?.value
+    }
+
+    func loadAsync(channelId: String, signedIn: Bool = false) async {
+        self.signedIn = signedIn
         isLoading = true
-        defer { isLoading = false }
+        isSubscriptionLoaded = false
+        error = nil
+        defer { if !Task.isCancelled { isLoading = false } }
         do {
             let (ch, group) = try await api.fetchChannel(channelId: channelId)
+            try Task.checkCancellation()
             channel = ch
             videos = group.videos
             nextPageToken = group.nextPageToken
+            let subscribed: Bool
+            if signedIn {
+                let subscriptions = try await api.fetchSubscribedChannels()
+                subscribed = subscriptions.contains { $0.id == ch.id || $0.id == channelId }
+            } else {
+                subscribed = await localSubscriptions.isFollowing(ch.id)
+            }
+            try Task.checkCancellation()
+            channel?.isSubscribed = subscribed
+            isSubscriptionLoaded = true
+        } catch {
+            if !Task.isCancelled { self.error = error }
+        }
+    }
+
+    public func setSubscribed(_ subscribed: Bool) async {
+        guard let channel, isSubscriptionLoaded, !isChangingSubscription else { return }
+        let signedIn = signedIn
+        isChangingSubscription = true
+        error = nil
+        defer { isChangingSubscription = false }
+        do {
+            try await api.changeSubscription(
+                channel: channel, subscribed: subscribed, signedIn: signedIn, localStore: localSubscriptions)
+            if self.channel?.id == channel.id && self.signedIn == signedIn {
+                // A refresh begun during the mutation may still return the old membership.
+                loadTask?.cancel()
+                isLoading = false
+                isSubscriptionLoaded = true
+                self.channel?.isSubscribed = subscribed
+            }
         } catch {
             self.error = error
         }

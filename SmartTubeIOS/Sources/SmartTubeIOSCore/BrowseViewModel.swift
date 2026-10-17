@@ -32,6 +32,7 @@ public final class BrowseViewModel {
     public internal(set) var videoGroups: [VideoGroup] = []
     /// Populated when the current section is `.channels`; empty for all other sections.
     public internal(set) var subscribedChannels: [Channel] = []
+    public private(set) var changingSubscriptionIDs: Set<String> = []
     public private(set) var isLoading: Bool = false
     /// True while a pagination (loadMore) request is in flight. Distinct from `isLoading`,
     /// which covers the initial/refresh fetch. Keeping these separate prevents the preload
@@ -162,6 +163,43 @@ public final class BrowseViewModel {
         loadContent(for: section, refresh: true, source: "reload")
     }
 
+    public func refreshChannels() async {
+        loadContent(refresh: false, source: "refreshChannels")
+        await fetchTask?.value
+    }
+
+    public func unsubscribe(from channel: Channel, signedIn: Bool) async {
+        guard changingSubscriptionIDs.insert(channel.id).inserted else { return }
+        defer { changingSubscriptionIDs.remove(channel.id) }
+        error = nil
+        do {
+            try await api.changeSubscription(channel: channel, subscribed: false, signedIn: signedIn)
+            if signedIn == hasAuthToken { applySubscriptionChange(channel: channel, subscribed: false) }
+        } catch {
+            self.error = error
+        }
+    }
+
+    public func applySubscriptionChange(channel: Channel, subscribed: Bool) {
+        guard currentSection.type == .channels || currentSection.type == .subscriptions else { return }
+        fetchTask?.cancel()
+        enrichTask?.cancel()
+        isLoading = false
+        isLoadingMore = false
+        loadedAt = nil
+        if currentSection.type == .channels {
+            subscribedChannels.removeAll { $0.id == channel.id }
+            if subscribed {
+                var updated = channel
+                updated.isSubscribed = true
+                subscribedChannels.append(updated)
+                subscribedChannels.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+            }
+        } else {
+            loadContent(refresh: true, source: "subscriptionChanged")
+        }
+    }
+
     /// Rebuilds the visible sections list from settings.
     /// Call this when AppSettings.enabledSections changes.
     public func configureSections(_ enabledTypes: [BrowseSection.SectionType]) {
@@ -177,6 +215,7 @@ public final class BrowseViewModel {
     // MARK: - Loading
 
     public func loadContent(for section: BrowseSection? = nil, refresh: Bool = false, source: String = "unknown") {
+        error = nil
         let target = section ?? currentSection
         let chCount = subscribedChannels.count
         let vCount = videoGroups.flatMap(\.videos).count
@@ -338,6 +377,7 @@ extension BrowseViewModel {
                     authSections.contains(section.type)
                 {
                     isAuthRequired = true
+                    self.error = error
                     browseLog.notice("Auth required for \(section.title) (HTTP \(code))")
                 } else {
                     isAuthRequired = false
@@ -499,8 +539,7 @@ extension BrowseViewModel {
     /// Concurrently fetches the avatar thumbnail URL for each subscribed channel and
     /// patches it into `subscribedChannels` as results arrive.
     ///
-    /// The TV subscription feed only returns video tiles (no channel avatars), so we
-    /// fetch each channel's About tab to get the avatar URL. Requests are fired
+    /// If a subscription tab omits its avatar, fetch the channel's About tab. Requests are fired
     /// concurrently. The task is cancelled automatically when the user leaves the
     /// Channels section (enrichTask?.cancel() in loadContent).
     internal func enrichChannelAvatars() async {
@@ -511,10 +550,6 @@ extension BrowseViewModel {
         browseLog.notice("enrichChannelAvatars: fetching avatars for \(missing.count) channels")
 
         let apiRef = api
-        let indexByID: [String: Int] = Dictionary(
-            uniqueKeysWithValues: snapshot.enumerated().map { ($1.id, $0) }
-        )
-
         await withTaskGroup(of: (String, URL?).self) { group in
             for channel in missing {
                 guard !Task.isCancelled else { break }
@@ -527,8 +562,7 @@ extension BrowseViewModel {
             for await (channelId, thumbURL) in group {
                 guard !Task.isCancelled else { break }
                 guard let thumbURL,
-                    let idx = indexByID[channelId],
-                    idx < self.subscribedChannels.count
+                    let idx = self.subscribedChannels.firstIndex(where: { $0.id == channelId })
                 else { continue }
                 self.subscribedChannels[idx].thumbnailURL = thumbURL
             }

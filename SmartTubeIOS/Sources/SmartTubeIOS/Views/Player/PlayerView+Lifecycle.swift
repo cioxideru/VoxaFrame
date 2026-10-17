@@ -500,7 +500,7 @@ extension PlayerView {
         }
         #endif
         .navigationDestination(item: $channelDestination) { dest in
-            ChannelView(channelId: dest.channelId)
+            ChannelView(channelId: dest.channelId, api: vm.api)
         }
         #if !os(tvOS) && ENABLE_DOWNLOADS
         .onChange(of: downloadService.state) { _, newState in

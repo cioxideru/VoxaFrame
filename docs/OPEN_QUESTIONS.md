@@ -245,3 +245,18 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Next step: restore the selected translation policy in the shared resume path without replacing
   the parked video item. Cover translation-enabled stop/reopen and the ordinary untranslated path.
 - This separate review finding was not changed by PLAN-0006's feed, prefetch and Shorts fixes.
+
+## OQ-0017 — Subscription and rare iPad menu live acceptance
+
+- Status: subscription functional acceptance complete; rare iPad layout sequence remains open.
+  Owner: navigation maintainer; basis: [PLAN-0017](exec-plans/completed/subscriptions.md)
+  and [PLAN-0016](exec-plans/completed/ipad-menu-overlap.md).
+- The physical iPad loaded 338 subscriptions with avatars. An approved temporary NASA
+  subscription persisted after relaunch, unsubscribe succeeded, and a further relaunch
+  confirmed the original unsubscribed state. The final live bundle has two passes, no skips.
+- The original rare overlap was not reproduced in the baseline Simulator round trips.
+  Corrected simulator channel/Settings drill-down/back, tab changes and both orientations pass;
+  physical channel/back and Settings/Search/Library returns also pass in both orientations.
+- Next step: repeat the user's exact intermittent sequence on the affected iPad, including
+  Split View and window-size changes. Record reproduction before extending layout policy;
+  current passing navigation checks do not prove every restoration sequence is covered.

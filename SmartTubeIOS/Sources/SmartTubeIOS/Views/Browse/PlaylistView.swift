@@ -76,7 +76,7 @@ public struct PlaylistView: View {
         }
         #endif
         .navigationDestination(item: $channelDestination) { dest in
-            ChannelView(channelId: dest.channelId)
+            ChannelView(channelId: dest.channelId, api: api)
         }
         .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
             guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }

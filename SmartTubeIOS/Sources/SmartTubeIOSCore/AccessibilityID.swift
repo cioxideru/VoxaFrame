@@ -2,6 +2,15 @@ import Foundation
 
 /// Accessibility identifiers used by app views.
 public enum AccessibilityID {
+    public static var homeChipBar: String { "home.chipBar" }
+    public static func homeSectionChip(_ title: String) -> String { "chip.\(title)" }
+    public static var channelSubscriptionButton: String { "channel.followButton" }
+    public static var subscriptionConfirm: String { "subscription.confirm" }
+    public static var subscriptionCancel: String { "subscription.cancel" }
+    public static var subscriptionRetry: String { "subscription.retry" }
+    public static var subscriptionList: String { "subscription.list" }
+    public static func subscriptionRow(_ id: String) -> String { "subscription.row.\(id)" }
+    public static func subscriptionRemove(_ id: String) -> String { "subscription.remove.\(id)" }
     public static var homeSubscriptionsChannelFilter: String { "home.subscriptionsChannelFilter" }
     public static var parentalControlsConfirmNew: String { "parentalControls.confirmNew" }
     public static var parentalControlsEnterNew: String { "parentalControls.enterNew" }

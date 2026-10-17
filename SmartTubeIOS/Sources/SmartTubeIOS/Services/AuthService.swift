@@ -110,6 +110,14 @@ public final class AuthService {
 
     public init() {
         tokenManager = TokenManager()
+        #if DEBUG
+        if SubscriptionUITestFixture.isEnabled {
+            accessToken = "subscription-fixture"
+            isSignedIn = true
+            accountName = "Subscription fixture"
+            return
+        }
+        #endif
         loadFromKeychain()
         // UI-testing override: treat the session as signed-in so the home feed
         // renders its full shelves (including the injected Shorts row) without

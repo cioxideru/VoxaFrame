@@ -283,6 +283,9 @@ public actor InnerTubeAPI {
         config.timeoutIntervalForRequest = Self.requestTimeoutInterval
         config.timeoutIntervalForResource = 60
         config.waitsForConnectivity = true
+        #if DEBUG
+        if SubscriptionUITestFixture.isEnabled { config.protocolClasses = [SubscriptionUITestProtocol.self] }
+        #endif
         self.session = URLSession(configuration: config)
         self.authToken = authToken
         self.poTokenProvider = poTokenProvider

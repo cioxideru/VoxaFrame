@@ -123,7 +123,7 @@ extension BrowseViewModel {
         if hasAuthToken {
             let group = try await api.fetchSubscriptions()
             if !Task.isCancelled {
-                isAuthRequired = group.videos.isEmpty
+                isAuthRequired = false
                 var deduped = group
                 deduped.videos = deduplicated(group.videos)
                     .sorted { ($0.publishedAt ?? .distantPast) > ($1.publishedAt ?? .distantPast) }
@@ -174,14 +174,13 @@ extension BrowseViewModel {
             let channels = try await api.fetchSubscribedChannels()
             browseLog.notice("channels fetch complete: \(channels.count) channels, isCancelled=\(Task.isCancelled)")
             if !Task.isCancelled {
-                isAuthRequired = channels.isEmpty
+                isAuthRequired = false
                 subscribedChannels = channels
                 videoGroups = []
                 let chCount = subscribedChannels.count
                 let authReq = isAuthRequired
                 browseLog.notice("channels state set: subscribedChannels=\(chCount) isAuthRequired=\(authReq)")
-                // Background-enrich avatars — the guide/params approaches yield no thumbnails;
-                // fetch each channel's About tab concurrently to get the avatar URL.
+                // Fill avatars only for channel tabs that omit their thumbnail.
                 if !channels.isEmpty {
                     enrichTask?.cancel()
                     enrichTask = Task { await self.enrichChannelAvatars() }
