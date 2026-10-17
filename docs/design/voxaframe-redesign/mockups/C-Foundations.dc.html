@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Основа: цвет, акцент, типографика</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.sw{display:flex;flex-direction:column;gap:6px;font-size:12px;line-height:15px}
+.sw i{display:block;height:52px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(127,127,127,.25)}
+.sw b{font-size:13px}
+.acc{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;line-height:15px;text-align:center}
+.acc i{display:flex;align-items:center;justify-content:center;width:56px;height:34px;border-radius:999px;font-style:normal;font-weight:700;font-size:13px}
+</style>
+</helmet>
+<div class="vf" data-theme="light" style="width: 1440px; height: 1040px; padding: 40px 48px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; background: #fbfaf8;">
+
+  <section style="display: flex; flex-direction: column; gap: 14px;">
+    <h2 class="t-2">Семантический цвет · Light</h2>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px;">
+      <div class="sw"><i style="background:#ffffff"></i><b>background</b><span class="t-sec">#FFFFFF</span></div>
+      <div class="sw"><i style="background:#f2f2f7"></i><b>surface</b><span class="t-sec">#F2F2F7</span></div>
+      <div class="sw"><i style="background:#000000"></i><b>text</b><span class="t-sec">21:1</span></div>
+      <div class="sw"><i style="background:#61616b"></i><b>secondary</b><span class="t-sec">6.1:1</span></div>
+      <div class="sw"><i style="background:#b83829"></i><b>action</b><span class="t-sec">5.8:1</span></div>
+      <div class="sw"><i style="background:#c6c6c8"></i><b>border</b><span class="t-sec">декор</span></div>
+      <div class="sw"><i style="background:#236a3c"></i><b>success</b><span class="t-sec">6.6:1</span></div>
+      <div class="sw"><i style="background:#805300"></i><b>warning</b><span class="t-sec">6.7:1</span></div>
+      <div class="sw"><i style="background:#b42318"></i><b>danger</b><span class="t-sec">6.6:1</span></div>
+      <div class="sw"><i style="background:rgba(0,0,0,.72)"></i><b>scrim</b><span class="t-sec">72%</span></div>
+      <div class="sw"><i style="background:#ff6b57"></i><b>brand-coral</b><span class="t-sec">декор</span></div>
+      <div class="sw"><i style="background:#260724"></i><b>brand-plum</b><span class="t-sec">бренд</span></div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px;">
+    <h2 class="t-2">Семантический цвет · Dark</h2>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px;">
+      <div class="sw"><i style="background:#000000"></i><b>background</b><span class="t-sec">#000000</span></div>
+      <div class="sw"><i style="background:#1c1c1e"></i><b>surface</b><span class="t-sec">#1C1C1E</span></div>
+      <div class="sw"><i style="background:#2c2c2e"></i><b>elevated</b><span class="t-sec">#2C2C2E</span></div>
+      <div class="sw"><i style="background:#b8b8c2"></i><b>secondary</b><span class="t-sec">8.7:1</span></div>
+      <div class="sw"><i style="background:#ff9988"></i><b>action</b><span class="t-sec">8.2:1</span></div>
+      <div class="sw"><i style="background:#260724"></i><b>onAction</b><span class="t-sec">8.9:1</span></div>
+      <div class="sw"><i style="background:#82d99e"></i><b>success</b><span class="t-sec">10:1</span></div>
+      <div class="sw"><i style="background:#f7ce7d"></i><b>warning</b><span class="t-sec">11:1</span></div>
+      <div class="sw"><i style="background:#ffb4a9"></i><b>danger</b><span class="t-sec">10:1</span></div>
+      <div class="sw"><i style="background:#ffd9d2"></i><b>focus</b><span class="t-sec">13:1</span></div>
+      <div class="sw"><i style="background:#38383a"></i><b>border</b><span class="t-sec">декор</span></div>
+      <div class="sw"><i style="background:#fff4de"></i><b>brand-ivory</b><span class="t-sec">бренд</span></div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px; grid-column: 1 / 3;">
+    <div class="row between"><h2 class="t-2">Пользовательский акцент (Settings › Accent Color)</h2><span class="t-fn t-sec">Коралл — предложение VoxaFrame по умолчанию; «Системный» = синий. Каждый цвет подобран до 4.5:1 на surface в обеих темах.</span></div>
+    <div style="display: flex; gap: 18px; flex-wrap: wrap;">
+      <div class="acc"><i style="background:#b83829;color:#fff">Aa</i><i style="background:#ff9988;color:#260724">Aa</i>Коралл</div>
+      <div class="acc"><i style="background:#0068d9;color:#fff">Aa</i><i style="background:#3398ff;color:#000">Aa</i>Системный</div>
+      <div class="acc"><i style="background:#d80b00;color:#fff">Aa</i><i style="background:#ff5f56;color:#000">Aa</i>Red</div>
+      <div class="acc"><i style="background:#9e5c00;color:#fff">Aa</i><i style="background:#ff9f0a;color:#000">Aa</i>Orange</div>
+      <div class="acc"><i style="background:#826800;color:#fff">Aa</i><i style="background:#ffd60a;color:#000">Aa</i>Yellow</div>
+      <div class="acc"><i style="background:#207a37;color:#fff">Aa</i><i style="background:#30d158;color:#000">Aa</i>Green</div>
+      <div class="acc"><i style="background:#007873;color:#fff">Aa</i><i style="background:#63e6e2;color:#000">Aa</i>Mint</div>
+      <div class="acc"><i style="background:#207685;color:#fff">Aa</i><i style="background:#40c8e0;color:#000">Aa</i>Teal</div>
+      <div class="acc"><i style="background:#0068d9;color:#fff">Aa</i><i style="background:#3398ff;color:#000">Aa</i>Blue</div>
+      <div class="acc"><i style="background:#5856d6;color:#fff">Aa</i><i style="background:#8e8ded;color:#000">Aa</i>Indigo</div>
+      <div class="acc"><i style="background:#a134d8;color:#fff">Aa</i><i style="background:#c76ff4;color:#000">Aa</i>Purple</div>
+      <div class="acc"><i style="background:#d80029;color:#fff">Aa</i><i style="background:#ff5b7c;color:#000">Aa</i>Pink</div>
+    </div>
+    <p class="t-fn t-sec">Акцент окрашивает только действия, выбранную вкладку, переключатели, прогресс и фокус. Ошибки и удаление всегда используют danger и подпись — даже при красном акценте.</p>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 10px;">
+    <h2 class="t-2">Типографика · SF Pro, Dynamic Type</h2>
+    <div class="row" style="gap: 16px; align-items: baseline;"><span class="t-lt">Главная</span><span class="t-fn t-sec">largeTitle 34/41 Bold</span></div>
+    <div class="row" style="gap: 16px; align-items: baseline;"><span class="t-1">Офлайн-видео</span><span class="t-fn t-sec">title1 28/34 Bold</span></div>
+    <div class="row" style="gap: 16px; align-items: baseline;"><span class="t-2">Продолжить просмотр</span><span class="t-fn t-sec">title2 22/28 Bold</span></div>
+    <div class="row" style="gap: 16px; align-items: baseline;"><span class="t-3">The long way home</span><span class="t-fn t-sec">title3 20/25 Semibold</span></div>
+    <div class="row" style="gap: 16px; align-items: baseline;"><span class="t-hl">Скачать для офлайна</span><span class="t-fn t-sec">headline 17/22</span></div>
+    <div class="row" style="gap: 16px; align-items: baseline;"><span class="t-body">Перевод готовится, можно смотреть с исходным звуком.</span><span class="t-fn t-sec">body 17/22</span></div>
+    <div class="row" style="gap: 16px; align-items: baseline;"><span class="t-sh">Field Notes · 128 тыс. просмотров · 2 дня назад</span><span class="t-fn t-sec">subheadline 15/20</span></div>
+    <div class="row" style="gap: 16px; align-items: baseline;"><span class="t-fn">Сохранено · 1080p · 168 МБ</span><span class="t-fn t-sec">footnote 13/18</span></div>
+    <div class="row" style="gap: 16px; align-items: baseline;"><span class="t-c1">18:42</span><span class="t-fn t-sec">caption1 12/16</span></div>
+    <p class="t-fn t-sec" style="margin-top: 6px;">TV: 48/58 · 36/44 · 29/36 · 23/30 (предложение, проверка с 3 м). Mac: системные стили, плотность body 13–14 pt.</p>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px;">
+    <h2 class="t-2">Материалы: Liquid Glass и непрозрачный вариант</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+      <div style="position: relative; height: 188px; border-radius: 22px; overflow: hidden;" class="a6">
+        <div class="glass" style="position: absolute; left: 16px; right: 16px; bottom: 16px; border-radius: 999px; display: flex; justify-content: space-around; padding: 6px;">
+          <span class="tab on" style="min-height: 46px;">Главная</span><span class="tab" style="min-height: 46px;">Медиатека</span><span class="tab" style="min-height: 46px;">Офлайн</span>
+        </div>
+        <span class="pill-badge" style="position: absolute; left: 16px; top: 16px; background: rgba(255,255,255,.8); color: #000;">Glass · по умолчанию</span>
+      </div>
+      <div data-transparency="reduced" style="position: relative; height: 188px; border-radius: 22px; overflow: hidden;" class="a6">
+        <div class="glass" style="position: absolute; left: 16px; right: 16px; bottom: 16px; border-radius: 999px; display: flex; justify-content: space-around; padding: 6px;">
+          <span class="tab on" style="min-height: 46px;">Главная</span><span class="tab" style="min-height: 46px;">Медиатека</span><span class="tab" style="min-height: 46px;">Офлайн</span>
+        </div>
+        <span class="pill-badge" style="position: absolute; left: 16px; top: 16px; background: rgba(255,255,255,.8); color: #000;">Reduce Transparency / Disable Liquid Glass</span>
+      </div>
+      <div style="position: relative; height: 150px; border-radius: 22px; overflow: hidden; background: linear-gradient(135deg, #f5f1e6, #ffffff);">
+        <div class="shade-b" style="position: absolute; left: 0; right: 0; bottom: 0; height: 70%; background: linear-gradient(transparent, rgba(0,0,0,.72));"></div>
+        <div class="row" style="position: absolute; left: 16px; right: 16px; bottom: 14px; color: #fff; gap: 10px;">
+          <span class="pctl glass-media"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg></span>
+          <span style="font-size: 15px; font-weight: 600;">Контролы на светлом кадре: градиент-скрим + стекло</span>
+        </div>
+      </div>
+      <div style="position: relative; height: 150px; border-radius: 22px; overflow: hidden; background: linear-gradient(135deg, #0a0a0c, #26262a);">
+        <div class="row" style="position: absolute; left: 16px; right: 16px; bottom: 14px; color: #fff; gap: 10px;">
+          <span class="pctl glass-media"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg></span>
+          <span style="font-size: 15px; font-weight: 600;">На тёмном кадре стекло получает светлую кромку</span>
+        </div>
+      </div>
+    </div>
+    <p class="t-fn t-sec">Стекло — только слой навигации и управления. Карточки, списки, описание и субтитры — на непрозрачных поверхностях. Стекло на стекле не кладём.</p>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 10px; grid-column: 1 / 3;">
+    <div class="row" style="gap: 40px; align-items: flex-start;">
+      <div class="col" style="gap: 8px;"><h3 class="t-hl">Отступы</h3><div class="row" style="gap: 10px; align-items: flex-end;"><i style="display:block;width:4px;height:24px;background:#b83829;border-radius:2px"></i><i style="display:block;width:8px;height:24px;background:#b83829;border-radius:2px"></i><i style="display:block;width:12px;height:24px;background:#b83829;border-radius:2px"></i><i style="display:block;width:16px;height:24px;background:#b83829;border-radius:2px"></i><i style="display:block;width:20px;height:24px;background:#b83829;border-radius:2px"></i><i style="display:block;width:24px;height:24px;background:#b83829;border-radius:2px"></i><i style="display:block;width:32px;height:24px;background:#b83829;border-radius:2px"></i><i style="display:block;width:48px;height:24px;background:#b83829;border-radius:2px"></i><i style="display:block;width:64px;height:24px;background:#b83829;border-radius:2px"></i></div><span class="t-fn t-sec">4 · 8 · 12 · 16 · 20 · 24 · 32 · 48 · 64 · поля: iPhone 16, iPad 20, Mac 24, TV 80/60</span></div>
+      <div class="col" style="gap: 8px;"><h3 class="t-hl">Радиусы контента</h3><div class="row" style="gap: 12px;"><i style="display:block;width:48px;height:48px;background:#e5e5ea;border-radius:8px"></i><i style="display:block;width:48px;height:48px;background:#e5e5ea;border-radius:16px"></i><i style="display:block;width:48px;height:48px;background:#e5e5ea;border-radius:24px"></i><i style="display:block;width:72px;height:48px;background:#e5e5ea;border-radius:999px"></i></div><span class="t-fn t-sec">small 8 · card 16 · panel 24 · pill. Окна, листы и системные кнопки скругляет ОС (концентрично)</span></div>
+      <div class="col" style="gap: 8px;"><h3 class="t-hl">Цели нажатия</h3><div class="row" style="gap: 12px; align-items: flex-end;"><i style="display:block;width:28px;height:28px;border:1.5px dashed #61616b;border-radius:6px"></i><i style="display:block;width:44px;height:44px;border:1.5px dashed #61616b;border-radius:8px"></i><i style="display:block;width:66px;height:66px;border:1.5px dashed #61616b;border-radius:10px"></i></div><span class="t-fn t-sec">Mac 28 · touch 44 · TV 66 — соседние цели не пересекаются</span></div>
+      <div class="col" style="gap: 8px;"><h3 class="t-hl">Движение</h3><span class="t-sh">fast 120 мс · standard 220 мс · layout 320 мс</span><span class="t-fn t-sec">Reduce Motion: без масштаба фокуса, parallax и перелистывания; остаётся смена прозрачности</span></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

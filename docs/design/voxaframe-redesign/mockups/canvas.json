@@ -1,0 +1,713 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-17T17:07:50Z"
+ },
+ "title": "VoxaFrame — новый интерфейс",
+ "launch": {
+  "view": "canvas",
+  "page": "map"
+ },
+ "pages": [
+  {
+   "id": "map",
+   "name": "Обзор"
+  },
+  {
+   "id": "comp",
+   "name": "Компоненты"
+  },
+  {
+   "id": "iphone",
+   "name": "iPhone"
+  },
+  {
+   "id": "ipad",
+   "name": "iPad"
+  },
+  {
+   "id": "mac",
+   "name": "Mac"
+  },
+  {
+   "id": "tv",
+   "name": "Apple TV"
+  },
+  {
+   "id": "proto",
+   "name": "Прототип"
+  },
+  {
+   "id": "sys",
+   "name": "Системные поверхности"
+  }
+ ],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1600,
+   "h": 1160,
+   "title": "Обзор: карта экранов и сценариев",
+   "page": "map"
+  },
+  "C-Foundations.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1440,
+   "h": 1040,
+   "title": "Основа: цвет, акцент, типографика, материалы",
+   "page": "comp"
+  },
+  "C-Controls.dc.html": {
+   "x": 1520,
+   "y": 260,
+   "w": 1440,
+   "h": 1040,
+   "title": "Кнопки, чипы, переключатели, поля",
+   "page": "comp"
+  },
+  "C-Navigation.dc.html": {
+   "x": 3040,
+   "y": 260,
+   "w": 1440,
+   "h": 1040,
+   "title": "Навигация на четырёх платформах",
+   "page": "comp"
+  },
+  "C-Cards.dc.html": {
+   "x": 0,
+   "y": 1680,
+   "w": 1440,
+   "h": 1180,
+   "title": "Карточки контента: варианты и состояния",
+   "page": "comp"
+  },
+  "C-Player.dc.html": {
+   "x": 1520,
+   "y": 1680,
+   "w": 1440,
+   "h": 1180,
+   "title": "Элементы плеера",
+   "page": "comp"
+  },
+  "C-Rows.dc.html": {
+   "x": 0,
+   "y": 3240,
+   "w": 1440,
+   "h": 1180,
+   "title": "Строки: задания, офлайн, настройки, RSS, очередь",
+   "page": "comp"
+  },
+  "C-Feedback.dc.html": {
+   "x": 1520,
+   "y": 3240,
+   "w": 1440,
+   "h": 1180,
+   "title": "Состояния, меню, диалоги, PIN",
+   "page": "comp"
+  },
+  "P-Home.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 876,
+   "h": 928,
+   "title": "Главная · светлая / тёмная",
+   "page": "iphone"
+  },
+  "P-Home-States.dc.html": {
+   "x": 956,
+   "y": 260,
+   "w": 1720,
+   "h": 928,
+   "title": "Главная · состояния ленты",
+   "page": "iphone"
+  },
+  "P-Channel.dc.html": {
+   "x": 2756,
+   "y": 260,
+   "w": 1298,
+   "h": 928,
+   "title": "Каналы и подписки",
+   "page": "iphone"
+  },
+  "P-Menus.dc.html": {
+   "x": 4134,
+   "y": 260,
+   "w": 876,
+   "h": 928,
+   "title": "Меню карточки · аккаунт / гость",
+   "page": "iphone"
+  },
+  "P-Search.dc.html": {
+   "x": 0,
+   "y": 1568,
+   "w": 1298,
+   "h": 928,
+   "title": "Поиск · история, подсказки, результаты",
+   "page": "iphone"
+  },
+  "P-Search-More.dc.html": {
+   "x": 1378,
+   "y": 1568,
+   "w": 1720,
+   "h": 928,
+   "title": "Поиск · фильтры и состояния",
+   "page": "iphone"
+  },
+  "P-Player.dc.html": {
+   "x": 0,
+   "y": 2876,
+   "w": 876,
+   "h": 928,
+   "title": "Плеер · портрет",
+   "page": "iphone"
+  },
+  "P-Player-Landscape.dc.html": {
+   "x": 956,
+   "y": 2876,
+   "w": 908,
+   "h": 474,
+   "title": "Плеер · горизонтально",
+   "page": "iphone"
+  },
+  "P-Player-Panels.dc.html": {
+   "x": 1944,
+   "y": 2876,
+   "w": 1298,
+   "h": 928,
+   "title": "Плеер · качество, скорость, субтитры и таймер",
+   "page": "iphone"
+  },
+  "P-Player-Translation.dc.html": {
+   "x": 3322,
+   "y": 2876,
+   "w": 1298,
+   "h": 928,
+   "title": "Плеер · аудио и перевод Yandex",
+   "page": "iphone"
+  },
+  "P-Player-More.dc.html": {
+   "x": 0,
+   "y": 4184,
+   "w": 1298,
+   "h": 928,
+   "title": "Плеер · действия, описание, комментарии",
+   "page": "iphone"
+  },
+  "P-Player-States.dc.html": {
+   "x": 1378,
+   "y": 4184,
+   "w": 1720,
+   "h": 928,
+   "title": "Плеер · буферизация, ошибка, конец, только аудио",
+   "page": "iphone"
+  },
+  "P-Shorts.dc.html": {
+   "x": 3178,
+   "y": 4184,
+   "w": 1298,
+   "h": 928,
+   "title": "Shorts",
+   "page": "iphone"
+  },
+  "P-Mini.dc.html": {
+   "x": 4556,
+   "y": 4184,
+   "w": 876,
+   "h": 928,
+   "title": "Мини-плеер и PiP",
+   "page": "iphone"
+  },
+  "P-Library.dc.html": {
+   "x": 0,
+   "y": 5492,
+   "w": 1298,
+   "h": 928,
+   "title": "Медиатека · история, плейлисты, RSS",
+   "page": "iphone"
+  },
+  "P-Queue.dc.html": {
+   "x": 1378,
+   "y": 5492,
+   "w": 1298,
+   "h": 928,
+   "title": "Очередь, плейлист, выбор плейлиста",
+   "page": "iphone"
+  },
+  "P-RSS.dc.html": {
+   "x": 2756,
+   "y": 5492,
+   "w": 876,
+   "h": 928,
+   "title": "RSS · добавление и управление",
+   "page": "iphone"
+  },
+  "P-Offline.dc.html": {
+   "x": 0,
+   "y": 6800,
+   "w": 1298,
+   "h": 928,
+   "title": "Офлайн · библиотека и задания",
+   "page": "iphone"
+  },
+  "P-Offline-Start.dc.html": {
+   "x": 1378,
+   "y": 6800,
+   "w": 876,
+   "h": 928,
+   "title": "Офлайн · выбор составляющих",
+   "page": "iphone"
+  },
+  "P-Offline-Item.dc.html": {
+   "x": 2334,
+   "y": 6800,
+   "w": 1720,
+   "h": 928,
+   "title": "Офлайн · сохранённое видео и удаление",
+   "page": "iphone"
+  },
+  "P-Settings.dc.html": {
+   "x": 0,
+   "y": 8108,
+   "w": 1298,
+   "h": 928,
+   "title": "Настройки · аккаунт, воспроизведение, языки",
+   "page": "iphone"
+  },
+  "P-Settings-2.dc.html": {
+   "x": 1378,
+   "y": 8108,
+   "w": 1298,
+   "h": 928,
+   "title": "Настройки · вид, данные, SponsorBlock",
+   "page": "iphone"
+  },
+  "P-SignIn-PIN.dc.html": {
+   "x": 2756,
+   "y": 8108,
+   "w": 1720,
+   "h": 928,
+   "title": "Вход по коду и PIN",
+   "page": "iphone"
+  },
+  "I-Home-Landscape.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1194,
+   "h": 834,
+   "title": "iPad · Главная, широкое окно",
+   "page": "ipad"
+  },
+  "I-Home-Portrait.dc.html": {
+   "x": 1274,
+   "y": 260,
+   "w": 834,
+   "h": 1194,
+   "title": "iPad · Главная, портрет",
+   "page": "ipad"
+  },
+  "I-Narrow.dc.html": {
+   "x": 2188,
+   "y": 260,
+   "w": 600,
+   "h": 834,
+   "title": "iPad · узкое окно",
+   "page": "ipad"
+  },
+  "I-Player.dc.html": {
+   "x": 0,
+   "y": 1834,
+   "w": 1194,
+   "h": 834,
+   "title": "iPad · плеер с панелью",
+   "page": "ipad"
+  },
+  "I-Search.dc.html": {
+   "x": 1274,
+   "y": 1834,
+   "w": 1194,
+   "h": 834,
+   "title": "iPad · поиск и фильтры",
+   "page": "ipad"
+  },
+  "I-Offline.dc.html": {
+   "x": 2548,
+   "y": 1834,
+   "w": 1194,
+   "h": 834,
+   "title": "iPad · офлайн",
+   "page": "ipad"
+  },
+  "M-Home.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1440,
+   "h": 900,
+   "title": "Mac · Главная",
+   "page": "mac"
+  },
+  "M-Player.dc.html": {
+   "x": 1520,
+   "y": 260,
+   "w": 1440,
+   "h": 900,
+   "title": "Mac · плеер в окне",
+   "page": "mac"
+  },
+  "M-Narrow.dc.html": {
+   "x": 3040,
+   "y": 260,
+   "w": 880,
+   "h": 700,
+   "title": "Mac · узкое окно",
+   "page": "mac"
+  },
+  "M-Offline.dc.html": {
+   "x": 0,
+   "y": 1540,
+   "w": 1440,
+   "h": 900,
+   "title": "Mac · офлайн",
+   "page": "mac"
+  },
+  "M-Settings.dc.html": {
+   "x": 1520,
+   "y": 1540,
+   "w": 980,
+   "h": 720,
+   "title": "Mac · окно настроек",
+   "page": "mac"
+  },
+  "M-Search.dc.html": {
+   "x": 2580,
+   "y": 1540,
+   "w": 1440,
+   "h": 900,
+   "title": "Mac · поиск",
+   "page": "mac"
+  },
+  "T-Home.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1920,
+   "h": 1080,
+   "title": "Apple TV · Главная",
+   "page": "tv"
+  },
+  "T-Player.dc.html": {
+   "x": 2000,
+   "y": 260,
+   "w": 1920,
+   "h": 1080,
+   "title": "Apple TV · плеер",
+   "page": "tv"
+  },
+  "T-Player-Menu.dc.html": {
+   "x": 4000,
+   "y": 260,
+   "w": 1920,
+   "h": 1080,
+   "title": "Apple TV · аудио и перевод",
+   "page": "tv"
+  },
+  "T-SignIn.dc.html": {
+   "x": 0,
+   "y": 1720,
+   "w": 1920,
+   "h": 1080,
+   "title": "Apple TV · вход по QR",
+   "page": "tv"
+  },
+  "T-Shorts.dc.html": {
+   "x": 2000,
+   "y": 1720,
+   "w": 1920,
+   "h": 1080,
+   "title": "Apple TV · Shorts",
+   "page": "tv"
+  },
+  "T-Settings.dc.html": {
+   "x": 4000,
+   "y": 1720,
+   "w": 1920,
+   "h": 1080,
+   "title": "Apple TV · настройки и офлайн",
+   "page": "tv"
+  },
+  "X-Search.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 390,
+   "h": 844,
+   "title": "Прототип · поиск → видео",
+   "page": "proto",
+   "is_interactive": true
+  },
+  "X-Watch.dc.html": {
+   "x": 470,
+   "y": 260,
+   "w": 390,
+   "h": 844,
+   "title": "Прототип · просмотр и перевод",
+   "page": "proto",
+   "is_interactive": true
+  },
+  "X-Shorts.dc.html": {
+   "x": 940,
+   "y": 260,
+   "w": 390,
+   "h": 844,
+   "title": "Прототип · Shorts",
+   "page": "proto",
+   "is_interactive": true
+  },
+  "X-Offline.dc.html": {
+   "x": 1410,
+   "y": 260,
+   "w": 390,
+   "h": 844,
+   "title": "Прототип · офлайн-загрузка",
+   "page": "proto",
+   "is_interactive": true
+  },
+  "S-Surfaces.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1500,
+   "h": 928,
+   "title": "Системные поверхности",
+   "page": "sys"
+  },
+  "S-Optional.dc.html": {
+   "x": 1580,
+   "y": 260,
+   "w": 1100,
+   "h": 700,
+   "title": "Дополнительный объём · только спецсборка",
+   "page": "sys"
+  },
+  "P-Accessibility.dc.html": {
+   "x": 4556,
+   "y": 8108,
+   "w": 1720,
+   "h": 928,
+   "title": "Доступность · AX-шрифт, контраст, VoiceOver",
+   "page": "iphone"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "C-Foundations.dc.html",
+  "C-Controls.dc.html",
+  "C-Navigation.dc.html",
+  "C-Cards.dc.html",
+  "C-Player.dc.html",
+  "C-Rows.dc.html",
+  "C-Feedback.dc.html",
+  "P-Home.dc.html",
+  "P-Home-States.dc.html",
+  "P-Channel.dc.html",
+  "P-Menus.dc.html",
+  "P-Search.dc.html",
+  "P-Search-More.dc.html",
+  "P-Player.dc.html",
+  "P-Player-Landscape.dc.html",
+  "P-Player-Panels.dc.html",
+  "P-Player-Translation.dc.html",
+  "P-Player-More.dc.html",
+  "P-Player-States.dc.html",
+  "P-Shorts.dc.html",
+  "P-Mini.dc.html",
+  "P-Library.dc.html",
+  "P-Queue.dc.html",
+  "P-RSS.dc.html",
+  "P-Offline.dc.html",
+  "P-Offline-Start.dc.html",
+  "P-Offline-Item.dc.html",
+  "P-Settings.dc.html",
+  "P-Settings-2.dc.html",
+  "P-SignIn-PIN.dc.html",
+  "P-Accessibility.dc.html",
+  "I-Home-Landscape.dc.html",
+  "I-Home-Portrait.dc.html",
+  "I-Narrow.dc.html",
+  "I-Player.dc.html",
+  "I-Search.dc.html",
+  "I-Offline.dc.html",
+  "M-Home.dc.html",
+  "M-Player.dc.html",
+  "M-Narrow.dc.html",
+  "M-Offline.dc.html",
+  "M-Settings.dc.html",
+  "M-Search.dc.html",
+  "T-Home.dc.html",
+  "T-Player.dc.html",
+  "T-Player-Menu.dc.html",
+  "T-SignIn.dc.html",
+  "T-Shorts.dc.html",
+  "T-Settings.dc.html",
+  "X-Search.dc.html",
+  "X-Watch.dc.html",
+  "X-Shorts.dc.html",
+  "X-Offline.dc.html",
+  "S-Surfaces.dc.html",
+  "S-Optional.dc.html"
+ ],
+ "notes": {
+  "comp-r0": {
+   "x": 0,
+   "y": 20,
+   "text": "Основа и навигация",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "comp"
+  },
+  "comp-r1": {
+   "x": 0,
+   "y": 1440,
+   "text": "Карточки и плеер",
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "comp"
+  },
+  "comp-r2": {
+   "x": 0,
+   "y": 3000,
+   "text": "Списки и обратная связь",
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "comp"
+  },
+  "iphone-r0": {
+   "x": 0,
+   "y": 20,
+   "text": "Главная и каналы",
+   "kind": "title1",
+   "maxW": 5010,
+   "page": "iphone"
+  },
+  "iphone-r1": {
+   "x": 0,
+   "y": 1328,
+   "text": "Поиск",
+   "kind": "title1",
+   "maxW": 3098,
+   "page": "iphone"
+  },
+  "iphone-r2": {
+   "x": 0,
+   "y": 2636,
+   "text": "Плеер",
+   "kind": "title1",
+   "maxW": 4620,
+   "page": "iphone"
+  },
+  "iphone-r3": {
+   "x": 0,
+   "y": 3944,
+   "text": "Плеер: состояния · Shorts · мини-плеер",
+   "kind": "title1",
+   "maxW": 5432,
+   "page": "iphone"
+  },
+  "iphone-r4": {
+   "x": 0,
+   "y": 5252,
+   "text": "Медиатека · очередь · RSS",
+   "kind": "title1",
+   "maxW": 3632,
+   "page": "iphone"
+  },
+  "iphone-r5": {
+   "x": 0,
+   "y": 6560,
+   "text": "Офлайн-видео",
+   "kind": "title1",
+   "maxW": 4054,
+   "page": "iphone"
+  },
+  "iphone-r6": {
+   "x": 0,
+   "y": 7868,
+   "text": "Настройки · вход · PIN · доступность",
+   "kind": "title1",
+   "maxW": 6276,
+   "page": "iphone"
+  },
+  "ipad-r0": {
+   "x": 0,
+   "y": 20,
+   "text": "Главная в трёх размерах окна",
+   "kind": "title1",
+   "maxW": 2788,
+   "page": "ipad"
+  },
+  "ipad-r1": {
+   "x": 0,
+   "y": 1594,
+   "text": "Плеер · поиск · офлайн",
+   "kind": "title1",
+   "maxW": 3742,
+   "page": "ipad"
+  },
+  "mac-r0": {
+   "x": 0,
+   "y": 20,
+   "text": "Нативное окно macOS",
+   "kind": "title1",
+   "maxW": 3920,
+   "page": "mac"
+  },
+  "mac-r1": {
+   "x": 0,
+   "y": 1300,
+   "text": "Офлайн · настройки · поиск",
+   "kind": "title1",
+   "maxW": 4020,
+   "page": "mac"
+  },
+  "tv-r0": {
+   "x": 0,
+   "y": 20,
+   "text": "Пульт и фокус",
+   "kind": "title1",
+   "maxW": 5920,
+   "page": "tv"
+  },
+  "tv-r1": {
+   "x": 0,
+   "y": 1480,
+   "text": "Вход · Shorts · настройки",
+   "kind": "title1",
+   "maxW": 5920,
+   "page": "tv"
+  },
+  "proto-r0": {
+   "x": 0,
+   "y": 20,
+   "text": "Интерактивные сценарии — нажмите Play на артборде",
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "proto"
+  },
+  "sys-r0": {
+   "x": 0,
+   "y": 20,
+   "text": "Вне приложения",
+   "kind": "title1",
+   "maxW": 2680,
+   "page": "sys"
+  }
+ },
+ "designSystems": [
+  {
+   "title": "VoxaFrame",
+   "namespace": "voxaframe",
+   "artifact": "https://claude.ai/artifact/17z8WXCD8FyUP7r1wp1qaN",
+   "version": "1792253906-0054",
+   "copiedAt": "2026-10-17T17:07:50Z"
+  }
+ ]
+}

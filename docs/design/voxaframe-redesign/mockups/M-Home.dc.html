@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Mac · Главная</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.mcard .title{font-size:14px;line-height:19px}
+.mcard .sub{font-size:12px;line-height:16px}
+</style>
+</helmet>
+<div class="mac-win vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1440px; height: 900px; flex-direction: row;">
+  <nav class="mac-side glass" style="border-radius: 0; border: 0; border-right: 1px solid var(--hairline); box-shadow: none; padding-top: 14px;" aria-label="Разделы">
+    <div class="lights" style="padding: 4px 8px 18px;"><i></i><i></i><i></i></div>
+    <button class="side-item on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Поиск</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн-видео<span class="cnt">3</span></button>
+    <div class="side-h">Медиатека</div>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Подписки</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>История</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h8"/></svg>Плейлисты</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Смотреть позже<span class="cnt">9</span></button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h8M19 15v6m-3-3h6"/></svg>Очередь<span class="cnt">12</span></button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle class="fc" cx="6" cy="18" r="1.5"/></svg>RSS-ленты</button>
+    <div class="side-h">Каналы</div>
+    <button class="side-item"><span class="avatar c0" style="width: 16px; height: 16px;"></span>Field Notes</button>
+    <button class="side-item"><span class="avatar c1" style="width: 16px; height: 16px;"></span>Studio North</button>
+    <button class="side-item"><span class="avatar c3" style="width: 16px; height: 16px;"></span>Sound Room</button>
+    <div style="flex: 1;"></div>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки…<span class="cnt"><span class="kbd">⌘,</span></span></button>
+    <button class="side-item"><span class="avatar c2" style="width: 20px; height: 20px; color: #fff; font-size: 10px;">А</span>Анна · Google</button>
+  </nav>
+  <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+    <div class="mac-toolbar">
+      <button class="mac-btn icon" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+      <button class="mac-btn icon" aria-label="Вперёд" disabled style="opacity: .4;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+      <span class="t-hl" style="margin-left: 6px;">Главная</span>
+      <span class="grow"></span>
+      <button class="mac-btn icon" aria-label="Обновить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></button>
+      <div class="search" style="min-height: 30px; width: 280px; font-size: 13px; padding: 0 10px;"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="grow">Поиск</span><span class="kbd">⌘F</span></div>
+    </div>
+    <div style="padding: 6px 28px 0; display: flex; flex-direction: column; gap: 18px; overflow: hidden; flex: 1; position: relative;">
+      <div class="chips"><span class="chip on" style="min-height: 30px; font-size: 13px;">Главная</span><span class="chip" style="min-height: 30px; font-size: 13px;">Рекомендации</span><span class="chip" style="min-height: 30px; font-size: 13px;">Подписки</span><span class="chip" style="min-height: 30px; font-size: 13px;">История</span><span class="chip" style="min-height: 30px; font-size: 13px;">Плейлисты</span><span class="chip" style="min-height: 30px; font-size: 13px;">Каналы</span><span class="chip" style="min-height: 30px; font-size: 13px;">Shorts</span><span class="chip" style="min-height: 30px; font-size: 13px;">Новости</span></div>
+      <h2 class="t-2" style="font-size: 20px;">Продолжить просмотр</h2>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px;">
+        <article class="card mcard"><div class="thumb a0"><span class="dur">18:42</span><span class="prog"><i style="width: 34%;"></i></span></div><div class="meta"><div class="grow"><p class="title clamp2">The long way home</p><p class="sub">Field Notes · осталось 12 мин</p></div></div></article>
+        <article class="card mcard"><div class="thumb a1" style="box-shadow: 0 10px 24px rgba(0,0,0,.22);"><span class="dur">12:08</span><span class="saved-mark" style="width: 30px; height: 30px;" aria-hidden="true"><svg class="f" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></span></div><div class="meta"><div class="grow"><p class="title clamp2">Design in motion</p><p class="sub">Studio North · наведение: кнопка меню</p></div></div></article>
+        <article class="card mcard is-focus"><div class="thumb a2"><span class="dur">24:16</span></div><div class="meta"><div class="grow"><p class="title clamp2">A slower morning</p><p class="sub">Everyday Films · фокус Tab</p></div></div></article>
+        <article class="card mcard"><div class="thumb a5"><span class="dur">21:07</span><span class="prog"><i style="width: 80%;"></i></span></div><div class="meta"><div class="grow"><p class="title clamp2">Small ideas, big worlds</p><p class="sub">Frame by Frame</p></div></div></article>
+      </div>
+      <div class="row between"><h2 class="t-2" style="font-size: 20px;">Shorts</h2><button class="mac-btn">Все Shorts</button></div>
+      <div class="row" style="gap: 16px; align-items: flex-start;">
+        <article class="card mcard" style="width: 128px;"><div class="thumb v a3"><span class="dur">0:42</span></div><p class="title clamp2" style="margin-top: 6px;">Morning light</p></article>
+        <article class="card mcard" style="width: 128px;"><div class="thumb v a1"><span class="dur">0:58</span></div><p class="title clamp2" style="margin-top: 6px;">Sound check</p></article>
+        <article class="card mcard" style="width: 128px;"><div class="thumb v a8"><span class="dur">0:31</span></div><p class="title clamp2" style="margin-top: 6px;">Paper and glue</p></article>
+        <article class="card mcard" style="width: 128px;"><div class="thumb v a6"><span class="dur">0:47</span></div><p class="title clamp2" style="margin-top: 6px;">Two-minute dinner</p></article>
+        <article class="card mcard" style="width: 128px;"><div class="thumb v a9"><span class="dur">0:55</span></div><p class="title clamp2" style="margin-top: 6px;">Night ferry</p></article>
+        <div class="col" style="gap: 8px; max-width: 260px; padding-top: 10px;"><span class="prop logic">Mac: видеослой Shorts не подключён</span><span class="t-fn t-sec">Открытие Shorts на Mac — после подключения AVPlayer-слоя; до этого ряд можно скрыть.</span></div>
+      </div>
+      <div class="menu glass" style="position: absolute; left: 420px; top: 190px; width: 260px; padding: 5px;" role="menu" aria-label="Контекстное меню: Design in motion">
+        <div class="mi" style="min-height: 26px; font-size: 13px; border-radius: 6px;">Открыть</div>
+        <div class="mi" style="min-height: 26px; font-size: 13px; border-radius: 6px;">Открыть канал</div>
+        <div class="msep"></div>
+        <div class="mi hl" style="min-height: 26px; font-size: 13px; border-radius: 6px; background: var(--action); color: var(--onAction);">Добавить в очередь</div>
+        <div class="mi" style="min-height: 26px; font-size: 13px; border-radius: 6px;">Воспроизвести следующим</div>
+        <div class="mi" style="min-height: 26px; font-size: 13px; border-radius: 6px;">Смотреть позже</div>
+        <div class="mi" style="min-height: 26px; font-size: 13px; border-radius: 6px;">Копировать в плейлист…</div>
+        <div class="msep"></div>
+        <div class="mi" style="min-height: 26px; font-size: 13px; border-radius: 6px;">Скачать для офлайна…</div>
+        <div class="mi" style="min-height: 26px; font-size: 13px; border-radius: 6px;">Поделиться…</div>
+        <div class="msep"></div>
+        <div class="mi" style="min-height: 26px; font-size: 13px; border-radius: 6px;">Не интересует</div>
+        <div class="mi" style="min-height: 26px; font-size: 13px; border-radius: 6px;">Не рекомендовать канал</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

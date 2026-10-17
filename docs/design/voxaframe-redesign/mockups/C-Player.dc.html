@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Элементы плеера</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.cap{font-size:12px;line-height:16px;color:#b8b8c2;font-weight:600}
+.stage{position:relative;border-radius:22px;overflow:hidden;padding:20px;color:#fff}
+</style>
+</helmet>
+<div class="vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1440px; height: 1180px; padding: 36px 48px; display: flex; flex-direction: column; gap: 24px; background: #0e0e10;">
+  <div class="row between"><h2 class="t-1">VF/Player · транспорт, шкала, панели</h2><span class="t-fn t-sec">Контролы — стекло над скримом; читаемы на светлом и тёмном кадре. Интервалы перемотки — из настроек.</span></div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px;">
+    <div class="stage a2" style="height: 250px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div style="position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.05) 40%, rgba(0,0,0,.55));"></div>
+      <span class="cap" style="position: relative; color: #fff;">VF/Transport · воспроизведение (светлый кадр)</span>
+      <div class="row center" style="gap: 22px; position: relative;">
+        <button class="pctl glass-media" aria-label="Предыдущее видео" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path class="fc" d="M19 5 9 12l10 7Z"/></svg></button>
+        <button class="pctl glass-media" aria-label="Назад 10 секунд" style="position: relative;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg><span style="position: absolute; font-size: 9px; font-weight: 800; margin-top: 3px;">10</span></button>
+        <button class="pctl big glass-media" aria-label="Пауза"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></button>
+        <button class="pctl glass-media" aria-label="Вперёд 30 секунд" style="position: relative;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg><span style="position: absolute; font-size: 9px; font-weight: 800; margin-top: 3px;">30</span></button>
+        <button class="pctl glass-media" aria-label="Следующее видео"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14"/><path class="fc" d="M5 5l10 7-10 7Z"/></svg></button>
+      </div>
+      <span style="position: relative; font-size: 13px;">«Предыдущее» недоступно — истории плеера ещё нет. Цифра в символе — значение Skip Back/Forward.</span>
+    </div>
+    <div class="stage" style="height: 250px; background: #050506; display: flex; flex-direction: column; justify-content: space-between;">
+      <span class="cap">Пауза · буферизация · главы (тёмный кадр)</span>
+      <div class="row center" style="gap: 40px;">
+        <div class="col" style="align-items: center;"><button class="pctl big glass-media" aria-label="Воспроизвести"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg></button><span class="t-fn">Пауза</span></div>
+        <div class="col" style="align-items: center;"><span class="pctl big glass-media" role="status" aria-label="Буферизация"><span class="spin lg" aria-hidden="true"></span></span><span class="t-fn">Буферизация · Выход доступен</span></div>
+        <div class="col" style="align-items: center;"><div class="row" style="gap: 10px;"><button class="qbtn glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 6 9 12l8 6M7 6v12"/></svg>Глава</button><button class="qbtn glass-media">Глава<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 6 8 6-8 6M17 6v12"/></svg></button></div><span class="t-fn">Переход по главам — отдельно от видео</span></div>
+      </div>
+      <span style="font-size: 13px; color: #b8b8c2;">Буферизация не скрывает название, «Назад» и выбранные параметры.</span>
+    </div>
+  </div>
+
+  <div class="stage" style="background: #18181b; display: flex; flex-direction: column; gap: 22px;">
+    <span class="cap">VF/Timeline · главы и SponsorBlock</span>
+    <div>
+      <div class="row between" style="margin-bottom: 10px;"><span class="t-sh t-b">Глава 3 · Through the valley</span><span class="t-fn" style="color: #b8b8c2;">Отметки глав — разрывы шкалы</span></div>
+      <div class="tl" role="slider" aria-label="Позиция" aria-valuetext="6 минут 24 секунды из 18 минут 42 секунд">
+        <i class="buf" style="width: 58%;"></i><i class="pl" style="width: 34%;"></i>
+        <i class="sb" style="left: 6%; width: 5%; background: var(--sb-sponsor);"></i><i class="sb" style="left: 22%; width: 2.5%; background: var(--sb-interaction);"></i><i class="sb" style="left: 90%; width: 10%; background: var(--sb-outro);"></i>
+        <i class="chap" style="left: 18%;"></i><i class="chap" style="left: 30%;"></i><i class="chap" style="left: 52%;"></i><i class="chap" style="left: 74%;"></i>
+        <i class="knob" style="left: 34%;"></i>
+      </div>
+      <div class="ttime"><span>06:24</span><span>−12:18</span></div>
+      <div class="row wrap" style="gap: 16px; margin-top: 12px; font-size: 13px;"><span class="row" style="gap: 6px;"><i class="sb-dot" style="background: var(--sb-sponsor);"></i>Спонсор</span><span class="row" style="gap: 6px;"><i class="sb-dot" style="background: var(--sb-interaction);"></i>Призыв к действию</span><span class="row" style="gap: 6px;"><i class="sb-dot" style="background: var(--sb-outro);"></i>Концовка</span><span style="color: #b8b8c2;">Цвет всегда с подписью · в списке глав</span></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px;">
+      <div>
+        <span class="cap">Перемотка с превью</span>
+        <div style="position: relative; height: 96px;">
+          <div class="thumb a3" style="position: absolute; left: 30%; top: 0; width: 120px; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,.5);"><span class="dur" style="right: 50%; transform: translateX(50%);">11:36</span></div>
+          <div class="tl" style="position: absolute; left: 0; right: 0; bottom: 18px; height: 10px; border-radius: 5px;"><i class="pl" style="width: 62%;"></i><i class="knob" style="left: 62%; width: 24px; height: 24px; margin: -12px 0 0 -12px;"></i></div>
+        </div>
+      </div>
+      <div>
+        <span class="cap">Live без перемотки</span>
+        <div class="row" style="gap: 10px; margin-top: 30px;"><span class="livepill">● LIVE</span><span class="t-fn">Перемотка в этом эфире недоступна</span></div>
+        <div class="tl" style="margin-top: 14px; opacity: .5;"><i class="pl" style="width: 100%;"></i></div>
+      </div>
+      <div>
+        <span class="cap">Live с окном перемотки (если источник даёт)</span>
+        <div class="tl" style="margin-top: 36px;"><i class="pl" style="width: 80%;"></i><i class="knob" style="left: 80%;"></i></div>
+        <div class="row between" style="margin-top: 10px;"><span class="livepill behind">−2:15</span><button class="qbtn glass-media" style="min-height: 30px;">● В эфир</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px;">
+    <div class="stage a9" style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.7));"></div>
+      <span class="cap" style="position: relative; color: #fff;">Быстрые настройки (iPhone/iPad) · на TV — в меню</span>
+      <div class="row wrap" style="gap: 10px; position: relative;">
+        <button class="qbtn glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16a8 8 0 1 1 15 0"/><path d="m12 13 4-4"/></svg>1,25×</button>
+        <button class="qbtn glass-media">Авто · 720p</button>
+        <button class="qbtn glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>Оригинал</button>
+        <button class="qbtn glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 10.2a2.2 2.2 0 1 0 0 3.6M17 10.2a2.2 2.2 0 1 0 0 3.6"/></svg>RU</button>
+        <button class="qbtn glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z"/></svg>28 мин</button>
+        <button class="qbtn glass-media" aria-label="Заполнить экран"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Fill</button>
+        <button class="qbtn glass-media" aria-label="Картинка в картинке"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><rect x="12" y="12" width="7" height="5" rx="1"/></svg></button>
+        <button class="qbtn glass-media" aria-label="AirPlay"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-9A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v9a1.5 1.5 0 0 1-1.5 1.5H18"/><path d="m12 14 5 6H7z"/></svg></button>
+        <button class="qbtn glass-media" aria-label="Только аудио"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></button>
+        <button class="qbtn glass-media" aria-label="Блокировка ориентации"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></svg></button>
+      </div>
+      <div class="row wrap" style="gap: 12px; position: relative;">
+        <span class="toast glass-media">Вступление<button class="btn sm" style="background: #fff; color: #000;">Пропустить</button></span>
+        <span class="toast glass-media"><i class="sb-dot" style="background: var(--sb-sponsor);"></i>Пропущено: спонсор · 0:42<button class="btn sm plain" style="color: #fff; text-decoration: underline;">Вернуть</button></span>
+        <span class="toast glass-media" style="padding-right: 16px;"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5v14l8-7Z M13 5v14l8-7Z" fill="currentColor"/></svg>2× — пока удерживаете</span>
+      </div>
+      <span style="position: relative; font-size: 13px; line-height: 18px;">Качество: метка показывает выбранное (Авто или 1080p) и отдельно фактическое «играет 720p». Переход на доступный поток не изображается как выбор Авто.</span>
+    </div>
+
+    <div class="stage" style="background: #18181b; display: flex; flex-direction: column; gap: 12px;">
+      <span class="cap">VF/TranslationStatus · Yandex</span>
+      <div class="row glass-media" style="border-radius: 18px; padding: 12px 14px; gap: 12px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/></svg><div class="grow"><p class="t-sh t-b">Перевод выключен</p><p class="t-fn" style="color: #d0d0d6;">Оригинал · English</p></div><button class="btn sm" style="background: rgba(255,255,255,.18); color: #fff;">Включить</button></div>
+      <div class="row glass-media" style="border-radius: 18px; padding: 12px 14px; gap: 12px;"><span class="spin" aria-hidden="true"></span><div class="grow"><p class="t-sh t-b">Готовим перевод · Русский</p><p class="t-fn" style="color: #d0d0d6;">Примерно 1–2 мин · видео ждёт</p></div><button class="btn sm" style="background: #fff; color: #000;">Смотреть без перевода</button></div>
+      <div class="row glass-media" style="border-radius: 18px; padding: 12px 14px; gap: 12px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: #82d99e;"><path d="m5 12.5 4.5 4.5L19 7"/></svg><div class="grow"><p class="t-sh t-b">Перевод · Русский</p><p class="t-fn" style="color: #d0d0d6;">Живые голоса · исходный звук тише</p></div><button class="btn sm" style="background: rgba(255,255,255,.18); color: #fff;">Оригинал</button></div>
+      <div class="row glass-media" style="border-radius: 18px; padding: 12px 14px; gap: 12px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: #ffb4a9;"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg><div class="grow"><p class="t-sh t-b">Перевод пока недоступен</p><p class="t-fn" style="color: #d0d0d6;">Играет оригинал</p></div><button class="btn sm" style="background: rgba(255,255,255,.18); color: #fff;">Повторить</button></div>
+      <span style="font-size: 13px; line-height: 18px; color: #b8b8c2;">Ожидание перевода — отдельный от буферизации вид: другой текст, есть «Смотреть без перевода».</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;">
+    <div class="stage a7" style="height: 150px;">
+      <span class="cap" style="color: #fff; position: relative;">Жесты · уровни (iPhone/iPad)</span>
+      <div class="row" style="position: absolute; left: 20px; right: 20px; bottom: 20px; gap: 14px;">
+        <div class="row glass-media" style="border-radius: 999px; padding: 8px 14px; gap: 10px; flex: 1;"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg><div class="tl thin grow"><i class="pl" style="width: 70%;"></i></div><span class="t-fn t-num">70%</span></div>
+        <div class="row glass-media" style="border-radius: 999px; padding: 8px 14px; gap: 10px; flex: 1;"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/></svg><span class="t-fn">Громкость недоступна</span></div>
+      </div>
+    </div>
+    <div class="stage" style="height: 150px; background: #000; font-family: ui-monospace, Menlo, monospace; font-size: 12px; line-height: 17px;">
+      <span class="cap" style="font-family: -apple-system, system-ui, sans-serif;">Stats for Nerds · второстепенно</span>
+      <div style="margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.72); border: 1px solid rgba(255,255,255,.15);">Selected 1080p · Resolution 1280×720 · avc1<br>Bitrate 2.4 Mb/s · Conn 18 Mb/s · Dropped 0<br>Stalls 1 · Startup 0.8 s · DASH · cache ok</div>
+    </div>
+    <div class="stage a5" style="height: 150px;">
+      <span class="cap" style="color: #fff; position: relative;">Конечные заставки (iOS/macOS)</span>
+      <div class="row" style="position: absolute; left: 20px; right: 20px; bottom: 18px; gap: 12px;">
+        <div class="thumb a0" style="width: 120px; outline: 2px solid rgba(255,255,255,.8);"></div>
+        <div class="thumb a6" style="width: 120px; outline: 2px solid rgba(255,255,255,.8);"></div>
+        <span class="t-fn" style="color: #fff;">Кликабельные · нет на TV</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

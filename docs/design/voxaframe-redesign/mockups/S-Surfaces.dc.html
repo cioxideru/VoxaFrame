@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Системные поверхности</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.wg{border-radius:24px;overflow:hidden;position:relative;background:var(--elevated);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.wg .thumb{border-radius:12px}
+.cap{font-size:13px;line-height:18px;font-weight:600;color:#3a3a40;margin-bottom:8px;display:block}
+</style>
+</helmet>
+<div class="vf" data-theme="{{theme}}" data-accent="{{accent}}" style="width: 1500px; height: 928px; padding: 32px; background: #e9e8ec; display: grid; grid-template-columns: 400px 1fr 360px; gap: 32px; color: var(--text);">
+  <div class="col" style="gap: 16px;">
+    <span class="cap">Расширение «Поделиться» · iOS</span>
+    <div class="wg" style="padding: 16px; background: var(--grouped);">
+      <div class="row" style="gap: 10px;"><img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 40px; height: 40px; border-radius: 10px;"><div class="grow"><p class="t-hl">VoxaFrame</p><p class="t-c1 t-sec clamp1">youtu.be/aB3… · видео распознано</p></div><button class="btn sm plain">Закрыть</button></div>
+      <div class="list" style="margin-top: 14px;">
+        <div class="li"><span class="ico ic-coral"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg></span><span class="lt">Открыть в VoxaFrame</span></div>
+        <div class="li"><span class="ico ic-blue"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><span class="lt">Смотреть позже<small>Добавится при открытии приложения · нужен вход</small></span></div>
+        <div class="li"><span class="ico ic-indigo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h8M19 15v6m-3-3h6"/></svg></span><span class="lt">В очередь</span></div>
+      </div>
+      <div class="banner ok" style="margin-top: 12px; background: var(--cell);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg><span>Запомнили. VoxaFrame добавит видео, когда вы его откроете.</span></div>
+    </div>
+    <div class="wg" style="padding: 16px; background: var(--grouped);">
+      <p class="t-sh t-b">Ссылка на RSS-ленту</p><p class="t-c1 t-sec" style="margin-bottom: 10px;">…/feeds/videos.xml?channel_id=UC…</p>
+      <button class="btn sm prom">Добавить RSS-ленту</button>
+      <div class="banner warn" style="margin-top: 12px; background: var(--cell);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2.5 20h19Z"/><path d="M12 10v4.5M12 17.2v.3"/></svg><span>Эта ссылка не поддерживается: VoxaFrame открывает видео, Shorts, YouTube Music и RSS каналов.</span></div>
+    </div>
+  </div>
+
+  <div class="col" style="gap: 16px;">
+    <span class="cap">Виджет «Главная» · локальный снимок ленты</span>
+    <div class="row" style="gap: 20px; align-items: flex-start;">
+      <div class="wg" style="width: 170px; height: 170px;"><div class="thumb a0" style="position: absolute; inset: 0; border-radius: 0; aspect-ratio: auto;"></div><div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 12px; background: linear-gradient(transparent, rgba(0,0,0,.75)); color: #fff;"><p class="t-c1" style="opacity: .85;">Field Notes</p><p class="t-sh t-b clamp2">The long way home</p></div></div>
+      <div class="wg" style="width: 364px; height: 170px; padding: 14px; display: flex; gap: 14px;"><div class="thumb a1" style="width: 190px; align-self: center;"></div><div class="col" style="gap: 4px; justify-content: center;"><img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 22px; height: 22px; border-radius: 6px;"><p class="t-sh t-b clamp2">Design in motion</p><p class="t-c1 t-sec">Studio North · 12:08</p></div></div>
+    </div>
+    <div class="row" style="gap: 20px; align-items: flex-start;">
+      <div class="wg" style="width: 364px; height: 382px; padding: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start;">
+        <div><div class="thumb a0"></div><p class="t-c1 t-b clamp1" style="margin-top: 4px;">The long way home</p></div>
+        <div><div class="thumb a1"></div><p class="t-c1 t-b clamp1" style="margin-top: 4px;">Design in motion</p></div>
+        <div><div class="thumb a2"></div><p class="t-c1 t-b clamp1" style="margin-top: 4px;">A slower morning</p></div>
+        <div><div class="thumb a6"></div><p class="t-c1 t-b clamp1" style="margin-top: 4px;">Two-minute dinners</p></div>
+        <div><div class="thumb a9"></div><p class="t-c1 t-b clamp1" style="margin-top: 4px;">Night ferry</p></div>
+        <div><div class="thumb a5"></div><p class="t-c1 t-b clamp1" style="margin-top: 4px;">Small ideas</p></div>
+      </div>
+      <div class="col" style="gap: 20px;">
+        <div class="wg" style="width: 170px; height: 170px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;"><img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 32px; height: 32px; border-radius: 8px;"><p class="t-fn">Откройте VoxaFrame, чтобы загрузить ленту</p></div>
+        <p class="t-c1" style="color: #4a4a52; width: 170px;">Пустое состояние. Виджет не загружает YouTube и не воспроизводит видео — нажатие открывает ролик в приложении.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col" style="gap: 16px;">
+    <span class="cap">Экран блокировки · Spotlight · Команды</span>
+    <div class="wg" data-theme="dark" style="padding: 16px; background: rgba(40,40,44,.9); color: #fff;">
+      <div class="row" style="gap: 12px;"><div class="thumb a0" style="width: 64px; border-radius: 10px;"></div><div class="grow"><p class="t-sh t-b">The long way home</p><p class="t-c1" style="color: #d0d0d6;">Field Notes · VoxaFrame</p></div><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-9A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v9a1.5 1.5 0 0 1-1.5 1.5H18"/><path d="m12 14 5 6H7z"/></svg></div>
+      <div class="tl thin" style="margin-top: 12px;"><i class="pl" style="width: 34%;"></i></div>
+      <div class="row center" style="gap: 34px; margin-top: 12px;"><svg class="i s28" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg><svg class="f s34" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg><svg class="i s28" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></div>
+      <p class="t-c1" style="color: #d0d0d6; margin-top: 10px;">AirPlay: видно, на каком устройстве идёт звук/видео.</p>
+    </div>
+    <div class="wg" style="padding: 12px 14px;"><p class="eyebrow">Spotlight</p><div class="row" style="gap: 10px; margin-top: 8px;"><div class="thumb a2" style="width: 64px; border-radius: 8px;"></div><div><p class="t-sh t-b">A slower morning</p><p class="t-c1 t-sec">VoxaFrame · недавно просмотрено</p></div></div><p class="t-c1 t-sec" style="margin-top: 8px;">До 50 видео и 300 каналов; Shorts не индексируются; очистка истории убирает записи.</p></div>
+    <div class="wg" style="padding: 12px 14px;"><p class="eyebrow">Команды и Siri</p>
+      <div class="chips wrap" style="gap: 6px; margin-top: 8px;"><span class="chip" style="font-size: 13px; min-height: 30px;">Продолжить просмотр</span><span class="chip" style="font-size: 13px; min-height: 30px;">Найти на YouTube</span><span class="chip" style="font-size: 13px; min-height: 30px;">Открыть раздел</span><span class="chip" style="font-size: 13px; min-height: 30px;">Смотреть позже</span><span class="chip" style="font-size: 13px; min-height: 30px;">Пауза/воспроизведение</span><span class="chip" style="font-size: 13px; min-height: 30px;">Перемотать на N с</span><span class="chip" style="font-size: 13px; min-height: 30px;">Следующее видео</span></div>
+      <p class="t-c1 t-sec" style="margin-top: 8px;">Нет активного видео → «Сейчас ничего не воспроизводится».</p>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"$preview":{"width":1500,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral' };
+  }
+}
+</script>
+</body>
+</html>

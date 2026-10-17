@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Mac · поиск</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.popup{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 8px 0 10px;border-radius:7px;background:var(--fill);font-size:12px;font-weight:500}
+.popup b{font-weight:600}
+.popup svg{width:12px;height:12px;color:var(--secondary)}
+.mrow{display:grid;grid-template-columns:200px 1fr 30px;gap:16px;align-items:center;padding:8px;border-radius:10px}
+.mrow .thumb{border-radius:8px}
+.mrow.hover{background:var(--fill)}
+.drop{position:absolute;right:14px;top:46px;width:340px;border-radius:12px;padding:6px;z-index:6}
+.drop .mi{min-height:28px;font-size:13px;border-radius:6px;gap:8px}
+.drop .mi svg{margin-left:0;width:14px;height:14px;color:var(--secondary)}
+</style>
+</helmet>
+<div class="mac-win vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1440px; height: 900px; flex-direction: row;">
+  <nav class="mac-side glass" style="border-radius: 0; border: 0; border-right: 1px solid var(--hairline); box-shadow: none; padding-top: 14px; width: 210px;" aria-label="Разделы">
+    <div class="lights" style="padding: 4px 8px 18px;"><i></i><i></i><i></i></div>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button>
+    <button class="side-item on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Поиск</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн-видео</button>
+    <div class="side-h">Медиатека</div>
+    <button class="side-item">Подписки</button>
+    <button class="side-item">История</button>
+    <button class="side-item">Плейлисты</button>
+    <button class="side-item">Очередь</button>
+    <button class="side-item">RSS-ленты</button>
+  </nav>
+  <div style="flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative;">
+    <div class="mac-toolbar">
+      <span class="t-hl">Поиск</span>
+      <span class="grow"></span>
+      <div class="search" style="min-height: 30px; width: 340px; font-size: 13px; padding: 0 10px; box-shadow: inset 0 0 0 2px var(--focus);"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="q">slow<i class="caret" style="height: 15px;"></i></span></div>
+    </div>
+    <div class="menu glass drop" role="listbox" aria-label="Подсказки">
+      <div class="mi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>slow living<span class="kbd" style="margin-left: auto;">Недавнее</span></div>
+      <div class="mi hl" style="background: var(--action); color: var(--onAction);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: inherit;"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>slow morning routine</div>
+      <div class="mi"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>slow travel japan</div>
+      <div class="msep"></div>
+      <div class="mi" style="color: var(--secondary);">↑↓ — выбор · Return — искать · Esc — закрыть</div>
+    </div>
+    <div style="padding: 4px 24px 0; display: flex; flex-direction: column; gap: 14px; overflow: hidden; flex: 1;">
+      <div class="row" style="gap: 8px;">
+        <span class="popup">Сортировка: <b>Дата</b><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg></span>
+        <span class="popup" style="background: var(--action); color: var(--onAction);">За неделю<svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: inherit;"><path d="M7 7l10 10M17 7 7 17"/></svg></span>
+        <span class="popup">Тип: <b>Любой</b><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg></span>
+        <span class="popup" style="background: var(--action); color: var(--onAction);">4–20 мин<svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: inherit;"><path d="M7 7l10 10M17 7 7 17"/></svg></span>
+        <span class="grow"></span><span class="t-c1 t-sec">Результаты по «slow living»</span>
+      </div>
+      <div class="mrow"><span class="avatar c2" style="width: 64px; height: 64px; justify-self: center;"></span><div><p class="t-hl">Everyday Films</p><p class="t-fn t-sec">Канал · 180 тыс. подписчиков</p></div><span></span></div>
+      <div class="mrow hover"><div class="thumb a2"><span class="dur">14:20</span></div><div><p class="t-hl">A slower morning: 10 small rituals</p><p class="t-fn t-sec">Everyday Films · 9 тыс. · 3 дня назад</p><p class="t-c1 t-sec" style="margin-top: 4px;">Ten tiny habits that make mornings calmer — no alarms, no rush.</p></div><button class="mac-btn icon" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div>
+      <div class="mrow is-focus"><div class="thumb a7"><span class="dur">18:03</span></div><div><p class="t-hl">Slow living in a small apartment</p><p class="t-fn t-sec">Green Rooms · 6 дней назад</p></div><span></span></div>
+      <div class="mrow"><div class="thumb a9"><span class="tag">ПЛЕЙЛИСТ · 12</span></div><div><p class="t-hl">Slow weekends</p><p class="t-fn t-sec">Плейлист · Night Walks</p><span class="prop logic" style="margin-top: 6px;">Маршрут «плейлист/канал» на Mac — проверить</span></div><span></span></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"dark"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'dark', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

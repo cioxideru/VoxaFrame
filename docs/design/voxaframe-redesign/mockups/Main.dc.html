@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>VoxaFrame — карта экранов</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="vf" data-theme="light" style="width: 1600px; height: 1160px; padding: 56px 64px; display: flex; flex-direction: column; gap: 36px; background: #fbfaf8;">
+  <div style="display: flex; align-items: center; gap: 24px;">
+    <img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="Иконка VoxaFrame" style="width: 96px; height: 96px; border-radius: 22px;">
+    <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+      <h1 style="font-size: 44px; line-height: 50px; font-weight: 700; letter-spacing: -0.5px;">VoxaFrame — новый интерфейс</h1>
+      <p style="font-size: 19px; line-height: 26px; color: #61616b;">Apple 27 · iPhone, iPad, нативный macOS, Apple TV · светлая и тёмная тема · вымышленный демо-контент</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
+      <span class="prop">Новое решение интерфейса</span>
+      <span class="prop logic">Нужна доработка логики</span>
+      <span class="prop cond">Условно · спецсборка</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px;">
+    <div style="background: #fff; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 0 0 1px #e6e4e0;">
+      <div class="row" style="gap: 10px;"><svg viewBox="0 0 24 24" fill="none" stroke="#b83829" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8v10h-6v-7H9v7H3Z"/></svg><h2 style="font-size: 20px; font-weight: 700;">Главная</h2></div>
+      <p class="t-fn t-sec">Лента рекомендаций и подписок с рядами Shorts</p>
+      <ul style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 19px;">
+        <li>Разделы: Home, Recommended, Subscriptions, History, Playlists, Channels, Shorts, Music, Gaming, News, Live, Sports, Watch Later</li>
+        <li>Фильтр канала в Subscriptions</li>
+        <li>Карточка → видео · канал · меню</li>
+        <li>Страница канала: All / Shorts, подписка</li>
+        <li>Состояния: загрузка, подгрузка, вход, нет подписок, всё скрыто фильтрами, ошибка с сохранённой частью</li>
+      </ul>
+    </div>
+    <div style="background: #fff; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 0 0 1px #e6e4e0;">
+      <div class="row" style="gap: 10px;"><svg viewBox="0 0 24 24" fill="none" stroke="#b83829" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><h2 style="font-size: 20px; font-weight: 700;">Поиск</h2></div>
+      <p class="t-fn t-sec">Отдельная вкладка-поиск в панели Apple 27</p>
+      <ul style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 19px;">
+        <li>История запросов (до 50) · темы</li>
+        <li>Подсказки: запуск и «стрелка» в строку</li>
+        <li>Фильтры: сортировка, дата, тип, длительность · метки</li>
+        <li>Результаты, подгрузка; запуск делает список очередью</li>
+        <li>Загрузка · нет результатов · ошибка <span class="prop logic">экран ошибки</span></li>
+      </ul>
+    </div>
+    <div style="background: #fff; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 0 0 1px #e6e4e0;">
+      <div class="row" style="gap: 10px;"><svg viewBox="0 0 24 24" fill="none" stroke="#b83829" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg><h2 style="font-size: 20px; font-weight: 700;">Медиатека</h2></div>
+      <p class="t-fn t-sec">Локальные данные и данные Google разделены</p>
+      <ul style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 19px;">
+        <li>Подписки · История (устройство + YouTube)</li>
+        <li>Плейлисты · Watch Later · выбор плейлиста</li>
+        <li>Очередь — постоянный вход <span class="prop logic">логика</span></li>
+        <li>Редактор очереди, Play Next после текущего <span class="prop logic">логика</span></li>
+        <li>RSS: лента, добавление, управление</li>
+        <li>Гостевая история в Медиатеке <span class="prop logic">логика</span></li>
+      </ul>
+    </div>
+    <div style="background: #fff; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 0 0 1px #e6e4e0;">
+      <div class="row" style="gap: 10px;"><svg viewBox="0 0 24 24" fill="none" stroke="#b83829" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg><h2 style="font-size: 20px; font-weight: 700;">Офлайн-видео</h2></div>
+      <p class="t-fn t-sec">Очередь загрузок ≠ очередь просмотра</p>
+      <ul style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 19px;">
+        <li>Библиотека: видео и число составляющих</li>
+        <li>Задания: 6 статусов, ожидание перевода, уступка сети плееру</li>
+        <li>Выбор видео / аудио / перевода, оценка размера</li>
+        <li>Страница видео: готовые варианты, добавление</li>
+        <li>Удаление: задание · видео · вся библиотека</li>
+        <li>Ошибка хранения ≠ пустая библиотека</li>
+      </ul>
+    </div>
+    <div style="background: #fff; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 0 0 1px #e6e4e0;">
+      <div class="row" style="gap: 10px;"><svg viewBox="0 0 24 24" fill="none" stroke="#b83829" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg><h2 style="font-size: 20px; font-weight: 700;">Настройки</h2></div>
+      <p class="t-fn t-sec">Mac — отдельное окно Settings; вход защищён PIN</p>
+      <ul style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 19px;">
+        <li>Аккаунт · вход по коду / QR · выход</li>
+        <li>Воспроизведение · кодеки</li>
+        <li>Языки: обычные видео и Shorts отдельно · токен</li>
+        <li>История и данные: три области</li>
+        <li>Внешний вид · Visible Sections · фильтры лент</li>
+        <li>SponsorBlock · DeArrow · PIN · About</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+    <div style="background: #260724; color: #fff4de; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <h3 style="font-size: 17px; font-weight: 700;">Плеер</h3>
+      <p style="font-size: 14px; line-height: 19px; color: #e9d9c6;">Качество (выбрано ≠ играет), скорость, аудио, перевод Yandex, субтитры, главы, SponsorBlock, таймер сна, Fit/Fill, только аудио, описание, комментарии, статистика</p>
+    </div>
+    <div style="background: #260724; color: #fff4de; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <h3 style="font-size: 17px; font-weight: 700;">Shorts</h3>
+      <p style="font-size: 14px; line-height: 19px; color: #e9d9c6;">Вертикальный плеер, свой набор: скорость, язык аудио, перевод, lively voices, исходный звук. Mac — видеослой не подключён</p>
+    </div>
+    <div style="background: #260724; color: #fff4de; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <h3 style="font-size: 17px; font-weight: 700;">Свёрнутый просмотр</h3>
+      <p style="font-size: 14px; line-height: 19px; color: #e9d9c6;">Мини-плеер — аксессуар над панелью вкладок (iPhone/iPad). PiP — системное окно. Закрытие одного не разворачивает другое</p>
+    </div>
+    <div style="background: #260724; color: #fff4de; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <h3 style="font-size: 17px; font-weight: 700;">Вход и защита</h3>
+      <p style="font-size: 14px; line-height: 19px; color: #e9d9c6;">Гость по умолчанию. Вход по коду и QR, таймер, истёкший код. PIN защищает только вход в настройки</p>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px;">
+    <h2 style="font-size: 24px; font-weight: 700;">Сценарии и где их смотреть</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 28px; font-size: 14px; line-height: 19px;">
+      <p><b>1.</b> Гость находит видео, открывает канал, локальная подписка — <span class="t-sec">P-Search, P-Channel, X-Search</span></p>
+      <p><b>2.</b> Вход по коду, подписки, Watch Later — <span class="t-sec">P-SignIn-PIN, P-Menus, T-SignIn</span></p>
+      <p><b>3.</b> Поиск с фильтрами; пусто и ошибка различимы — <span class="t-sec">P-Search-More, X-Search, I-Search</span></p>
+      <p><b>4.</b> Качество, скорость, аудио, субтитры без потери просмотра — <span class="t-sec">P-Player-Panels, X-Watch</span></p>
+      <p><b>5.</b> Перевод: ожидание, включение, отказ — <span class="t-sec">P-Player-Translation, X-Watch, T-Player-Menu</span></p>
+      <p><b>6.</b> Свернуть и развернуть ролик, закрытие останавливает — <span class="t-sec">P-Mini, X-Watch</span></p>
+      <p><b>7.</b> Shorts: свои скорость и язык — <span class="t-sec">P-Shorts, X-Shorts, T-Shorts</span></p>
+      <p><b>8.</b> Выбор составляющих, задания, повтор, запуск без сети — <span class="t-sec">P-Offline-Start, P-Offline, X-Offline</span></p>
+      <p><b>9.</b> Удаление варианта, видео, всей библиотеки — <span class="t-sec">P-Offline-Item, C-Feedback</span></p>
+      <p><b>10.</b> Вид, история, SponsorBlock, PIN — <span class="t-sec">P-Settings-2, M-Settings, T-Settings</span></p>
+      <p><b>11.</b> Тот же путь с пульта и в окне Mac — <span class="t-sec">T-Home, T-Player, M-Home, M-Narrow</span></p>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1160}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

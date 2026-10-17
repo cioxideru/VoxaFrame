@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · состояния плеера</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.pinfo{padding:14px 16px 0}
+</style>
+</helmet>
+<div class="strip dark-bg" style="width: 1720px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Загрузка источника · <em>буферизация</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;"><button class="navbtn" aria-label="Свернуть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button><span class="t-fn t-sec">Очередь · 3 из 12</span><span style="width: 44px;"></span></div>
+        <div class="media" style="height: 219px;"><div class="art a0" style="filter: brightness(.45) blur(2px);"></div>
+          <div class="col center" style="position: absolute; inset: 0; gap: 10px;" role="status"><span class="pctl big glass-media"><span class="spin lg" aria-hidden="true"></span></span><span class="t-fn t-b">Буферизация… 06:24</span></div>
+          <div class="tl thin" style="position: absolute; left: 14px; right: 14px; bottom: 14px;"><i class="buf" style="width: 35%;"></i><i class="pl" style="width: 34%;"></i></div>
+        </div>
+        <div class="pinfo"><h1 class="t-3">The long way home</h1><p class="t-fn t-sec" style="margin-top: 4px;">Field Notes · Авто · 1080p</p><p class="t-fn t-sec" style="margin-top: 14px;">Название, «Свернуть» и выбранные параметры видны. Перевод ожидается отдельным экраном — не путать.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Ошибка видео · <em>не выход из аккаунта</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;"><button class="navbtn" aria-label="Свернуть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button><span class="t-fn t-sec">Очередь · 4 из 12</span><span style="width: 44px;"></span></div>
+        <div class="media" style="height: 219px; background: #111;">
+          <div class="col center" style="position: absolute; inset: 0; gap: 8px; text-align: center; padding: 0 30px;" role="alert"><svg class="i s34" viewBox="0 0 24 24" aria-hidden="true" style="color: #ffb4a9;"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg><p class="t-hl">Это видео не удалось воспроизвести</p><p class="t-fn" style="color: #d0d0d6;">Источник не отдал поток. Остальные видео доступны.</p></div>
+        </div>
+        <div class="pinfo col" style="gap: 10px;"><h1 class="t-3">Night ferry to the islands</h1><div class="row" style="gap: 10px;"><button class="btn prom">Повторить</button><button class="btn">Следующее видео</button></div><p class="t-fn t-sec">Если ролику нужен вход — «Войдите, чтобы смотреть это видео» с кнопкой входа; аккаунт при этом не сбрасывается.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Конец · <em>автопереход</em> · конечные заставки</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;"><button class="navbtn" aria-label="Свернуть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button><span class="t-fn t-sec">Очередь · 3 из 12</span><span style="width: 44px;"></span></div>
+        <div class="media" style="height: 219px;"><div class="art a0" style="filter: brightness(.35);"></div>
+          <div class="row" style="position: absolute; left: 14px; right: 14px; top: 14px; gap: 10px;"><div class="thumb a6" style="width: 120px; outline: 2px solid rgba(255,255,255,.8);"></div><div class="thumb a9" style="width: 120px; outline: 2px solid rgba(255,255,255,.8);"></div></div>
+          <div class="row glass-media" style="position: absolute; left: 12px; right: 12px; bottom: 12px; border-radius: 18px; padding: 8px 8px 8px 12px; gap: 10px;"><div class="grow"><p class="t-c1" style="color: #e6e6ea;">Далее через 5 с · из очереди</p><p class="t-sh t-b clamp1">Design in motion</p></div><button class="btn sm" style="background: rgba(255,255,255,.2); color: #fff;">Отмена</button><button class="btn sm" style="background: #fff; color: #000;">Сейчас</button></div>
+        </div>
+        <div class="pinfo"><h1 class="t-3">The long way home</h1><p class="t-fn t-sec" style="margin-top: 6px;">Порядок: повтор (Loop) → очередь → рекомендации (Shuffle / Autoplay). Без Autoplay видео остаётся на последнем кадре с кнопкой «Смотреть снова».</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Только аудио · обложка вместо видео</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;"><button class="navbtn" aria-label="Свернуть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button><span class="pill-badge act" style="background: var(--fill);"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>Только аудио</span><span style="width: 44px;"></span></div>
+        <div class="col center" style="height: 280px; gap: 14px;"><div class="thumb a3" style="width: 220px; border-radius: 22px; box-shadow: 0 20px 40px rgba(0,0,0,.5);"></div><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 60px; height: 22px; color: var(--action);"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg></div>
+        <div class="pad col" style="gap: 12px;">
+          <div><h1 class="t-3">Inside the sound</h1><p class="t-fn t-sec">Sound Room</p></div>
+          <div class="tl on-light"><i class="pl" style="width: 42%;"></i><i class="knob" style="left: 42%;"></i></div>
+          <div class="ttime" style="color: var(--secondary); margin-top: -4px;"><span>04:10</span><span>09:51</span></div>
+          <div class="row center" style="gap: 28px;"><button class="navbtn" aria-label="Назад 10 секунд"><svg class="i s28" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg></button><button class="btn prom icon" style="width: 64px; min-height: 64px;" aria-label="Пауза"><svg class="f s28" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></button><button class="navbtn" aria-label="Вперёд 30 секунд"><svg class="i s28" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></button></div>
+          <p class="t-c1 t-sec">Пробуем отдельный аудиопоток; экономия трафика не гарантируется. Для Live — обычный поток со скрытым видео.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1720,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

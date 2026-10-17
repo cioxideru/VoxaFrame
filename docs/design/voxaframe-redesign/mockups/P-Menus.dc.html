@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · меню карточки</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.ctx .mi{min-height:40px;font-size:16px}
+.ctx .mi svg{width:19px;height:19px}
+</style>
+</helmet>
+<div class="strip" style="width: 876px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Аккаунт · контекст <em>«Смотреть позже»</em></span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar"><button class="navbtn" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span class="t">Смотреть позже</span><span style="width: 44px;"></span></div>
+        <div class="pad" style="filter: blur(3px); opacity: .5;">
+          <article class="crow" style="margin-top: 10px;"><div class="thumb a2"><span class="dur">24:16</span></div><div><p class="title">A slower morning</p><p class="sub">Everyday Films</p></div></article>
+        </div>
+        <div style="position: absolute; left: 16px; right: 16px; top: 120px; z-index: 10; display: flex; flex-direction: column; gap: 10px;">
+          <article class="crow" style="background: var(--background); border-radius: 18px; padding: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.2); grid-template-columns: 120px 1fr;"><div class="thumb a1"><span class="dur">12:08</span></div><div><p class="title clamp2">Design in motion</p><p class="sub">Studio North</p></div></article>
+          <div class="menu glass ctx" role="menu" aria-label="Действия: Design in motion" style="width: 280px;">
+            <div class="mi">Поделиться<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg></div>
+            <div class="mi">Открыть канал<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg></div>
+            <div class="msep thick"></div>
+            <div class="mi">Воспроизвести следующим<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h8M4 18h12M16 9l4 3-4 3"/></svg></div>
+            <div class="mi">Добавить в очередь<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h8M19 15v6m-3-3h6"/></svg></div>
+            <div class="mi">Копировать в плейлист…<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h6M17 14v7M13.5 17.5h7"/></svg></div>
+            <div class="mi">Переместить в плейлист…<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h6M15 18h6m-2-2 2 2-2 2"/></svg></div>
+            <div class="mi">Смотреть инкогнито<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4 9.5 6a12 12 0 0 1-2.6 3.4M6.3 7.6C4.4 8.9 3.1 10.7 2.5 12c1 2 4.5 6 9.5 6 1.6 0 3-.4 4.3-1"/></svg></div>
+            <div class="mi">Скачать для офлайна…<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg></div>
+            <div class="msep thick"></div>
+            <div class="mi dest">Убрать из «Смотреть позже»<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></div>
+            <div class="mi">Не интересует<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg></div>
+            <div class="mi">Не рекомендовать канал<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1-4 4-6 7.5-6M15 16l5 5m0-5-5 5"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Гость · прямая трансляция · <em>недоступные действия</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="largehead"><h1 class="t-lt">Главная</h1><button class="btn sm tint">Войти</button></div>
+        <div style="position: absolute; left: 16px; right: 16px; top: 128px; z-index: 10; display: flex; flex-direction: column; gap: 10px;">
+          <article class="crow" style="background: var(--surface); border-radius: 18px; padding: 10px; grid-template-columns: 120px 1fr;"><div class="thumb a4"><span class="tag live">● LIVE</span></div><div><p class="title clamp2">Cities after dark — night walk</p><p class="sub">Night Walks · 1,2 тыс. смотрят</p></div></article>
+          <div class="menu glass ctx" role="menu" aria-label="Действия: Cities after dark" style="width: 300px;">
+            <div class="mi">Поделиться<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg></div>
+            <div class="mi">Открыть канал<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg></div>
+            <div class="mi">Добавить в очередь<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h8M19 15v6m-3-3h6"/></svg></div>
+            <div class="mi">Смотреть инкогнито<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4 9.5 6"/></svg></div>
+            <div class="msep thick"></div>
+            <div class="mi dis"><span>Скачать для офлайна<small>Прямую трансляцию нельзя сохранить</small></span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg></div>
+            <div class="msep thick"></div>
+            <div class="mi"><span>Смотреть позже<small>Нужен вход в Google</small></span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></div>
+            <div class="mi"><span>В плейлист…<small>Нужен вход в Google</small></span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h6M17 14v7M13.5 17.5h7"/></svg></div>
+          </div>
+          <p class="t-fn t-sec" style="padding: 0 6px;">Команды аккаунта у гостя ведут на вход. «Не интересует» и «Не рекомендовать» скрыты: без аккаунта их некуда отправить.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":876,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

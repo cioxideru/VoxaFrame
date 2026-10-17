@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Прототип · просмотр, параметры, перевод, мини-плеер</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.opt .li{min-height:46px;padding:7px 16px;width:100%;border:0;background:transparent;text-align:left;color:var(--text)}
+.opt .lt{font-size:16px}
+.opt .lt small{font-size:12px}
+.hint-tap{position:absolute;left:12px;right:12px;bottom:6px;text-align:center;font-size:11px;color:var(--secondary);z-index:30}
+.spd{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.spd button{min-height:48px;border-radius:14px;background:var(--fill);border:0;font-size:17px;font-weight:600;color:var(--text)}
+.spd button.on{background:var(--action);color:var(--onAction)}
+</style>
+</helmet>
+<div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="border-radius: 0; box-shadow: none;">
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+  <div class="screen">
+    <div class="safe-top"></div>
+    <div class="largehead"><h1 class="t-lt">Главная</h1></div>
+    <div class="scroll pad col" style="gap: 18px;">
+      <button class="card" style="border: 0; background: transparent; padding: 0; text-align: left; color: var(--text);" onClick="{{ openPlayer }}"><div class="thumb a0"><span class="lbl">FIELD / NOTES</span><span class="dur">18:42</span></div><div class="meta"><div class="grow"><p class="title">The long way home</p><p class="sub">Field Notes · нажмите, чтобы смотреть</p></div></div></button>
+      <article class="card"><div class="thumb a1"><span class="dur">12:08</span></div><div class="meta"><div class="grow"><p class="title">Design in motion</p><p class="sub">Studio North</p></div></div></article>
+    </div>
+    <div class="tabbar-wrap">
+      <sc-if value="{{ mini }}" hint-placeholder-val="{{ false }}">
+        <div class="accessory glass">
+          <button class="row" style="flex: 1; min-width: 0; gap: 10px; border: 0; background: transparent; padding: 0; text-align: left; color: var(--text);" onClick="{{ openPlayer }}" aria-label="Развернуть плеер"><span class="thumb a0" style="width: 64px; border-radius: 999px;"></span><span class="tt"><b>The long way home</b><small>{{ miniSub }}</small></span></button>
+          <button class="navbtn" aria-label="Пауза или воспроизведение" onClick="{{ togglePlay }}"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ playIcon }}"/></svg></button>
+          <button class="navbtn" aria-label="Закрыть и остановить" onClick="{{ closeMini }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
+        </div>
+      </sc-if>
+      <div class="tabbar-row"><nav class="tabbar glass" aria-label="Разделы"><button class="tab on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button></nav><button class="tab-search glass" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isPlayer }}" hint-placeholder-val="{{ false }}">
+  <div class="screen">
+    <div class="safe-top"></div>
+    <div class="navbar" style="padding: 0 8px;"><button class="navbtn" aria-label="Свернуть в мини-плеер" onClick="{{ collapse }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button><span class="t-fn t-sec">{{ trLabel }}</span><span style="width: 44px;"></span></div>
+    <div class="media" style="height: 219px;">
+      <div class="art a0"></div><div class="shade-b"></div>
+      <div class="row center" style="position: absolute; left: 0; right: 0; top: 70px; gap: 26px;">
+        <button class="pctl sm glass-media" aria-label="Назад 10 секунд"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg></button>
+        <button class="pctl glass-media" style="width: 60px; height: 60px;" aria-label="Пауза или воспроизведение" onClick="{{ togglePlay }}"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ playIcon }}"/></svg></button>
+        <button class="pctl sm glass-media" aria-label="Вперёд 30 секунд"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></button>
+      </div>
+      <div style="position: absolute; left: 14px; right: 14px; bottom: 12px;"><div class="tl thin"><i class="pl" style="width: 34%;"></i><i class="knob" style="left: 34%; width: 14px; height: 14px; margin: -7px 0 0 -7px;"></i></div><div class="ttime" style="margin-top: 6px;"><span>06:24</span><span>18:42</span></div></div>
+      <sc-if value="{{ trPreparing }}" hint-placeholder-val="{{ false }}">
+        <div class="col center" style="position: absolute; inset: 0; gap: 8px; background: rgba(0,0,0,.6); text-align: center; padding: 0 24px;" role="status"><span class="spin lg" aria-hidden="true"></span><p class="t-hl">Готовим перевод · Русский</p><p class="t-c1" style="color: #e6e6ea;">Примерно 1–2 мин · видео на паузе</p></div>
+      </sc-if>
+    </div>
+    <div class="row pad" style="gap: 8px; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap;">
+      <button class="chip" onClick="{{ openSpeed }}"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16a8 8 0 1 1 15 0"/><path d="m12 13 4-4"/></svg>{{ speedLabel }}</button>
+      <button class="chip" onClick="{{ openQuality }}">{{ qualityLabel }}</button>
+      <button class="chip" onClick="{{ openAudio }}"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/></svg>{{ audioLabel }}</button>
+    </div>
+    <div class="pad col" style="gap: 10px;">
+      <sc-if value="{{ trPreparing }}" hint-placeholder-val="{{ false }}">
+        <div class="col" style="gap: 8px;"><button class="btn prom block" onClick="{{ watchWithout }}">Смотреть без перевода</button><div class="row" style="gap: 8px;"><button class="btn sm" onClick="{{ trSucceed }}">Демо: перевод готов</button><button class="btn sm" onClick="{{ trFail }}">Демо: ошибка</button></div></div>
+      </sc-if>
+      <sc-if value="{{ trFailed }}" hint-placeholder-val="{{ false }}">
+        <div class="banner err" role="alert"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg><span class="grow">Перевод пока недоступен. Играет оригинал.</span><button class="btn sm tint" onClick="{{ startTr }}">Повторить</button></div>
+      </sc-if>
+      <sc-if value="{{ trReady }}" hint-placeholder-val="{{ false }}">
+        <div class="banner ok"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg><span class="grow">Перевод включён · исходный звук тише</span><button class="btn sm plain" onClick="{{ watchWithout }}">Оригинал</button></div>
+      </sc-if>
+      <h1 class="t-3">The long way home</h1>
+      <p class="t-fn t-sec">Field Notes · выбор качества, скорости и аудио не перезапускает видео</p>
+    </div>
+
+    <sc-if value="{{ panelQuality }}" hint-placeholder-val="{{ false }}">
+      <div class="dim-under"></div>
+      <div class="sheet glass opt" style="background: var(--elevated);" role="dialog" aria-label="Качество">
+        <div class="grab"></div>
+        <div class="sheet-h"><span style="width: 44px;"></span><span class="t">Качество</span><button class="btn sm icon" aria-label="Закрыть" onClick="{{ closePanel }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+        <div class="pad">
+          <p class="t-c1 t-sec" style="padding: 0 4px 8px;">{{ qualityNote }}</p>
+          <div class="list" style="background: var(--surface);">
+            <button class="li" onClick="{{ pickAuto }}"><span class="lt">Авто<small>По сети и устройству</small></span><span class="pill-badge act">{{ autoMark }}</span></button>
+            <button class="li" onClick="{{ pick1080 }}"><span class="lt">1080p · H.264<small>Недоступно в сети прямо сейчас</small></span><span class="pill-badge act">{{ q1080Mark }}</span></button>
+            <button class="li" onClick="{{ pick720 }}"><span class="lt">720p · H.264</span><span class="pill-badge act">{{ q720Mark }}</span></button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ panelSpeed }}" hint-placeholder-val="{{ false }}">
+      <div class="dim-under"></div>
+      <div class="sheet glass" style="background: var(--elevated);" role="dialog" aria-label="Скорость">
+        <div class="grab"></div>
+        <div class="sheet-h"><span style="width: 44px;"></span><span class="t">Скорость</span><button class="btn sm icon" aria-label="Закрыть" onClick="{{ closePanel }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+        <div class="pad col" style="gap: 10px;">
+          <div class="spd"><sc-for list="{{ speeds }}" as="sp" hint-placeholder-count="8"><button class="{{ sp.cls }}" onClick="{{ sp.pick }}">{{ sp.label }}</button></sc-for></div>
+          <p class="t-fn t-sec">Только для обычных видео. Shorts — своя скорость.</p>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ panelAudio }}" hint-placeholder-val="{{ false }}">
+      <div class="dim-under"></div>
+      <div class="sheet glass opt" style="background: var(--elevated);" role="dialog" aria-label="Аудио">
+        <div class="grab"></div>
+        <div class="sheet-h"><span style="width: 44px;"></span><span class="t">Аудио</span><button class="btn sm icon" aria-label="Закрыть" onClick="{{ closePanel }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+        <div class="pad">
+          <p class="group-h" style="margin-top: 0;">Дорожка видео</p>
+          <div class="list" style="background: var(--surface);"><button class="li" onClick="{{ watchWithout }}"><span class="lt">English<small>Оригинал</small></span></button><button class="li" onClick="{{ watchWithout }}"><span class="lt">Español<small>Дубляж</small></span></button></div>
+          <p class="group-h">Закадровый перевод · Yandex</p>
+          <div class="list" style="background: var(--surface);"><button class="li" onClick="{{ startTr }}"><span class="lt">Перевести на русский<small>Подготовка займёт время</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</sc-if>
+
+<p class="hint-tap">Прототип: карточка → плеер → параметры → перевод → свернуть → мини-плеер → закрыть</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"dark"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: 'home', mini: false, playing: true, panel: null, quality: 'auto', speed: '1', tr: 'off' };
+  }
+  componentWillUnmount() { clearTimeout(this.t); }
+  renderVals() {
+    const s = this.state;
+    const speeds = ['0,25', '0,5', '0,75', '1', '1,25', '1,5', '1,75', '2'].map((v) => ({
+      label: v + '×', cls: s.speed === v ? 'on' : '', pick: () => this.setState({ speed: v, panel: null })
+    }));
+    const qLabel = s.quality === 'auto' ? 'Авто · 720p' : (s.quality === '1080' ? 'Выбрано 1080p · играет 720p' : '720p');
+    const qNote = s.quality === '1080' ? 'Выбрано: 1080p · Играет: 720p — выбор сохранится, 1080p включится, когда станет доступно.' : (s.quality === 'auto' ? 'Выбрано: Авто · Играет: 720p' : 'Выбрано: 720p · Играет: 720p');
+    const pause = 'M7 4h3.5v16H7zM13.5 4H17v16h-3.5z';
+    const play = 'M7 4.5v15l12-7.5Z';
+    return {
+      theme: this.props.theme ?? 'dark', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass',
+      isHome: s.screen === 'home', isPlayer: s.screen === 'player', mini: s.mini,
+      miniSub: s.playing ? 'Field Notes · Играет' : 'Field Notes · Пауза',
+      playIcon: s.playing ? pause : play,
+      panelQuality: s.panel === 'quality', panelSpeed: s.panel === 'speed', panelAudio: s.panel === 'audio',
+      speeds,
+      speedLabel: s.speed + '×', qualityLabel: qLabel, qualityNote: qNote,
+      autoMark: s.quality === 'auto' ? 'Выбрано' : '', q1080Mark: s.quality === '1080' ? 'Выбрано' : '', q720Mark: s.quality === '720' ? 'Выбрано' : (s.quality !== '720' ? 'Играет' : ''),
+      audioLabel: s.tr === 'ready' ? 'Перевод · RU' : (s.tr === 'preparing' ? 'Готовим…' : 'Оригинал'),
+      trLabel: s.tr === 'ready' ? 'Перевод · Русский' : 'Очередь · 3 из 12',
+      trPreparing: s.tr === 'preparing', trReady: s.tr === 'ready', trFailed: s.tr === 'failed',
+      openPlayer: () => this.setState({ screen: 'player', mini: false }),
+      collapse: () => this.setState({ screen: 'home', mini: true, panel: null }),
+      closeMini: () => this.setState({ mini: false, playing: false }),
+      togglePlay: () => this.setState({ playing: !s.playing }),
+      openSpeed: () => this.setState({ panel: 'speed' }),
+      openQuality: () => this.setState({ panel: 'quality' }),
+      openAudio: () => this.setState({ panel: 'audio' }),
+      closePanel: () => this.setState({ panel: null }),
+      pickAuto: () => this.setState({ quality: 'auto', panel: null }),
+      pick1080: () => this.setState({ quality: '1080', panel: null }),
+      pick720: () => this.setState({ quality: '720', panel: null }),
+      startTr: () => { this.setState({ tr: 'preparing', panel: null, playing: false }); clearTimeout(this.t); this.t = setTimeout(() => { if (this.state.tr === 'preparing') this.setState({ tr: 'ready', playing: true }); }, 4000); },
+      watchWithout: () => { clearTimeout(this.t); this.setState({ tr: 'off', panel: null, playing: true }); },
+      trSucceed: () => { clearTimeout(this.t); this.setState({ tr: 'ready', playing: true }); },
+      trFail: () => { clearTimeout(this.t); this.setState({ tr: 'failed', playing: true }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

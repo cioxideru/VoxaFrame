@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Навигация на четырёх платформах</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.cap{font-size:12px;line-height:16px;color:var(--secondary)}
+</style>
+</helmet>
+<div class="vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1440px; height: 1040px; padding: 40px 48px; display: flex; flex-direction: column; gap: 28px;">
+  <div class="row between"><h2 class="t-1">Навигация</h2><span class="t-fn t-sec">Пять разделов на всех платформах; Поиск — отдельная вкладка-роль (Apple 27). Tweaks: тема, акцент, прозрачность.</span></div>
+
+  <div style="display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 40px;">
+    <section class="col" style="gap: 14px;">
+      <h3 class="t-hl">iPhone · панель вкладок + аксессуар</h3>
+      <div class="a3" style="position: relative; height: 176px; border-radius: 26px; overflow: hidden;">
+        <div class="tabbar-wrap" style="padding-bottom: 14px;">
+          <div class="accessory glass">
+            <span class="thumb a1"></span>
+            <span class="tt"><b>Design in motion</b><small>Studio North</small></span>
+            <button class="navbtn" aria-label="Пауза"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></button>
+            <button class="navbtn" aria-label="Закрыть мини-плеер"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
+          </div>
+          <div class="tabbar-row">
+            <nav class="tabbar glass" aria-label="Разделы">
+              <button class="tab on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button>
+              <button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button>
+              <button class="tab" style="position: relative;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн<span class="pill-badge act" style="position: absolute; top: 2px; right: 6px; padding: 0 6px; background: var(--action); color: var(--onAction); font-size: 11px; line-height: 16px;" aria-label="3 загрузки">3</span></button>
+              <button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button>
+            </nav>
+            <button class="tab-search glass" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <span class="cap">Аксессуар — живое изображение, Play/Pause, закрыть. Нажатие на название разворачивает плеер. Бейдж «3» — активные задания загрузки (VoiceOver: «Офлайн, 3 загрузки»).</span>
+      <div class="a2" style="position: relative; height: 96px; border-radius: 26px; overflow: hidden;">
+        <div class="tabbar-wrap" style="padding-bottom: 14px; flex-direction: row; align-items: center;">
+          <button class="tab-search glass" style="width: 52px; height: 52px; color: var(--action);" aria-label="Главная"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg></button>
+          <div class="accessory glass" style="flex: 1; min-height: 52px;"><span class="tt"><b>Design in motion</b></span><button class="navbtn" aria-label="Пауза"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></button></div>
+          <button class="tab-search glass" style="width: 52px; height: 52px;" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button>
+        </div>
+      </div>
+      <span class="cap">При прокрутке вниз панель сворачивается, аксессуар встаёт в строку. Название остаётся, кнопка закрытия уходит в контекстное меню аксессуара.</span>
+    </section>
+
+    <section class="col" style="gap: 14px;">
+      <h3 class="t-hl">Второй уровень</h3>
+      <div class="col" style="gap: 12px; padding: 18px; border-radius: 22px; background: var(--surface);">
+        <span class="cap">Главная · разделы из Visible Sections, горизонтальная прокрутка + кнопка «Все разделы» (доступно без свайпа)</span>
+        <div class="row" style="gap: 8px;"><div class="chips" style="flex: 1;"><span class="chip on">Главная</span><span class="chip">Рекомендации</span><span class="chip">Подписки</span><span class="chip">История</span><span class="chip">Плейлисты</span><span class="chip">Каналы</span><span class="chip">Shorts</span></div><button class="btn sm icon" aria-label="Все разделы"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button></div>
+        <span class="cap">Подписки · фильтр канала (сбрасывается при смене раздела)</span>
+        <div class="chips"><span class="chip on">Все каналы</span><span class="chip"><span class="avatar c0" style="width: 22px; height: 22px;"></span>Field Notes</span><span class="chip"><span class="avatar c1" style="width: 22px; height: 22px;"></span>Studio North</span><span class="chip"><span class="avatar c3" style="width: 22px; height: 22px;"></span>Sound Room</span></div>
+        <span class="cap">Медиатека · подписки, история, плейлисты, очередь, RSS</span>
+        <div class="seg"><span>Подписки</span><span class="on">История</span><span>Плейлисты</span><span>Очередь</span><span>RSS</span></div>
+        <span class="prop logic" style="align-self: flex-start;">«Очередь» — постоянный вход, сейчас зависит от плейлистов</span>
+      </div>
+    </section>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 300px 300px minmax(0, 1fr); gap: 40px; flex: 1;">
+    <section class="col" style="gap: 12px;">
+      <h3 class="t-hl">iPad · адаптивная боковая панель</h3>
+      <nav class="sidebar glass" style="border-radius: 26px; padding: 14px;" aria-label="Разделы">
+        <div class="side-item on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</div>
+        <div class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Поиск</div>
+        <div class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</div>
+        <div class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн-видео<span class="cnt">3</span></div>
+        <div class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3"/></svg>Настройки</div>
+        <div class="side-h">Медиатека</div>
+        <div class="side-item">История</div>
+        <div class="side-item">Смотреть позже</div>
+        <div class="side-item">Очередь<span class="cnt">12</span></div>
+        <div class="side-item">RSS-ленты</div>
+      </nav>
+      <span class="cap">Широкое окно — sidebar; узкое (&lt; 700 pt) — панель вкладок сверху. Выбор переносится между формами.</span>
+    </section>
+
+    <section class="col" style="gap: 12px;">
+      <h3 class="t-hl">Mac · source list</h3>
+      <div class="mac-side" style="background: var(--surface); border-radius: 16px; padding: 10px;">
+        <div class="side-item on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</div>
+        <div class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Поиск<span class="cnt"><span class="kbd">⌘F</span></span></div>
+        <div class="side-item is-focus"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</div>
+        <div class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн-видео<span class="cnt">3</span></div>
+        <div class="side-h">Подписки</div>
+        <div class="side-item"><span class="avatar c0" style="width: 16px; height: 16px;"></span>Field Notes</div>
+        <div class="side-item" style="background: var(--fill);"><span class="avatar c1" style="width: 16px; height: 16px;"></span>Studio North · наведение</div>
+        <div class="side-item"><span class="avatar c3" style="width: 16px; height: 16px;"></span>Sound Room</div>
+      </div>
+      <span class="cap">Выбранный раздел (заливка), клавиатурный фокус (кольцо) и наведение — три разных состояния. Настройки — отдельное окно, ⌘,</span>
+    </section>
+
+    <section class="col" style="gap: 12px;">
+      <h3 class="t-hl">Apple TV · верхние вкладки</h3>
+      <div data-theme="dark" style="background: radial-gradient(ellipse at 80% 20%, #3a2a40, #0b0b0d 70%); border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 18px; color: #fff;">
+        <div class="tv-tabs glass" style="transform: scale(.56); transform-origin: left top; margin-bottom: -36px; align-self: flex-start;">
+          <span class="tv-tab on">Главная</span><span class="tv-tab focus">Поиск</span><span class="tv-tab">Медиатека</span><span class="tv-tab">Офлайн</span><span class="tv-tab">Настройки</span>
+        </div>
+        <div class="row" style="gap: 18px; font-size: 14px; color: #d0d0d6;"><span class="row" style="gap: 6px;"><i style="display:block;width:16px;height:16px;border-radius:5px;background:rgba(255,255,255,.28)"></i>Выбрано</span><span class="row" style="gap: 6px;"><i style="display:block;width:16px;height:16px;border-radius:5px;background:#fff"></i>Фокус пульта</span><span class="row" style="gap: 6px;"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>Сейчас играет</span></div>
+        <span style="font-size: 13px; line-height: 18px; color: #b8b8c2;">Фокус входит в выбранную вкладку или последний значимый элемент. Back закрывает верхний слой, затем переходит к вкладкам. Нижней панели iPhone на TV нет.</span>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

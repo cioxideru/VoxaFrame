@@ -1,0 +1,54 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VoxaFrame</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--background); color: var(--text); font-family: var(--font-system); overflow: hidden; }
+  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; }
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 288px; overflow: hidden; }
+  .art svg { display: block; width: 480px; height: 288px; }
+  .plum { fill: var(--brand-plum); }
+  .coral { fill: var(--brand-coral); }
+  .ivory { fill: var(--brand-ivory); }
+  .signal { fill: var(--action); }
+  .blk { rx: var(--radius-panel); }
+  .chip { rx: var(--radius-card); }
+  .bar { rx: 4px; }
+  .words { position: absolute; left: var(--space-32); bottom: var(--space-32); max-width: 440px; }
+  .name { margin: 0; font-size: 80px; line-height: .92; font-weight: 700; letter-spacing: -.03em; color: var(--text); }
+  .tag { margin: var(--space-12) 0 0 3px; font-size: 14px; line-height: 20px; color: var(--secondary); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      brand-plum 232×288 slab bled off the top (the icon's ground, largest) · brand-coral 128×216 · brand-ivory 80×168 bled off the right · action 64×16 once (the signal) — ≈40% of 960×288
+  arrangement one tall plum slab with two satellites stepping down to the right, bottoms on one line space-24 above the edge, space-16 gutters
+  pattern     capsules, from "chips, buttons and the nav are radius-pill capsules; playback is the main action": filter-chip pills (32 tall, radius-card = half) and a player timeline (8 tall, coral progress + knob) cut into the slab in coral and ivory
+  scales      sides in space-8 multiples; gutters space-16; chip pitch space-48 rows; corners radius-panel, chips radius-card, bars 4 (half of space-8)
+-->
+<rect class="plum blk" x="24" y="-24" width="232" height="288" rx="24"/>
+<rect class="coral blk" x="272" y="48" width="128" height="216" rx="24"/>
+<rect class="ivory blk" x="416" y="96" width="80" height="168" rx="24"/>
+<rect class="signal" x="416" y="64" width="64" height="16" rx="8"/>
+<rect class="coral chip" x="48" y="104" width="88" height="32" rx="16"/>
+<rect class="ivory chip" x="144" y="104" width="64" height="32" rx="16"/>
+<rect class="ivory chip" x="48" y="152" width="56" height="32" rx="16"/>
+<rect class="ivory chip" x="112" y="152" width="96" height="32" rx="16"/>
+<rect class="ivory bar" x="48" y="216" width="184" height="8" rx="4"/>
+<rect class="coral bar" x="48" y="216" width="72" height="8" rx="4"/>
+<circle class="coral" cx="120" cy="220" r="8"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">VoxaFrame</h1>
+<p class="tag">Your videos. Your language. iPhone · iPad · Mac · Apple TV</p>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · каналы и подписки</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.chhead{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:4px 16px 14px}
+.chrow{display:flex;align-items:center;gap:12px;padding:10px 16px;position:relative;background:var(--background)}
+.chrow + .chrow::before{content:"";position:absolute;top:0;left:72px;right:0;height:1px;background:var(--hairline)}
+</style>
+</helmet>
+<div class="strip" style="width: 1298px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Канал · гость · <em>подписка на устройстве</em></span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;"><button class="navbtn glass" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span></span><button class="navbtn glass" aria-label="Поделиться каналом"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg></button></div>
+        <div class="chhead">
+          <span class="avatar c1" style="width: 84px; height: 84px;"></span>
+          <h1 class="t-2">Studio North</h1>
+          <p class="t-fn t-sec">96 тыс. подписчиков · 214 видео</p>
+          <p class="t-sh clamp2" style="max-width: 320px;">Короткие фильмы о дизайне, свете и движении. Новое видео — каждую пятницу.</p>
+          <button class="btn prom" style="margin-top: 6px;">Подписаться</button>
+          <p class="t-c1 t-sec">Без входа подписка сохранится на этом устройстве</p>
+        </div>
+        <div class="pad" style="padding-bottom: 12px;"><div class="seg"><span class="on">Все</span><span>Shorts</span></div></div>
+        <div class="scroll pad col" style="gap: 14px;">
+          <article class="crow"><div class="thumb a1"><span class="dur">12:08</span></div><div><p class="title clamp2">Design in motion</p><p class="sub">46 тыс. · неделю назад</p></div><button class="btn plain icon" style="width: 32px; min-height: 32px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></article>
+          <article class="crow"><div class="thumb a6"><span class="dur">09:30</span></div><div><p class="title clamp2">Light studies, vol. 3</p><p class="sub">31 тыс. · 2 недели назад</p></div><button class="btn plain icon" style="width: 32px; min-height: 32px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></article>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Подписка в процессе → <em>подтверждение отписки</em></span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;"><button class="navbtn glass" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span></span><span style="width: 44px;"></span></div>
+        <div class="chhead">
+          <span class="avatar c1" style="width: 84px; height: 84px;"></span>
+          <h1 class="t-2">Studio North</h1>
+          <p class="t-fn t-sec">96 тыс. подписчиков</p>
+          <div class="row" style="gap: 10px; margin-top: 6px;"><button class="btn" aria-busy="true" style="min-width: 168px;" disabled><span class="spin" aria-hidden="true"></span>Подписываем…</button><span class="t-c1 t-sec">кнопка заблокирована</span></div>
+          <div class="row" style="gap: 10px; margin-top: 6px;"><button class="btn" style="min-width: 168px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg>Вы подписаны</button><span class="t-c1 t-sec">аккаунт Google</span></div>
+        </div>
+        <div class="dim-under"></div>
+        <div style="position: absolute; left: 0; right: 0; top: 300px; display: flex; justify-content: center; z-index: 10;">
+          <div class="alert glass" style="background: var(--elevated);"><h3>Отписаться от Studio North?</h3><p>Подписка в аккаунте Google будет отменена. Видео канала пропадут из «Подписок».</p><div class="acts h"><button class="btn is-focus">Отмена</button><button class="btn dest-prom">Отписаться</button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Каналы · список подписок · <em>действие строки</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="largehead"><h1 class="t-lt">Главная</h1></div>
+        <div class="pad" style="padding-bottom: 8px;"><div class="chips"><span class="chip">История</span><span class="chip">Плейлисты</span><span class="chip on">Каналы</span><span class="chip">Shorts</span></div></div>
+        <p class="t-fn t-sec pad" style="padding-bottom: 6px;">Подписки на этом устройстве · 5</p>
+        <div class="scroll">
+          <div class="chrow"><span class="avatar c0" style="width: 44px; height: 44px;"></span><div class="grow"><p class="t-hl">Field Notes</p><p class="t-fn t-sec">412 тыс. подписчиков</p></div><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px; color: var(--tertiary);"><path d="m9 5 7 7-7 7"/></svg></div>
+          <div class="chrow" style="padding: 0; overflow: hidden;"><div class="row" style="gap: 12px; padding: 10px 16px; transform: translateX(-112px); background: var(--background); flex: 1; min-width: 100%;"><span class="avatar c1" style="width: 44px; height: 44px;"></span><div class="grow"><p class="t-hl">Studio North</p><p class="t-fn t-sec">96 тыс. подписчиков</p></div></div><button class="btn dest-prom" style="position: absolute; right: 0; top: 0; bottom: 0; border-radius: 0; width: 112px; min-height: 0;">Отписаться</button></div>
+          <div class="chrow"><span class="avatar c3" style="width: 44px; height: 44px;"></span><div class="grow"><p class="t-hl">Sound Room</p><p class="t-fn t-sec">28 тыс. подписчиков</p></div><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px; color: var(--tertiary);"><path d="m9 5 7 7-7 7"/></svg></div>
+          <div class="chrow"><span class="avatar" style="width: 44px; height: 44px;">N</span><div class="grow"><p class="t-hl">Night Walks</p><p class="t-fn t-sec">Число подписчиков неизвестно</p></div><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px; color: var(--tertiary);"><path d="m9 5 7 7-7 7"/></svg></div>
+          <div class="chrow"><span class="avatar c5" style="width: 44px; height: 44px;"></span><div class="grow"><p class="t-hl">Frame by Frame</p><p class="t-fn t-sec">7 тыс. подписчиков</p></div><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px; color: var(--tertiary);"><path d="m9 5 7 7-7 7"/></svg></div>
+          <p class="t-fn t-sec pad" style="padding-top: 14px;">Свайп влево или долгое нажатие → «Отписаться». На TV — отдельная кнопка в строке. После входа локальные подписки автоматически в аккаунт не переносятся.</p>
+        </div>
+        <div class="tabbar-wrap"><div class="tabbar-row"><nav class="tabbar glass" aria-label="Разделы"><button class="tab on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button></nav><button class="tab-search glass" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1298,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

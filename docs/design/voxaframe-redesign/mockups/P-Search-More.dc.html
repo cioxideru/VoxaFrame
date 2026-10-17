@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · фильтры и состояния поиска</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.fl .li{min-height:44px;padding:8px 16px}
+.fl .lt{font-size:16px}
+.qhead{display:flex;gap:8px;padding:0 16px 10px}
+</style>
+</helmet>
+<div class="strip" style="width: 1720px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Фильтры · лист · Отмена / Применить / Сбросить</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="qhead"><div class="search" style="flex: 1;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="q">slow living</span></div></div>
+        <div class="dim-under"></div>
+        <div class="sheet full glass" style="background: var(--grouped); top: 74px;" role="dialog" aria-label="Фильтры поиска">
+          <div class="grab"></div>
+          <div class="sheet-h"><button class="btn sm plain">Отмена</button><span class="t">Фильтры</span><button class="btn sm prom">Применить</button></div>
+          <div class="pad fl" style="overflow: hidden;">
+            <p class="group-h" style="margin-top: 6px;">Сортировка</p>
+            <div class="list"><div class="li"><span class="lt">Релевантность</span></div><div class="li"><span class="lt">Рейтинг</span></div><div class="li"><span class="lt">Дата загрузки</span><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div><div class="li"><span class="lt">Число просмотров</span></div></div>
+            <p class="group-h">Дата</p>
+            <div class="seg" style="flex-wrap: wrap; border-radius: 18px;"><span>Любая</span><span>Час</span><span>Сегодня</span><span class="on">Неделя</span><span>Месяц</span><span>Год</span></div>
+            <p class="group-h">Тип</p>
+            <div class="seg" style="border-radius: 18px;"><span class="on">Любой</span><span>Видео</span><span>Канал</span><span>Плейлист</span><span>Фильм</span></div>
+            <p class="group-h">Длительность</p>
+            <div class="seg" style="border-radius: 18px;"><span>Любая</span><span>&lt; 4 мин</span><span class="on">4–20 мин</span><span>&gt; 20 мин</span></div>
+            <div class="row" style="justify-content: center; margin-top: 18px;"><button class="btn sm plain" style="color: var(--danger);">Сбросить фильтры</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Первая загрузка результатов</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="qhead"><div class="search" style="flex: 1;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="q">slow living</span></div><button class="btn icon" aria-label="Фильтры"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button></div>
+        <div class="scroll pad col" style="gap: 20px;" role="status" aria-label="Ищем">
+          <p class="t-fn t-sec row" style="gap: 8px;"><span class="spin" style="width: 14px; height: 14px; border-width: 2px;" aria-hidden="true"></span>Ищем «slow living»…</p>
+          <div class="crow"><div class="thumb skel"></div><div class="col" style="gap: 6px;"><span class="skl" style="height: 14px; width: 92%;"></span><span class="skl" style="height: 14px; width: 60%;"></span><span class="skl" style="height: 12px; width: 40%;"></span></div></div>
+          <div class="crow"><div class="thumb skel"></div><div class="col" style="gap: 6px;"><span class="skl" style="height: 14px; width: 80%;"></span><span class="skl" style="height: 12px; width: 50%;"></span></div></div>
+          <div class="crow"><div class="thumb skel"></div><div class="col" style="gap: 6px;"><span class="skl" style="height: 14px; width: 88%;"></span><span class="skl" style="height: 12px; width: 36%;"></span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Запрос выполнен · <em>совпадений нет</em></span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="qhead"><div class="search" style="flex: 1;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="q">quiet mornings</span></div><button class="btn icon" aria-label="Фильтры, активно 1" style="color: var(--action);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button></div>
+        <div class="pad" style="padding-bottom: 10px;"><div class="chips"><span class="chip removable">За последний час<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></span></div></div>
+        <div class="scroll" style="display: flex; align-items: center; justify-content: center;">
+          <div class="empty"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></div><h3>Ничего не найдено</h3><p>По «quiet mornings» за последний час совпадений нет. Попробуйте другой запрос или период.</p><button class="btn">Убрать фильтр «за час»</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Ошибка запроса · <em>отличается</em> от пустого</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="qhead"><div class="search" style="flex: 1;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="q">slow living</span></div><button class="btn icon" aria-label="Фильтры"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button></div>
+        <div class="scroll" style="display: flex; align-items: center; justify-content: center;">
+          <div class="empty"><div class="glyph" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg></div><h3>Не удалось выполнить поиск</h3><p>Сервис не ответил. Запрос и фильтры сохранены.</p><button class="btn prom">Попробовать ещё раз</button><button class="btn plain sm">Открыть офлайн-видео</button><span class="prop logic" style="margin-top: 10px;">Экран ошибки поиска — новый</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1720,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

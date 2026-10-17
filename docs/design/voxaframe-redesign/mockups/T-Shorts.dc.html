@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Apple TV · Shorts</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.ctl{display:flex;align-items:center;gap:16px;min-height:76px;padding:0 28px;border-radius:999px;font-size:27px;font-weight:600;color:#fff}
+.ctl svg{width:32px;height:32px}
+.ctl.focus{background:#fff;color:#000;transform:scale(1.05);box-shadow:0 16px 34px rgba(0,0,0,.45)}
+</style>
+</helmet>
+<div class="vf tv" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1920px; height: 1080px; position: relative; overflow: hidden; color: #fff; background: #000;">
+  <div class="a3" style="position: absolute; inset: -40px; filter: blur(60px) brightness(.45);"></div>
+  <div class="media" style="position: absolute; left: 50%; top: 60px; bottom: 60px; width: 540px; transform: translateX(-50%); border-radius: 36px;"><div class="art a3"></div><div class="shade-b"></div>
+    <div style="position: absolute; left: 28px; right: 28px; bottom: 28px;"><div class="tl"><i class="pl" style="width: 58%;"></i></div><div class="ttime" style="font-size: 20px; margin-top: 10px;"><span>0:34</span><span>0:58</span></div></div>
+  </div>
+  <div style="position: absolute; left: 80px; top: 60px; width: 560px; display: flex; flex-direction: column; gap: 18px;">
+    <span class="toast glass-media" style="align-self: flex-start; font-size: 23px; padding: 10px 22px;">Shorts · 3 из 24</span>
+    <div class="row" style="gap: 14px; margin-top: 20px;"><span class="avatar c3" style="width: 56px; height: 56px;"></span><span style="font-size: 29px; font-weight: 700;">Sound Room</span></div>
+    <h1 style="font-size: 44px; line-height: 54px; font-weight: 700;">One-minute sound check: three microphones, one room</h1>
+    <p style="font-size: 23px; line-height: 30px; color: #d0d0d6; margin-top: 30px;">Вверх / вниз — предыдущий и следующий ролик<br>Play/Pause — пауза · Back — к полке Shorts</p>
+    <p style="font-size: 23px; line-height: 30px; color: #d0d0d6;">Пока открыта панель выбора, переключение роликов не срабатывает.</p>
+  </div>
+  <div style="position: absolute; right: 80px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 16px; align-items: stretch; width: 460px;">
+    <div class="ctl glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/></svg>Звук</div>
+    <div class="ctl focus"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16a8 8 0 1 1 15 0"/><path d="m12 13 4-4"/></svg>Скорость Shorts · 1,5×</div>
+    <div class="ctl glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Язык · перевод RU</div>
+    <div class="ctl glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Масштаб · Fit</div>
+    <div class="ctl glass-media"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>Ещё: канал, очередь</div>
+    <p style="font-size: 20px; line-height: 26px; color: #d0d0d6; padding: 0 12px;">Скорость и язык Shorts не меняют обычные видео.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

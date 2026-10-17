@@ -2,9 +2,10 @@
 
 Status: active
 
-Owner: Claude Code for Ivan Baranov. Git boundary: local `master` at `0e81d8a`. Working tree has
-unrelated changes that stay outside this plan: modified `Localizable.xcstrings`, untracked
-`docs/design/claude-design/voxaframe-redesign.zip` and `docs/new-design-v1/`.
+Owner: Claude Code for Ivan Baranov. Original Git boundary: local `master` at `0e81d8a`.
+The 2026-10-17 consolidation into local `master` includes the remaining design export,
+HTML/CSS boards, [reference screenshots](../../new-design-v1/README.md), and refreshed string catalog.
+Saving these source materials does not accept unfinished redesign stages or close OQ-0019.
 Basis: [design package](../../design/voxaframe-redesign/START-HERE.md) (DESIGN-0003) and the
 [functional brief](../../design/VoxaFrame-Functionality.ru.md) (DESIGN-0002), which wins over a mockup on any disagreement.
 Decisions: [ADR-0012](../../adr/0012-redesign-availability-and-tokens.md); accent and logic scope below.
@@ -31,7 +32,7 @@ Decisions: [ADR-0012](../../adr/0012-redesign-availability-and-tokens.md); accen
 
 | Stage | Content | Status / evidence |
 | --- | --- | --- |
-| 0 | This plan, ADR-0012, OQ-0019, document index | done: `452adac`; HTML/CSS mockups left uncommitted behind the HIG gate (OQ-0019) |
+| 0 | This plan, ADR-0012, OQ-0019, document index | done: `452adac`; the remaining HTML/CSS mockups are now retained as design references. UI acceptance remains in OQ-0019 and the stage checks below |
 | 1 | `Views/DesignSystem/`: tokens and glass modifier. Accent flip deferred to the button stage (see OQ-0019) | done: `e483ec1`. Package tests and SwiftLint (`./h check`: 1157 tests, 160 suites), iOS and tvOS builds pass; HIG static review advisory-pass, high=0. macOS app scheme is not built by the harness (package compiles on macOS); device and Dark Mode checks NOT RUN |
 | 3a | `VFProminentButtonStyle` (fill `action`, label `onAction`), migrate the 15 `.borderedProminent` sites, then flip `.system` accent on iOS, iPadOS, tvOS | NOT RUN |
 | 2 | Shell: tabs / sidebar / split view / top tabs; mini-player accessory spike; macOS inspector and menu | NOT RUN |

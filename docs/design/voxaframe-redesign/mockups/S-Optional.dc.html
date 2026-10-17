@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Дополнительный объём</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.stage{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--cell);font-size:14px}
+.stage .n{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:var(--fill);flex:none}
+.stage.done .n{background:var(--success);color:var(--background)}
+.stage.now .n{background:var(--action);color:var(--onAction)}
+</style>
+</helmet>
+<div class="vf" data-theme="{{theme}}" data-accent="{{accent}}" style="width: 1100px; height: 700px; padding: 32px; background: var(--grouped); display: grid; grid-template-columns: 1fr 1fr; gap: 28px;">
+  <div class="col" style="gap: 12px;">
+    <div class="row" style="gap: 10px;"><h2 class="t-2">Download to Gallery</h2><span class="prop cond">Флаг ENABLE_DOWNLOADS</span></div>
+    <p class="t-fn t-sec">Не входит в обычную сборку и не заменяет «Офлайн-видео». Сохраняет файл в «Фото» и требует доступа к медиатеке.</p>
+    <div class="stage done"><span class="n">✓</span>Получение потока</div>
+    <div class="stage now"><span class="n">2</span><span class="grow">Загрузка · 48%</span><span class="t-c1 t-sec">82 из 170 МБ</span></div>
+    <div class="stage"><span class="n">3</span>Сохранение в «Фото»</div>
+    <div class="stage"><span class="n">4</span>Готово · «Открыть в Фото»</div>
+    <div class="banner err" style="background: var(--cell);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg><span class="grow">Нет доступа к «Фото». Разрешите в Настройках iOS.</span><button class="btn sm tint">Открыть</button></div>
+    <div class="banner warn" style="background: var(--cell);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2.5 20h19Z"/><path d="M12 10v4.5M12 17.2v.3"/></svg><span class="grow">Не удалось сохранить файл</span><button class="btn sm tint">Повторить</button></div>
+    <p class="t-c1 t-sec">Старая страница Downloads в Медиатеке появляется только в такой сборке.</p>
+  </div>
+  <div class="col" style="gap: 12px;">
+    <div class="row" style="gap: 10px;"><h2 class="t-2">Live Activity</h2><span class="prop cond">Только для Gallery</span></div>
+    <div data-theme="dark" style="border-radius: 26px; padding: 16px; background: #1c1c1e; color: #fff;">
+      <div class="row" style="gap: 12px;"><img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 40px; height: 40px; border-radius: 10px;"><div class="grow"><p class="t-sh t-b">Сохраняем в «Фото»</p><p class="t-c1" style="color: #d0d0d6;">The long way home · 48%</p></div></div>
+      <div class="bar" style="margin-top: 12px; background: rgba(255,255,255,.2);"><i style="width: 48%; background: #ff9988;"></i></div>
+    </div>
+    <div data-theme="dark" class="row" style="gap: 10px; border-radius: 999px; padding: 8px 14px; background: #000; color: #fff; align-self: flex-start;"><img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 22px; height: 22px; border-radius: 6px;"><span class="t-c1">48%</span></div>
+    <p class="t-fn t-sec">Стадии: получение → скачивание → сохранение → успех или ошибка. Это другой механизм, чем очередь «Офлайн-видео».</p>
+    <div style="height: 1px; background: var(--hairline); margin: 6px 0;"></div>
+    <div class="row" style="gap: 10px;"><h3 class="t-hl">Live Activity для «Офлайн-видео»</h3><span class="prop">Новое · предложение</span></div>
+    <p class="t-fn t-sec">Показывать прогресс группы заданий на экране блокировки. Требует новой реализации и соблюдения ограничений фоновой загрузки ОС.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"$preview":{"width":1100,"height":700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral' };
+  }
+}
+</script>
+</body>
+</html>

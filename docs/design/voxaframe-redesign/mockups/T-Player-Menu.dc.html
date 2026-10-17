@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Apple TV · аудио и перевод</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.panel{position:absolute;right:80px;top:60px;bottom:60px;width:720px;border-radius:40px;padding:40px 32px;display:flex;flex-direction:column;gap:10px}
+.ph{font-size:23px;line-height:30px;font-weight:700;color:var(--secondary);letter-spacing:.5px;text-transform:uppercase;padding:18px 28px 6px}
+.tv-row .chk{width:32px;height:32px;color:var(--action);margin-left:auto}
+.tv-row.focus .chk{color:#000}
+</style>
+</helmet>
+<div class="vf tv" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1920px; height: 1080px; position: relative; overflow: hidden; color: #fff;">
+  <div class="media" style="position: absolute; inset: 0;"><div class="art a7" style="filter: brightness(.55);"></div></div>
+  <div style="position: absolute; left: 80px; top: 60px; max-width: 900px;">
+    <p style="font-size: 23px; color: #e6e6ea;">Field Notes</p>
+    <h1 style="font-size: 48px; line-height: 58px; font-weight: 700;">Walking the old salt road, part two</h1>
+    <div class="row glass-media" style="margin-top: 380px; border-radius: 28px; padding: 22px 28px; gap: 22px; width: 860px;" role="status"><span class="spin lg" aria-hidden="true"></span><div><p style="font-size: 29px; font-weight: 700;">Готовим перевод · Русский</p><p style="font-size: 23px; color: #e6e6ea;">Примерно 1–2 минуты · видео на паузе</p></div></div>
+  </div>
+  <div class="panel glass" style="background: rgba(30,30,32,.72);" role="dialog" aria-label="Аудио и перевод">
+    <h2 style="font-size: 36px; line-height: 44px; font-weight: 700; padding: 0 28px 6px;">Аудио и перевод</h2>
+    <div class="tv-row focus">Смотреть без перевода</div>
+    <p class="ph">Дорожка видео</p>
+    <div class="tv-row">English · оригинал</div>
+    <div class="tv-row">Español · дубляж</div>
+    <p class="ph">Перевод Yandex</p>
+    <div class="tv-row">Русский<span class="v">Готовится…</span></div>
+    <div class="tv-row">English</div>
+    <div class="tv-row">Қазақша</div>
+    <div class="tv-row">Исходный звук фоном<span class="v">Вкл</span></div>
+    <p style="font-size: 23px; line-height: 30px; color: var(--secondary); padding: 10px 28px 0;">Back — закрыть панель, видео не перезапускается.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Строки и списки</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.cap{font-size:12px;line-height:16px;color:var(--secondary);font-weight:600;display:block;margin:0 0 8px 4px}
+.jt{width:30px;height:30px;border-radius:8px;background:var(--fill);display:flex;align-items:center;justify-content:center;color:var(--secondary);flex:none}
+.jt svg{width:18px;height:18px}
+</style>
+</helmet>
+<div class="vf" data-theme="{{theme}}" data-accent="{{accent}}" style="width: 1440px; height: 1180px; padding: 36px 48px; display: flex; flex-direction: column; gap: 22px; background: var(--grouped);">
+  <div class="row between"><h2 class="t-1">Строки списков</h2><span class="t-fn t-sec">Нативный List. Состояние всегда словом и символом, не только цветом.</span></div>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px;">
+
+    <div class="col" style="gap: 18px;">
+      <div>
+        <span class="cap">VF/DownloadRow · задания сгруппированы по видео</span>
+        <div class="banner warn" style="margin-bottom: 10px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg><span>Загрузки ждут, пока идёт воспроизведение. Это не ошибка.</span></div>
+        <div class="list">
+          <div class="li" style="align-items: flex-start;"><div class="thumb a0" style="width: 72px; border-radius: 8px;"></div><div class="lt"><b class="t-hl">The long way home</b><small>3 составляющие · ~214 МБ</small></div></div>
+          <div class="li ind"><span class="jt"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9.5 4.5 2.5-4.5 2.5Z"/></svg></span><div class="lt" style="font-size: 15px;">Видео · 720p H.264<div class="bar" style="margin: 6px 0 4px;" role="progressbar" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100"><i style="width: 64%;"></i></div><small>Загрузка · 64% · 128 из 200 МБ</small></div><button class="btn sm plain">Отменить</button></div>
+          <div class="li ind"><span class="jt"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/></svg></span><div class="lt" style="font-size: 15px;">Аудио · English (оригинал)<small>В очереди · 2-я</small></div><button class="btn sm plain">Отменить</button></div>
+          <div class="li ind"><span class="jt"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span><div class="lt" style="font-size: 15px;">Перевод · Русский<small class="row" style="gap: 6px;"><span class="spin" style="width: 12px; height: 12px; border-width: 2px;"></span>Подготовка · ждём сервис перевода</small></div><button class="btn sm plain">Отменить</button></div>
+        </div>
+      </div>
+      <div class="list">
+        <div class="li"><span class="jt" style="color: var(--success);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></span><div class="lt" style="font-size: 15px;">Inside the sound · Аудио<small class="t-ok" style="color: var(--success);">Завершено · 34 МБ</small></div><button class="btn sm plain">Открыть</button></div>
+        <div class="li"><span class="jt" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg></span><div class="lt" style="font-size: 15px;">Cities after dark · Видео 1080p<small style="color: var(--danger);">Ошибка · недостаточно места</small></div><button class="btn sm tint">Повторить</button></div>
+        <div class="li"><span class="jt"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 8.5 7 7"/></svg></span><div class="lt" style="font-size: 15px;">A slower morning · Видео 720p<small>Отменено вами</small></div><button class="btn sm tint">Повторить</button></div>
+        <div class="li"><span class="jt"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span><div class="lt" style="font-size: 15px;">Paper, light and glue · Видео<small>Подготовка · получаем параметры</small></div><button class="btn sm plain">Отменить</button></div>
+      </div>
+      <span class="t-fn t-sec">Свайп/меню строки: Удалить задание. <span class="prop logic">Пауза отдельного задания — предложение</span></span>
+    </div>
+
+    <div class="col" style="gap: 18px;">
+      <div>
+        <span class="cap">VF/OfflineAssetRow · страница сохранённого видео</span>
+        <div class="group-h" style="margin-top: 0;">Видео</div>
+        <div class="list">
+          <div class="li"><div class="lt">1080p · VP9 · 60 fps<small class="row" style="gap: 6px;"><span class="pill-badge ok">Сохранено</span>168 МБ</small></div><button class="btn sm prom" aria-label="Воспроизвести 1080p"><svg class="f s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg></button></div>
+          <div class="li"><div class="lt">720p · H.264 · HLS<small class="row" style="gap: 6px;"><span class="pill-badge ok">Сохранено</span>Звук внутри пакета</small></div><button class="btn sm prom" aria-label="Воспроизвести 720p"><svg class="f s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg></button></div>
+          <div class="li"><div class="lt">480p · H.264<small class="row" style="gap: 6px;"><span class="pill-badge act">Загрузка 40%</span></small></div></div>
+        </div>
+        <div class="group-h">Аудио</div>
+        <div class="list">
+          <div class="li"><div class="lt">Звук внутри видео</div></div>
+          <div class="li sel"><div class="lt">English · оригинал<small>22 МБ</small></div><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div>
+        </div>
+        <div class="group-h">Перевод</div>
+        <div class="list">
+          <div class="li sel"><div class="lt">Без перевода</div><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div>
+          <div class="li"><div class="lt">Русский · Yandex<small>10 МБ · без живых голосов</small></div></div>
+        </div>
+        <div class="banner warn" style="margin-top: 10px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2.5 20h19Z"/><path d="M12 10v4.5M12 17.2v.3"/></svg><span>HLS-пакет 720p играет только со своим звуком. Выберите «Звук внутри видео» или 1080p.</span></div>
+      </div>
+    </div>
+
+    <div class="col" style="gap: 18px;">
+      <div>
+        <span class="cap">VF/SettingsRow</span>
+        <div class="list">
+          <div class="li"><span class="ico ic-coral"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16a8 8 0 1 1 15 0"/><path d="m12 13 4-4"/></svg></span><span class="lt">Скорость</span><span class="val">1×<svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></span></div>
+          <div class="li"><span class="ico ic-indigo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/></svg></span><span class="lt">Фоновое воспроизведение</span><button class="switch on" role="switch" aria-checked="true" aria-label="Фоновое воспроизведение"></button></div>
+          <div class="li"><span class="ico ic-plum"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><span class="lt">Токен Yandex<small>Для живых голосов</small></span><span class="val t-num" style="letter-spacing: 2px;">••••••••</span></div>
+          <div class="li"><span class="lt" style="padding-left: 42px; color: var(--action); font-size: 15px;">Как получить токен</span></div>
+          <div class="li dest"><span class="lt" style="text-align: center;">Удалить все офлайн-видео</span></div>
+        </div>
+      </div>
+      <div>
+        <span class="cap">RSS · очередь · история поиска</span>
+        <div class="list">
+          <div class="li"><span class="ico ic-orange"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle class="fc" cx="6" cy="18" r="1.5"/></svg></span><span class="lt">Field Notes<small>youtube.com/feeds/…channel_id=UC…x9</small></span><button class="switch on" role="switch" aria-checked="true" aria-label="Field Notes активна"></button></div>
+          <div class="li"><span class="ico ic-gray"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle class="fc" cx="6" cy="18" r="1.5"/></svg></span><span class="lt">Night Walks<small>Выключена · остаётся в списке</small></span><button class="switch" role="switch" aria-checked="false" aria-label="Night Walks активна"></button></div>
+        </div>
+        <div class="list" style="margin-top: 12px;">
+          <div class="li"><svg class="i s18 t-act" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg><div class="thumb a1" style="width: 64px; border-radius: 6px;"></div><span class="lt" style="font-size: 15px;">Design in motion<small class="t-act" style="color: var(--action);">Сейчас играет</small></span></div>
+          <div class="li"><span class="t-fn t-sec t-num" style="width: 18px; text-align: center;">2</span><div class="thumb a2" style="width: 64px; border-radius: 6px;"></div><span class="lt" style="font-size: 15px;">A slower morning<small>Everyday Films</small></span><button class="btn sm plain icon" aria-label="Переместить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14M5 15h14"/></svg></button></div>
+        </div>
+        <div class="list" style="margin-top: 12px;">
+          <div class="li"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--secondary);"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span class="lt">slow living</span><button class="btn sm plain icon" aria-label="Подставить запрос в строку"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 17 7 7m0 8V7h8"/></svg></button><button class="btn sm plain icon" aria-label="Удалить запрос"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+        </div>
+      </div>
+      <div>
+        <span class="cap">Комментарий · только чтение</span>
+        <div class="row" style="gap: 12px; align-items: flex-start;"><span class="avatar c2" style="width: 32px; height: 32px;"></span><div class="grow"><p class="t-fn"><b>@paperbird</b> <span class="t-sec">· 3 дня назад</span></p><p class="t-sh" style="margin-top: 2px;">Лучший момент — <a href="#c">04:12</a>, свет в окне просто нереальный.</p><p class="t-fn t-sec row" style="gap: 4px; margin-top: 4px;"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v10H4V10h3Zm0 0 4-7c1.5 0 2.5 1 2.2 2.6L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 6.5A2.5 2.5 0 0 1 17.3 20H7"/></svg>214</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral' };
+  }
+}
+</script>
+</body>
+</html>

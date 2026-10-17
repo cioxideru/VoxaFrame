@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · RSS</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.rli .lt small{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+</style>
+</helmet>
+<div class="strip" style="width: 876px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Добавить ленту · <em>неверный адрес</em></span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen" style="background: var(--grouped);">
+        <div class="safe-top"></div>
+        <div class="sheet-h"><button class="btn sm plain">Отмена</button><span class="t">Новая RSS-лента</span><button class="btn sm prom" disabled>Добавить</button></div>
+        <div class="pad col" style="gap: 16px; padding-top: 10px;">
+          <div class="field"><label for="rssn">Название</label><div class="box" id="rssn" style="background: var(--cell);">Night Walks</div></div>
+          <div class="field"><label for="rssu">Адрес ленты</label><div class="box err" id="rssu" style="background: var(--cell);">youtube.com/feeds/videos</div><span class="hint err"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg>Нужен адрес http:// или https://</span></div>
+          <p class="t-fn t-sec">Пример: https://www.youtube.com/feeds/videos.xml?channel_id=… — новые видео канала без аккаунта Google.</p>
+          <div class="list" style="margin-top: 12px;">
+            <div class="li"><span class="lt" style="font-size: 15px;">Добавление…<small>После нажатия кнопка показывает прогресс и блокируется</small></span><span class="spin" style="color: var(--secondary);" aria-hidden="true"></span></div>
+          </div>
+          <div class="empty" style="margin-top: 20px;"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle class="fc" cx="6" cy="18" r="1.5"/></svg></div><h3 style="font-size: 17px;">Пустой список RSS</h3><p>Добавьте первую ленту канала — видео появятся в Медиатеке.</p><button class="btn sm prom">Добавить ленту</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Управление лентами · вкл/выкл · удаление</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen" style="background: var(--grouped);">
+        <div class="safe-top"></div>
+        <div class="navbar"><button class="navbtn" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span class="t">RSS-ленты</span><button class="navbtn" aria-label="Добавить ленту"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
+        <div class="pad">
+          <p class="group-h">Активные попадают в общий список</p>
+          <div class="list rli">
+            <div class="li"><span class="lt">Field Notes<small>…/videos.xml?channel_id=UC…x9</small></span><button class="switch on" role="switch" aria-checked="true" aria-label="Field Notes"></button></div>
+            <div class="li"><span class="lt">Everyday Films<small>…/videos.xml?channel_id=UC…3k</small></span><button class="switch on" role="switch" aria-checked="true" aria-label="Everyday Films"></button></div>
+            <div class="li"><span class="lt">Night Walks<small>Выключена · остаётся в списке</small></span><button class="switch" role="switch" aria-checked="false" aria-label="Night Walks"></button></div>
+            <div class="li" style="padding: 0; overflow: hidden;"><div class="row" style="gap: 12px; padding: 10px 16px; transform: translateX(-96px); flex: 1; min-width: 100%; background: var(--cell);"><span class="lt">Studio North<small>…/videos.xml?channel_id=UC…7q</small></span><span class="switch on" aria-hidden="true"></span></div><button class="btn dest-prom" style="position: absolute; right: 0; top: 0; bottom: 0; border-radius: 0; width: 96px; min-height: 0;">Удалить</button></div>
+          </div>
+          <p class="group-f">Выключение оставляет источник. Удаление убирает его с устройства. На Mac и TV те же действия — в меню строки.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":876,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

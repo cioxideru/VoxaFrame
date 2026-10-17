@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · поиск</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.sbar{position:absolute;left:14px;right:14px;bottom:22px;display:flex;gap:10px;align-items:center;z-index:5}
+.sbar .search{flex:1;min-height:52px}
+.kbd-block{position:absolute;left:0;right:0;bottom:0;height:300px;background:var(--surface);border-top:1px solid var(--hairline);display:flex;align-items:center;justify-content:center;color:var(--secondary);font-size:13px}
+.srow{display:flex;align-items:center;gap:12px;min-height:46px;border-bottom:1px solid var(--hairline)}
+</style>
+</helmet>
+<div class="strip" style="width: 1298px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Пустой поиск · <em>история запросов</em> и темы</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="largehead"><h1 class="t-lt">Поиск</h1></div>
+        <div class="scroll pad">
+          <div class="row between" style="margin: 6px 0 4px;"><h2 class="t-hl">Недавние</h2><button class="btn sm plain">Очистить</button></div>
+          <div class="srow"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--secondary);"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span class="grow t-body">slow living</span><button class="btn sm plain icon" aria-label="Подставить в строку"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 17 7 7m0 8V7h8"/></svg></button><button class="btn sm plain icon" aria-label="Удалить запрос"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+          <div class="srow"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--secondary);"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span class="grow t-body">night ferry islands</span><button class="btn sm plain icon" aria-label="Подставить в строку"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 17 7 7m0 8V7h8"/></svg></button><button class="btn sm plain icon" aria-label="Удалить запрос"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+          <div class="srow"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--secondary);"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span class="grow t-body">как испечь хлеб на костре</span><button class="btn sm plain icon" aria-label="Подставить в строку"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 17 7 7m0 8V7h8"/></svg></button><button class="btn sm plain icon" aria-label="Удалить запрос"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+          <p class="t-c1 t-sec" style="margin-top: 8px;">История поиска хранится на устройстве (до 50). Очистка не трогает историю просмотров.</p>
+          <h2 class="t-hl" style="margin: 22px 0 10px;">Темы</h2>
+          <div class="chips wrap" style="row-gap: 8px;"><span class="chip">Путешествия</span><span class="chip">Кулинария</span><span class="chip">Дизайн</span><span class="chip">Музыка</span><span class="chip">Наука</span><span class="chip">Природа</span></div>
+        </div>
+        <div class="sbar">
+          <button class="tab-search glass" style="width: 52px; height: 52px;" aria-label="К разделам"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg></button>
+          <div class="search glass"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span>Видео, каналы, плейлисты</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Ввод · <em>подсказки</em> · стрелка подставляет текст</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="scroll pad" style="padding-top: 8px;">
+          <div class="srow"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--secondary);"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="grow t-body"><b>slow</b> living</span><button class="btn sm plain icon" aria-label="Подставить «slow living»"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 17 7 7m0 8V7h8"/></svg></button></div>
+          <div class="srow"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--secondary);"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="grow t-body"><b>slow</b> morning routine</span><button class="btn sm plain icon" aria-label="Подставить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 17 7 7m0 8V7h8"/></svg></button></div>
+          <div class="srow"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--secondary);"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="grow t-body"><b>slow</b> travel japan</span><button class="btn sm plain icon" aria-label="Подставить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 17 7 7m0 8V7h8"/></svg></button></div>
+          <div class="srow"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--secondary);"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="grow t-body"><b>slow</b> cinema</span><button class="btn sm plain icon" aria-label="Подставить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 17 7 7m0 8V7h8"/></svg></button></div>
+        </div>
+        <div class="sbar" style="bottom: 312px;">
+          <div class="search glass" style="box-shadow: inset 0 0 0 2px var(--focus);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="q">slow<i class="caret"></i></span><button class="btn sm icon" style="min-height: 26px; width: 26px; background: var(--fill-strong);" aria-label="Очистить"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+          <button class="btn glassb sm">Отмена</button>
+        </div>
+        <div class="kbd-block">Системная клавиатура · «Найти» запускает поиск</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Результаты · <em>активные фильтры</em> снимаются</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="row pad" style="gap: 8px; padding-bottom: 10px;"><div class="search" style="flex: 1;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="q">slow living</span></div><button class="btn icon" aria-label="Фильтры, активно 2" style="color: var(--action);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button></div>
+        <div class="pad" style="padding-bottom: 12px;"><div class="chips"><span class="chip removable">За неделю<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></span><span class="chip removable">4–20 мин<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></span></div></div>
+        <div class="scroll pad col" style="gap: 16px;">
+          <div class="row" style="gap: 12px; background: var(--surface); border-radius: 18px; padding: 12px;"><span class="avatar c2" style="width: 52px; height: 52px;"></span><div class="grow"><p class="t-hl">Everyday Films</p><p class="t-fn t-sec">Канал · 180 тыс.</p></div><button class="btn sm prom">Подписаться</button></div>
+          <article class="card"><div class="thumb a2"><span class="dur">14:20</span></div><div class="meta"><div class="grow"><p class="title clamp2">A slower morning: 10 small rituals</p><p class="sub">Everyday Films · 9 тыс. · 3 дня назад</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article>
+          <article class="crow"><div class="thumb a7"><span class="dur">18:03</span></div><div><p class="title clamp2">Slow living in a small apartment</p><p class="sub">Green Rooms · 6 дней назад</p></div><button class="btn plain icon" style="width: 32px; min-height: 32px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></article>
+          <p class="t-c1 t-sec">Запуск результата делает видимый список текущей очередью — подсказка появляется при первом запуске.</p>
+        </div>
+        <div class="tabbar-wrap"><div class="tabbar-row"><nav class="tabbar glass" aria-label="Разделы"><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button></nav><button class="tab-search glass on" aria-label="Поиск" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1298,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

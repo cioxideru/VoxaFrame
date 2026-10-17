@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · панели плеера</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.opt .li{min-height:46px}
+.opt .lt{font-size:16px}
+.opt .lt small{font-size:12px}
+.spd{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.spd span{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:14px;background:var(--fill);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.spd span.on{background:var(--action);color:var(--onAction)}
+</style>
+</helmet>
+<div class="strip dark-bg" style="width: 1298px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Качество · <em>выбрано ≠ играет</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="media" style="height: 219px; margin-top: 44px;"><div class="art a0"></div></div>
+        <div class="pad" style="padding-top: 12px;"><p class="t-3">The long way home</p><p class="t-fn t-sec">Field Notes</p></div>
+        <div class="sheet glass opt" style="background: var(--elevated); top: 360px;" role="dialog" aria-label="Качество">
+          <div class="grab"></div>
+          <div class="sheet-h"><span style="width: 44px;"></span><span class="t">Качество</span><button class="btn sm icon" aria-label="Закрыть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+          <div class="pad">
+            <div class="banner info" style="margin-bottom: 10px; background: var(--fill);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.3"/></svg><span>Выбрано: 1080p · Играет: 720p — 1080p временно недоступно</span></div>
+            <div class="list" style="background: var(--surface);">
+              <div class="li"><span class="lt">Авто<small>По сети и устройству</small></span></div>
+              <div class="li"><span class="lt">1080p60 · VP9</span></div>
+              <div class="li sel"><span class="lt">1080p · H.264<small>Ваш выбор · сохранится для следующих видео</small></span><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div>
+              <div class="li"><span class="lt">720p · H.264<small>Играет сейчас</small></span><span class="pill-badge act">Сейчас</span></div>
+              <div class="li"><span class="lt">480p</span></div>
+              <div class="li dis"><span class="lt">2160p<small>Нет для этого видео</small></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Скорость · масштаб · применяется качество</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="media" style="height: 219px; margin-top: 44px;"><div class="art a0"></div><div class="row center" style="position: absolute; inset: 0;"><span class="toast glass-media" style="padding-right: 16px;"><span class="spin" aria-hidden="true"></span>Переключаем на 1080p…</span></div></div>
+        <div class="sheet glass" style="background: var(--elevated); top: 330px;" role="dialog" aria-label="Скорость">
+          <div class="grab"></div>
+          <div class="sheet-h"><span style="width: 44px;"></span><span class="t">Скорость</span><button class="btn sm icon" aria-label="Закрыть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+          <div class="pad col" style="gap: 14px;">
+            <div class="spd" role="radiogroup" aria-label="Скорость обычных видео"><span>0,25×</span><span>0,5×</span><span>0,75×</span><span>1×</span><span class="on">1,25×</span><span>1,5×</span><span>1,75×</span><span>2×</span></div>
+            <p class="t-fn t-sec">Для обычных видео. У Shorts своя скорость. Удержание по видео даёт 2× временно и не меняет выбор.</p>
+            <p class="group-h" style="padding: 0; margin-top: 4px;">Масштаб</p>
+            <div class="seg"><span class="on">Целиком (Fit)</span><span>Заполнить (Fill)</span></div>
+            <p class="t-fn t-sec">Общая настройка для видео и Shorts. Двойное нажатие по центру тоже переключает.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Субтитры и <em>таймер сна</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="media" style="height: 219px; margin-top: 44px;"><div class="art a0"></div><div style="position: absolute; left: 0; right: 0; bottom: 14px; text-align: center;"><span class="caption-line" style="font-size: 15px;">Мы шли вдоль старой дороги</span></div></div>
+        <div class="sheet glass opt" style="background: var(--elevated); top: 300px;" role="dialog" aria-label="Субтитры и таймер">
+          <div class="grab"></div>
+          <div class="sheet-h"><span style="width: 44px;"></span><span class="t">Субтитры</span><button class="btn sm icon" aria-label="Закрыть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+          <div class="pad">
+            <div class="list" style="background: var(--surface);">
+              <div class="li"><span class="lt">Выкл</span></div>
+              <div class="li sel"><span class="lt">Русский</span><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div>
+              <div class="li"><span class="lt">English</span></div>
+              <div class="li"><span class="lt">Español<small>Создано автоматически</small></span></div>
+            </div>
+            <p class="t-c1 t-sec" style="padding: 6px 4px 0;">Язык запомнится и применится к следующему видео, если дорожка есть.</p>
+            <p class="group-h" style="padding: 0 4px 6px;">Таймер сна · осталось 28:41</p>
+            <div class="seg"><span>Выкл</span><span>15</span><span class="on">30</span><span>45</span><span>60 мин</span></div>
+            <p class="t-c1 t-sec" style="padding: 6px 4px 0;">По истечении видео встанет на паузу.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1298,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

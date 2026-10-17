@@ -7,6 +7,7 @@ CLAUDE.local.md
 .AppleDouble
 .LSOverride
 ._*
+*.textClipping
 
 # Xcode
 *.xcuserstate
@@ -67,6 +68,7 @@ logcat.txt
 /releases
 /files
 .screenshot-review/
+.playwright-mcp/
 /misc
 /other
 /TODO.txt

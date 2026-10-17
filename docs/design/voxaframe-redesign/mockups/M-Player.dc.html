@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Mac · плеер в окне</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.tip{position:absolute;padding:4px 8px;border-radius:6px;background:rgba(30,30,32,.92);color:#fff;font-size:12px;line-height:16px;white-space:nowrap}
+</style>
+</helmet>
+<div class="mac-win vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1440px; height: 900px; flex-direction: row;">
+  <nav class="mac-side glass" style="border-radius: 0; border: 0; border-right: 1px solid var(--hairline); box-shadow: none; padding-top: 14px; width: 210px;" aria-label="Разделы">
+    <div class="lights" style="padding: 4px 8px 18px;"><i></i><i></i><i></i></div>
+    <button class="side-item on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Поиск</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн-видео<span class="cnt">3</span></button>
+    <div class="side-h">Медиатека</div>
+    <button class="side-item">Подписки</button>
+    <button class="side-item">История</button>
+    <button class="side-item">Плейлисты</button>
+    <button class="side-item">Очередь<span class="cnt">12</span></button>
+    <button class="side-item">RSS-ленты</button>
+  </nav>
+  <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+    <div class="mac-toolbar">
+      <button class="mac-btn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>Главная</button>
+      <span class="t-hl clamp1" style="margin-left: 6px; max-width: 420px;">The long way home</span>
+      <span class="grow"></span>
+      <button class="mac-btn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Скачать…</button>
+      <button class="mac-btn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg>Поделиться</button>
+      <button class="mac-btn icon" aria-label="Показать или скрыть панель"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M15 4v16"/></svg></button>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 340px; gap: 20px; padding: 4px 22px 22px; flex: 1; min-height: 0;">
+      <div class="col" style="gap: 14px; min-width: 0;">
+        <div class="media" style="height: 520px; border-radius: 14px;">
+          <div class="art a0"></div><div class="shade-b"></div>
+          <div style="position: absolute; left: 18px; right: 18px; bottom: 14px;">
+            <div class="tl" role="slider" aria-label="Позиция" aria-valuetext="6:24 из 18:42"><i class="buf" style="width: 58%;"></i><i class="pl" style="width: 34%;"></i><i class="sb" style="left: 6%; width: 5%; background: var(--sb-sponsor);"></i><i class="chap" style="left: 18%;"></i><i class="chap" style="left: 30%;"></i><i class="chap" style="left: 52%;"></i><i class="knob" style="left: 34%;"></i></div>
+            <div class="row" style="gap: 6px; margin-top: 10px;">
+              <button class="pctl sm glass-media" aria-label="Предыдущее видео" style="width: 34px; height: 34px;"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path class="fc" d="M19 5 9 12l10 7Z"/></svg></button>
+              <button class="pctl sm glass-media" aria-label="Назад 10 секунд" style="width: 34px; height: 34px;"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg></button>
+              <button class="pctl glass-media is-focus" aria-label="Пауза" style="width: 42px; height: 42px; position: relative;"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg><span class="tip" style="bottom: 52px; left: -20px;">Пауза · Пробел</span></button>
+              <button class="pctl sm glass-media" aria-label="Вперёд 30 секунд" style="width: 34px; height: 34px;"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></button>
+              <button class="pctl sm glass-media" aria-label="Следующее видео" style="width: 34px; height: 34px;"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14"/><path class="fc" d="M5 5l10 7-10 7Z"/></svg></button>
+              <span class="t-fn t-num" style="margin-left: 8px; font-weight: 600;">06:24 / 18:42 · Глава 3</span>
+              <span class="grow"></span>
+              <button class="qbtn glass-media" style="min-height: 30px; font-size: 13px;">1×</button>
+              <button class="qbtn glass-media" style="min-height: 30px; font-size: 13px;">Авто · 1080p</button>
+              <button class="qbtn glass-media" style="min-height: 30px; font-size: 13px;">Оригинал</button>
+              <button class="qbtn glass-media" style="min-height: 30px; font-size: 13px;">Субтитры</button>
+              <button class="qbtn glass-media" style="min-height: 30px; font-size: 13px;" aria-label="Таймер сна"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z"/></svg></button>
+              <button class="qbtn glass-media" style="min-height: 30px;" aria-label="Fit или Fill"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+              <button class="qbtn glass-media" style="min-height: 30px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="row between"><div><h1 class="t-2">The long way home</h1><p class="t-fn t-sec">128 тыс. просмотров · 2 дня назад</p></div><div class="row" style="gap: 8px;"><span class="avatar c0" style="width: 32px; height: 32px;"></span><div><p class="t-sh t-b">Field Notes</p><p class="t-c1 t-sec">412 тыс.</p></div><button class="mac-btn" style="background: var(--action); color: var(--onAction); margin-left: 8px;">Подписаться</button><button class="mac-btn">Нравится</button><button class="mac-btn">Не нравится</button></div></div>
+        <p class="t-c1 t-sec row" style="gap: 6px;">Управление появляется при наведении и при фокусе клавиатуры. <span class="prop">Пробел · ⌘F · Esc · ←/→ — предложение</span></p>
+      </div>
+      <aside class="col" style="gap: 12px; background: var(--surface); border-radius: 14px; padding: 12px; min-height: 0; overflow: hidden;">
+        <div class="seg"><span>Далее</span><span class="on">Описание</span><span>Комментарии</span></div>
+        <h3 class="t-hl">The long way home</h3>
+        <p class="t-fn t-sec">Field Notes · 14 окт. 2026</p>
+        <p class="t-sh" style="line-height: 21px;">Три дня пешком вдоль старой соляной дороги — от деревни у моря до перевала.</p>
+        <p class="t-sh" style="line-height: 21px;"><a href="#t1">00:00</a> Начало<br><a href="#t2">02:41</a> Деревня у моря<br><a href="#t3">06:10</a> Through the valley<br><a href="#t4">11:02</a> The salt houses<br><a href="#t5">16:30</a> Перевал</p>
+        <p class="t-sh" style="line-height: 21px;">Музыка: <a href="#l">fieldnotes.example/music</a></p>
+        <p class="t-c1 t-sec">Отметки времени перематывают это видео; внешние ссылки открываются в браузере.</p>
+      </aside>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"dark"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'dark', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

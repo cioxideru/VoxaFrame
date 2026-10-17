@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Состояния, сообщения, подтверждения</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.box{background:var(--background);border-radius:22px;box-shadow:0 0 0 1px var(--hairline);min-height:228px;display:flex;align-items:center;justify-content:center}
+.cap{font-size:12px;line-height:16px;color:var(--secondary);font-weight:600;display:block;margin:0 0 8px 4px}
+</style>
+</helmet>
+<div class="vf" data-theme="{{theme}}" data-accent="{{accent}}" style="width: 1440px; height: 1180px; padding: 36px 48px; display: flex; flex-direction: column; gap: 22px; background: var(--surface);">
+  <div class="row between"><h2 class="t-1">VF/StatusPanel · VF/Banner · подтверждения</h2><span class="t-fn t-sec">Разные причины — разные тексты и следующий шаг. Пустая библиотека ≠ ошибка хранения.</span></div>
+
+  <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px;">
+    <div class="box"><div class="empty"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg></div><h3>Войдите, чтобы увидеть ленту</h3><p>Поиск, локальные подписки и RSS работают без входа.</p><button class="btn prom sm">Войти</button><button class="btn plain sm">Открыть поиск</button></div></div>
+    <div class="box"><div class="empty"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg></div><h3>Нет подписок</h3><p>Подпишитесь на канал — без аккаунта подписка сохранится на устройстве.</p><button class="btn sm">Найти каналы</button></div></div>
+    <div class="box"><div class="empty"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4 9.5 6a12 12 0 0 1-2.6 3.4M6.3 7.6C4.4 8.9 3.1 10.7 2.5 12c1 2 4.5 6 9.5 6 1.6 0 3-.4 4.3-1"/></svg></div><h3>Всё скрыто фильтрами</h3><p>Просмотренные скрыты (порог 90%). Загрузить следующую порцию?</p><button class="btn sm">Показать ещё</button><button class="btn plain sm">Настроить фильтры</button></div></div>
+    <div class="box"><div class="empty"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></div><h3>Ничего не найдено</h3><p>По запросу «quiet mornings» с фильтром «за час» совпадений нет.</p><button class="btn sm">Сбросить фильтры</button></div></div>
+    <div class="box"><div class="empty"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 12.5a10 10 0 0 1 4.5-2.4M14.8 10.2A10 10 0 0 1 19 12.5M2 9a15 15 0 0 1 4-2.6M10.5 4.6A15 15 0 0 1 22 9"/></svg></div><h3>Нет подключения</h3><p>Сохранённые видео доступны в разделе «Офлайн».</p><button class="btn prom sm">Открыть офлайн</button><button class="btn plain sm">Повторить</button></div></div>
+    <div class="box"><div class="empty"><div class="glyph" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg></div><h3>Не удалось выполнить поиск</h3><p>Сервис не ответил. Запрос сохранён.</p><button class="btn sm">Попробовать ещё раз</button></div></div>
+    <div class="box"><div class="empty"><div class="glyph" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.5"/><path d="M5 6v12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/></svg></div><h3>Не удалось прочитать офлайн-библиотеку</h3><p>Файлы не удалены. Повторите чтение.</p><button class="btn sm">Повторить</button></div></div>
+    <div class="box"><div class="empty"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg></div><h3>Офлайн пока пусто</h3><p>Нажмите «Скачать для офлайна» в меню карточки или плеера.</p></div></div>
+    <div class="box"><div class="empty"><span class="spin lg" style="color: var(--secondary);" aria-hidden="true"></span><h3 style="margin-top: 10px;">Загружаем подписки</h3><p>Ваши каналы появятся через мгновение.</p></div></div>
+    <div class="box"><div class="empty"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h8"/></svg></div><h3>Плейлистов нет</h3><p>Создание плейлистов в приложении пока не поддерживается.</p></div></div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 28px;">
+    <div class="col" style="gap: 10px;">
+      <span class="cap">VF/Banner · результат действия</span>
+      <div class="banner ok" style="background: var(--background);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg><span class="grow">Добавлено в «Смотреть позже»</span><button class="btn sm plain">Открыть</button></div>
+      <div class="banner err" style="background: var(--background);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg><span class="grow">Не удалось добавить — нет сети</span><button class="btn sm tint">Повторить</button></div>
+      <div class="banner warn" style="background: var(--background);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2.5 20h19Z"/><path d="M12 10v4.5M12 17.2v.3"/></svg><span class="grow">Не удалось обновить. Показаны загруженные ранее видео.</span><button class="btn sm tint">Повторить</button></div>
+      <div class="banner info" style="background: var(--background);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.3"/></svg><span class="grow">Канал скрыт из рекомендаций</span><button class="btn sm plain">Отменить</button></div>
+      <p class="t-fn t-sec">Сообщения не исчезают по короткому таймеру, не перехватывают фокус, озвучиваются вежливо. Ошибка не равна успеху.</p>
+    </div>
+    <div class="col" style="gap: 10px;">
+      <span class="cap">Подтверждения удаления — объём назван явно, «Отмена» безопасна</span>
+      <div class="row" style="gap: 16px; align-items: flex-start;">
+        <div class="alert glass" style="width: 270px;"><h3>Удалить задание «Перевод · Русский»?</h3><p>Видео и аудио этого ролика останутся.</p><div class="acts"><button class="btn dest-prom">Удалить задание</button><button class="btn is-focus">Отмена</button></div></div>
+        <div class="alert glass" style="width: 270px;"><h3>Удалить «The long way home»?</h3><p>Будут удалены видео 1080p и 720p, аудио, перевод и 1 незавершённое задание · 214 МБ.</p><div class="acts"><button class="btn dest-prom">Удалить видео и файлы</button><button class="btn">Отмена</button></div></div>
+        <div class="alert glass" style="width: 270px;"><h3>Удалить всю офлайн-библиотеку?</h3><p>12 видео, все задания и кэш · 3,4 ГБ. История, подписки, вход в Google и настройки не изменятся.</p><div class="acts"><button class="btn dest-prom">Удалить всё</button><button class="btn">Отмена</button></div></div>
+      </div>
+      <div class="row" style="gap: 16px; align-items: flex-start;">
+        <div class="alert glass" style="width: 270px;"><h3>Отписаться от Studio North?</h3><p>Подписка на этом устройстве будет удалена.</p><div class="acts h"><button class="btn">Отмена</button><button class="btn dest-prom">Отписаться</button></div></div>
+        <div class="alert glass" style="width: 270px;"><h3>Очистить историю на этом устройстве?</h3><p>История YouTube, поиск и сохранённые позиции останутся.</p><div class="acts h"><button class="btn">Отмена</button><button class="btn dest-prom">Очистить</button></div><span class="prop logic" style="margin-top: 10px;">Сейчас без подтверждения</span></div>
+        <div class="alert glass" style="width: 270px;"><h3>Сбросить все настройки?</h3><p>Включая PIN. Офлайн-видео, списки и токены не удаляются.</p><div class="acts h"><button class="btn">Отмена</button><button class="btn dest-prom">Сбросить</button></div><span class="prop logic" style="margin-top: 10px;">Сейчас без подтверждения</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral' };
+  }
+}
+</script>
+</body>
+</html>

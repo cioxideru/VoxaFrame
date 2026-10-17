@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Mac · окно настроек</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.ptabs{display:flex;justify-content:center;gap:4px;padding:6px 0 10px}
+.ptab{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:84px;padding:6px 8px;border-radius:8px;font-size:11px;font-weight:500;color:var(--secondary)}
+.ptab svg{width:22px;height:22px}
+.ptab.on{background:var(--fill-strong);color:var(--text)}
+.ptab.on svg{color:var(--action)}
+.form{display:grid;grid-template-columns:300px 1fr;gap:12px 14px;align-items:center;font-size:13px}
+.form .lbl{text-align:right;color:var(--text)}
+.form .hint{grid-column:2;font-size:11px;color:var(--secondary);margin-top:-8px}
+.popup{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 6px 0 10px;border-radius:6px;background:var(--elevated);box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 1px 2px rgba(0,0,0,.12);font-size:13px}
+.popup svg{width:12px;height:12px;color:var(--secondary)}
+.cb{display:inline-flex;align-items:center;gap:8px}
+.cb i{width:14px;height:14px;border-radius:4px;border:1px solid var(--tertiary);display:inline-flex;align-items:center;justify-content:center;background:var(--elevated)}
+.cb i.on{background:var(--action);border-color:var(--action)}
+.stepper{display:inline-flex;align-items:center;gap:6px}
+.stepper span{display:inline-flex;flex-direction:column;border-radius:5px;box-shadow:0 0 0 .5px rgba(0,0,0,.3);overflow:hidden}
+.stepper span b{display:block;width:14px;height:10px;font-size:7px;line-height:10px;text-align:center;background:var(--elevated)}
+</style>
+</helmet>
+<div class="mac-win vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 980px; height: 720px;">
+  <div class="row" style="padding: 12px 14px 0;"><div class="lights"><i></i><i></i><i></i></div><span class="grow" style="text-align: center; font-size: 13px; font-weight: 600; margin-right: 60px;">Воспроизведение</span></div>
+  <div class="ptabs" role="tablist" aria-label="Разделы настроек">
+    <span class="ptab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg>Аккаунт</span>
+    <span class="ptab on" aria-selected="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg>Воспроизведение</span>
+    <span class="ptab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Языки</span>
+    <span class="ptab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Данные</span>
+    <span class="ptab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path class="fc" d="M12 3a9 9 0 0 1 0 18Z"/></svg>Вид</span>
+    <span class="ptab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5v14l8-7Z M13 5v14l8-7Z"/></svg>SponsorBlock</span>
+    <span class="ptab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Защита</span>
+  </div>
+  <div style="height: 1px; background: var(--hairline);"></div>
+  <div style="padding: 26px 40px;">
+    <div class="form">
+      <span class="lbl">Скорость:</span><span><span class="popup">1×<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg></span></span>
+      <span class="lbl">Качество по умолчанию:</span><span><span class="popup is-focus">Авто<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg></span></span>
+      <span class="hint">Изменение сбрасывает последний ручной выбор качества.</span>
+      <span class="lbl">Перемотка назад:</span><span class="stepper"><span class="popup" style="padding-right: 10px;">10 с</span><span><b>▲</b><b>▼</b></span><span class="t-c1 t-sec" style="box-shadow: none;">5–60, шаг 5</span></span>
+      <span class="lbl">Перемотка вперёд:</span><span class="stepper"><span class="popup" style="padding-right: 10px;">30 с</span><span><b>▲</b><b>▼</b></span></span>
+      <span class="lbl">Скрывать управление через:</span><span><span class="popup">4 с<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg></span></span>
+      <span class="lbl">Масштаб видео:</span><span class="seg" style="width: 220px; padding: 1px;"><span class="on" style="min-height: 22px; font-size: 12px;">Fit</span><span style="min-height: 22px; font-size: 12px;">Fill</span></span>
+      <span class="lbl">После видео:</span><span class="col" style="gap: 8px;"><span class="cb"><i></i>Повторять видео</span><span class="cb"><i></i>Случайные рекомендации</span><span class="cb"><i class="on"></i>Автовоспроизведение следующего</span></span>
+      <span class="lbl">Кодеки:</span><span class="col" style="gap: 8px;"><span class="cb"><i class="on"></i>VP9 (до 4K при поддержке)</span><span class="cb"><i></i>H.264 (до 1080p)</span><span class="cb"><i></i>Предпочитать H.264</span></span>
+      <span class="hint">Последний включённый кодек выключить нельзя.</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":980,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

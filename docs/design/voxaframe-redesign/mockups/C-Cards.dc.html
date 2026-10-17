@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Карточки контента</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.cap{font-size:12px;line-height:16px;color:var(--secondary);margin-bottom:8px;display:block;font-weight:600}
+</style>
+</helmet>
+<div class="vf" data-theme="{{theme}}" data-accent="{{accent}}" style="width: 1440px; height: 1180px; padding: 36px 48px; display: flex; flex-direction: column; gap: 26px;">
+  <div class="row between"><h2 class="t-1">VF/VideoCard · VF/ShortsCard · строки</h2><span class="t-fn t-sec">Нажатие открывает видео один раз; меню — отдельная кнопка. Отсутствующее значение не показывается нулём.</span></div>
+
+  <section>
+    <h3 class="t-hl" style="margin-bottom: 12px;">Варианты содержимого</h3>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 20px;">
+      <div><span class="cap">Обычная</span><article class="card"><div class="thumb a0"><span class="lbl">FIELD / NOTES</span><span class="dur">18:42</span></div><div class="meta"><span class="avatar c0" style="width: 32px; height: 32px;"></span><div class="grow"><p class="title clamp2">The long way home</p><p class="sub">Field Notes · 128 тыс. · 2 дня</p></div><button class="btn plain icon more" aria-label="Ещё: The long way home"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article></div>
+      <div><span class="cap">Прогресс + Watch Later</span><article class="card"><div class="thumb a1"><span class="lbl">DESIGN / MOTION</span><span class="saved-mark" aria-label="В «Смотреть позже»"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><span class="dur">12:08</span><span class="prog"><i style="width: 42%;"></i></span></div><div class="meta"><span class="avatar c1" style="width: 32px; height: 32px;"></span><div class="grow"><p class="title clamp2">Design in motion</p><p class="sub">Studio North · осталось 7 мин</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article></div>
+      <div><span class="cap">Прямая трансляция</span><article class="card"><div class="thumb a4"><span class="tag live">● LIVE</span></div><div class="meta"><span class="avatar c4" style="width: 32px; height: 32px;"></span><div class="grow"><p class="title clamp2">Cities after dark — night walk</p><p class="sub">Night Walks · 1,2 тыс. смотрят</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article></div>
+      <div><span class="cap">Премьера</span><article class="card"><div class="thumb a5"><span class="tag">ПРЕМЬЕРА</span></div><div class="meta"><span class="avatar c5" style="width: 32px; height: 32px;"></span><div class="grow"><p class="title clamp2">Small ideas, big worlds</p><p class="sub">Frame by Frame · 18 окт., 20:00</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article></div>
+      <div><span class="cap">Нет обложки и метаданных</span><article class="card"><div class="thumb none"><svg class="i s34" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9.5 4.5 2.5-4.5 2.5Z"/></svg></div><div class="meta"><span class="avatar" style="width: 32px; height: 32px;">S</span><div class="grow"><p class="title clamp2">Sound check no. 4</p><p class="sub">Sound Room</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article></div>
+      <div><span class="cap">DeArrow · название сообщества</span><article class="card"><div class="thumb a7"><span class="lbl">GREEN / ROOMS</span><span class="dur">24:16</span></div><div class="meta"><span class="avatar c3" style="width: 32px; height: 32px;"></span><div class="grow"><p class="title clamp2">How a small garden survives winter</p><p class="sub">Everyday Films · <span class="t-act" style="font-weight: 600;">DeArrow</span></p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article></div>
+    </div>
+  </section>
+
+  <section>
+    <h3 class="t-hl" style="margin-bottom: 12px;">Состояния</h3>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 20px;">
+      <div><span class="cap">Нажатие</span><article class="card" style="transform: scale(.97); filter: brightness(.9);"><div class="thumb a2"><span class="dur">24:16</span></div><div class="meta"><div class="grow"><p class="title clamp2">A slower morning</p><p class="sub">Everyday Films</p></div></div></article></div>
+      <div><span class="cap">Наведение · Mac/iPad</span><article class="card"><div class="thumb a2" style="box-shadow: 0 10px 24px rgba(0,0,0,.2);"><span class="dur">24:16</span><span class="saved-mark" style="top: auto; bottom: 8px; right: 60px; width: auto; padding: 0 8px; font-size: 11px; font-weight: 700;">Превью</span></div><div class="meta"><div class="grow"><p class="title clamp2">A slower morning</p><p class="sub">Everyday Films</p></div></div></article></div>
+      <div><span class="cap">Фокус клавиатуры</span><article class="card is-focus"><div class="thumb a2"><span class="dur">24:16</span></div><div class="meta"><div class="grow"><p class="title clamp2">A slower morning</p><p class="sub">Everyday Films</p></div></div></article></div>
+      <div data-theme="dark" style="background: #111; border-radius: 14px; padding: 10px;"><span class="cap">Фокус пульта · TV</span><article class="card tvf"><div class="thumb a2"><span class="dur">24:16</span></div><div class="meta"><div class="grow"><p class="title clamp2" style="color: #fff;">A slower morning</p></div></div></article></div>
+      <div><span class="cap">Загрузка</span><div class="thumb skel"></div><div class="meta" style="display: flex; gap: 10px; margin-top: 10px;"><span class="skl" style="width: 32px; height: 32px; border-radius: 99px;"></span><div class="grow col" style="gap: 6px;"><span class="skl" style="height: 14px; width: 90%;"></span><span class="skl" style="height: 12px; width: 55%;"></span></div></div></div>
+      <div><span class="cap">Видео недоступно</span><article class="card"><div class="thumb a3" style="filter: grayscale(1) brightness(.7);"><span class="tag top" style="left: 8px;">НЕДОСТУПНО</span></div><div class="meta"><div class="grow"><p class="title clamp2">Inside the sound</p><p class="sub t-dng">Требуется вход в аккаунт</p></div></div></article></div>
+      <div><span class="cap">Просмотрено (фильтр)</span><article class="card"><div class="thumb a8"><span class="tag">ПРОСМОТРЕНО</span><span class="dur">09:51</span><span class="prog"><i style="width: 100%;"></i></span></div><div class="meta"><div class="grow"><p class="title clamp2">Paper, light and glue</p><p class="sub">Frame by Frame</p></div></div></article></div>
+    </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 36px;">
+    <section>
+      <h3 class="t-hl" style="margin-bottom: 12px;">Компактная строка (Thumbnail Style: Compact)</h3>
+      <div class="col" style="gap: 14px;">
+        <article class="crow"><div class="thumb a0"><span class="dur">18:42</span><span class="prog"><i style="width: 65%;"></i></span></div><div><p class="title clamp2">The long way home</p><p class="sub">Field Notes · 128 тыс. · 2 дня</p></div><button class="btn plain icon" style="width: 32px; min-height: 32px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></article>
+        <article class="crow"><div class="thumb a4"><span class="tag live">● LIVE</span></div><div><p class="title clamp2">Cities after dark — night walk</p><p class="sub">Night Walks · 1,2 тыс. смотрят</p></div><button class="btn plain icon" style="width: 32px; min-height: 32px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></article>
+        <article class="crow"><div class="thumb a6"><span class="tag">ПРЕМЬЕРА</span></div><div><p class="title clamp2">An unusually long English title that wraps to a second line and then truncates</p><p class="sub">Studio North · 18 окт., 20:00</p></div><button class="btn plain icon" style="width: 32px; min-height: 32px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></article>
+      </div>
+    </section>
+    <section>
+      <h3 class="t-hl" style="margin-bottom: 12px;">Shorts 9:16</h3>
+      <div class="row" style="gap: 12px; align-items: flex-start;">
+        <article class="card" style="width: 112px;"><div class="thumb v a3"><span class="dur">0:42</span></div><p class="title clamp2" style="font-size: 14px; line-height: 18px; margin-top: 8px;">Morning light in 40 seconds</p></article>
+        <article class="card is-focus" style="width: 112px;"><div class="thumb v a1"><span class="dur">0:58</span></div><p class="title clamp2" style="font-size: 14px; line-height: 18px; margin-top: 8px;">One-minute sound check</p></article>
+        <div style="width: 112px;"><div class="thumb v skel"></div><span class="skl" style="display: block; height: 12px; margin-top: 10px; width: 85%;"></span></div>
+      </div>
+      <p class="t-fn t-sec" style="margin-top: 10px;">Меню Shorts: свой набор команд, без Offline watch и Incognito.</p>
+    </section>
+    <section>
+      <h3 class="t-hl" style="margin-bottom: 12px;">Плейлисты и очередь</h3>
+      <div class="col" style="gap: 12px;">
+        <div class="row" style="gap: 12px;"><div class="thumb a9" style="width: 112px;"><span class="tag right" style="right: 0; bottom: 0; left: auto; border-radius: 0; height: 100%; width: 40%; display: flex; flex-direction: column; justify-content: center; background: rgba(0,0,0,.6);">24<svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h12M4 12h12M4 17h8"/></svg></span></div><div><p class="t-hl">Travel diaries</p><p class="t-fn t-sec">Плейлист YouTube · 24 видео</p></div></div>
+        <div class="row" style="gap: 12px;"><div class="thumb a5" style="width: 112px;"><span class="saved-mark" style="top: 50%; left: 50%; right: auto; margin: -13px 0 0 -13px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></div><div><p class="t-hl">Смотреть позже</p><p class="t-fn t-sec">Список аккаунта · 9 видео</p></div></div>
+        <div class="row" style="gap: 12px;"><div class="thumb none" style="width: 112px; background: var(--fill);"><svg class="i s28" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--action);"><path d="M4 6h12M4 12h12M4 18h8M19 15v6m-3-3h6"/></svg></div><div><p class="t-hl">Очередь</p><p class="t-fn t-sec">На этом устройстве · 12 из 500</p></div></div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral' };
+  }
+}
+</script>
+</body>
+</html>

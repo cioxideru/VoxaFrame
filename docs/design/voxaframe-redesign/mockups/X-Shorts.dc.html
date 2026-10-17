@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Прототип · Shorts</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.rail{position:absolute;right:12px;bottom:170px;display:flex;flex-direction:column;gap:12px;align-items:center;z-index:3}
+.rail .lab{font-size:11px;font-weight:700;color:#fff;text-align:center;margin-top:3px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.hint-tap{position:absolute;left:12px;right:12px;bottom:6px;text-align:center;font-size:11px;color:#d0d0d6;z-index:30}
+.seg > button{color:var(--text)}
+</style>
+</helmet>
+<div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}" style="border-radius: 0; box-shadow: none; background: #000;">
+  <div class="media" style="position: absolute; inset: 0;"><div class="{{ artCls }}" style="position: absolute; inset: 0;"></div><div class="shade-t"></div><div class="shade-b"></div></div>
+  <div class="screen" style="color: #fff;">
+    <div class="safe-top"></div>
+    <div class="row between" style="padding: 0 12px;"><button class="pctl sm glass-media" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span class="toast glass-media" style="padding: 6px 14px; font-size: 13px;">{{ counter }}</span><span style="width: 40px;"></span></div>
+
+    <sc-if value="{{ trWait }}" hint-placeholder-val="{{ false }}">
+      <div class="col center" style="position: absolute; left: 30px; right: 90px; top: 300px; gap: 10px; text-align: center; z-index: 4;" role="status"><span class="pctl glass-media" style="width: 60px; height: 60px;"><span class="spin lg" aria-hidden="true"></span></span><p class="t-hl">Готовим перевод для Shorts</p><button class="btn sm" style="background: #fff; color: #000;" onClick="{{ trSkip }}">Смотреть без перевода</button></div>
+    </sc-if>
+    <sc-if value="{{ isEnd }}" hint-placeholder-val="{{ false }}">
+      <div class="row glass-media" style="position: absolute; left: 12px; right: 12px; top: 120px; border-radius: 18px; padding: 10px 14px; gap: 10px; z-index: 4;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg><span class="t-sh grow">Это последний загруженный ролик. Он останется на экране.</span></div>
+    </sc-if>
+    <sc-if value="{{ loadErr }}" hint-placeholder-val="{{ false }}">
+      <div class="row glass-media" style="position: absolute; left: 12px; right: 12px; top: 120px; border-radius: 18px; padding: 10px 12px; gap: 10px; z-index: 4;" role="alert"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: #ffb4a9;"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg><span class="t-sh grow">Следующий не загрузился</span><button class="btn sm" style="background: #fff; color: #000;" onClick="{{ retry }}">Повторить</button></div>
+    </sc-if>
+
+    <div class="rail">
+      <div><button class="pctl glass-media" aria-label="Предыдущий Short" onClick="{{ prev }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button></div>
+      <div><button class="pctl glass-media" aria-label="Следующий Short" onClick="{{ next }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+      <div><button class="pctl glass-media" aria-label="Настройки Shorts" onClick="{{ openPanel }}"><span style="font-size: 13px; font-weight: 800;">{{ speedLabel }}</span></button><p class="lab">Скорость</p></div>
+      <div><button class="pctl glass-media" aria-label="Перевод для Shorts" onClick="{{ openPanel }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></button><p class="lab">{{ trShort }}</p></div>
+    </div>
+    <div style="position: absolute; left: 16px; right: 80px; bottom: 96px; z-index: 3;" class="col">
+      <div class="row" style="gap: 8px;"><span class="avatar c3" style="width: 30px; height: 30px;"></span><span class="t-sh t-b">{{ channel }}</span></div>
+      <p class="t-hl clamp2">{{ title }}</p>
+    </div>
+    <div style="position: absolute; left: 16px; right: 16px; bottom: 52px; z-index: 3;"><div class="tl thin"><i class="pl" style="width: 40%;"></i></div></div>
+    <div class="row" style="position: absolute; left: 16px; right: 16px; bottom: 22px; gap: 8px; z-index: 3; font-size: 12px; color: #d0d0d6;"><span>Обычные видео: скорость 1× · перевод выкл — не меняются</span></div>
+
+    <sc-if value="{{ panel }}" hint-placeholder-val="{{ false }}">
+      <div class="sheet glass" style="background: var(--elevated); color: var(--text); z-index: 20;" role="dialog" aria-label="Настройки Shorts">
+        <div class="grab"></div>
+        <div class="sheet-h"><span style="width: 44px;"></span><span class="t">Shorts</span><button class="btn sm icon" aria-label="Закрыть" onClick="{{ closePanel }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+        <div class="pad">
+          <p class="group-h" style="margin-top: 0;">Скорость Shorts</p>
+          <div class="seg"><sc-for list="{{ speedsA }}" as="sp" hint-placeholder-count="4"><button class="{{ sp.cls }}" aria-pressed="{{ sp.pressed }}" onClick="{{ sp.pick }}">{{ sp.label }}</button></sc-for></div>
+          <div class="seg" style="margin-top: 6px;"><sc-for list="{{ speedsB }}" as="sp" hint-placeholder-count="4"><button class="{{ sp.cls }}" aria-pressed="{{ sp.pressed }}" onClick="{{ sp.pick }}">{{ sp.label }}</button></sc-for></div>
+          <p class="group-h">Перевод Yandex для Shorts</p>
+          <div class="list" style="background: var(--surface);"><div class="li"><span class="lt">Переводить на русский</span><button class="{{ trSwitchCls }}" role="switch" aria-checked="{{ trOn }}" aria-label="Перевод для Shorts" onClick="{{ toggleTr }}"></button></div></div>
+          <p class="t-c1 t-sec" style="padding: 8px 4px 0;">Пока панель открыта, переключение роликов не срабатывает. Изменения не затрагивают обычные видео.</p>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+  <p class="hint-tap">Прототип: ▲▼ — ролики · скорость/перевод — панель Shorts</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { i: 3, speed: '1', tr: false, trWait: false, panel: false, err: false };
+  }
+  componentWillUnmount() { clearTimeout(this.t); }
+  renderVals() {
+    const s = this.state;
+    const items = [
+      { title: 'Morning light in 40 seconds', channel: 'Everyday Films', art: 'a2' },
+      { title: 'One-minute sound check: three microphones', channel: 'Sound Room', art: 'a3' },
+      { title: 'Paper, light and glue', channel: 'Frame by Frame', art: 'a8' },
+      { title: 'Two-minute dinner, one pan', channel: 'Everyday Films', art: 'a6' },
+      { title: 'Night ferry, one take', channel: 'Night Walks', art: 'a9' }
+    ];
+    const it = items[s.i % items.length];
+    const total = 24;
+    const mk = (v) => ({ label: v + '×', cls: s.speed === v ? 'on' : '', pressed: s.speed === v ? 'true' : 'false', pick: () => this.setState({ speed: v }) });
+    const speedsA = ['0,25', '0,5', '0,75', '1'].map(mk);
+    const speedsB = ['1,25', '1,5', '1,75', '2'].map(mk);
+    return {
+      accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass',
+      artCls: it.art, title: it.title, channel: it.channel,
+      counter: s.i + ' из ' + total,
+      speedLabel: s.speed + '×', trShort: s.tr ? 'RU' : 'Язык',
+      speedsA, speedsB, panel: s.panel, trWait: s.trWait, isEnd: s.i >= total, loadErr: s.err,
+      trOn: s.tr ? 'true' : 'false', trSwitchCls: s.tr ? 'switch on' : 'switch',
+      prev: () => { if (!s.panel) this.setState({ i: Math.max(1, s.i - 1), err: false }); },
+      next: () => {
+        if (s.panel) return;
+        if (s.i === 5 && !s.errShown) { this.setState({ err: true, errShown: true }); return; }
+        this.setState({ i: Math.min(total, s.i + 1), err: false, trWait: s.tr });
+        if (s.tr) { clearTimeout(this.t); this.t = setTimeout(() => this.setState({ trWait: false }), 2500); }
+      },
+      retry: () => this.setState({ err: false, i: Math.min(total, s.i + 1) }),
+      openPanel: () => this.setState({ panel: true }),
+      closePanel: () => this.setState({ panel: false }),
+      toggleTr: () => { const on = !s.tr; this.setState({ tr: on, trWait: on }); clearTimeout(this.t); if (on) this.t = setTimeout(() => this.setState({ trWait: false }), 2500); },
+      trSkip: () => { clearTimeout(this.t); this.setState({ trWait: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

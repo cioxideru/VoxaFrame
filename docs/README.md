@@ -24,6 +24,8 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
 | [design/VoxaFrame-Functionality.ru.md](design/VoxaFrame-Functionality.ru.md) | DESIGN-0002: standalone Russian functional brief for redesigning VoxaFrame on four Apple platforms | current | 2026-10-17 |
 | [design/voxaframe-redesign/START-HERE.md](design/voxaframe-redesign/START-HERE.md) | DESIGN-0003: VoxaFrame redesign handoff — screen map, tokens, component contracts, mockups | current | 2026-10-17 |
+| [design/voxaframe-redesign/docs/VoxaFrame-Functionality.ru.md](design/voxaframe-redesign/docs/VoxaFrame-Functionality.ru.md) | Functional brief snapshot included in the design export; maintained source is design/VoxaFrame-Functionality.ru.md | current | 2026-10-17 |
+| [new-design-v1/README.md](new-design-v1/README.md) | Original design board and app screenshots used as redesign references | current | 2026-10-17 |
 | [design/claude-design/README.md](design/claude-design/README.md) | DESIGN-0001: VoxaFrame Claude Design import bundle and visual references | current | 2026-10-17 |
 | [design/claude-design/HANDOFF.ru.md](design/claude-design/HANDOFF.ru.md) | Colleague handoff: import files, save the system and check the four platforms | current | 2026-10-17 |
 | [design/claude-design/CLAUDE_IMPORT.md](design/claude-design/CLAUDE_IMPORT.md) | Apple 27 design-system specification, platform rules, components and provenance | current | 2026-10-17 |

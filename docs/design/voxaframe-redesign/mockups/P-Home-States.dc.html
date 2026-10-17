@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · состояния Главной</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.sk{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+</style>
+</helmet>
+<div class="strip" style="width: 1720px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Первая загрузка</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="largehead"><h1 class="t-lt">Главная</h1></div>
+        <div class="pad" style="padding-bottom: 12px;"><div class="chips"><span class="chip on">Главная</span><span class="chip">Рекомендации</span><span class="chip">Подписки</span></div></div>
+        <div class="scroll pad" role="status" aria-label="Загружаем ленту">
+          <p class="t-fn t-sec row" style="gap: 8px; margin-bottom: 14px;"><span class="spin" style="width: 14px; height: 14px; border-width: 2px;" aria-hidden="true"></span>Загружаем вашу ленту…</p>
+          <div class="sk"><div class="thumb skel"></div><div class="row" style="gap: 10px;"><span class="skl" style="width: 34px; height: 34px; border-radius: 99px;"></span><div class="grow col" style="gap: 6px;"><span class="skl" style="height: 14px; width: 86%;"></span><span class="skl" style="height: 12px; width: 52%;"></span></div></div></div>
+          <div class="sk"><div class="thumb skel"></div><div class="row" style="gap: 10px;"><span class="skl" style="width: 34px; height: 34px; border-radius: 99px;"></span><div class="grow col" style="gap: 6px;"><span class="skl" style="height: 14px; width: 70%;"></span><span class="skl" style="height: 12px; width: 44%;"></span></div></div></div>
+        </div>
+        <div class="tabbar-wrap"><div class="tabbar-row"><nav class="tabbar glass" aria-label="Разделы"><button class="tab on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button></nav><button class="tab-search glass" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Гость · раздел Home <em>нужен вход</em></span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="largehead"><h1 class="t-lt">Главная</h1><button class="btn sm tint">Войти</button></div>
+        <div class="pad" style="padding-bottom: 12px;"><div class="chips"><span class="chip on">Главная</span><span class="chip">Рекомендации</span><span class="chip">Подписки</span><span class="chip">История</span></div></div>
+        <div class="scroll pad col" style="gap: 14px;">
+          <div class="empty" style="background: var(--surface); border-radius: 26px; padding: 26px 20px;">
+            <img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 64px; height: 64px; border-radius: 16px; margin-bottom: 6px;">
+            <h3>Войдите, чтобы увидеть свою ленту</h3>
+            <p>Вход по коду с телефона или компьютера. Пароль в VoxaFrame вводить не нужно.</p>
+            <button class="btn prom">Войти через Google</button>
+          </div>
+          <p class="eyebrow" style="padding: 6px 4px 0;">Без входа</p>
+          <div class="list" style="background: var(--surface);">
+            <div class="li"><span class="ico ic-blue"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></span><span class="lt">Открыть поиск</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></div>
+            <div class="li"><span class="ico ic-coral"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><span class="lt">Рекомендации<small>Общедоступные видео</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></div>
+            <div class="li"><span class="ico ic-green"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg></span><span class="lt">Подписки на устройстве<small>3 канала</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></div>
+            <div class="li"><span class="ico ic-orange"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle class="fc" cx="6" cy="18" r="1.5"/></svg></span><span class="lt">RSS-ленты</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></div>
+          </div>
+        </div>
+        <div class="tabbar-wrap"><div class="tabbar-row"><nav class="tabbar glass" aria-label="Разделы"><button class="tab on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button></nav><button class="tab-search glass" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Подгрузка · <em>конец источника</em></span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar"><span></span><span class="t">Главная</span><span style="width: 44px;"></span></div>
+        <div class="scroll pad col" style="gap: 18px; padding-top: 6px;">
+          <article class="crow"><div class="thumb a5"><span class="dur">21:07</span></div><div><p class="title clamp2">Small ideas, big worlds</p><p class="sub">Frame by Frame · 3 дня</p></div><button class="btn plain icon" style="width: 32px; min-height: 32px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></article>
+          <article class="crow"><div class="thumb a9"><span class="dur">08:12</span></div><div><p class="title clamp2">Night ferry to the islands</p><p class="sub">Night Walks · неделю назад</p></div><button class="btn plain icon" style="width: 32px; min-height: 32px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></article>
+          <p class="t-fn t-sec row" style="gap: 8px; justify-content: center;" role="status"><span class="spin" style="width: 14px; height: 14px; border-width: 2px;" aria-hidden="true"></span>Подгружаем ещё</p>
+          <div style="height: 1px; background: var(--hairline);"></div>
+          <article class="crow"><div class="thumb a6"><span class="dur">11:44</span></div><div><p class="title clamp2">Two-minute dinners, ten ways</p><p class="sub">Everyday Films · 2 недели</p></div><button class="btn plain icon" style="width: 32px; min-height: 32px;" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></article>
+          <div class="empty" style="padding: 18px 10px;"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div><h3 style="font-size: 17px;">Это всё в разделе на сейчас</h3><p>Новые видео появятся после обновления ленты.</p><button class="btn sm">Обновить</button></div>
+        </div>
+        <div class="tabbar-wrap"><div class="tabbar-row"><nav class="tabbar glass" aria-label="Разделы"><button class="tab on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button></nav><button class="tab-search glass" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Ошибка · <em>сохранённая часть</em> · фильтры</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="largehead"><h1 class="t-lt">Главная</h1></div>
+        <div class="pad" style="padding-bottom: 10px;"><div class="chips"><span class="chip">Главная</span><span class="chip on">Рекомендации</span><span class="chip">Подписки</span></div></div>
+        <div class="scroll pad col" style="gap: 14px;">
+          <div class="banner warn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2.5 20h19Z"/><path d="M12 10v4.5M12 17.2v.3"/></svg><span class="grow">Не удалось обновить. Показаны загруженные ранее.</span><button class="btn sm tint">Повторить</button></div>
+          <article class="card"><div class="thumb a6"><span class="dur">11:44</span></div><div class="meta"><div class="grow"><p class="title clamp2">Two-minute dinners, ten ways</p><p class="sub">Everyday Films · 2 недели</p></div></div></article>
+          <div class="empty" style="background: var(--surface); border-radius: 24px; padding: 20px;"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4 9.5 6a12 12 0 0 1-2.6 3.4M6.3 7.6C4.4 8.9 3.1 10.7 2.5 12c1 2 4.5 6 9.5 6 1.6 0 3-.4 4.3-1"/></svg></div><h3 style="font-size: 17px;">Остальное скрыто фильтрами</h3><p>18 просмотренных видео и Shorts не показаны.</p><div class="row" style="gap: 8px;"><button class="btn sm">Показать ещё</button><button class="btn sm plain">Фильтры</button></div></div>
+        </div>
+        <div class="tabbar-wrap"><div class="tabbar-row"><nav class="tabbar glass" aria-label="Разделы"><button class="tab on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button></nav><button class="tab-search glass" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1720,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPad · плеер с панелью</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.qrow{display:flex;align-items:center;gap:12px;padding:8px 0}
+.qrow .thumb{width:120px;border-radius:10px}
+</style>
+</helmet>
+<div class="tablet vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1194px; height: 834px; display: flex; flex-direction: column;">
+  <div class="row between" style="padding: 18px 22px 10px;">
+    <div class="row" style="gap: 6px;"><button class="btn icon glassb" aria-label="Свернуть в мини-плеер"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button><span class="t-fn t-sec">Очередь · 3 из 12</span></div>
+    <div class="row" style="gap: 8px;"><button class="btn icon glassb" aria-label="AirPlay"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-9A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v9a1.5 1.5 0 0 1-1.5 1.5H18"/><path d="m12 14 5 6H7z"/></svg></button><button class="btn icon glassb" aria-label="Скрыть панель"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M15 4v16"/></svg></button></div>
+  </div>
+  <div style="display: grid; grid-template-columns: 1fr 360px; gap: 22px; padding: 0 22px 22px; flex: 1; min-height: 0;">
+    <div class="col" style="gap: 14px; min-width: 0;">
+      <div class="media" style="height: 438px; border-radius: 24px;">
+        <div class="art a0"></div><div class="shade-t"></div><div class="shade-b"></div>
+        <div class="row center" style="position: absolute; left: 0; right: 0; top: 160px; gap: 34px;">
+          <button class="pctl glass-media" aria-label="Предыдущее видео"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path class="fc" d="M19 5 9 12l10 7Z"/></svg></button>
+          <button class="pctl glass-media" aria-label="Назад 10 секунд"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg></button>
+          <button class="pctl big glass-media" aria-label="Пауза"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></button>
+          <button class="pctl glass-media" aria-label="Вперёд 30 секунд"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></button>
+          <button class="pctl glass-media" aria-label="Следующее видео"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14"/><path class="fc" d="M5 5l10 7-10 7Z"/></svg></button>
+        </div>
+        <div style="position: absolute; left: 22px; right: 22px; bottom: 16px;">
+          <div class="tl" role="slider" aria-label="Позиция" aria-valuetext="6:24 из 18:42"><i class="buf" style="width: 58%;"></i><i class="pl" style="width: 34%;"></i><i class="sb" style="left: 6%; width: 5%; background: var(--sb-sponsor);"></i><i class="chap" style="left: 18%;"></i><i class="chap" style="left: 30%;"></i><i class="chap" style="left: 52%;"></i><i class="knob" style="left: 34%;"></i></div>
+          <div class="ttime"><span>06:24 · Глава 3</span><span>18:42</span></div>
+          <div class="row" style="gap: 8px; margin-top: 10px;">
+            <button class="qbtn glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16a8 8 0 1 1 15 0"/><path d="m12 13 4-4"/></svg>1×</button>
+            <button class="qbtn glass-media" style="box-shadow: 0 0 0 2px #fff;" aria-expanded="true">Авто · 1080p</button>
+            <button class="qbtn glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/></svg>Оригинал</button>
+            <button class="qbtn glass-media"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 10.2a2.2 2.2 0 1 0 0 3.6M17 10.2a2.2 2.2 0 1 0 0 3.6"/></svg>Выкл</button>
+            <span class="grow"></span>
+            <button class="qbtn glass-media" aria-label="Картинка в картинке"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><rect x="12" y="12" width="7" height="5" rx="1"/></svg></button>
+            <button class="qbtn glass-media" aria-label="Заполнить экран"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+            <button class="qbtn glass-media" aria-label="Ещё действия"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button>
+          </div>
+        </div>
+        <div class="popover glass" style="position: absolute; left: 120px; bottom: 76px; width: 300px; color: var(--text);" role="dialog" aria-label="Качество">
+          <div style="padding: 14px 16px 6px;"><p class="t-hl">Качество</p><p class="t-fn t-sec">Сейчас играет 1080p · VP9</p></div>
+          <div class="menu" style="padding: 4px 6px 8px; box-shadow: none; background: transparent;">
+            <div class="mi hl">Авто<small style="margin-left: 6px;">выбрано</small><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--action);"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div>
+            <div class="mi">1080p60 · VP9</div>
+            <div class="mi">1080p · H.264</div>
+            <div class="mi">720p · H.264</div>
+            <div class="mi">480p</div>
+            <div class="mi dis">2160p<small style="margin-left: auto;">нет для этого видео</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="row between"><div><h1 class="t-2">The long way home</h1><p class="t-fn t-sec" style="margin-top: 2px;">Field Notes · 128 тыс. просмотров · 2 дня назад</p></div><div class="row" style="gap: 8px;"><button class="btn sm"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v10H4V10h3Zm0 0 4-7c1.5 0 2.5 1 2.2 2.6L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 6.5A2.5 2.5 0 0 1 17.3 20H7"/></svg>Нравится</button><button class="btn sm"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg>Поделиться</button><button class="btn sm tint"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button></div></div>
+    </div>
+    <aside class="col" style="gap: 12px; background: var(--surface); border-radius: 24px; padding: 14px; min-height: 0; overflow: hidden;">
+      <div class="seg"><span class="on">Далее</span><span>Описание</span><span>Комментарии</span></div>
+      <div class="row between"><span class="t-fn t-sec">Очередь · 12 · на устройстве</span><div class="row" style="gap: 2px;"><button class="btn sm plain icon" aria-label="Перемешать очередь"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3.5c4 0 6 10 10 10H21M3 17h3.5c1.5 0 2.7-1.4 3.7-3.2M14 10.2C15 8.4 16 7 17 7h4M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></button><button class="btn sm plain">Изменить</button></div></div>
+      <div class="qrow" style="background: var(--fill); border-radius: 14px; padding: 8px;"><div class="thumb a0"><span class="prog"><i style="width: 34%;"></i></span></div><div class="grow"><p class="t-sh t-b clamp2">The long way home</p><p class="t-c1 t-act" style="color: var(--action);">Сейчас играет</p></div></div>
+      <div class="qrow"><div class="thumb a1"><span class="dur">12:08</span></div><div class="grow"><p class="t-sh t-b clamp2">Design in motion</p><p class="t-c1 t-sec">Studio North</p></div></div>
+      <div class="qrow"><div class="thumb a2"><span class="dur">24:16</span></div><div class="grow"><p class="t-sh t-b clamp2">A slower morning</p><p class="t-c1 t-sec">Everyday Films</p></div></div>
+      <div class="qrow"><div class="thumb a5"><span class="dur">21:07</span></div><div class="grow"><p class="t-sh t-b clamp2">Small ideas, big worlds</p><p class="t-c1 t-sec">Frame by Frame</p></div></div>
+      <div class="qrow"><div class="thumb a7"><span class="dur">14:30</span></div><div class="grow"><p class="t-sh t-b clamp2">Field kitchen: bread over a fire</p><p class="t-c1 t-sec">Field Notes</p></div></div>
+      <p class="t-c1 t-sec">После очереди — рекомендации (Autoplay). Панель скрывается, если окно уже 900 pt.</p>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"dark"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1194,"height":834}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'dark', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

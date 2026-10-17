@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Mac · офлайн-видео</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.tbl{display:grid;grid-template-columns:1fr 170px 90px 150px;font-size:13px}
+.tbl > div{padding:8px 10px;display:flex;align-items:center;gap:10px;min-height:52px}
+.tbl .h{min-height:28px;font-size:11px;font-weight:700;color:var(--secondary);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--hairline)}
+.tbl .sel{background:var(--action);color:var(--onAction)}
+.tbl .sel .t-sec,.tbl .sel .pill-badge{color:var(--onAction)}
+.tbl .alt{background:var(--fill)}
+.tbl .thumb{width:72px;border-radius:6px}
+</style>
+</helmet>
+<div class="mac-win vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1440px; height: 900px; flex-direction: row;">
+  <nav class="mac-side glass" style="border-radius: 0; border: 0; border-right: 1px solid var(--hairline); box-shadow: none; padding-top: 14px; width: 210px;" aria-label="Разделы">
+    <div class="lights" style="padding: 4px 8px 18px;"><i></i><i></i><i></i></div>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Поиск</button>
+    <button class="side-item on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн-видео<span class="cnt">3</span></button>
+    <div class="side-h">Медиатека</div>
+    <button class="side-item">Подписки</button>
+    <button class="side-item">История</button>
+    <button class="side-item">Плейлисты</button>
+    <button class="side-item">Очередь<span class="cnt">12</span></button>
+    <button class="side-item">RSS-ленты</button>
+  </nav>
+  <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+    <div class="mac-toolbar">
+      <span class="t-hl">Офлайн-видео</span>
+      <div class="seg" style="width: 250px; margin-left: 16px;"><span class="on" style="min-height: 24px; font-size: 12px;">Библиотека</span><span style="min-height: 24px; font-size: 12px;">Задания · 3</span></div>
+      <span class="grow"></span>
+      <span class="t-fn t-sec">3,4 ГБ · 12 видео</span>
+      <button class="mac-btn">Удалить всё…</button>
+      <button class="mac-btn icon" aria-label="Показать панель"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M15 4v16"/></svg></button>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 360px; flex: 1; min-height: 0;">
+      <div style="padding: 6px 18px; overflow: hidden;">
+        <div class="tbl" role="table" aria-label="Офлайн-библиотека">
+          <div class="h">Видео</div><div class="h">Составляющие</div><div class="h">Размер</div><div class="h">Состояние</div>
+          <div class="sel"><span class="thumb a0"></span><span><b>The long way home</b><br><span class="t-sec">Field Notes</span></span></div><div class="sel">2 видео · аудио · перевод</div><div class="sel t-num">214 МБ</div><div class="sel"><span class="pill-badge" style="background: rgba(255,255,255,.2);">Готово</span></div>
+          <div><span class="thumb a3"></span><span><b>Inside the sound</b><br><span class="t-sec">Sound Room</span></span></div><div>аудио</div><div class="t-num">34 МБ</div><div><span class="pill-badge ok">Готово</span></div>
+          <div class="alt"><span class="thumb a1"></span><span><b>Design in motion</b><br><span class="t-sec">Studio North</span></span></div><div class="alt">видео · аудио</div><div class="alt t-num">~200 МБ</div><div class="alt"><span class="pill-badge act">Загрузка 64%</span></div>
+          <div><span class="thumb a4"></span><span><b>Cities after dark</b><br><span class="t-sec">Night Walks</span></span></div><div>видео</div><div class="t-num">—</div><div><span class="pill-badge dng">Ошибка · нет места</span></div>
+          <div class="alt"><span class="thumb a8"></span><span><b>Small ideas, big worlds</b><br><span class="t-sec">Frame by Frame</span></span></div><div class="alt">720p · аудио</div><div class="alt t-num">96 МБ</div><div class="alt"><span class="pill-badge ok">Готово</span></div>
+          <div><span class="thumb a2"></span><span><b>A slower morning</b><br><span class="t-sec">Everyday Films</span></span></div><div>видео</div><div class="t-num">—</div><div><span class="pill-badge">Отменено</span></div>
+        </div>
+        <p class="t-c1 t-sec" style="margin-top: 14px;">Двойной щелчок или Return — открыть, Delete — удалить с подтверждением. На Mac доступны прямые файлы; HLS-пакеты — только на iPhone/iPad.</p>
+      </div>
+      <aside style="border-left: 1px solid var(--hairline); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; background: var(--surface);">
+        <div class="thumb a0" style="border-radius: 10px;"></div>
+        <h2 class="t-hl">The long way home</h2>
+        <button class="mac-btn" style="background: var(--action); color: var(--onAction); align-self: flex-start;"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg>Смотреть 1080p</button>
+        <p class="eyebrow" style="margin-top: 6px;">Видео</p>
+        <div class="row between t-fn"><span>1080p · VP9 · 168 МБ</span><span class="pill-badge ok">Сохранено</span></div>
+        <div class="row between t-fn"><span>720p · H.264 · 46 МБ</span><span class="pill-badge ok">Сохранено</span></div>
+        <p class="eyebrow" style="margin-top: 6px;">Аудио</p>
+        <div class="row" style="gap: 8px; font-size: 13px;"><span style="width: 14px; height: 14px; border-radius: 50%; border: 4px solid var(--action);"></span>English · оригинал</div>
+        <p class="eyebrow" style="margin-top: 6px;">Перевод</p>
+        <div class="row" style="gap: 8px; font-size: 13px;"><span style="width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--tertiary);"></span>Без перевода</div>
+        <div class="row" style="gap: 8px; font-size: 13px;"><span style="width: 14px; height: 14px; border-radius: 50%; border: 4px solid var(--action);"></span>Русский · Yandex</div>
+        <div style="flex: 1;"></div>
+        <button class="mac-btn">Добавить вариант…</button>
+        <button class="mac-btn" style="color: var(--danger);">Удалить видео и файлы…</button>
+      </aside>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

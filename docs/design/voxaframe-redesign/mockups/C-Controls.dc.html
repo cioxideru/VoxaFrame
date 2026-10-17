@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кнопки, чипы, переключатели, поля</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.cell{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.cap{font-size:12px;line-height:15px;color:var(--secondary)}
+</style>
+</helmet>
+<div class="vf" data-theme="{{theme}}" data-accent="{{accent}}" style="width: 1440px; height: 1040px; padding: 40px 48px; display: flex; flex-direction: column; gap: 30px;">
+  <div class="row between"><h2 class="t-1">Элементы управления</h2><span class="t-fn t-sec">Тема и акцент меняются в Tweaks. В приложении — нативные Button, Toggle, Picker, Slider, TextField.</span></div>
+
+  <section class="col" style="gap: 14px;">
+    <h3 class="t-hl">VF/Button · роли</h3>
+    <div class="row" style="gap: 14px; align-items: flex-end;">
+      <div class="cell"><button class="btn prom"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg>Смотреть</button><span class="cap">prominent · одно на экран</span></div>
+      <div class="cell"><button class="btn">Подписаться</button><span class="cap">secondary</span></div>
+      <div class="cell"><button class="btn tint"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Скачать</button><span class="cap">tinted</span></div>
+      <div class="cell"><button class="btn plain">Открыть канал</button><span class="cap">plain</span></div>
+      <div class="cell"><button class="btn dest">Удалить видео</button><span class="cap">destructive</span></div>
+      <div class="cell"><button class="btn dest-prom">Удалить всё</button><span class="cap">destructive · подтверждение</span></div>
+      <div class="cell"><button class="btn icon" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button><span class="cap">icon + label</span></div>
+      <div class="cell"><button class="btn glassb"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Фильтры</button><span class="cap">glass · на панели</span></div>
+    </div>
+  </section>
+
+  <section class="col" style="gap: 14px;">
+    <h3 class="t-hl">Состояния</h3>
+    <div class="row" style="gap: 14px; align-items: flex-end;">
+      <div class="cell"><button class="btn prom">Подписаться</button><span class="cap">default</span></div>
+      <div class="cell"><button class="btn prom is-pressed">Подписаться</button><span class="cap">pressed</span></div>
+      <div class="cell"><button class="btn prom is-hover">Подписаться</button><span class="cap">hover · Mac/iPad</span></div>
+      <div class="cell"><button class="btn prom is-focus">Подписаться</button><span class="cap">клавиатурный фокус</span></div>
+      <div class="cell"><button class="btn prom" aria-busy="true" style="min-width: 150px;"><span class="spin" aria-hidden="true"></span>Подписка…</button><span class="cap">loading · ширина сохраняется</span></div>
+      <div class="cell"><button class="btn prom" disabled>Скачать</button><span class="cap">недоступно</span></div>
+      <div class="cell" style="max-width: 250px;"><span class="t-fn t-sec" style="display: flex; gap: 6px; align-items: flex-start;"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.3"/></svg>Прямую трансляцию нельзя скачать</span><span class="cap">причина рядом с недоступным</span></div>
+      <div class="cell"><button class="btn" style="color: var(--success);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg>В «Смотреть позже»</button><span class="cap">подтверждённый успех</span></div>
+    </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px;">
+    <section class="col" style="gap: 14px;">
+      <h3 class="t-hl">VF/FilterChip · разделы ленты</h3>
+      <div class="chips"><span class="chip on">Главная</span><span class="chip">Рекомендации</span><span class="chip">Подписки</span><span class="chip">История</span></div>
+      <h3 class="t-hl" style="margin-top: 8px;">Активные фильтры поиска — снимаемые метки</h3>
+      <div class="chips wrap"><span class="chip removable">За неделю<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></span><span class="chip removable">4–20 мин<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></span><span class="chip removable">По дате<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></span></div>
+      <h3 class="t-hl" style="margin-top: 8px;">Segmented · второй уровень</h3>
+      <div class="seg" style="width: 330px;"><span class="on">Библиотека</span><span>Задания · 3</span></div>
+      <div class="seg" style="width: 330px;"><span class="on">Все</span><span>Shorts</span></div>
+    </section>
+
+    <section class="col" style="gap: 14px;">
+      <h3 class="t-hl">VF/SearchField</h3>
+      <div class="search"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span>Видео, каналы, плейлисты</span></div>
+      <div class="search" style="box-shadow: inset 0 0 0 2px var(--focus);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="q">slow living<i class="caret"></i></span><button class="btn sm icon" aria-label="Очистить" style="min-height: 26px; width: 26px; background: var(--fill-strong);"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+      <div class="search glass"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span>Поиск · в панели вкладок</span></div>
+      <div class="field" style="margin-top: 6px;"><label>Адрес ленты</label><div class="box err">youtube.com/feeds/videos</div><span class="hint err"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg>Нужен адрес вида https://…</span></div>
+    </section>
+
+    <section class="col" style="gap: 14px;">
+      <h3 class="t-hl">Toggle · Picker · Slider</h3>
+      <div class="list" style="background: var(--surface);">
+        <div class="li"><span class="lt">Фоновое воспроизведение</span><button class="switch on" role="switch" aria-checked="true" aria-label="Фоновое воспроизведение"></button></div>
+        <div class="li"><span class="lt">Скрывать просмотренные</span><button class="switch" role="switch" aria-checked="false" aria-label="Скрывать просмотренные"></button></div>
+        <div class="li dis"><span class="lt">Живые голоса<small>Нужен включённый перевод</small></span><button class="switch dis" role="switch" aria-checked="false" disabled aria-label="Живые голоса"></button></div>
+        <div class="li"><span class="lt">Качество по умолчанию</span><span class="val">Авто<svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg></span></div>
+        <div class="li" style="flex-direction: column; align-items: stretch; gap: 10px;"><div class="row between"><span class="lt">Порог просмотренного</span><span class="val t-num">90%</span></div><div class="tl on-light thin"><i class="pl" style="width: 89%;"></i><i class="knob" style="left: 89%; width: 26px; height: 26px; margin: -13px 0 0 -13px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25);"></i></div><span class="cap">5–100%, шаг 5</span></div>
+      </div>
+    </section>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px;">
+    <section class="col" style="gap: 12px;">
+      <h3 class="t-hl">Mac · компактные контролы, наведение и фокус</h3>
+      <div class="row" style="gap: 10px;">
+        <button class="mac-btn" style="background: var(--action); color: var(--onAction);">Подписаться</button>
+        <button class="mac-btn">Поделиться</button>
+        <button class="mac-btn is-hover" style="filter: brightness(.94);">Наведение</button>
+        <button class="mac-btn is-focus">Фокус Tab</button>
+        <button class="mac-btn icon" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button>
+        <span class="kbd">⌘</span><span class="kbd">F</span><span class="prop">клавиши — предложение</span>
+      </div>
+    </section>
+    <section class="col" style="gap: 12px;">
+      <h3 class="t-hl">Apple TV · фокус пульта</h3>
+      <div class="row" data-theme="dark" style="gap: 18px; padding: 18px 22px; border-radius: 22px; background: #111;">
+        <span class="tv-btn focus" style="font-size: 20px; min-height: 48px; padding: 0 22px;"><svg class="f" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px;"><path d="M7 4.5v15l12-7.5Z"/></svg>Смотреть</span>
+        <span class="tv-btn" style="font-size: 20px; min-height: 48px; padding: 0 22px;">Подписаться</span>
+        <span class="tv-btn" style="font-size: 20px; min-height: 48px; padding: 0 22px;">Ещё</span>
+        <span class="t-fn" style="color: #b8b8c2;">Фокус: белая заливка + подъём; без масштаба при Reduce Motion</span>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral' };
+  }
+}
+</script>
+</body>
+</html>

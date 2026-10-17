@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · сохранённое видео и удаление</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.opt .li{min-height:44px;padding:7px 16px}
+.opt .lt{font-size:15px}
+.opt .lt small{font-size:12px}
+.asheet{position:absolute;left:8px;right:8px;bottom:8px;z-index:10;display:flex;flex-direction:column;gap:8px}
+.asheet .grp{border-radius:28px;overflow:hidden}
+.asheet .hd{padding:14px 18px;text-align:center;font-size:13px;line-height:18px;color:var(--secondary)}
+.asheet .hd b{display:block;color:var(--text);font-size:15px;margin-bottom:2px}
+.asheet .ab{display:flex;align-items:center;justify-content:center;min-height:56px;font-size:19px;border-top:1px solid var(--hairline)}
+</style>
+</helmet>
+<div class="strip" style="width: 1720px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Сохранённое видео · варианты и недостающее</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen" style="background: var(--grouped);">
+        <div class="safe-top"></div>
+        <div class="navbar"><button class="navbtn" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span></span><button class="navbtn" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div>
+        <div class="scroll pad opt">
+          <div class="thumb a1" style="border-radius: 18px;"><span class="dur">12:08</span></div>
+          <h1 class="t-3" style="margin-top: 10px;">Design in motion</h1>
+          <p class="t-fn t-sec">Studio North</p>
+          <div class="banner info" style="margin-top: 10px; background: var(--cell);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.3"/></svg><span>Видео ещё загружается (64%). Аудио уже можно слушать.</span></div>
+          <p class="group-h" style="margin-top: 14px;">Видео</p>
+          <div class="list"><div class="li"><span class="lt">1080p · VP9<small>Загрузка 64%</small></span><span class="pill-badge act">Загрузка</span></div></div>
+          <p class="group-h">Аудио</p>
+          <div class="list"><div class="li sel"><span class="lt">English · оригинал<small>Сохранено · 22 МБ</small></span><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div></div>
+          <p class="group-h">Перевод</p>
+          <div class="list"><div class="li sel"><span class="lt">Без перевода</span><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div><div class="li"><span class="lt">Русский<small>Сохранено</small></span></div></div>
+          <p class="group-h">Добавить</p>
+          <div class="list"><div class="li"><span class="lt">720p · H.264</span><button class="btn sm tint">Скачать</button></div><div class="li"><span class="lt">Español · дубляж</span><button class="btn sm tint">Скачать</button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Удалить <em>одну дорожку</em></span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen" style="background: var(--grouped);">
+        <div class="safe-top"></div>
+        <div class="pad opt" style="padding-top: 60px; filter: brightness(.7);">
+          <div class="list"><div class="li"><span class="lt">1080p · VP9<small>Сохранено · 168 МБ</small></span></div><div class="li"><span class="lt">Русский перевод<small>Сохранено · 10 МБ</small></span></div></div>
+        </div>
+        <div class="dim-under"></div>
+        <div class="asheet">
+          <div class="grp glass" style="background: var(--elevated);"><div class="hd"><b>Удалить «Русский перевод»?</b>Видео 1080p и аудио останутся. Освободится 10 МБ.</div><button class="ab" style="color: var(--danger); background: transparent; border-left: 0; border-right: 0; border-bottom: 0; width: 100%;">Удалить перевод</button></div>
+          <div class="grp glass" style="background: var(--elevated);"><button class="ab" style="font-weight: 600; border: 0; width: 100%; background: transparent; color: var(--action);">Отмена</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Удалить <em>видео целиком</em> · выполняется</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen" style="background: var(--grouped);">
+        <div class="safe-top"></div>
+        <div class="dim-under"></div>
+        <div style="position: absolute; left: 0; right: 0; top: 210px; display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 10;">
+          <div class="alert glass" style="background: var(--elevated);"><h3>Удалить «The long way home»?</h3><p>Видео 1080p и 720p, аудио English, перевод «Русский» и 1 незавершённое задание · 214 МБ.</p><div class="acts"><button class="btn dest-prom">Удалить видео и файлы</button><button class="btn is-focus">Отмена</button></div></div>
+          <div class="alert glass" style="background: var(--elevated);"><div class="row" style="gap: 12px;"><span class="spin" style="color: var(--secondary);" aria-hidden="true"></span><div><h3>Удаляем…</h3><p style="margin-top: 2px;">Остальные действия с этим видео недоступны.</p></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Удалить <em>всю библиотеку</em> · файл повреждён</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen" style="background: var(--grouped);">
+        <div class="safe-top"></div>
+        <div class="navbar"><button class="navbtn" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span class="t">Офлайн-видео</span><span style="width: 44px;"></span></div>
+        <div class="pad opt col" style="gap: 12px; padding-top: 10px;">
+          <div class="banner err" style="background: var(--cell);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg><span class="grow">Файл 720p повреждён — его нельзя воспроизвести.</span><button class="btn sm tint">Скачать снова</button></div>
+          <div class="list"><div class="li"><span class="lt">Занято<small>12 видео · 31 файл</small></span><span class="val">3,4 ГБ</span></div></div>
+          <div class="list"><div class="li dest"><span class="lt" style="text-align: center;">Удалить все офлайн-видео…</span></div></div>
+        </div>
+        <div class="dim-under"></div>
+        <div style="position: absolute; left: 0; right: 0; top: 330px; display: flex; justify-content: center; z-index: 10;">
+          <div class="alert glass" style="background: var(--elevated);"><h3>Удалить всю офлайн-библиотеку?</h3><p>12 видео, все задания загрузки и кэш · 3,4 ГБ. Это не очищает историю, не выходит из Google и не сбрасывает настройки.</p><div class="acts"><button class="btn dest-prom">Удалить всё</button><button class="btn">Отмена</button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1720,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

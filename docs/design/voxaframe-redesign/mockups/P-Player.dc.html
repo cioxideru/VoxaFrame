@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · плеер, портрет</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.act{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;line-height:13px;font-weight:600;min-width:58px;border:0;background:transparent;color:var(--text)}
+.act span.ic{width:44px;height:44px;border-radius:999px;background:var(--fill);display:flex;align-items:center;justify-content:center}
+.act.on span.ic{color:var(--action)}
+</style>
+</helmet>
+<div class="strip" style="width: 876px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Плеер · управление показано · <em>светлая</em></span>
+    <div class="phone vf" data-theme="light" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;">
+          <button class="navbtn" aria-label="Свернуть в мини-плеер"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button>
+          <span class="t-fn t-sec">Очередь · 3 из 12</span>
+          <button class="navbtn" aria-label="AirPlay"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-9A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v9a1.5 1.5 0 0 1-1.5 1.5H18"/><path d="m12 14 5 6H7z"/></svg></button>
+        </div>
+        <div class="media" style="height: 219px;">
+          <div class="art a0"></div><div class="shade-t"></div><div class="shade-b"></div>
+          <div class="row" style="position: absolute; top: 10px; right: 10px; gap: 8px;">
+            <button class="qbtn glass-media" style="min-height: 32px; padding: 0 10px;" aria-label="Картинка в картинке"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><rect x="12" y="12" width="7" height="5" rx="1"/></svg></button>
+            <button class="qbtn glass-media" style="min-height: 32px; padding: 0 10px;" aria-label="Субтитры: русский"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 10.2a2.2 2.2 0 1 0 0 3.6M17 10.2a2.2 2.2 0 1 0 0 3.6"/></svg></button>
+          </div>
+          <div class="row center" style="position: absolute; left: 0; right: 0; top: 70px; gap: 26px;">
+            <button class="pctl sm glass-media" aria-label="Назад 10 секунд"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg></button>
+            <button class="pctl glass-media" style="width: 60px; height: 60px;" aria-label="Пауза"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></button>
+            <button class="pctl sm glass-media" aria-label="Вперёд 30 секунд"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></button>
+          </div>
+          <div style="position: absolute; left: 14px; right: 14px; bottom: 10px;">
+            <div class="row between" style="font-size: 12px; font-weight: 600; margin-bottom: 8px;"><span>Глава 3 · Through the valley</span><button class="qbtn glass-media" style="min-height: 28px; padding: 0 8px;" aria-label="Заполнить экран"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
+            <div class="tl thin" role="slider" aria-label="Позиция" aria-valuetext="6:24 из 18:42"><i class="buf" style="width: 58%;"></i><i class="pl" style="width: 34%;"></i><i class="sb" style="left: 6%; width: 5%; background: var(--sb-sponsor);"></i><i class="chap" style="left: 18%;"></i><i class="chap" style="left: 30%;"></i><i class="chap" style="left: 52%;"></i><i class="knob" style="left: 34%; width: 14px; height: 14px; margin: -7px 0 0 -7px;"></i></div>
+            <div class="ttime" style="margin-top: 6px;"><span>06:24</span><span>18:42</span></div>
+          </div>
+        </div>
+        <div class="row pad" style="gap: 8px; padding-top: 10px; padding-bottom: 10px; overflow: hidden;">
+          <button class="chip"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16a8 8 0 1 1 15 0"/><path d="m12 13 4-4"/></svg>1×</button>
+          <button class="chip">Авто · 1080p</button>
+          <button class="chip"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/></svg>Оригинал</button>
+          <button class="chip"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z"/></svg>Таймер</button>
+        </div>
+        <div class="scroll pad">
+          <h1 class="t-3">The long way home</h1>
+          <p class="t-fn t-sec" style="margin-top: 4px;">128 тыс. просмотров · 2 дня назад · <a href="#d">Описание</a></p>
+          <div class="row" style="gap: 10px; margin-top: 14px;"><span class="avatar c0" style="width: 40px; height: 40px;"></span><div class="grow"><p class="t-hl">Field Notes</p><p class="t-fn t-sec">412 тыс. подписчиков</p></div><button class="btn sm prom">Подписаться</button></div>
+          <div class="row between" style="margin-top: 16px;">
+            <button class="act on"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v10H4V10h3Zm0 0 4-7c1.5 0 2.5 1 2.2 2.6L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 6.5A2.5 2.5 0 0 1 17.3 20H7"/></svg></span>Нравится</button>
+            <button class="act"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="transform: rotate(180deg);"><path d="M7 10v10H4V10h3Zm0 0 4-7c1.5 0 2.5 1 2.2 2.6L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 6.5A2.5 2.5 0 0 1 17.3 20H7"/></svg></span>Не нравится</button>
+            <button class="act"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg></span>Поделиться</button>
+            <button class="act"><span class="ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg></span>Офлайн</button>
+            <button class="act"><span class="ic"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></span>Ещё</button>
+          </div>
+          <div class="row between" style="margin-top: 20px;"><h2 class="t-hl">Далее в очереди</h2><button class="btn sm plain">Вся очередь</button></div>
+          <article class="crow" style="margin-top: 8px; grid-template-columns: 120px 1fr;"><div class="thumb a1"><span class="dur">12:08</span></div><div><p class="title clamp2">Design in motion</p><p class="sub">Studio North</p></div></article>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Управление скрыто · субтитры · перевод · <em>тёмная</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;">
+          <button class="navbtn" aria-label="Свернуть в мини-плеер"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button>
+          <span class="pill-badge act" style="background: var(--fill);"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/></svg>Перевод · Русский</span>
+          <button class="navbtn" aria-label="AirPlay"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-9A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v9a1.5 1.5 0 0 1-1.5 1.5H18"/><path d="m12 14 5 6H7z"/></svg></button>
+        </div>
+        <div class="media" style="height: 219px;">
+          <div class="art a7"></div>
+          <div style="position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; padding: 0 20px;"><span class="caption-line">Мы шли по старой соляной дороге</span></div>
+          <div class="tl thin" style="position: absolute; left: 0; right: 0; bottom: 0; border-radius: 0; height: 3px;"><i class="pl" style="width: 52%; border-radius: 0; background: var(--action);"></i></div>
+        </div>
+        <div class="pad" style="padding-top: 12px;"><span class="toast glass" style="display: inline-flex;"><i class="sb-dot" style="background: var(--sb-intro);"></i>Вступление<button class="btn sm prom">Пропустить</button></span></div>
+        <div class="scroll pad" style="padding-top: 12px;">
+          <h1 class="t-3">Walking the old salt road, part two</h1>
+          <p class="t-fn t-sec" style="margin-top: 4px;">12 тыс. просмотров · 5 часов назад</p>
+          <div class="row" style="gap: 10px; margin-top: 14px;"><span class="avatar c0" style="width: 40px; height: 40px;"></span><div class="grow"><p class="t-hl">Field Notes</p><p class="t-fn t-sec">Подписка на устройстве</p></div><button class="btn sm">Вы подписаны</button></div>
+          <div class="list" style="margin-top: 18px;">
+            <div class="li"><span class="lt" style="font-size: 15px;">Главы<small>8 глав · сейчас: «The salt houses»</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></div>
+            <div class="li"><span class="lt" style="font-size: 15px;">Комментарии<small>214 · только чтение</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></div>
+          </div>
+          <p class="t-fn t-sec" style="margin-top: 14px;">Нажатие по видео показывает управление. Двойное нажатие слева/справа — ±10/30 с, в центре — Fit/Fill. Все действия продублированы кнопками.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":876,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

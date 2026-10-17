@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · мини-плеер и PiP</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.lrow{display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:center}
+.lrow .thumb{border-radius:10px}
+</style>
+</helmet>
+<div class="strip" style="width: 876px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Мини-плеер · меню аксессуара</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="largehead"><h1 class="t-lt">Медиатека</h1></div>
+        <div class="pad" style="padding-bottom: 12px;"><div class="seg"><span>Подписки</span><span class="on">История</span><span>Плейлисты</span><span>Очередь</span></div></div>
+        <div class="scroll pad col" style="gap: 14px;">
+          <div class="lrow"><div class="thumb a2"><span class="prog"><i style="width: 70%;"></i></span></div><div><p class="t-sh t-b clamp2">A slower morning</p><p class="t-fn t-sec">Everyday Films · сегодня</p></div></div>
+          <div class="lrow"><div class="thumb a1"><span class="prog"><i style="width: 100%;"></i></span></div><div><p class="t-sh t-b clamp2">Design in motion</p><p class="t-fn t-sec">Studio North · вчера</p></div></div>
+          <div class="lrow"><div class="thumb a8"><span class="prog"><i style="width: 20%;"></i></span></div><div><p class="t-sh t-b clamp2">Paper, light and glue</p><p class="t-fn t-sec">Frame by Frame · вчера</p></div></div>
+        </div>
+        <div class="dim-under" style="background: rgba(0,0,0,.18);"></div>
+        <div class="menu glass" style="position: absolute; left: 14px; bottom: 214px; width: 250px; z-index: 11;" role="menu" aria-label="Мини-плеер">
+          <div class="mi">Развернуть<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></div>
+          <div class="mi">Пауза<svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></div>
+          <div class="mi">Следующее<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14"/><path class="fc" d="M5 5l10 7-10 7Z"/></svg></div>
+          <div class="msep"></div>
+          <div class="mi dest">Закрыть и остановить<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></div>
+        </div>
+        <div class="tabbar-wrap" style="z-index: 12;">
+          <div class="accessory glass" style="box-shadow: 0 0 0 3px var(--focus), var(--glass-shadow);">
+            <span class="thumb a0"></span>
+            <span class="tt"><b>The long way home</b><small>Field Notes · Играет</small></span>
+            <button class="navbtn" aria-label="Пауза"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></button>
+            <button class="navbtn" aria-label="Закрыть мини-плеер и остановить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
+          </div>
+          <div class="tabbar-row"><nav class="tabbar glass" aria-label="Разделы"><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button><button class="tab on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button></nav><button class="tab-search glass" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Системный PiP · <em>мини-плеер скрыт</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="largehead"><h1 class="t-lt">Главная</h1></div>
+        <div class="scroll pad col" style="gap: 18px;">
+          <article class="card"><div class="thumb a6"><span class="dur">11:44</span></div><div class="meta"><div class="grow"><p class="title">Two-minute dinners, ten ways</p><p class="sub">Everyday Films</p></div></div></article>
+          <article class="card"><div class="thumb a9"><span class="dur">08:12</span></div><div class="meta"><div class="grow"><p class="title">Night ferry to the islands</p><p class="sub">Night Walks</p></div></div></article>
+        </div>
+        <div style="position: absolute; right: 12px; top: 96px; width: 210px; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; box-shadow: 0 16px 36px rgba(0,0,0,.6); z-index: 8;" class="media" aria-label="Картинка в картинке: The long way home">
+          <div class="art a0"></div>
+          <div class="row between" style="position: absolute; left: 6px; right: 6px; top: 6px;"><span class="pctl glass-media" style="width: 28px; height: 28px;"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></span><span class="pctl glass-media" style="width: 28px; height: 28px;"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m9 9 6 6M15 9v6H9"/></svg></span></div>
+        </div>
+        <div class="tabbar-wrap"><div class="tabbar-row"><nav class="tabbar glass" aria-label="Разделы"><button class="tab on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн</button><button class="tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button></nav><button class="tab-search glass" aria-label="Поиск"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button></div></div>
+        <p class="t-c1 t-sec pad" style="position: absolute; left: 0; right: 0; bottom: 116px;">Возврат из PiP продолжает то же видео в полном плеере. Закрытие PiP не разворачивает мини-плеер.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":876,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

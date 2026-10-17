@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPad · офлайн-видео</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.orow{display:flex;gap:12px;align-items:center;padding:10px;border-radius:14px}
+.orow .thumb{width:104px;border-radius:9px}
+.orow.on{background:var(--fill-strong)}
+</style>
+</helmet>
+<div class="tablet vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1194px; height: 834px; display: grid; grid-template-columns: 236px 380px 1fr;">
+  <nav class="sidebar" style="padding: 20px 10px;" aria-label="Разделы">
+    <div class="row" style="gap: 10px; padding: 4px 8px 16px;"><img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 30px; height: 30px; border-radius: 8px;"><span class="t-hl">VoxaFrame</span></div>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Поиск</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button>
+    <button class="side-item on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн-видео<span class="cnt">3</span></button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button>
+  </nav>
+  <section style="padding: 22px 14px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid var(--hairline); overflow: hidden;">
+    <div class="row between" style="padding: 0 6px;"><h1 class="t-1">Офлайн</h1><button class="btn sm icon" aria-label="Ещё: удалить всё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div>
+    <div class="seg"><span class="on">Библиотека · 12</span><span>Задания · 3</span></div>
+    <p class="t-fn t-sec" style="padding: 0 6px;">3,4 ГБ на устройстве</p>
+    <div class="orow on"><div class="thumb a0"><span class="dur">18:42</span></div><div class="grow"><p class="t-sh t-b clamp2">The long way home</p><p class="row" style="gap: 6px; margin-top: 4px;"><span class="pill-badge ok">Готово</span><span class="t-c1 t-sec">4 составляющие</span></p></div></div>
+    <div class="orow"><div class="thumb a3"><span class="dur">09:51</span></div><div class="grow"><p class="t-sh t-b clamp2">Inside the sound</p><p class="row" style="gap: 6px; margin-top: 4px;"><span class="pill-badge ok">Аудио</span></p></div></div>
+    <div class="orow"><div class="thumb a1"><span class="dur">12:08</span></div><div class="grow"><p class="t-sh t-b clamp2">Design in motion</p><p class="row" style="gap: 6px; margin-top: 4px;"><span class="pill-badge act">64%</span><span class="t-c1 t-sec">видео не готово</span></p></div></div>
+    <div class="orow"><div class="thumb a4"><span class="dur">16:32</span></div><div class="grow"><p class="t-sh t-b clamp2">Cities after dark</p><p class="row" style="gap: 6px; margin-top: 4px;"><span class="pill-badge dng">Ошибка</span></p></div></div>
+    <div class="orow"><div class="thumb a8"><span class="dur">21:07</span></div><div class="grow"><p class="t-sh t-b clamp2">Small ideas, big worlds</p><p class="row" style="gap: 6px; margin-top: 4px;"><span class="pill-badge ok">720p</span></p></div></div>
+  </section>
+  <section style="padding: 22px 26px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; background: var(--grouped);">
+    <div class="thumb a0" style="border-radius: 20px;"><span class="lbl">FIELD / NOTES</span><span class="dur">18:42</span></div>
+    <div class="row between"><div><h2 class="t-2">The long way home</h2><p class="t-fn t-sec">Field Notes · сохранено 14 окт.</p></div><button class="btn prom"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg>Смотреть 1080p</button></div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+      <div>
+        <p class="group-h" style="margin: 0; padding: 0 4px 6px;">Аудио</p>
+        <div class="list"><div class="li"><span class="lt" style="font-size: 15px;">Звук внутри видео</span></div><div class="li sel"><span class="lt" style="font-size: 15px;">English · оригинал</span><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div></div>
+      </div>
+      <div>
+        <p class="group-h" style="margin: 0; padding: 0 4px 6px;">Перевод</p>
+        <div class="list"><div class="li"><span class="lt" style="font-size: 15px;">Без перевода</span></div><div class="li sel"><span class="lt" style="font-size: 15px;">Русский · Yandex</span><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg></div></div>
+      </div>
+    </div>
+    <p class="group-h" style="margin: 0; padding: 4px 4px 0;">Видео</p>
+    <div class="list">
+      <div class="li"><span class="lt" style="font-size: 15px;">1080p · VP9<small>168 МБ · Сохранено</small></span><button class="btn sm prom icon" aria-label="Воспроизвести 1080p"><svg class="f s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg></button><button class="btn sm plain icon" aria-label="Удалить вариант 1080p" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg></button></div>
+      <div class="li"><span class="lt" style="font-size: 15px;">720p · H.264 · HLS<small>Звук внутри пакета · Сохранено</small></span><button class="btn sm prom icon" aria-label="Воспроизвести 720p"><svg class="f s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg></button><button class="btn sm plain icon" aria-label="Удалить вариант 720p" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg></button></div>
+    </div>
+    <div class="row" style="gap: 10px;"><button class="btn tint"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Добавить качество, аудио или перевод</button><button class="btn dest">Удалить видео и файлы</button></div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1194,"height":834}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

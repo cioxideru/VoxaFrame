@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Прототип · офлайн-загрузка</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.opt .li{min-height:44px;padding:7px 16px;width:100%;border:0;background:transparent;text-align:left;color:var(--text)}
+.opt .lt{font-size:16px}
+.opt .lt small{font-size:12px}
+.radio{width:22px;height:22px;border-radius:50%;border:1.6px solid var(--tertiary);flex:none}
+.radio.on{border:7px solid var(--action)}
+.hint-tap{position:absolute;left:12px;right:12px;bottom:6px;text-align:center;font-size:11px;color:var(--secondary);z-index:30}
+.seg > button{color:var(--text)}
+.jt{width:28px;height:28px;border-radius:8px;background:var(--fill);display:flex;align-items:center;justify-content:center;color:var(--secondary);flex:none}
+.jt svg{width:16px;height:16px}
+</style>
+</helmet>
+<div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="border-radius: 0; box-shadow: none;">
+
+<sc-if value="{{ isVideo }}" hint-placeholder-val="{{ true }}">
+  <div class="screen">
+    <div class="safe-top"></div>
+    <div class="navbar" style="padding: 0 8px;"><span style="width: 44px;"></span><span class="t-fn t-sec">Плеер</span><span style="width: 44px;"></span></div>
+    <div class="media" style="height: 219px;"><div class="art a0"></div></div>
+    <div class="pad col" style="gap: 12px; padding-top: 14px;">
+      <h1 class="t-3">The long way home</h1>
+      <p class="t-fn t-sec">Field Notes · 18:42</p>
+      <button class="btn tint" style="align-self: flex-start;" onClick="{{ openSheet }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Скачать для офлайна</button>
+      <p class="t-fn t-sec">Сценарий 8–9: выбор составляющих → задания → ошибка и повтор → запуск без сети → удаление.</p>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isSheet }}" hint-placeholder-val="{{ false }}">
+  <div class="screen">
+    <div class="safe-top"></div>
+    <div class="dim-under"></div>
+    <div class="sheet full glass opt" style="background: var(--grouped); top: 56px;" role="dialog" aria-label="Скачать для офлайна">
+      <div class="grab"></div>
+      <div class="sheet-h"><button class="btn sm plain" onClick="{{ toVideo }}">Отмена</button><span class="t">Скачать для офлайна</span><span style="width: 70px;"></span></div>
+      <sc-if value="{{ variantsLoading }}" hint-placeholder-val="{{ true }}">
+        <div class="empty" style="padding-top: 80px;"><span class="spin lg" style="color: var(--secondary);" aria-hidden="true"></span><h3 style="font-size: 17px; margin-top: 10px;">Получаем доступные варианты…</h3></div>
+      </sc-if>
+      <sc-if value="{{ variantsReady }}" hint-placeholder-val="{{ false }}">
+        <div class="pad">
+          <p class="group-h" style="margin-top: 6px;">Видео</p>
+          <div class="list">
+            <button class="li" onClick="{{ pick720 }}"><span class="{{ r720 }}" aria-hidden="true"></span><span class="lt">720p · H.264<small>≈ 168 МБ · рекомендуем</small></span></button>
+            <button class="li" onClick="{{ pick1080 }}"><span class="{{ r1080 }}" aria-hidden="true"></span><span class="lt">1080p · VP9 · 60 fps<small>≈ 310 МБ</small></span></button>
+          </div>
+          <p class="group-h">Аудио</p>
+          <div class="list"><div class="li"><span class="radio on" aria-hidden="true"></span><span class="lt">English · оригинал<small>≈ 22 МБ</small></span></div></div>
+          <p class="group-h">Перевод · необязательно</p>
+          <div class="seg"><button class="{{ trNoneCls }}" onClick="{{ trNone }}">Без перевода</button><button class="{{ trRuCls }}" onClick="{{ trRu }}">Русский</button></div>
+          <div class="row between" style="margin-top: 14px; padding: 0 4px;"><span class="t-sh">{{ sizeLabel }}</span><span class="t-c1 t-sec">{{ jobsLabel }}</span></div>
+          <button class="btn prom block lg" style="margin-top: 10px;" onClick="{{ startDownload }}">Скачать</button>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isOffline }}" hint-placeholder-val="{{ false }}">
+  <div class="screen">
+    <div class="safe-top"></div>
+    <div class="largehead"><h1 class="t-lt">Офлайн</h1><button class="{{ netCls }}" onClick="{{ toggleNet }}">{{ netLabel }}</button></div>
+    <div class="pad" style="padding-bottom: 10px;"><div class="seg"><button class="{{ libCls }}" onClick="{{ toLibrary }}">Библиотека</button><button class="{{ jobsCls }}" onClick="{{ toJobs }}">{{ jobsTab }}</button></div></div>
+    <div class="scroll pad col" style="gap: 12px;">
+      <sc-if value="{{ offlineMode }}" hint-placeholder-val="{{ false }}"><div class="banner info"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 12.5a10 10 0 0 1 4.5-2.4M14.8 10.2A10 10 0 0 1 19 12.5"/></svg><span>Нет подключения. Готовые файлы играют с устройства.</span></div></sc-if>
+
+      <sc-if value="{{ showJobs }}" hint-placeholder-val="{{ false }}">
+        <div class="list" style="background: var(--surface);">
+          <div class="li"><div class="thumb a0" style="width: 56px; border-radius: 6px;"></div><div class="lt"><b class="t-sh t-b">The long way home</b><small>{{ jobsLabel }}</small></div></div>
+          <div class="li"><span class="jt"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9.5 4.5 2.5-4.5 2.5Z"/></svg></span><div class="lt" style="font-size: 15px;">{{ videoJobTitle }}<div class="bar" style="margin: 6px 0 4px;"><i style="width: {{ vPct }}%"></i></div><small>{{ videoJobStatus }}</small></div></div>
+          <div class="li"><span class="jt"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/></svg></span><div class="lt" style="font-size: 15px;">Аудио · English<small>{{ audioJobStatus }}</small></div></div>
+          <sc-if value="{{ hasTrJob }}" hint-placeholder-val="{{ false }}">
+            <div class="li"><span class="jt"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span><div class="lt" style="font-size: 15px;">Перевод · Русский<small class="{{ trJobCls }}">{{ trJobStatus }}</small></div><sc-if value="{{ trFailed }}" hint-placeholder-val="{{ false }}"><button class="btn sm tint" onClick="{{ retryTr }}">Повторить</button></sc-if></div>
+          </sc-if>
+        </div>
+        <p class="t-c1 t-sec">Ошибка одной составляющей не останавливает остальные. Отмена ≠ пауза.</p>
+      </sc-if>
+
+      <sc-if value="{{ showLibrary }}" hint-placeholder-val="{{ false }}">
+        <button class="row" style="gap: 12px; border: 0; background: transparent; padding: 0; text-align: left; color: var(--text);" onClick="{{ toItem }}"><div class="thumb a0" style="width: 118px; border-radius: 10px;"><span class="dur">18:42</span></div><span class="grow"><span class="t-sh t-b" style="display: block;">The long way home</span><span class="t-c1 t-sec">{{ libStatus }}</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px; color: var(--tertiary);"><path d="m9 5 7 7-7 7"/></svg></button>
+        <sc-if value="{{ libEmpty }}" hint-placeholder-val="{{ false }}"><div class="empty"><div class="glyph"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg></div><h3>Офлайн пока пусто</h3><p>Видео удалено вместе с файлами. Начните заново из плеера.</p><button class="btn sm" onClick="{{ restart }}">Начать заново</button></div></sc-if>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isItem }}" hint-placeholder-val="{{ false }}">
+  <div class="screen" style="background: var(--grouped);">
+    <div class="safe-top"></div>
+    <div class="navbar"><button class="navbtn" aria-label="Назад" onClick="{{ toLibrary }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span class="t">Сохранённое видео</span><span style="width: 44px;"></span></div>
+    <div class="scroll pad opt">
+      <div class="thumb a0" style="border-radius: 16px;"></div>
+      <div class="row between" style="margin-top: 12px;"><h1 class="t-3">The long way home</h1><button class="btn prom" onClick="{{ play }}"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg>Смотреть</button></div>
+      <p class="group-h">Сохранено</p>
+      <div class="list">
+        <div class="li"><span class="lt">{{ videoJobTitle }}<small>Сохранено</small></span></div>
+        <div class="li"><span class="lt">Аудио · English<small>Сохранено</small></span></div>
+        <sc-if value="{{ trSavedAndKept }}" hint-placeholder-val="{{ false }}"><div class="li"><span class="lt">Перевод · Русский<small>Сохранено</small></span><button class="btn sm dest" onClick="{{ askTrack }}">Удалить</button></div></sc-if>
+      </div>
+      <button class="btn dest block" style="margin-top: 18px;" onClick="{{ askVideo }}">Удалить видео и файлы</button>
+    </div>
+    <sc-if value="{{ confirmTrack }}" hint-placeholder-val="{{ false }}">
+      <div class="dim-under"></div>
+      <div style="position: absolute; left: 0; right: 0; top: 300px; display: flex; justify-content: center; z-index: 10;"><div class="alert glass" style="background: var(--elevated);"><h3>Удалить перевод «Русский»?</h3><p>Видео и аудио останутся.</p><div class="acts"><button class="btn dest-prom" onClick="{{ deleteTrack }}">Удалить перевод</button><button class="btn" onClick="{{ cancelConfirm }}">Отмена</button></div></div></div>
+    </sc-if>
+    <sc-if value="{{ confirmVideo }}" hint-placeholder-val="{{ false }}">
+      <div class="dim-under"></div>
+      <div style="position: absolute; left: 0; right: 0; top: 280px; display: flex; justify-content: center; z-index: 10;"><div class="alert glass" style="background: var(--elevated);"><h3>Удалить «The long way home»?</h3><p>Будут удалены видео, аудио и переводы этого ролика. История и подписки не изменятся.</p><div class="acts"><button class="btn dest-prom" onClick="{{ deleteVideo }}">Удалить видео и файлы</button><button class="btn" onClick="{{ cancelConfirm }}">Отмена</button></div></div></div>
+    </sc-if>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isPlaying }}" hint-placeholder-val="{{ false }}">
+  <div class="screen">
+    <div class="safe-top"></div>
+    <div class="navbar" style="padding: 0 8px;"><button class="navbtn" aria-label="Назад" onClick="{{ toItem }}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button><span class="pill-badge ok">Из файлов устройства</span><span style="width: 44px;"></span></div>
+    <div class="media" style="height: 219px;"><div class="art a0"></div><div class="row center" style="position: absolute; inset: 0;"><span class="pctl glass-media" style="width: 60px; height: 60px;"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></span></div></div>
+    <div class="pad col" style="gap: 8px; padding-top: 14px;"><h1 class="t-3">The long way home</h1><p class="t-fn t-sec">{{ playingNote }}</p></div>
+  </div>
+</sc-if>
+
+<p class="hint-tap">Прототип: скачать → задания (перевод упадёт) → повтор → библиотека → «Без сети» → смотреть → удалить</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: 'video', loading: true, vq: '720', tr: 'ru', v: 0, audio: 'queued', trJob: 'resolving', tab: 'jobs', net: true, confirm: 'none', trKept: true, deleted: false };
+  }
+  componentWillUnmount() { clearInterval(this.iv); clearTimeout(this.t); }
+  tick() {
+    const s = this.state;
+    let v = Math.min(100, s.v + 9);
+    let audio = s.audio;
+    if (v >= 30 && audio === 'queued') audio = 'downloading';
+    if (v >= 70) audio = 'done';
+    let trJob = s.trJob;
+    if (s.tr === 'ru' && v >= 45 && trJob === 'resolving') trJob = 'failed';
+    this.setState({ v, audio, trJob });
+    if (v >= 100) clearInterval(this.iv);
+  }
+  renderVals() {
+    const s = this.state;
+    const hasTr = s.tr === 'ru';
+    const doneAll = s.v >= 100 && s.audio === 'done' && (!hasTr || s.trJob === 'done');
+    const go = (screen) => () => this.setState({ screen, confirm: 'none' });
+    return {
+      theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass',
+      isVideo: s.screen === 'video', isSheet: s.screen === 'sheet', isOffline: s.screen === 'offline', isItem: s.screen === 'item', isPlaying: s.screen === 'playing',
+      variantsLoading: s.loading, variantsReady: !s.loading,
+      r720: s.vq === '720' ? 'radio on' : 'radio', r1080: s.vq === '1080' ? 'radio on' : 'radio',
+      trNoneCls: hasTr ? '' : 'on', trRuCls: hasTr ? 'on' : '',
+      sizeLabel: (s.vq === '720' ? '≈ 190 МБ' : '≈ 332 МБ') + (hasTr ? ' + перевод' : ''),
+      jobsLabel: hasTr ? '3 составляющие' : '2 составляющие',
+      videoJobTitle: s.vq === '720' ? 'Видео · 720p H.264' : 'Видео · 1080p VP9',
+      vPct: s.v,
+      videoJobStatus: s.v >= 100 ? 'Завершено' : (s.v === 0 ? 'В очереди' : 'Загрузка · ' + s.v + '%'),
+      audioJobStatus: s.audio === 'queued' ? 'В очереди' : (s.audio === 'downloading' ? 'Загрузка…' : 'Завершено'),
+      hasTrJob: hasTr, trFailed: s.trJob === 'failed',
+      trJobStatus: s.trJob === 'resolving' ? 'Подготовка · ждём сервис перевода' : (s.trJob === 'failed' ? 'Ошибка · сервис не ответил' : (s.trJob === 'retry' ? 'Подготовка · повтор' : 'Завершено')),
+      trJobCls: s.trJob === 'failed' ? 't-dng' : '',
+      showJobs: s.tab === 'jobs', showLibrary: s.tab === 'library' && !s.deleted, libEmpty: s.deleted,
+      libCls: s.tab === 'library' ? 'on' : '', jobsCls: s.tab === 'jobs' ? 'on' : '',
+      jobsTab: doneAll ? 'Задания' : 'Задания · идут',
+      libStatus: doneAll ? 'Готово · можно смотреть без сети' : 'Ещё загружается — откройте «Задания»',
+      offlineMode: !s.net, netCls: s.net ? 'btn sm' : 'btn sm tint', netLabel: s.net ? 'Демо: без сети' : 'Сеть вернуть',
+      trSavedAndKept: hasTr && s.trJob === 'done' && s.trKept,
+      confirmTrack: s.confirm === 'track', confirmVideo: s.confirm === 'video',
+      playingNote: s.net ? 'Играет сохранённый файл.' : 'Без сети: играет сохранённый файл. Онлайн-поток не подставляется.',
+      toVideo: go('video'),
+      openSheet: () => { this.setState({ screen: 'sheet', loading: true }); clearTimeout(this.t); this.t = setTimeout(() => this.setState({ loading: false }), 1200); },
+      pick720: () => this.setState({ vq: '720' }), pick1080: () => this.setState({ vq: '1080' }),
+      trNone: () => this.setState({ tr: 'none' }), trRu: () => this.setState({ tr: 'ru' }),
+      startDownload: () => { this.setState({ screen: 'offline', tab: 'jobs', v: 0, audio: 'queued', trJob: 'resolving', deleted: false, trKept: true }); clearInterval(this.iv); this.iv = setInterval(() => this.tick(), 700); },
+      retryTr: () => { this.setState({ trJob: 'retry' }); clearTimeout(this.t); this.t = setTimeout(() => this.setState({ trJob: 'done' }), 1500); },
+      toLibrary: () => this.setState({ screen: 'offline', tab: 'library', confirm: 'none' }),
+      toJobs: () => this.setState({ tab: 'jobs' }),
+      toggleNet: () => this.setState({ net: !s.net }),
+      toItem: () => { if (doneAll || s.screen === 'playing') this.setState({ screen: 'item' }); else this.setState({ tab: 'jobs' }); },
+      play: go('playing'),
+      askTrack: () => this.setState({ confirm: 'track' }), askVideo: () => this.setState({ confirm: 'video' }),
+      cancelConfirm: () => this.setState({ confirm: 'none' }),
+      deleteTrack: () => this.setState({ confirm: 'none', trKept: false }),
+      deleteVideo: () => this.setState({ confirm: 'none', deleted: true, screen: 'offline', tab: 'library' }),
+      restart: () => this.setState({ screen: 'video', deleted: false, v: 0 })
+    };
+  }
+}
+</script>
+</body>
+</html>

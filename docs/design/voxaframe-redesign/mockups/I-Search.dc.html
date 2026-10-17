@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPad · поиск и фильтры</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.fp .group-h{margin-top:12px;padding-left:4px}
+.fp .seg > span{font-size:13px;padding:0 8px}
+.pointer{position:absolute;width:18px;height:18px;border-radius:50%;background:rgba(120,120,128,.45);border:1.5px solid rgba(255,255,255,.8);z-index:6}
+</style>
+</helmet>
+<div class="tablet vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1194px; height: 834px;">
+  <nav class="sidebar glass" style="position: absolute; left: 12px; top: 12px; bottom: 12px; width: 240px; border-radius: 28px; padding: 18px 12px; z-index: 3;" aria-label="Разделы">
+    <div class="row" style="gap: 10px; padding: 4px 8px 16px;"><img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 30px; height: 30px; border-radius: 8px;"><span class="t-hl">VoxaFrame</span></div>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button>
+    <button class="side-item on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Поиск</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн-видео</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button>
+    <div class="side-h">Недавние запросы</div>
+    <button class="side-item">slow living</button>
+    <button class="side-item">night ferry islands</button>
+    <button class="side-item">как испечь хлеб</button>
+  </nav>
+  <main style="position: absolute; left: 264px; right: 0; top: 0; bottom: 0; padding: 26px 28px 0 20px; display: flex; flex-direction: column; gap: 14px; overflow: hidden;">
+    <div class="row" style="gap: 10px;"><div class="search" style="flex: 1; box-shadow: inset 0 0 0 2px var(--focus);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="q">slow living</span><span class="kbd">⏎</span></div><button class="btn tint" aria-expanded="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Фильтры · 2</button></div>
+    <div class="chips"><span class="chip removable">За неделю<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></span><span class="chip removable">4–20 мин<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></span></div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px;">
+      <article class="card"><div class="thumb a2" style="box-shadow: 0 10px 24px rgba(0,0,0,.2);"><span class="dur">14:20</span></div><div class="meta"><div class="grow"><p class="title clamp2">A slower morning: 10 small rituals</p><p class="sub">Everyday Films · 3 дня</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article>
+      <article class="card"><div class="thumb a7"><span class="dur">18:03</span></div><div class="meta"><div class="grow"><p class="title clamp2">Slow living in a small apartment</p><p class="sub">Green Rooms · 6 дней</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article>
+      <article class="card"><div class="thumb a8"><span class="dur">09:51</span></div><div class="meta"><div class="grow"><p class="title clamp2">Paper, light and glue</p><p class="sub">Frame by Frame · 5 дней</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article>
+      <article class="card"><div class="thumb a6"><span class="dur">11:44</span></div><div class="meta"><div class="grow"><p class="title clamp2">Two-minute dinners, ten ways</p><p class="sub">Everyday Films · неделю</p></div></div></article>
+      <article class="card"><div class="thumb a9"><span class="dur">08:12</span></div><div class="meta"><div class="grow"><p class="title clamp2">Night ferry to the islands</p><p class="sub">Night Walks · неделю</p></div></div></article>
+      <article class="card"><div class="thumb skel"></div><div class="col" style="gap: 6px; margin-top: 10px;"><span class="skl" style="height: 14px; width: 80%;"></span><span class="skl" style="height: 12px; width: 50%;"></span></div></article>
+    </div>
+  </main>
+  <span class="pointer" style="left: 420px; top: 270px;" aria-hidden="true"></span>
+  <div class="popover glass fp" style="position: absolute; right: 28px; top: 82px; width: 340px; background: var(--elevated); z-index: 7; padding: 14px;" role="dialog" aria-label="Фильтры">
+    <div class="row between"><button class="btn sm plain">Сбросить</button><span class="t-hl">Фильтры</span><button class="btn sm prom">Применить</button></div>
+    <p class="group-h eyebrow">Сортировка</p>
+    <div class="seg"><span>Релев.</span><span>Рейтинг</span><span class="on">Дата</span><span>Просмотры</span></div>
+    <p class="group-h eyebrow">Дата</p>
+    <div class="seg"><span>Любая</span><span>Час</span><span>День</span><span class="on">Неделя</span><span>Месяц</span><span>Год</span></div>
+    <p class="group-h eyebrow">Тип</p>
+    <div class="seg"><span class="on">Любой</span><span>Видео</span><span>Канал</span><span>Плейлист</span><span>Фильм</span></div>
+    <p class="group-h eyebrow">Длительность</p>
+    <div class="seg"><span>Любая</span><span>&lt;4</span><span class="on">4–20</span><span>&gt;20 мин</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1194,"height":834}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

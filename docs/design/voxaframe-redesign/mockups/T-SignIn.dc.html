@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Apple TV · вход по QR</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="vf tv" data-theme="{{theme}}" data-accent="{{accent}}" style="width: 1920px; height: 1080px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 20% 10%, #3a1f37, var(--background) 60%);">
+  <div style="position: absolute; inset: 0; padding: 120px 160px; display: grid; grid-template-columns: 560px 1fr; gap: 120px; align-items: center;">
+    <div class="qr" style="width: 560px; padding: 34px; border-radius: 36px; gap: 6px;" role="img" aria-label="QR-код для входа"><i></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i class="o"></i><i class="o"></i><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i></div>
+    <div class="col" style="gap: 26px; color: var(--text);">
+      <img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 104px; height: 104px; border-radius: 24px;">
+      <h1 style="font-size: 64px; line-height: 72px; font-weight: 700;">Войдите с телефона</h1>
+      <p style="font-size: 29px; line-height: 38px; color: var(--secondary);">Наведите камеру на QR-код или откройте <b style="color: var(--text);">google.com/device</b> и введите код:</p>
+      <p style="font-size: 96px; line-height: 104px; font-weight: 800; letter-spacing: 14px; font-family: ui-monospace, Menlo, monospace;">KTR-4QX</p>
+      <p style="font-size: 29px; color: var(--secondary);" class="row" role="status"><span class="spin" style="width: 28px; height: 28px; border-width: 3px; margin-right: 14px;" aria-hidden="true"></span>Ждём подтверждения · код действует 14:32</p>
+      <div class="row" style="gap: 24px; margin-top: 10px;"><span class="tv-btn focus">Отмена</span><span class="tv-btn" style="color: var(--text); background: var(--fill-strong);">Другой аккаунт</span></div>
+      <p style="font-size: 23px; color: var(--secondary);">Когда код истечёт, новый появится сам. Пароль на TV вводить не нужно.</p>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"dark"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'dark', accent: this.props.accent ?? 'coral' };
+  }
+}
+</script>
+</body>
+</html>

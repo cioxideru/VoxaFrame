@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPad · Главная, широкое окно</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="tablet vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1194px; height: 834px; display: flex;">
+  <nav class="sidebar glass" style="position: absolute; left: 12px; top: 12px; bottom: 12px; width: 260px; border-radius: 28px; padding: 18px 12px; z-index: 3;" aria-label="Разделы">
+    <div class="row" style="gap: 10px; padding: 4px 8px 16px;"><img src="/_blob/0cd6ed5a4caf26e2f6d80a4ea81a953f" alt="" style="width: 32px; height: 32px; border-radius: 8px;"><span class="t-hl">VoxaFrame</span></div>
+    <button class="side-item on" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5V20h-5.5v-6h-6v6H3.5Z"/></svg>Главная</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Поиск</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2.5"/><path d="M7 4h10"/></svg>Медиатека</button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14"/></svg>Офлайн-видео<span class="cnt">3</span></button>
+    <button class="side-item"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3m0 13v3M2.5 12h3m13 0h3M5.3 5.3l2.1 2.1m9.2 9.2 2.1 2.1M5.3 18.7l2.1-2.1m9.2-9.2 2.1-2.1"/></svg>Настройки</button>
+    <div class="side-h">Медиатека</div>
+    <button class="side-item">История</button>
+    <button class="side-item">Смотреть позже<span class="cnt">9</span></button>
+    <button class="side-item">Очередь<span class="cnt">12</span></button>
+    <button class="side-item">RSS-ленты</button>
+    <div class="side-h">Подписки</div>
+    <button class="side-item"><span class="avatar c0" style="width: 22px; height: 22px;"></span>Field Notes</button>
+    <button class="side-item"><span class="avatar c1" style="width: 22px; height: 22px;"></span>Studio North</button>
+  </nav>
+  <main style="position: absolute; left: 284px; right: 0; top: 0; bottom: 0; padding: 26px 28px 0 20px; display: flex; flex-direction: column; gap: 16px; overflow: hidden;">
+    <div class="row between"><h1 class="t-lt">Главная</h1><div class="row" style="gap: 8px;"><button class="btn sm icon glassb" aria-label="Обновить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg></button><button class="avatar c2" style="width: 36px; height: 36px; border: 0; color: #fff;" aria-label="Аккаунт: Анна">А</button></div></div>
+    <div class="chips"><span class="chip on">Главная</span><span class="chip">Рекомендации</span><span class="chip">Подписки</span><span class="chip">История</span><span class="chip">Плейлисты</span><span class="chip">Каналы</span><span class="chip">Shorts</span><span class="chip">Музыка</span></div>
+    <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 22px; align-items: center; background: var(--surface); border-radius: 26px; padding: 18px;">
+      <div class="thumb a0" style="border-radius: 18px;"><span class="lbl">FIELD / NOTES</span><span class="dur">18:42</span><span class="prog"><i style="width: 34%;"></i></span></div>
+      <div class="col" style="gap: 8px;">
+        <span class="eyebrow">Продолжить просмотр</span>
+        <h2 class="t-1">The long way home</h2>
+        <p class="t-sh t-sec">Field Notes · осталось 12 мин · глава 3 из 8</p>
+        <div class="row" style="gap: 10px; margin-top: 8px;"><button class="btn prom"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg>Продолжить</button><button class="btn icon" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div>
+      </div>
+    </div>
+    <div class="row between"><h2 class="t-2">Для вас</h2><span class="t-fn t-sec">3 колонки · Landscape Columns</span></div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px;">
+      <article class="card"><div class="thumb a1"><span class="dur">12:08</span></div><div class="meta"><span class="avatar c1" style="width: 32px; height: 32px;"></span><div class="grow"><p class="title clamp2">Design in motion</p><p class="sub">Studio North · 46 тыс. · неделю</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article>
+      <article class="card is-focus"><div class="thumb a2"><span class="dur">24:16</span></div><div class="meta"><span class="avatar c2" style="width: 32px; height: 32px;"></span><div class="grow"><p class="title clamp2">A slower morning</p><p class="sub">Everyday Films · 9 тыс. · 3 дня</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article>
+      <article class="card"><div class="thumb a4"><span class="tag live">● LIVE</span></div><div class="meta"><span class="avatar c4" style="width: 32px; height: 32px;"></span><div class="grow"><p class="title clamp2">Cities after dark — night walk</p><p class="sub">Night Walks · 1,2 тыс. смотрят</p></div><button class="btn plain icon more" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div></article>
+    </div>
+  </main>
+  <div class="accessory glass" style="position: absolute; left: 50%; transform: translateX(-25%); bottom: 20px; width: 520px; z-index: 4;">
+    <span class="thumb a3"></span>
+    <span class="tt"><b>Inside the sound</b><small>Sound Room · 04:10 / 09:51</small></span>
+    <button class="navbtn" aria-label="Назад 10 секунд"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg></button>
+    <button class="navbtn" aria-label="Пауза"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg></button>
+    <button class="navbtn" aria-label="Закрыть мини-плеер"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1194,"height":834}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

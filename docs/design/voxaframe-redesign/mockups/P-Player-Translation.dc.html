@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · аудио и перевод</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.opt .li{min-height:44px;padding:8px 16px}
+.opt .lt{font-size:16px}
+.opt .lt small{font-size:12px}
+</style>
+</helmet>
+<div class="strip dark-bg" style="width: 1298px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Аудиодорожки и <em>перевод Yandex</em> — раздельно</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="media" style="height: 160px; margin-top: 4px;"><div class="art a0"></div></div>
+        <div class="sheet glass opt" style="background: var(--elevated); top: 150px;" role="dialog" aria-label="Аудио">
+          <div class="grab"></div>
+          <div class="sheet-h"><span style="width: 44px;"></span><span class="t">Аудио</span><button class="btn sm icon" aria-label="Закрыть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+          <div class="pad">
+            <p class="group-h" style="margin-top: 0;">Дорожка видео</p>
+            <div class="list" style="background: var(--surface);">
+              <div class="li"><span class="lt">Авто</span></div>
+              <div class="li"><span class="lt">English<small>Оригинал</small></span></div>
+              <div class="li"><span class="lt">Español<small>Дубляж</small></span></div>
+              <div class="li"><span class="lt">Português (Brasil)<small>Дубляж</small></span></div>
+            </div>
+            <p class="group-h">Закадровый перевод · Yandex</p>
+            <div class="list" style="background: var(--surface);">
+              <div class="li sel"><span class="lt">Перевести это видео</span><button class="switch on" role="switch" aria-checked="true" aria-label="Перевести это видео"></button></div>
+              <div class="li"><span class="lt">Язык перевода</span><span class="val">Русский<svg class="i s16" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg></span></div>
+              <div class="li"><span class="lt">Живые голоса<small>Только для русского · нужен токен</small></span><button class="switch on" role="switch" aria-checked="true" aria-label="Живые голоса"></button></div>
+              <div class="li"><span class="lt">Исходный звук фоном<small>Музыка и звуки тише перевода</small></span><button class="switch on" role="switch" aria-checked="true" aria-label="Исходный звук фоном"></button></div>
+            </div>
+            <p class="t-c1 t-sec" style="padding: 6px 4px 0;">Выбор дорожки видео выключает перевод для этого видео. Настройки Shorts — отдельно.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Ожидание перевода · <em>не буферизация</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;"><button class="navbtn" aria-label="Свернуть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button><span class="t-fn t-sec">Очередь · 3 из 12</span><span style="width: 44px;"></span></div>
+        <div class="media" style="height: 219px;">
+          <div class="art a0" style="filter: brightness(.55);"></div>
+          <div class="col center" style="position: absolute; inset: 0; gap: 10px; text-align: center; padding: 0 24px;" role="status">
+            <span class="pctl glass-media" style="width: 56px; height: 56px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg></span>
+            <p class="t-hl">Готовим перевод · Русский</p>
+            <p class="t-fn" style="color: #e6e6ea;">Примерно 1–2 минуты · видео на паузе</p>
+          </div>
+        </div>
+        <div class="pad col" style="gap: 10px; padding-top: 14px;">
+          <div class="bar ind" role="progressbar" aria-label="Подготовка перевода"><i style="width: 30%;"></i></div>
+          <button class="btn prom block">Смотреть без перевода</button>
+          <button class="btn block">Отменить перевод</button>
+          <p class="t-fn t-sec">Если перевод будет готов позже — предложим включить его, без перезапуска видео. <span class="prop logic">логика</span></p>
+          <h1 class="t-3" style="margin-top: 8px;">The long way home</h1>
+          <p class="t-fn t-sec">Field Notes · 128 тыс. просмотров</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Ошибка перевода · <em>играет оригинал</em></span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar" style="padding: 0 8px;"><button class="navbtn" aria-label="Свернуть"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button><span class="t-fn t-sec">Очередь · 3 из 12</span><span style="width: 44px;"></span></div>
+        <div class="media" style="height: 219px;"><div class="art a0"></div><div class="shade-b"></div>
+          <div class="row glass-media" style="position: absolute; left: 12px; right: 12px; bottom: 12px; border-radius: 18px; padding: 10px 12px; gap: 10px;" role="alert"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: #ffb4a9;"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg><div class="grow"><p class="t-sh t-b">Перевод пока недоступен</p><p class="t-c1" style="color: #e6e6ea;">Можно слушать оригинал</p></div><button class="btn sm" style="background: #fff; color: #000;">Повторить</button></div>
+        </div>
+        <div class="pad" style="padding-top: 14px;">
+          <h1 class="t-3">The long way home</h1>
+          <p class="t-fn t-sec" style="margin-top: 4px;">Field Notes · аудио: English (оригинал)</p>
+          <div class="list" style="margin-top: 16px; background: var(--surface);">
+            <div class="li"><span class="ico ic-plum"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/></svg></span><span class="lt" style="font-size: 15px;">Аудио<small>English · оригинал</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></div>
+            <div class="li"><span class="ico ic-gray"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span><span class="lt" style="font-size: 15px;">Перевод<small style="color: var(--danger);">Ошибка · сервис не ответил</small></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></div>
+          </div>
+          <p class="t-fn t-sec" style="margin-top: 12px;">Сообщение не исчезает само; ошибка не изображается как готовый перевод. Токен никогда не показывается.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1298,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

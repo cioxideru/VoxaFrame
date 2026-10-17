@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Apple TV · Главная</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.tvcard .title{font-size:29px;line-height:36px;font-weight:600;margin-top:18px}
+.tvcard .sub{font-size:23px;line-height:30px;color:var(--secondary);margin-top:4px}
+.tvcard .thumb{border-radius:22px}
+.tvcard .dur{font-size:20px;line-height:26px;padding:3px 10px;border-radius:8px;right:14px;bottom:14px}
+</style>
+</helmet>
+<div class="vf tv" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}" style="width: 1920px; height: 1080px; position: relative; overflow: hidden;">
+  <div class="a0" style="position: absolute; inset: 0 0 auto 0; height: 760px;"></div>
+  <div style="position: absolute; inset: 0 0 auto 0; height: 760px; background: linear-gradient(90deg, rgba(0,0,0,.78) 0%, rgba(0,0,0,.35) 55%, rgba(0,0,0,0) 80%), linear-gradient(transparent 55%, var(--background));"></div>
+  <div style="position: relative; padding: 60px 80px 0; display: flex; flex-direction: column; height: 100%;">
+    <div class="row center" style="justify-content: center;">
+      <nav class="tv-tabs glass" aria-label="Разделы">
+        <span class="tv-tab on">Главная</span><span class="tv-tab">Поиск</span><span class="tv-tab">Медиатека</span><span class="tv-tab">Офлайн</span><span class="tv-tab">Настройки</span>
+      </nav>
+    </div>
+    <div style="margin-top: 96px; max-width: 900px; color: #fff; display: flex; flex-direction: column; gap: 18px;">
+      <span style="font-size: 23px; line-height: 30px; font-weight: 700; letter-spacing: 1.5px; color: #e6e6ea;">ПРОДОЛЖИТЬ ПРОСМОТР · FIELD NOTES</span>
+      <h1 style="font-size: 76px; line-height: 82px; font-weight: 700; letter-spacing: -1px;">The long way home</h1>
+      <p style="font-size: 29px; line-height: 38px; color: #e6e6ea;">Осталось 12 мин · Глава 3 из 8 · Субтитры, перевод</p>
+      <div class="row" style="gap: 24px; margin-top: 14px;">
+        <span class="tv-btn focus"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg>Продолжить</span>
+        <span class="tv-btn">С начала</span>
+        <span class="tv-btn">Канал</span>
+      </div>
+    </div>
+    <div style="margin-top: auto; padding-bottom: 60px; display: flex; flex-direction: column; gap: 22px;">
+      <div class="row between"><h2 style="font-size: 36px; line-height: 44px; font-weight: 700;">Для вас</h2><span style="font-size: 23px; color: var(--secondary);">Удерживайте Select — меню · Back — к вкладкам</span></div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 48px;">
+        <article class="card tvcard"><div class="thumb a1"><span class="dur">12:08</span></div><p class="title clamp1">Design in motion</p><p class="sub">Studio North · 46 тыс.</p></article>
+        <article class="card tvcard"><div class="thumb a2"><span class="dur">24:16</span></div><p class="title clamp1">A slower morning</p><p class="sub">Everyday Films</p></article>
+        <article class="card tvcard"><div class="thumb a4"><span class="tag live" style="font-size: 18px; line-height: 24px; padding: 3px 10px; left: 14px; bottom: 14px;">● LIVE</span></div><p class="title clamp1">Cities after dark</p><p class="sub">1,2 тыс. смотрят</p></article>
+        <article class="card tvcard"><div class="thumb a5"><span class="dur">21:07</span></div><p class="title clamp1">Small ideas, big worlds</p><p class="sub">Frame by Frame</p></article>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"dark"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'dark', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

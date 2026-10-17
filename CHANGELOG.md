@@ -25,6 +25,11 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Added — 2026-10-17
 
+- **Design reference consolidation (PLAN-0027, PLAN-0028):** retained the original redesign
+  export, component previews, canvas boards and iPhone/iPad screenshots in Git; synchronized
+  the string catalog with existing offline and playback controls. Redesign stage acceptance
+  remains in PLAN-0027 and OQ-0019.
+
 - **VoxaFrame 5.16 (35), delete all offline media (PLAN-0026):** Offline videos has a confirmed
   Delete all action on both tabs. It cancels all offline transfers and removes saved video, audio,
   translations, protected HLS packages and unfinished transfer cache. Cleanup survives relaunch

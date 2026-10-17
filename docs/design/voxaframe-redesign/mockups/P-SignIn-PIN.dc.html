@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · вход по коду и PIN</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.code{font-size:40px;line-height:46px;font-weight:700;letter-spacing:6px;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,monospace}
+.pinwrap{display:flex;flex-direction:column;align-items:center;gap:26px;padding-top:40px}
+</style>
+</helmet>
+<div class="strip" style="width: 1720px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Вход · код, QR и <em>ожидание</em></span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen" style="background: var(--grouped);">
+        <div class="safe-top"></div>
+        <div class="sheet-h"><button class="btn sm plain">Отмена</button><span class="t">Вход в Google</span><span style="width: 70px;"></span></div>
+        <div class="pad col" style="gap: 14px; align-items: center; text-align: center; padding-top: 10px;">
+          <p class="t-sh t-sec">Откройте страницу активации на этом или другом устройстве и введите код</p>
+          <p class="t-hl">google.com/device</p>
+          <div class="code" aria-label="Код K T R 4 Q X">KTR-4QX</div>
+          <div class="row" style="gap: 10px;"><button class="btn sm"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Скопировать код</button><button class="btn sm prom">Открыть страницу</button></div>
+          <div class="qr" style="width: 168px;" role="img" aria-label="QR-код страницы активации"><i></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i class="o"></i><i class="o"></i><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i></div>
+          <p class="t-fn t-sec row" style="gap: 8px;" role="status"><span class="spin" style="width: 14px; height: 14px; border-width: 2px;" aria-hidden="true"></span>Ждём подтверждения · код действует 14:32</p>
+          <button class="btn sm plain">Использовать другой аккаунт</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Код истёк · ошибка подключения</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen" style="background: var(--grouped);">
+        <div class="safe-top"></div>
+        <div class="sheet-h"><button class="btn sm plain">Отмена</button><span class="t">Вход в Google</span><span style="width: 70px;"></span></div>
+        <div class="pad col" style="gap: 14px; padding-top: 10px;">
+          <div class="banner info" style="background: var(--cell);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4.5h-4.5"/></svg><span>Прежний код истёк — мы показали новый.</span></div>
+          <div class="col" style="align-items: center; gap: 8px; text-align: center; background: var(--cell); border-radius: 22px; padding: 18px;"><div class="code" style="font-size: 34px;">MPW-8JD</div><p class="t-fn t-sec">Код действует 15:00</p></div>
+          <div class="empty" style="background: var(--cell); border-radius: 22px; margin-top: 10px;"><div class="glyph" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg></div><h3 style="font-size: 17px;">Не удалось подключиться к Google</h3><p>Проверьте сеть. Код не был выдан.</p><button class="btn sm prom">Повторить</button></div>
+          <div class="col" style="align-items: center; gap: 8px; background: var(--cell); border-radius: 22px; padding: 18px; text-align: center;"><span class="avatar c2" style="width: 56px; height: 56px; color: #fff; font-size: 22px;">А</span><p class="t-hl">Вы вошли как Анна</p><p class="t-fn t-sec">Экран закроется; имя и аватар появятся в Настройках.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">PIN · установка · частичный ввод</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="sheet-h"><button class="btn sm plain">Отмена</button><span class="t">PIN для настроек</span><span style="width: 70px;"></span></div>
+        <div class="pinwrap">
+          <p class="t-3">Придумайте PIN</p>
+          <p class="t-fn t-sec" style="text-align: center; max-width: 280px; margin-top: -14px;">Четыре цифры. PIN защищает только вход в настройки.</p>
+          <div class="pin-dots" aria-label="Введено 2 цифры из 4"><i class="f"></i><i class="f"></i><i></i><i></i></div>
+          <div class="keypad">
+            <button class="key">1</button><button class="key">2<small>ABC</small></button><button class="key">3<small>DEF</small></button>
+            <button class="key">4<small>GHI</small></button><button class="key">5<small>JKL</small></button><button class="key">6<small>MNO</small></button>
+            <button class="key">7<small>PQRS</small></button><button class="key">8<small>TUV</small></button><button class="key">9<small>WXYZ</small></button>
+            <span></span><button class="key">0</button><button class="key ghost" aria-label="Удалить цифру"><svg class="i s28" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h12v14H8l-5-7Z"/><path d="m11 9 6 6m0-6-6 6"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">PIN · <em>неверный код</em> · несовпадение</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="sheet-h"><button class="btn sm plain">Отмена</button><span class="t">Настройки защищены</span><span style="width: 70px;"></span></div>
+        <div class="pinwrap">
+          <p class="t-3">Введите PIN</p>
+          <div class="pin-dots err" aria-label="Неверный PIN"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div>
+          <p class="t-sh" style="color: var(--danger); margin-top: -10px;" role="alert">Неверный PIN. Попробуйте ещё раз.</p>
+          <div class="keypad">
+            <button class="key">1</button><button class="key">2<small>ABC</small></button><button class="key">3<small>DEF</small></button>
+            <button class="key">4<small>GHI</small></button><button class="key">5<small>JKL</small></button><button class="key">6<small>MNO</small></button>
+            <button class="key">7<small>PQRS</small></button><button class="key">8<small>TUV</small></button><button class="key">9<small>WXYZ</small></button>
+            <span></span><button class="key">0</button><button class="key ghost" aria-label="Удалить цифру"><svg class="i s28" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h12v14H8l-5-7Z"/><path d="m11 9 6 6m0-6-6 6"/></svg></button>
+          </div>
+          <p class="t-fn t-sec" style="text-align: center; max-width: 300px;">При подтверждении: «PIN не совпадает — введите заново». Смена — старый, новый, подтверждение. Удаление — проверка текущего.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1720,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>

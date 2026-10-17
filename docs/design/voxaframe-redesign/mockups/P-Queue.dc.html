@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>iPhone · очередь и плейлисты</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="vf.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.q{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--hairline)}
+.q .thumb{width:96px;border-radius:8px}
+.q .pos{width:20px;text-align:center;font-size:13px;color:var(--secondary);font-variant-numeric:tabular-nums;flex:none}
+.opt .li{min-height:52px}
+</style>
+</helmet>
+<div class="strip" style="width: 1298px; height: 928px;">
+  <div class="shot">
+    <span class="shot-label">Очередь · <em>редактор</em> (предложение)</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar"><button class="navbtn" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span class="t">Очередь</span><button class="btn sm plain">Готово</button></div>
+        <div class="pad col" style="gap: 10px; padding-bottom: 8px;">
+          <p class="t-fn t-sec">12 из 500 · на этом устройстве · не плейлист YouTube</p>
+          <div class="row" style="gap: 8px;"><button class="btn sm"><svg class="i s18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3.5c4 0 6 10 10 10H21M3 17h3.5c1.5 0 2.7-1.4 3.7-3.2M14 10.2C15 8.4 16 7 17 7h4"/></svg>Перемешать</button><button class="btn sm dest">Очистить очередь</button></div>
+          <span class="prop logic" style="align-self: flex-start;">Перестановка и удаление: операции есть в хранилище, UI новый</span>
+        </div>
+        <div class="scroll pad">
+          <div class="q" style="background: var(--fill); border-radius: 12px; padding: 8px; border: 0;"><span class="pos t-act"><svg class="i s16" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--action);"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg></span><div class="thumb a0"></div><div class="grow"><p class="t-sh t-b clamp1">The long way home</p><p class="t-c1" style="color: var(--action);">Сейчас играет</p></div></div>
+          <div class="q"><button class="btn sm plain icon" aria-label="Удалить из очереди: Design in motion" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></button><div class="thumb a1"></div><div class="grow"><p class="t-sh t-b clamp1">Design in motion</p><p class="t-c1 t-sec">Studio North</p></div><button class="btn sm plain icon" aria-label="Переместить. Используйте действия: выше, ниже"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14M5 15h14"/></svg></button></div>
+          <div class="q"><button class="btn sm plain icon" aria-label="Удалить из очереди" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></button><div class="thumb a2"></div><div class="grow"><p class="t-sh t-b clamp1">A slower morning</p><p class="t-c1 t-sec">Everyday Films</p></div><button class="btn sm plain icon" aria-label="Переместить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14M5 15h14"/></svg></button></div>
+          <div class="q"><button class="btn sm plain icon" aria-label="Удалить из очереди" style="color: var(--danger);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></button><div class="thumb a5"></div><div class="grow"><p class="t-sh t-b clamp1">Small ideas, big worlds</p><p class="t-c1 t-sec">Frame by Frame</p></div><button class="btn sm plain icon" aria-label="Переместить"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14M5 15h14"/></svg></button></div>
+          <p class="t-c1 t-sec" style="margin-top: 10px;">«Удалить из очереди» не трогает офлайн-файлы и плейлисты. Очистка — с подтверждением.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Плейлист · запуск формирует очередь</span>
+    <div class="phone vf" data-theme="{{theme}}" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="navbar"><button class="navbtn" aria-label="Назад"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><span></span><button class="navbtn" aria-label="Ещё"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg></button></div>
+        <div class="pad col" style="gap: 10px; align-items: center; text-align: center; padding-bottom: 10px;">
+          <div class="thumb a9" style="width: 220px; border-radius: 18px;"></div>
+          <h1 class="t-2">Travel diaries</h1>
+          <p class="t-fn t-sec">Плейлист YouTube · 24 видео</p>
+          <div class="row" style="gap: 10px;"><button class="btn prom"><svg class="f" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z"/></svg>Смотреть</button><button class="btn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3.5c4 0 6 10 10 10H21M3 17h3.5c1.5 0 2.7-1.4 3.7-3.2M14 10.2C15 8.4 16 7 17 7h4"/></svg>Вперемешку</button></div>
+          <p class="t-c1 t-sec">Запуск заменит текущую очередь этим списком.</p>
+        </div>
+        <div class="scroll pad">
+          <div class="q"><span class="pos">1</span><div class="thumb a9"><span class="dur">08:12</span></div><div class="grow"><p class="t-sh t-b clamp2">Night ferry to the islands</p><p class="t-c1 t-sec">Night Walks</p></div></div>
+          <div class="q"><span class="pos">2</span><div class="thumb a0"><span class="dur">18:42</span></div><div class="grow"><p class="t-sh t-b clamp2">The long way home</p><p class="t-c1 t-sec">Field Notes</p></div></div>
+          <div class="q"><span class="pos">3</span><div class="thumb a9"><span class="dur">08:12</span></div><div class="grow"><p class="t-sh t-b clamp2">Night ferry to the islands</p><p class="t-c1 t-sec">Повтор позиции 1 — допустимо</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <span class="shot-label">Переместить в плейлист · <em>выбор</em> · результат</span>
+    <div class="phone vf" data-theme="dark" data-accent="{{accent}}" data-transparency="{{transparency}}">
+      <div class="screen">
+        <div class="safe-top"></div>
+        <div class="dim-under"></div>
+        <div class="sheet glass opt" style="background: var(--grouped); top: 140px;" role="dialog" aria-label="Переместить в плейлист">
+          <div class="grab"></div>
+          <div class="sheet-h"><button class="btn sm plain">Отмена</button><span class="t">Переместить в…</span><span style="width: 70px;"></span></div>
+          <div class="pad col" style="gap: 10px;">
+            <div class="row" style="gap: 10px;"><div class="thumb a2" style="width: 80px; border-radius: 8px;"></div><div><p class="t-sh t-b">A slower morning</p><p class="t-c1 t-sec">Из «Travel diaries»</p></div></div>
+            <div class="list" style="background: var(--surface);">
+              <div class="li"><div class="thumb a5" style="width: 56px; border-radius: 6px;"></div><span class="lt">Смотреть позже<small>9 видео</small></span></div>
+              <div class="li"><div class="thumb a7" style="width: 56px; border-radius: 6px;"></div><span class="lt">Cooking outdoors<small>11 видео</small></span><span class="spin" style="color: var(--secondary);" aria-label="Отправляем"></span></div>
+              <div class="li dis"><div class="thumb a9" style="width: 56px; border-radius: 6px;"></div><span class="lt">Travel diaries<small>Исходный плейлист</small></span></div>
+            </div>
+            <p class="t-c1 t-sec">Пока идёт отправка, другие строки недоступны — повторное нажатие не отправит дважды.</p>
+            <div class="banner ok"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg><span>Перемещено в «Cooking outdoors»</span></div>
+            <div class="banner err"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg><span class="grow">Добавлено, но из исходного не удалено</span><button class="btn sm tint">Повторить</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"accent":{"editor":"enum","options":["coral","blue","red","orange","yellow","green","mint","teal","indigo","purple","pink"],"default":"coral"},"transparency":{"editor":"enum","options":["glass","reduced"],"default":"glass"},"$preview":{"width":1298,"height":928}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', accent: this.props.accent ?? 'coral', transparency: this.props.transparency ?? 'glass' };
+  }
+}
+</script>
+</body>
+</html>
