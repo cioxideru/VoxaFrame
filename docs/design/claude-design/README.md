@@ -7,7 +7,9 @@
 
 ## Самый простой импорт
 
-1. Распакуйте `VoxaFrame-Claude-Design.zip`.
+Инструкция для передачи коллеге: **[HANDOFF.ru.md](HANDOFF.ru.md)**.
+
+1. Откройте этот каталог или распакуйте `VoxaFrame-Claude-Design.zip` на другом компьютере.
 2. В Claude прикрепите **[CLAUDE_IMPORT.md](CLAUDE_IMPORT.md)**,
    **[VoxaFrame-Design-System.pdf](VoxaFrame-Design-System.pdf)** и
    **[assets/voxaframe-icon.png](assets/voxaframe-icon.png)**.
@@ -33,6 +35,7 @@ PDF и PNG: основные правила и значения уже есть 
 
 | Файл | Для чего |
 |---|---|
+| [HANDOFF.ru.md](HANDOFF.ru.md) | Короткая инструкция для коллеги: загрузка, сохранение системы и проверка результата |
 | [CLAUDE_IMPORT.md](CLAUDE_IMPORT.md) | Единый документ: продукт, правила, компоненты, платформы, состояния, доступность, источники |
 | [IMPORT_PROMPT.txt](IMPORT_PROMPT.txt) | Готовый запрос на создание системы; дальнейшие запросы есть в основном документе |
 | [VoxaFrame-Design-System.pdf](VoxaFrame-Design-System.pdf) | Визуальные эталоны бренда, компонентов и четырёх платформ |

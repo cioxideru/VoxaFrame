@@ -23,6 +23,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-15 |
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
 | [design/claude-design/README.md](design/claude-design/README.md) | DESIGN-0001: VoxaFrame Claude Design import bundle and visual references | current | 2026-10-17 |
+| [design/claude-design/HANDOFF.ru.md](design/claude-design/HANDOFF.ru.md) | Colleague handoff: import files, save the system and check the four platforms | current | 2026-10-17 |
 | [design/claude-design/CLAUDE_IMPORT.md](design/claude-design/CLAUDE_IMPORT.md) | Apple 27 design-system specification, platform rules, components and provenance | current | 2026-10-17 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0018) | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |

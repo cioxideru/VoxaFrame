@@ -3,8 +3,9 @@
   "date": "2026-10-17",
   "sha256": {
     "CLAUDE_IMPORT.md": "2acbc205de1017676f202b836ac205dce12937308270b298175b5315dcc03b24",
+    "HANDOFF.ru.md": "254ac9ab1ebd160040c683b56c0f2b70706acc537dce0fb013b463b682a1af07",
     "IMPORT_PROMPT.txt": "092ed1529050c87d9808251bbc8df50130477062dd39515a7219204c8798fe0d",
-    "README.md": "cf16a0dc9d2f08114c7abf49ca3e8ea79b8fa78984e363afe3a7dc0d5bdc38b5",
+    "README.md": "7f75eaf1b2ccaebb1dfaba968bff1485bccd80bb34bc7f3f5690ffeb8a375588",
     "VoxaFrame-Design-System.pdf": "7847b492180d18734077cdb8141762f0e0daee3d55405f1bb49e0f64f2c3016b",
     "assets/voxaframe-icon.png": "80983436902ea1a9d5371d7aad511d409aeb4efafc67813bc52fd43996624006",
     "checks.json": "23587e5507b281930f519752bbd5bf6f01b4c9cb36fea83c86547fab931fabc1",
