@@ -19,10 +19,7 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0023: VoxaFrame identity](active/voxaframe-branding.md) — app name, original icon and platform acceptance.
 
-- [PLAN-0020: Playback priority](active/playback-priority.md) — shared playback demand and bounded optional transfers.
-- [PLAN-0022: Initial stream source boundary](active/stream-source-boundary.md) — isolate initial metadata acquisition without changing fallback order.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
 
@@ -31,6 +28,12 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0023: VoxaFrame identity](completed/voxaframe-branding.md) — app name, original icon and platform acceptance.
+- [PLAN-0020: Playback priority](completed/playback-priority.md) — shared playback demand and bounded optional transfers.
+- [PLAN-0022: Initial stream source boundary](completed/stream-source-boundary.md) — isolate initial metadata acquisition without changing fallback order.
+- [PLAN-0021: Offline library](completed/offline-library.md) — background media downloads and saved audio translations.
+
 
 - [PLAN-0019: Independent Shorts playback speed](completed/shorts-playback-speed.md) — separate persisted speed, synchronized translation and native-resume fix; 1092 native tests, three iPad UI tests and iOS/tvOS Release app + UI-test builds.
 

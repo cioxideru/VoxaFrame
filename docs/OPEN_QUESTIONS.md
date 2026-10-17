@@ -266,3 +266,18 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - If the original wide-screen overlap recurs, capture the exact navigation sequence, orientation
   and window mode before extending layout policy. The passing requested matrix does not prove
   that every possible restoration sequence is covered.
+
+## OQ-0018 — Offline library and playback priority on physical iPad
+
+- Status: hardware and live-service acceptance pending; owner: playback maintainer.
+  Basis: PLAN-0020 and PLAN-0021; the user deferred physical-device acceptance.
+- Simulator fixtures exercise the real system download sessions and local AVPlayer; they do not
+  establish current YouTube signed-URL availability, Yandex translation generation, physical
+  background-session wakeup or audio synchronization under device load.
+- Next check: save a real video with VOT, background the app, verify notification and retained
+  progress, relaunch, then play in airplane mode and add another quality/audio track online.
+  Separately compare startup/buffering with competing downloads on the same connection.
+- Source resolution and translation preparation need a running app. Accepted media transfers
+  use system background sessions; force-quitting the app does not promise continued downloads.
+- HLS uses its included audio with optional local VOT. External audio-file overrides require a
+  direct video file; the UI explains this platform limit rather than attempting HLS composition.

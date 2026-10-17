@@ -1,12 +1,23 @@
 # Changelog
 
-All notable changes to SmartTube are documented here.
+All notable changes to VoxaFrame and its SmartTube predecessor are documented here.
 
 ---
 
 ## [Unreleased]
 
 ### Added — 2026-10-17
+
+- **VoxaFrame 5.15 (33) (PLAN-0020–0023):** new app name and two-voices/Play icon,
+  preserving the installed app identity, account storage and deep links. Offline watch adds
+  a durable background download queue, progress page, completion notifications, saved video
+  qualities and audio tracks, and Yandex translation that can be downloaded initially or later.
+  Saved media can be played after relaunch without requesting its original media URL.
+- **Playback priority (PLAN-0020):** speculative metadata, Shorts preparation and offline
+  transfers yield while active playback starts or buffers. Explicit pause releases demand;
+  resumed optional work is bounded, and shared requests retain their foreground consumers.
+- **Initial stream source boundary (PLAN-0022):** metadata acquisition now has a small tested
+  boundary while AVPlayer lifecycle and existing recovery order remain with the player.
 
 - **Version 5.14 (32), independent Shorts speed (PLAN-0019):** Shorts has the same
   0.25–2× playback-speed picker as regular videos, with a separately saved choice.

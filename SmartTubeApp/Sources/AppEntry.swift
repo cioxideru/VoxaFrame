@@ -57,6 +57,7 @@ struct AppEntry: App {
             return BotGuardClient()
         }()
         let api = InnerTubeAPI(authToken: nil, poTokenProvider: poTokenProvider)
+        OfflineCoordinator.shared.configure(api: api)
         let homeViewModel = HomeViewModel(api: api)
         _homeViewModel = State(initialValue: homeViewModel)
         _api = State(initialValue: api)

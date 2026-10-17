@@ -1,6 +1,9 @@
 # PLAN-0022 — Initial stream metadata boundary
 
-Status: active
+Status: completed
+
+Resolution: scoped implementation accepted with native, platform-build and Simulator checks.
+Physical and live-service acceptance remains tracked separately in OQ-0018.
 
 - Owner: stream-source Astra; coordinator owns acceptance, shared documentation, commit and merge.
 - Git boundary: `mac/stream-source-boundary`, base `6eb7158`, dedicated `stream-source-boundary/SmartTubeIOS` worktree. Initially clean.
@@ -50,5 +53,32 @@ implementation of all ADR-0005. No performance improvement is claimed.
 ## Dependencies and blockers
 
 No public cache interface or shared-file edits required. Coordinator-authorized native checks
-completed sequentially on Xcode 27.0. Changes remain uncommitted for acceptance. Full pipeline
-parity and hardware performance are outside this step.
+completed sequentially on Xcode 27.0. The source change is committed in `9a19054` and integrated with playback priority and branding
+in `8a15d9b`. Full pipeline parity and hardware performance are outside this step.
+
+## Combined integration checks — 2026-10-17
+
+- Xcode 27.0: Release app and UI-test-target builds PASS for both iOS and tvOS.
+  Logs: `/private/tmp/voxaframe-ios-release-build.log` and
+  `/private/tmp/voxaframe-tvos-release-build.log`. Build output paths were isolated.
+- iPad Pro 11-inch (M5) Simulator: both `DownloadsPlaybackUITests` scenarios PASS,
+  zero failures/skips, 170.5 seconds; `/private/tmp/voxaframe-final-ui.xcresult`.
+  These exercise real URLSession/AVAssetDownloadURLSession and AVPlayer with synthetic local media:
+  additional quality/AAC/VOT, saved HLS resolution, rotation, relaunch and unchanged original-media request counts.
+- Independent merge review found no loss of the stream-source boundary, playback-demand reset,
+  local-source identity, cancellation guards or offline scheduling ownership.
+- Built iOS/tvOS bundles report VoxaFrame 5.15 (33), retaining the existing bundle identifier.
+  The chosen icon and VoxaFrame label were visually verified on the Simulator home screen.
+- Physical background delivery, real YouTube/Yandex requests and measured playback-priority
+  benefit remain in [OQ-0018](../../OPEN_QUESTIONS.md#oq-0018--offline-library-and-playback-priority-on-physical-ipad).
+
+## Final gate
+
+- Combined `scripts/ci.sh`: PASS, 1133 tests in 157 suites; secrets, links, Core imports
+  and formatting pass. `/private/tmp/voxaframe-final-ci.log`.
+- Strict baseline SwiftLint: PASS, zero violations across 429 files.
+  `/private/tmp/voxaframe-final-lint.log`.
+- Rotation follow-up: PASS, one scenario, zero skips, 96.2 seconds;
+  `/private/tmp/voxaframe-rotation-final.xcresult`. The test waits for the app's landscape
+  bounds and advancing playback. `XCUIScreen` capture confirms the final layout;
+  the first XCTest window is an empty auxiliary window and must not be used for this assertion.

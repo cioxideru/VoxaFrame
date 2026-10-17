@@ -35,7 +35,14 @@ extension PlaybackViewModel {
     func exhaustiveRetry(
         video: Video, originalError: Error?, playerInfo: PlayerInfo? = nil, cached: CachedVideoData? = nil
     ) async {
-        guard !Task.isCancelled, currentVideo?.id == video.id else { return }
+        guard !Task.isCancelled, currentVideo?.hasSamePlaybackSource(as: video) == true else { return }
+        guard !video.isDownloaded else {
+            error = originalError ?? OfflineLibraryError.invalidFile
+            isLoading = false
+            isPlaying = false
+            player.pause()
+            return
+        }
         // Testing override: --uitesting-force-stream-method restricts the retry to a
         // single named client so UI tests can probe one path at a time.
         if let method = StreamMethodProbeSupport.forcedStreamMethod {

@@ -1,6 +1,9 @@
 # PLAN-0020 — Active playback priority
 
-Status: active
+Status: completed
+
+Resolution: scoped implementation accepted with native, platform-build and Simulator checks.
+Physical and live-service acceptance remains tracked separately in OQ-0018.
 
 - Owner: playback-priority agent; coordinator owns integration and acceptance.
 - Git boundary: `mac/playback-priority`, base `6eb7158`, isolated `playback-priority/SmartTubeIOS` worktree.
@@ -9,7 +12,7 @@ Status: active
 - Constraints: preserve shared stream requests, fallback order, quality, speed and voice-over; no dependencies or project-file edits.
 - Basis: [architecture](../../architecture.md), [ADR-0011](../../adr/0011-bounded-native-shorts-preloading.md); read-only AxrTube mechanism research supplied by coordinator.
 - Dependencies: shared playback integration points and offline subscriber contract coordinated with parent agent.
-- Next deliverable: coordinator review and platform-build acceptance; implementation and native gates are complete.
+- Next deliverable: none for this scoped implementation; deferred checks are recorded in OQ-0018.
 - Acceptance: startup and later buffer wait yield optional work; cancellation/video changes cannot revive stale work; resume is bounded and coalesced requests survive promotion; sustained buffer pressure cannot starve optional work.
 - Blockers: none for native verification; simulator builds and physical measurements remain coordinator-owned.
 
@@ -49,3 +52,30 @@ No device speedup, bandwidth reduction or battery improvement is claimed. Existi
 Review found that a deliberate pause during initial buffer wait left the preparation latch active indefinitely. The adapter now records deliberate pause intent separately from AVPlayer transport state; state/KVO updates cannot reacquire demand until `beginPlaybackAudioSession` records a new playback intent. User toggle (including pending activation), background-disabled handling, suspension, output loss, native remote pause, system interruption and sleep timer release demand. Translation and stream/seek technical pauses retain their existing behavior.
 
 Regression tests exercise waiting/technical pause/intentional pause/recovery/stale update/resume and seven ViewModel pause routes. Focused tests: 19 tests / 4 suites PASS (`/private/tmp/playback-priority-pause-focused.log`). Complete `scripts/ci.sh`: 1102 tests / 153 suites PASS (`/private/tmp/playback-priority-pause-ci.log`). Strict SwiftLint: 0 violations, exit 0 (`/private/tmp/playback-priority-pause-lint.log`). Native remote/interruption wiring is source-checked; these UIKit paths and physical-device behavior still require platform acceptance.
+
+## Combined integration checks — 2026-10-17
+
+- Xcode 27.0: Release app and UI-test-target builds PASS for both iOS and tvOS.
+  Logs: `/private/tmp/voxaframe-ios-release-build.log` and
+  `/private/tmp/voxaframe-tvos-release-build.log`. Build output paths were isolated.
+- iPad Pro 11-inch (M5) Simulator: both `DownloadsPlaybackUITests` scenarios PASS,
+  zero failures/skips, 170.5 seconds; `/private/tmp/voxaframe-final-ui.xcresult`.
+  These exercise real URLSession/AVAssetDownloadURLSession and AVPlayer with synthetic local media:
+  additional quality/AAC/VOT, saved HLS resolution, rotation, relaunch and unchanged original-media request counts.
+- Independent merge review found no loss of the stream-source boundary, playback-demand reset,
+  local-source identity, cancellation guards or offline scheduling ownership.
+- Built iOS/tvOS bundles report VoxaFrame 5.15 (33), retaining the existing bundle identifier.
+  The chosen icon and VoxaFrame label were visually verified on the Simulator home screen.
+- Physical background delivery, real YouTube/Yandex requests and measured playback-priority
+  benefit remain in [OQ-0018](../../OPEN_QUESTIONS.md#oq-0018--offline-library-and-playback-priority-on-physical-ipad).
+
+## Final gate
+
+- Combined `scripts/ci.sh`: PASS, 1133 tests in 157 suites; secrets, links, Core imports
+  and formatting pass. `/private/tmp/voxaframe-final-ci.log`.
+- Strict baseline SwiftLint: PASS, zero violations across 429 files.
+  `/private/tmp/voxaframe-final-lint.log`.
+- Rotation follow-up: PASS, one scenario, zero skips, 96.2 seconds;
+  `/private/tmp/voxaframe-rotation-final.xcresult`. The test waits for the app's landscape
+  bounds and advancing playback. `XCUIScreen` capture confirms the final layout;
+  the first XCTest window is an empty auxiliary window and must not be used for this assertion.
