@@ -28,6 +28,7 @@ final class ShortsPreloadingUITests: XCTestCase {
             "--uitesting", "--uitesting-shorts", "--uitesting-reset-settings",
             "--uitesting-disable-sponsorblock", "--uitesting-sign-out",
             "--uitesting-shorts-ids=" + (0..<count).map { "preload-\($0)" }.joined(separator: ","),
+            "--uitesting-show-controls", "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
         ]
         if !preload { app.launchArguments.append("--uitesting-disable-shorts-preload") }
         app.launchEnvironment["SHORTS_TEST_MEDIA_URL"] = mediaURL
@@ -85,6 +86,148 @@ final class ShortsPreloadingUITests: XCTestCase {
         add(evidence)
         XCTAssertGreaterThan(cold, 0)
         XCTAssertLessThan(Double(warm), Double(cold) * 0.6)
+    }
+
+    func testSpeedSurvivesPausePreparedNextRotationAndRelaunch() {
+        let app = launch(preload: true, count: 3)
+        _ = wait(app, id: 0, buffered: true)
+        let before = decimal("native", in: app.staticTexts[AccessibilityID.shortsPreloadStatus].label)
+        selectSpeed(1.5, in: app)
+        expectRate(1.5, in: app)
+        XCTAssertGreaterThanOrEqual(
+            decimal("native", in: app.staticTexts[AccessibilityID.shortsPreloadStatus].label), before)
+
+        app.buttons[AccessibilityID.shortsPlayPauseButton].tap()
+        expectRate(0, in: app)
+        selectSpeed(0.5, in: app)
+        expectRate(0, in: app)
+        XCTAssertEqual(app.buttons[AccessibilityID.shortsPlayPauseButton].label, "Play")
+        app.buttons[AccessibilityID.shortsPlayPauseButton].tap()
+        expectRate(0.5, in: app)
+        next(app)
+        let prepared = wait(app, id: 1, buffered: true)
+        XCTAssertTrue(prepared.contains("shorts:prepared"), prepared)
+        expectRate(0.5, in: app)
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let speed = app.buttons[AccessibilityID.shortsSpeedButton]
+        let landscape = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in
+                let frame = app.windows.firstMatch.frame
+                return frame.width > frame.height && speed.isHittable
+            }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 10), .completed)
+        XCTAssertEqual(speed.value as? String, "0.5×")
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Independent Shorts speed in landscape"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
+        app.launch()
+        _ = wait(app, id: 0, buffered: true)
+        expectRate(0.5, in: app)
+        XCTAssertEqual(speed.value as? String, "0.5×")
+    }
+
+    func testRegularAndShortsSpeedsRemainIndependent() {
+        let app = launch(preload: true, count: 3)
+        _ = wait(app, id: 0, buffered: true)
+        selectSpeed(1.5, in: app)
+        expectRate(1.5, in: app)
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" || $0 == "--uitesting-shorts" }
+        app.launchArguments.append("--uitesting-deeplink-video=preload-0")
+        app.launch()
+        let regular = app.buttons[AccessibilityID.playerQuickSpeedButton]
+        XCTAssertTrue(regular.waitForExistence(timeout: 20))
+        regular.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.playerSpeed(1)].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons[AccessibilityID.playerSpeed(1)].isSelected)
+        app.buttons[AccessibilityID.playerSpeed(1.25)].tap()
+
+        app.terminate()
+        app.launchArguments.removeAll { $0.hasPrefix("--uitesting-deeplink-video=") }
+        app.launchArguments.append("--uitesting-shorts")
+        app.launch()
+        _ = wait(app, id: 0, buffered: true)
+        expectRate(1.5, in: app)
+        selectSpeed(0.75, in: app)
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-shorts" }
+        app.launchArguments.append("--uitesting-deeplink-video=preload-0")
+        app.launch()
+        XCTAssertTrue(regular.waitForExistence(timeout: 20))
+        regular.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.playerSpeed(1.25)].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons[AccessibilityID.playerSpeed(1.25)].isSelected)
+    }
+
+    func testTranslationMatchesSpeedAndPausedSelection() {
+        let app = launch(preload: true, count: 3)
+        _ = wait(app, id: 0, buffered: true)
+        enableTranslation(in: app)
+        expectRate(1, in: app, voice: true)
+        selectSpeed(1.5, in: app)
+        expectRate(1.5, in: app, voice: true)
+        selectSpeed(0.75, in: app)
+        expectRate(0.75, in: app, voice: true)
+
+        app.buttons[AccessibilityID.shortsPlayPauseButton].tap()
+        expectRate(0, in: app, voice: true)
+        selectSpeed(1.25, in: app)
+        expectRate(0, in: app, voice: true)
+        app.buttons[AccessibilityID.shortsPlayPauseButton].tap()
+        expectRate(1.25, in: app, voice: true)
+        next(app)
+        _ = wait(app, id: 1, buffered: true)
+        enableTranslation(in: app)
+        expectRate(1.25, in: app, voice: true)
+    }
+
+    private func selectSpeed(_ speed: Double, in app: XCUIApplication) {
+        let button = app.buttons[AccessibilityID.shortsSpeedButton]
+        XCTAssertTrue(button.waitForExistence(timeout: 5))
+        button.tap()
+        let option = app.buttons[AccessibilityID.playerSpeed(speed)]
+        XCTAssertTrue(option.waitForExistence(timeout: 5))
+        option.tap()
+    }
+
+    private func decimal(_ name: String, in status: String) -> Double {
+        status.split(separator: " ").first { $0.hasPrefix(name + "=") }
+            .flatMap { Double($0.dropFirst(name.count + 1)) } ?? -.infinity
+    }
+
+    private func expectRate(_ rate: Double, in app: XCUIApplication, voice: Bool = false) {
+        let probe = app.staticTexts[AccessibilityID.shortsPreloadStatus]
+        XCTAssertTrue(probe.waitForExistence(timeout: 5))
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in
+                let status = probe.label
+                let matches = self.decimal("rate", in: status) == rate
+                guard voice else { return matches }
+                return matches && self.decimal("voiceRate", in: status) == rate
+                    && (rate == 0
+                        || abs(self.decimal("native", in: status) - self.decimal("voiceTime", in: status)) < 0.5)
+            }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .completed, probe.label)
+    }
+
+    private func enableTranslation(in app: XCUIApplication) {
+        app.buttons[AccessibilityID.shortsAudioTrackButton].tap()
+        let language = app.buttons[AccessibilityID.playerTranslationLanguagePicker]
+        XCTAssertTrue(language.waitForExistence(timeout: 5))
+        language.tap()
+        app.buttons["Russian"].firstMatch.tap()
+        let toggle = app.switches[AccessibilityID.playerAudioTrackPickerVoiceOverToggle]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        if toggle.value as? String != "1" {
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        }
+        app.buttons["Cancel"].firstMatch.tap()
     }
 
     func testSustainedPlaybackAndBackgroundRelease() {

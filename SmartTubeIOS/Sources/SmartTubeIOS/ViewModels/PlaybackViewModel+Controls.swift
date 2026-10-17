@@ -121,11 +121,13 @@ extension PlaybackViewModel {
     }
 
     public func setPlaybackSpeed(_ speed: Double) {
+        settings.playbackSpeed = speed
         // Setting player.rate to a non-zero value on a paused AVPlayer restarts
         // playback — only apply the rate while actively playing.
         if isPlaying {
             player.rate = Float(speed)
         }
+        voiceOver.sync()
     }
 
     /// Called when the user begins a long-press on the video surface (controls hidden).

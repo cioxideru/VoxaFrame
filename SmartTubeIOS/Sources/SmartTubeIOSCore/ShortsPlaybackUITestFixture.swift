@@ -22,5 +22,7 @@ public enum ShortsPlaybackUITestFixture {
             video: Video(id: videoId, title: videoId, channelTitle: "Local fixture", isShort: true),
             formats: [format], hlsURL: url, dashURL: nil, captionTracks: [], trackingURLs: nil, endCards: [])
     }
+
+    public static var translationAudioURL: URL? { baseURL?.appendingPathComponent("voice.mp3") }
 }
 #endif

@@ -144,71 +144,7 @@ extension PlayerView {
     // MARK: - Speed picker overlay
 
     var speedPickerOverlay: some View {
-        ZStack(alignment: .bottom) {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { showSpeedPicker = false }
-            VStack(spacing: 0) {
-                HStack {
-                    Button("Cancel") { showSpeedPicker = false }
-                        #if os(tvOS)
-                    .buttonStyle(PickerHeaderButtonStyle())
-                        #endif
-                        .padding()
-                    Spacer()
-                    Text("Playback Speed")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Color.clear.frame(width: 70, height: 44)
-                }
-                Divider()
-                ScrollView {
-                    VStack(spacing: 0) {
-                        ForEach(AppSettings.availableSpeeds, id: \.self) { (speed: Double) in
-                            Button {
-                                store.settings.playbackSpeed = speed
-                                vm.setPlaybackSpeed(speed)
-                                showSpeedPicker = false
-                            } label: {
-                                HStack {
-                                    Text(speed == 1.0 ? "Normal (1\u{d7})" : "\(speed, specifier: "%.2g")\u{d7}")
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    if abs(store.settings.playbackSpeed - speed) < 0.01 {
-                                        Image(systemName: AppSymbol.checkmark)
-                                            .foregroundStyle(Color.accentColor)
-                                    }
-                                }
-                                .contentShape(Rectangle())
-                                .padding(.horizontal)
-                                .padding(.vertical, 12)
-                            }
-                            .buttonStyle(.plain)
-                            Divider()
-                        }
-                    }
-                }
-                .frame(maxHeight: 320)
-                #if os(tvOS)
-                .prefersDefaultFocus(in: speedPickerNamespace)
-                .focused($speedPickerFocused)
-                #endif
-            }
-            .frame(maxWidth: moreMenuPortraitWidth)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .accessibilityIdentifier("player.speedPicker")
-            #if os(tvOS)
-            .focusScope(speedPickerNamespace)
-            .onExitCommand {
-                pickerLog.notice("[speedPicker] onExitCommand fired — dismissing")
-                showSpeedPicker = false
-            }
-            #endif
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
-        }
-        .ignoresSafeArea()
+        PlayerSpeedPicker(vm: vm, showSpeedPicker: $showSpeedPicker, maxWidth: moreMenuPortraitWidth)
     }
 
     // MARK: - Sleep timer picker overlay

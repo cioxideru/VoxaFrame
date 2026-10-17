@@ -53,6 +53,10 @@ final class VoiceOverTranslationController {
         get { voicePlayer.isMuted }
         set { voicePlayer.isMuted = newValue }
     }
+    #if DEBUG
+    var testPlaybackRate: Float { voicePlayer.rate }
+    var testPlaybackTime: Double { voicePlayer.currentTime().seconds }
+    #endif
     private var originalAudioVolume: Float { keepsOriginalAudio ? Self.duckedVolume : 0 }
     /// Re-seek the voice when it drifts further than this from the video.
     private static let maxDrift: Double = 0.35
@@ -123,6 +127,13 @@ final class VoiceOverTranslationController {
     // MARK: - Translation loop
 
     private func run(_ request: Request) async {
+        #if DEBUG
+        if let url = ShortsPlaybackUITestFixture.translationAudioURL {
+            guard !Task.isCancelled else { return }
+            attach(url, livelyVoice: false)
+            return
+        }
+        #endif
         var token = request.livelyVoiceToken
         var uploadedAudio = false
         var playingURL: URL?
@@ -236,7 +247,7 @@ final class VoiceOverTranslationController {
     }
 
     /// Mirrors the main player's state onto the voice player: any playback rate, pause, seeks.
-    private func sync() {
+    func sync() {
         guard let mainPlayer, let voiceItem = voicePlayer.currentItem else { return }
         if voiceItem.status == .failed {
             return fail("Translation audio failed: \(voiceItem.error?.localizedDescription ?? "unknown error")")

@@ -159,16 +159,6 @@ extension PlayerView {
                     moreMenuFocusedRow = nil
                 }
             }
-            .onChange(of: showSpeedPicker) { _, visible in
-                playerLifecycleLog.notice("[tv] showSpeedPicker changed → \(visible)")
-                if visible {
-                    Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 50_000_000)
-                        speedPickerFocused = true
-                        playerLifecycleLog.notice("[tv] speedPickerFocused set → true")
-                    }
-                }
-            }
             .onChange(of: showQualityPicker) { _, visible in
                 playerLifecycleLog.notice("[tv] showQualityPicker changed → \(visible)")
                 if visible {

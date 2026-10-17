@@ -163,15 +163,17 @@ public struct AppSettings: Codable {
     /// without music or effects); off mutes it.
     public var yandexVOTKeepOriginalAudio: Bool
 
-    // MARK: Shorts audio and translation
+    // MARK: Shorts playback, audio and translation
+    public var shortsPlaybackSpeed: Double
     public var shortsPreferredAudioLanguage: String?
     public var shortsYandexVOTEnabled: Bool
     public var shortsYandexVOTLivelyVoice: Bool
     public var shortsYandexVOTKeepOriginalAudio: Bool
 
-    /// Resolve only the audio/translation preferences at the Shorts playback boundary.
+    /// Resolve the independent preferences at the Shorts playback boundary.
     public var shortsPlaybackSettings: AppSettings {
         var result = self
+        result.playbackSpeed = shortsPlaybackSpeed
         result.preferredAudioLanguage = shortsPreferredAudioLanguage
         result.yandexVOTEnabled = shortsYandexVOTEnabled
         result.yandexVOTLivelyVoice = shortsYandexVOTLivelyVoice
@@ -333,6 +335,7 @@ public struct AppSettings: Codable {
         yandexVOTEnabled = false
         yandexVOTLivelyVoice = false
         yandexVOTKeepOriginalAudio = true
+        shortsPlaybackSpeed = 1.0
         shortsPreferredAudioLanguage = nil
         shortsYandexVOTEnabled = false
         shortsYandexVOTLivelyVoice = false
@@ -375,6 +378,7 @@ extension AppSettings {
         case preferredQuality
         case lastVideoQuality
         case playbackSpeed
+        case shortsPlaybackSpeed
         case autoplayEnabled
         case subtitlesLanguage
         case backgroundPlaybackEnabled
@@ -436,6 +440,8 @@ extension AppSettings {
         preferredQuality = c.safeDecode(VideoQuality.self, forKey: .preferredQuality, default: d.preferredQuality)
         lastVideoQuality = c.safeDecode(VideoQualityPreference?.self, forKey: .lastVideoQuality, default: nil)
         playbackSpeed = c.safeDecode(Double.self, forKey: .playbackSpeed, default: d.playbackSpeed)
+        // Preserve the formerly shared choice once; subsequent saves keep the two speeds separate.
+        shortsPlaybackSpeed = c.safeDecode(Double.self, forKey: .shortsPlaybackSpeed, default: playbackSpeed)
         autoplayEnabled = c.safeDecode(Bool.self, forKey: .autoplayEnabled, default: d.autoplayEnabled)
         subtitlesLanguage = c.safeDecode(String?.self, forKey: .subtitlesLanguage, default: d.subtitlesLanguage)
         backgroundPlaybackEnabled = c.safeDecode(

@@ -60,6 +60,17 @@ extension PlaybackViewModel {
         // KVO delivery hops to MainActor. A deliberate pause may already have
         // been followed by resume while this event was waiting to be handled.
         guard player.rate == newRate else { return }
+        // AVPlayer can recover before our delayed nudge, including when voice-over attaches.
+        // Deliberate holds cancel recovery, so only the outstanding stall may resume the UI state.
+        if newRate > 0, !isPlaying, stallRecoveryTask != nil,
+            player.currentItem === stallItem, canResumeInAudioSession
+        {
+            cancelStallRecovery()
+            isPlaying = true
+            #if canImport(UIKit)
+            updateNowPlayingPlayback()
+            #endif
+        }
         // Ignore rate changes that we ourselves triggered (load/pause/resume/stop)
         // by only acting when the player goes silent unexpectedly while we
         // believed it was playing.

@@ -125,8 +125,8 @@ extension ShortsPlayerView {
         guard videos.indices.contains(index) else { return }
         let video = videos[index]
         vm.updateSettings(store.settings)
-        vm.setPlaybackSpeed(store.settings.playbackSpeed)
         showAudioTrackPicker = false
+        showSpeedPicker = false
         vm.load(video: video)
         vm.player.isMuted = isMuted
         vm.voiceOver.isMuted = isMuted

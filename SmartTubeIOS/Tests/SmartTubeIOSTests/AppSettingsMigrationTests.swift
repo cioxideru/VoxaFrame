@@ -20,6 +20,29 @@ import Testing
 @Suite("AppSettings forward-compatible decoding (#181)")
 struct AppSettingsMigrationTests {
 
+    @Test("Legacy playback speed seeds Shorts once without resetting other preferences")
+    func migrateShortsPlaybackSpeed() throws {
+        let data = Data(#"{"playbackSpeed":1.5,"autoplayEnabled":false}"#.utf8)
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        #expect(settings.playbackSpeed == 1.5)
+        #expect(settings.shortsPlaybackSpeed == 1.5)
+        #expect(!settings.autoplayEnabled)
+        #expect(AppSettings().shortsPlaybackSpeed == 1)
+    }
+
+    @Test("Shorts speed survives saves independently of regular speed", arguments: AppSettings.availableSpeeds)
+    func independentShortsSpeedRoundTrip(speed: Double) throws {
+        var settings = AppSettings()
+        settings.playbackSpeed = 1.25
+        settings.shortsPlaybackSpeed = speed
+        var restored = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings))
+        restored.playbackSpeed = 2
+        let reloaded = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(restored))
+        #expect(reloaded.playbackSpeed == 2)
+        #expect(reloaded.shortsPlaybackSpeed == speed)
+        #expect(reloaded.shortsPlaybackSettings.playbackSpeed == speed)
+    }
+
     @Test("Legacy translation preferences seed an independent Shorts copy")
     func migrateShortsTranslationPreferences() throws {
         let json = Data(

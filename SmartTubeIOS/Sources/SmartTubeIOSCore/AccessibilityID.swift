@@ -90,6 +90,10 @@ public enum AccessibilityID {
     public static var shortsReopenTestButton: String { "shorts.reopenTestButton" }
     public static var shortsPlayPauseButton: String { "shorts.playPauseButton" }
     public static var shortsAudioTrackButton: String { "shorts.audioTrackButton" }
+    public static var shortsSpeedButton: String { "shorts.speedButton" }
+    public static var playerSpeedPicker: String { "player.speedPicker" }
+    public static var playerQuickSpeedButton: String { "player.quickAccess.speed" }
+    public static func playerSpeed(_ speed: Double) -> String { "player.speed.\(speed)" }
     public static var shortsVideoScaleButton: String { "shorts.videoScaleButton" }
     public static var shortsLoadMoreButton: String { "shorts.loadMoreButton" }
     public static var shortsMuteButton: String { "shorts.muteButton" }

@@ -49,7 +49,7 @@ extension PlayerControlsOverlay {
             quickAccessButton(
                 systemImage: AppSymbol.speedometer,
                 label: speedLabel,
-                accessibilityId: "player.quickAccess.speed"
+                accessibilityId: AccessibilityID.playerQuickSpeedButton
             ) { showSpeedPicker = true }
 
             if !vm.isAudioOnlyMode {

@@ -53,6 +53,7 @@ struct PlaybackAudioSessionTests {
         settings.shortsYandexVOTLivelyVoice = true
         settings.shortsYandexVOTKeepOriginalAudio = false
         settings.playbackSpeed = 1.5
+        settings.shortsPlaybackSpeed = 0.75
         settings.videoGravityMode = .fill
         let regular = PlaybackViewModel(settings: settings)
         let shorts = PlaybackViewModel(settings: settings, isShortsPlayer: true)
@@ -66,18 +67,54 @@ struct PlaybackAudioSessionTests {
         #expect(shorts.settings.yandexVOTEnabled)
         #expect(shorts.settings.yandexVOTLivelyVoice)
         #expect(!shorts.settings.yandexVOTKeepOriginalAudio)
-        #expect(shorts.settings.playbackSpeed == 1.5)
+        #expect(regular.settings.playbackSpeed == 1.5)
+        #expect(shorts.settings.playbackSpeed == 0.75)
         #expect(shorts.settings.videoGravityMode == .fill)
 
         settings.preferredAudioLanguage = "kk"
         settings.yandexVOTEnabled = true
         settings.shortsYandexVOTEnabled = false
+        settings.playbackSpeed = 1.25
+        settings.shortsPlaybackSpeed = 2
         regular.updateSettings(settings)
         shorts.updateSettings(settings)
         #expect(regular.voiceOverTargetLanguage == "kk")
         #expect(regular.settings.yandexVOTEnabled)
         #expect(shorts.voiceOverTargetLanguage == "en")
         #expect(!shorts.settings.yandexVOTEnabled)
+        #expect(regular.settings.playbackSpeed == 1.25)
+        #expect(shorts.settings.playbackSpeed == 2)
+    }
+
+    @Test @MainActor func changingSpeedWhilePausedOrAwaitingTranslationDoesNotResumeEarly() async throws {
+        let vm = PlaybackViewModel(isShortsPlayer: true)
+        vm.audioSession = PlaybackAudioSession(driver: AudioSessionDriverProbe().driver)
+        let item = AVPlayerItem(asset: AVMutableComposition())
+        vm.player.replaceCurrentItem(with: item)
+        vm.beginPlaybackAudioSession()
+        #expect(await vm.activatePlaybackAudioSession())
+        vm.setPlaybackSpeed(0.5)
+        #expect(vm.settings.playbackSpeed == 0.5)
+        #expect(!vm.isPlaying)
+        #expect(vm.player.rate == 0)
+        #expect(vm.player.currentItem === item)
+
+        vm.voiceOver.start(
+            .init(
+                videoId: "short", duration: 30, sourceLanguage: "en", targetLanguage: "ru",
+                livelyVoiceToken: nil, originalAudioURL: nil, originalAudioHLSURL: nil,
+                originalAudioUserAgent: "test"),
+            mainPlayer: vm.player, setVideoPlaying: { [weak vm] in vm?.setPlayingForVoiceOver($0) })
+        vm.setPlaybackSpeed(1.75)
+        #expect(!vm.isPlaying)
+        #expect(vm.player.rate == 0)
+        // Cancel before the translation task can perform I/O, then exercise its normal resume path.
+        vm.voiceOver.cancelAndResume()
+        #expect(vm.isPlaying)
+        #expect(vm.player.rate == 1.75)
+        #expect(vm.player.currentItem === item)
+        vm.stop()
+        await vm.audioPlaybackTask?.value
     }
 
     @Test @MainActor func voiceOverMuteSurvivesCancellationAndReplacement() {
@@ -104,6 +141,31 @@ struct PlaybackAudioSessionTests {
         #expect(playbackIntents == [false, true, false, true])
         translation.isMuted = false
         #expect(!translation.isMuted)
+    }
+
+    @Test("Native stall recovery restores controls unless a deliberate hold intervened", arguments: [false, true])
+    @MainActor func nativeResumeAfterStall(deliberateHold: Bool) async {
+        let vm = PlaybackViewModel(isShortsPlayer: true)
+        vm.audioSession = PlaybackAudioSession(driver: AudioSessionDriverProbe().driver)
+        let item = AVPlayerItem(asset: AVMutableComposition())
+        vm.player.replaceCurrentItem(with: item)
+        vm.beginPlaybackAudioSession()
+        #expect(await vm.activatePlaybackAudioSession())
+        vm.isPlaying = true
+        vm.handlePlayerRateChange(0)
+        #expect(!vm.isPlaying)
+        #expect(vm.stallRecoveryTask != nil)
+        if deliberateHold { vm.setPlayingForVoiceOver(false) }
+        vm.player.rate = 1
+        vm.handlePlayerRateChange(1)
+        #expect(vm.isPlaying == !deliberateHold)
+        #expect(vm.stallRecoveryTask == nil)
+        if !deliberateHold {
+            vm.setPlaybackSpeed(1.5)
+            #expect(vm.player.rate == 1.5)
+        }
+        vm.stop()
+        await vm.audioPlaybackTask?.value
     }
 
     @Test @MainActor func deferredConfigurationAndOffMainOrdering() async throws {

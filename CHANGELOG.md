@@ -6,7 +6,19 @@ All notable changes to SmartTube are documented here.
 
 ## [Unreleased]
 
+### Added — 2026-10-17
+
+- **Version 5.14 (32), independent Shorts speed (PLAN-0019):** Shorts has the same
+  0.25–2× playback-speed picker as regular videos, with a separately saved choice.
+  Upgrades copy the former shared speed once. Pause/resume, prepared next videos
+  and relaunch retain the Shorts setting; Yandex voice-over follows the video's
+  speed without restarting translation. Choosing a speed while paused keeps it paused.
+
 ### Fixed — 2026-10-17
+
+- **Playback state after translation (PLAN-0019):** when AVPlayer resumes itself
+  after an unexpected stall, playback controls now recognize the resumed video.
+  Speed changes apply immediately; intentional pauses and translation holds stay paused.
 
 - **Version 5.13 (31), watched-video settings (PLAN-0018):** Home and Shorts now
   apply Hide Watched Videos consistently with other feed sections. The threshold

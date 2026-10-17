@@ -37,6 +37,7 @@ public struct ShortsPlayerView: View {
     @State var fetchMoreTask: Task<Void, Never>?
     @State var isMuted = false
     @State var showAudioTrackPicker = false
+    @State var showSpeedPicker = false
     @State var nextPageToken: String?
     @State var hasLoadedFeed = false
     /// True while the app is backgrounded — guards onDisappear from calling stop()
@@ -118,7 +119,7 @@ public struct ShortsPlayerView: View {
             .onPlayPauseCommand { vm.togglePlayPause() }
             // Siri Remote D-pad: up/down navigate prev/next short.
             .onMoveCommand { direction in
-                guard !isTransitioning, !showAudioTrackPicker else { return }
+                guard !isTransitioning, !showAudioTrackPicker, !showSpeedPicker else { return }
                 switch direction {
                 case .up:
                     if let next = ShortsNavigation.targetIndex(
@@ -179,6 +180,9 @@ public struct ShortsPlayerView: View {
             .overlay {
                 if showAudioTrackPicker {
                     PlayerAudioTrackPicker(vm: vm, showAudioTrackPicker: $showAudioTrackPicker)
+                }
+                if showSpeedPicker {
+                    PlayerSpeedPicker(vm: vm, showSpeedPicker: $showSpeedPicker)
                 }
             }
             #if DEBUG
@@ -268,6 +272,7 @@ public struct ShortsPlayerView: View {
         return "id=\(vm.currentVideoId ?? "none") playing=\(vm.isPlaying && vm.currentTime > 0) "
             + "ms=\(vm.timeToPlayMs) queue=\(queued) buffered=\(Int(buffered * 1000)) "
             + "rate=\(vm.player.rate) time=\(vm.currentTime) native=\(vm.player.currentTime().seconds) "
+            + "voiceRate=\(vm.voiceOver.testPlaybackRate) voiceTime=\(vm.voiceOver.testPlaybackTime) "
             + "control=\(vm.player.timeControlStatus.rawValue) "
             + "retained=\(videos.count) \(vm.cacheStatusSummary)"
     }

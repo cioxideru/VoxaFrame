@@ -82,7 +82,6 @@ public struct PlayerView: View {
     /// engine moves focus into the overlay when it opens.
     @Namespace var moreMenuNamespace
     @Namespace var qualityPickerNamespace
-    @Namespace var speedPickerNamespace
     @Namespace var sleepTimerNamespace
     @Namespace var captionPickerNamespace
     @Namespace var descriptionOverlayNamespace
@@ -92,7 +91,6 @@ public struct PlayerView: View {
     /// `.onMoveCommand` (SwiftUI's spatial engine cannot navigate ZStack overlays).
     @FocusState var moreMenuFocusedRow: MoreMenuRow?
     @FocusState var qualityPickerFocused: Bool
-    @FocusState var speedPickerFocused: Bool
     @FocusState var sleepTimerPickerFocused: Bool
     @FocusState var captionPickerFocused: Bool
     @FocusState var skipToastButtonFocused: Bool

@@ -70,6 +70,23 @@ extension ShortsPlayerView {
                     .accessibilityIdentifier(AccessibilityID.shortsAudioTrackButton)
                     Spacer()
                     Button {
+                        showSpeedPicker = true
+                    } label: {
+                        Label {
+                            Text(
+                                "\(store.settings.shortsPlaybackSpeed, format: .number.precision(.fractionLength(0...2)))×"
+                            )
+                        } icon: {
+                            Image(systemName: AppSymbol.speedometer)
+                        }
+                        .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .accessibilityLabel("Playback Speed")
+                    .accessibilityValue(
+                        "\(store.settings.shortsPlaybackSpeed, format: .number.precision(.fractionLength(0...2)))×"
+                    )
+                    .accessibilityIdentifier(AccessibilityID.shortsSpeedButton)
+                    Button {
                         store.settings.videoGravityMode.toggle()
                     } label: {
                         Image(

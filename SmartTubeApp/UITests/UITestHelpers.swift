@@ -98,6 +98,10 @@ enum AccessibilityID {
     static var shortsPreloadStatus: String { "shorts.preloadStatus" }
     static var shortsReopenTestButton: String { "shorts.reopenTestButton" }
     static var shortsAudioTrackButton: String { "shorts.audioTrackButton" }
+    static var shortsSpeedButton: String { "shorts.speedButton" }
+    static var playerSpeedPicker: String { "player.speedPicker" }
+    static var playerQuickSpeedButton: String { "player.quickAccess.speed" }
+    static func playerSpeed(_ speed: Double) -> String { "player.speed.\(speed)" }
     static var shortsVideoScaleButton: String { "shorts.videoScaleButton" }
     static var shortsLoadMoreButton: String { "shorts.loadMoreButton" }
     static var shortsMuteButton: String { "shorts.muteButton" }
