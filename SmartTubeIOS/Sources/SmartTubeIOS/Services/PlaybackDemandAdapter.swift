@@ -25,6 +25,7 @@ final class PlaybackDemandAdapter {
     private var preparing = false
     private var isLoading = false
     private var isEnabled = false
+    private(set) var isPaused = false
 
     init(coordinator: PlaybackDemandCoordinator = .shared) { self.coordinator = coordinator }
 
@@ -58,6 +59,17 @@ final class PlaybackDemandAdapter {
         publish()
     }
 
+    /// A transport pause alone is ambiguous: translation and stream changes also pause AVPlayer.
+    func pause() {
+        isPaused = true
+        coordinator.remove(owner: owner)
+    }
+
+    func resume() {
+        isPaused = false
+        preparing = !hasStarted
+    }
+
     func stop() {
         isEnabled = false
         hasStarted = false
@@ -66,7 +78,7 @@ final class PlaybackDemandAdapter {
     }
 
     private func publish() {
-        guard isEnabled, videoID != nil, let player else {
+        guard isEnabled, !isPaused, videoID != nil, let player else {
             coordinator.remove(owner: owner)
             return
         }

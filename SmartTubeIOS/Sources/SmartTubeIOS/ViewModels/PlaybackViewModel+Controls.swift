@@ -14,6 +14,7 @@ extension PlaybackViewModel {
 
     public func togglePlayPause() {
         if audioPlaybackTask != nil, audioSessionID != nil, !isPlaying {
+            playbackDemand.pause()
             cancelPendingAudioPlayback()
             return
         }
@@ -36,6 +37,7 @@ extension PlaybackViewModel {
             return
         }
         if isPlaying {
+            playbackDemand.pause()
             cancelPendingAudioPlayback()
             player.pause()
             isPlaying = false

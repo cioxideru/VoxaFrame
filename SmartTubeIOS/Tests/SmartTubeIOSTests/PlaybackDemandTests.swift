@@ -38,6 +38,68 @@ struct PlaybackDemandTests {
         try #require(predicate(), sourceLocation: sourceLocation)
     }
 
+    @Test func intentionalPauseReleasesStartupAndResumeReacquiresIt() async throws {
+        let recovery = DemandGate()
+        let budget = DemandGate()
+        let demand = PlaybackDemandCoordinator(
+            waitForRecovery: { await recovery.wait() }, waitForBudget: { await budget.wait() })
+        let adapter = PlaybackDemandAdapter(coordinator: demand)
+        let player = DemandPlayer()
+        adapter.update(player: player, videoID: "startup", isLoading: true, isEnabled: true)
+        player.transport = .waitingToPlayAtSpecifiedRate
+        adapter.update(player: player, videoID: "startup", isLoading: false, isEnabled: true)
+        #expect(demand.isYielding)
+        // Translation/stream preparation may pause before the first frame without a user pause.
+        player.transport = .paused
+        adapter.update(player: player, videoID: "startup", isLoading: false, isEnabled: true)
+        #expect(demand.isYielding)
+        adapter.pause()
+        player.transport = .waitingToPlayAtSpecifiedRate
+        adapter.update(player: player, videoID: "startup", isLoading: true, isEnabled: true)
+        try await eventually { recovery.waits.count == 1 }
+        recovery.fire()
+        try await eventually { !demand.isYielding }
+        adapter.update(player: player, videoID: "startup", isLoading: false, isEnabled: true)
+        #expect(!demand.isYielding)
+        adapter.resume()
+        adapter.update(player: player, videoID: "startup", isLoading: false, isEnabled: true)
+        #expect(demand.isYielding)
+        #expect(budget.waits.isEmpty)
+        adapter.stop()
+        try await eventually { recovery.waits.count == 1 }
+        recovery.fire()
+        try await eventually { !demand.isYielding }
+    }
+
+    @Test(arguments: [
+        "toggle", "pendingToggle", "background", "suspend", "outputLost", "voiceOver", "backgroundEnabled",
+    ])
+    func viewModelDistinguishesIntentionalAndTechnicalPauses(path: String) {
+        var settings = AppSettings()
+        settings.backgroundPlaybackEnabled = path == "backgroundEnabled"
+        let vm = PlaybackViewModel(settings: settings)
+        vm.isIncognito = true
+        vm.beginPlaybackAudioSession()
+        vm.currentVideo = Video(id: "startup", title: "Fixture", channelTitle: "Test")
+        vm.isLoading = true
+        vm.isPlaying = true
+        switch path {
+        case "toggle": vm.togglePlayPause()
+        case "pendingToggle":
+            vm.isPlaying = false
+            vm.audioPlaybackTask = Task {}
+            vm.togglePlayPause()
+        case "background", "backgroundEnabled": vm.handleBackground()
+        case "suspend": vm.suspend()
+        case "outputLost": vm.handleAudioOutputLost()
+        default: vm.setPlayingForVoiceOver(false)
+        }
+        #expect(vm.playbackDemand.isPaused == (path != "voiceOver" && path != "backgroundEnabled"))
+        vm.beginPlaybackAudioSession()
+        #expect(!vm.playbackDemand.isPaused)
+        vm.stop()
+    }
+
     @Test func startupWaitsForActualPlaybackThenRecoversWithoutFlapping() async throws {
         let recovery = DemandGate()
         let budget = DemandGate()

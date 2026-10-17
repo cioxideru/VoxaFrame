@@ -22,6 +22,7 @@ extension PlaybackViewModel {
     func beginPlaybackAudioSession() {
         cancelPendingAudioPlayback()
         audioSessionID = audioSession.begin()
+        playbackDemand.resume()
         updatePlaybackDemand()
     }
 

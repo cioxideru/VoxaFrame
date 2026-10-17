@@ -369,6 +369,7 @@ public final class PlaybackViewModel {
     public var sleepTimerMinutes: Int? { sleepTimer.sleepTimerMinutes }
     public func setSleepTimer(minutes: Int?) {
         sleepTimer.setSleepTimer(minutes: minutes) { [weak self] in
+            self?.playbackDemand.pause()
             self?.cancelPendingAudioPlayback()
             self?.cancelBackgroundQualityUpgrade()
             self?.cancelStallRecovery()

@@ -251,6 +251,7 @@ extension PlaybackViewModel {
     public func handleBackground() {
         shortsPreloader?.cancel()
         guard !settings.backgroundPlaybackEnabled else { return }
+        playbackDemand.pause()
         cancelPendingAudioPlayback()
         cancelBackgroundQualityUpgrade()
         // A pending stall recovery would otherwise resume playback in the background.
@@ -266,6 +267,7 @@ extension PlaybackViewModel {
     /// Called when the PlayerView temporarily disappears (e.g. a sheet slides over it).
     /// Use `resume()` to restart playback, or `load(video:)` to switch videos.
     public func suspend() {
+        playbackDemand.pause()
         cancelPendingAudioPlayback()
         cancelBackgroundQualityUpgrade()
         audioOnlySwapTask?.cancel()

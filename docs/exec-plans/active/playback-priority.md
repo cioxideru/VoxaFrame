@@ -43,3 +43,9 @@ Coordinator review requested an explicit demand reset in `resetPlaybackForLoad`,
 ## Remaining evidence
 
 No device speedup, bandwidth reduction or battery improvement is claimed. Existing in-flight shared stream requests intentionally finish, because a foreground consumer may already depend on them. Initial preparation has no separate pressure timer and relies on the existing playback timeout/error/cancellation lifecycle. Simulator builds, PiP on hardware, and a live iPad comparison have not been run in this workstream.
+
+## Review follow-up — intentional pause before first frame
+
+Review found that a deliberate pause during initial buffer wait left the preparation latch active indefinitely. The adapter now records deliberate pause intent separately from AVPlayer transport state; state/KVO updates cannot reacquire demand until `beginPlaybackAudioSession` records a new playback intent. User toggle (including pending activation), background-disabled handling, suspension, output loss, native remote pause, system interruption and sleep timer release demand. Translation and stream/seek technical pauses retain their existing behavior.
+
+Regression tests exercise waiting/technical pause/intentional pause/recovery/stale update/resume and seven ViewModel pause routes. Focused tests: 19 tests / 4 suites PASS (`/private/tmp/playback-priority-pause-focused.log`). Complete `scripts/ci.sh`: 1102 tests / 153 suites PASS (`/private/tmp/playback-priority-pause-ci.log`). Strict SwiftLint: 0 violations, exit 0 (`/private/tmp/playback-priority-pause-lint.log`). Native remote/interruption wiring is source-checked; these UIKit paths and physical-device behavior still require platform acceptance.
