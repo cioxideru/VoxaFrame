@@ -58,6 +58,56 @@ struct ShortsPreloadingTests {
         return player
     }
 
+    @Test func startupDefersAndBufferPressureRestartsOnlyTheLatestTarget() async throws {
+        let demand = PlaybackDemandCoordinator(waitForRecovery: {}, waitForBudget: {})
+        let owner = UUID()
+        let player = queue()
+        let preparer = ControlledShortsPreparer()
+        let preloader = ShortsPreloader(player: player, preparer: preparer, demand: demand)
+        demand.update(owner: owner, phase: .preparing)
+        preloader.prepare(video("old"), settings: AppSettings())
+        preloader.prepare(video("latest"), settings: AppSettings())
+        #expect(preparer.requests.isEmpty)
+        demand.update(owner: owner, phase: .playing)
+        try await eventually { preparer.requests.count == 1 }
+        #expect(preparer.requests[0].video.id == "latest")
+        // A second preparation episode cancels speculative ownership, even if the fake ignores cancellation.
+        demand.update(owner: owner, phase: .preparing)
+        await Task.yield()
+        _ = preparer.finish(0)
+        demand.update(owner: owner, phase: .playing)
+        try await eventually { preparer.requests.count == 2 }
+        let item = preparer.finish(1)
+        try await eventually { preloader.prepared?.item === item }
+        let promoted = try #require(preloader.take(video: video("latest"), settings: AppSettings()))
+        demand.update(owner: owner, phase: .preparing)
+        await Task.yield()
+        #expect(promoted.warmingPlayer.currentItem === item)
+        preloader.cancel()
+        demand.remove(owner: owner)
+        player.removeAllItems()
+    }
+
+    @Test(arguments: [false, true])
+    func cancellationWhileYieldingDoesNotReviveTarget(memoryPressure: Bool) async throws {
+        let demand = PlaybackDemandCoordinator(waitForRecovery: {}, waitForBudget: {})
+        let owner = UUID()
+        let player = queue()
+        let preparer = ControlledShortsPreparer()
+        let preloader = ShortsPreloader(player: player, preparer: preparer, demand: demand)
+        demand.update(owner: owner, phase: .preparing)
+        preloader.prepare(video("cancelled"), settings: AppSettings())
+        if memoryPressure { preloader.retention.releaseNow() } else { preloader.cancel() }
+        demand.remove(owner: owner)
+        try await eventually { !demand.isYielding }
+        preloader.prepare(video("replacement"), settings: AppSettings())
+        try await eventually { preparer.requests.count == 1 }
+        #expect(preparer.requests[0].video.id == "replacement")
+        _ = preparer.finish(0)
+        preloader.cancel()
+        player.removeAllItems()
+    }
+
     @Test func promotionReusesTheItemAndRepeatedRequestsCoalesce() async throws {
         let player = queue()
         let preparer = ControlledShortsPreparer()

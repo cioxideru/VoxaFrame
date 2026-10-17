@@ -193,6 +193,7 @@ extension PlaybackViewModel {
         if !isShortsPlayer, let prev = currentVideo, prev.id != video.id {
             history.append(prev)
         }
+        playbackDemand.stop()
         currentVideo = video
         // fix236: Record the intended video at load() time so checkWrongVideoOnFirstPlay()
         // can detect if a stale task swaps currentVideo before readyToPlay fires.
@@ -353,6 +354,7 @@ extension PlaybackViewModel {
     // MARK: - Cleanup
 
     public func stop() {
+        playbackDemand.stop()
         shortsPreloader?.cancel()
         qualityManager.cancel()
         sponsorBlockManager.cancelPendingSkip()

@@ -37,7 +37,10 @@ public final class PlaybackViewModel {
 
     public internal(set) var playerInfo: PlayerInfo?
     public internal(set) var isLoading: Bool = false {
-        didSet { if !isLoading { retryStatusMessage = nil } }
+        didSet {
+            if !isLoading { retryStatusMessage = nil }
+            updatePlaybackDemand()
+        }
     }
     /// Short user-facing message shown under the loading spinner when the player
     /// enters the multi-phase stream-negotiation fallback chain. `nil` while the
@@ -64,6 +67,7 @@ public final class PlaybackViewModel {
     var pendingWrongVideoCheck: Bool = false
     public internal(set) var isPlaying: Bool = false {
         didSet {
+            updatePlaybackDemand()
             guard isPlaying, !oldValue else { return }
             // fix13: Cross-process Darwin notification for regression-test timing.
             // XCTDarwinNotificationExpectation in WKHLSReplayRegressionUITests receives
@@ -141,6 +145,7 @@ public final class PlaybackViewModel {
     var lastAttemptedStreamURL: URL?
     public var error: Error? {
         didSet {
+            updatePlaybackDemand()
             guard let error else { return }
             let nsError = error as NSError
             // Transient connectivity errors are expected in poor-network conditions and are
@@ -250,7 +255,9 @@ public final class PlaybackViewModel {
     /// Videos played before the current one (oldest first).
     var history: [Video] = []
     /// The video currently loaded (nil before first load).
-    var currentVideo: Video? = nil
+    var currentVideo: Video? {
+        didSet { updatePlaybackDemand() }
+    }
 
     /// A ready item can keep rendering during stream recovery for the same video.
     var displayedVideo: Video? {
@@ -261,6 +268,7 @@ public final class PlaybackViewModel {
     // MARK: - AVPlayer
 
     public internal(set) var player: AVPlayer
+    @ObservationIgnored let playbackDemand = PlaybackDemandAdapter()
     @ObservationIgnored var shortsPreloader: ShortsPreloader?
     // Created and replaced on MainActor; nonisolated access is only for cleanup after the last reference is released.
     @ObservationIgnored nonisolated(unsafe) var timeObserver: (player: AVPlayer, token: Any)?
@@ -482,7 +490,8 @@ public final class PlaybackViewModel {
         self.isShortsPlayer = isShortsPlayer
         self.settings = isShortsPlayer ? settings.shortsPlaybackSettings : settings
         if isShortsPlayer {
-            shortsPreloader = ShortsPreloader(player: player, preparer: ShortsStreamPreparer(api: api))
+            shortsPreloader = ShortsPreloader(
+                player: player, preparer: ShortsStreamPreparer(api: api), demand: .shared)
         }
 
         // Create managers before any other setup (they hold no back-references yet).

@@ -11,6 +11,7 @@ extension PlaybackViewModel {
         rateObserver?.invalidate()
         airPlayObserver?.invalidate()
         player = preparedPlayer
+        updatePlaybackDemand()
         player.isMuted = wasMuted
         player.allowsExternalPlayback = true
         player.preventsDisplaySleepDuringVideoPlayback = true

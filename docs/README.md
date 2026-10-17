@@ -24,6 +24,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0017) | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/active/playback-priority.md](exec-plans/active/playback-priority.md) | PLAN-0020: shared playback demand and bounded optional transfers | current | 2026-10-17 |
 | [exec-plans/completed/shorts-playback-speed.md](exec-plans/completed/shorts-playback-speed.md) | PLAN-0019: independent Shorts playback speed and translation sync | current | 2026-10-17 |
 | [exec-plans/completed/subscriptions.md](exec-plans/completed/subscriptions.md) | PLAN-0017: subscriptions and channel management | current | 2026-10-17 |
 | [exec-plans/completed/ipad-menu-overlap.md](exec-plans/completed/ipad-menu-overlap.md) | PLAN-0016: iPad navigation menu overlap | current | 2026-10-17 |
