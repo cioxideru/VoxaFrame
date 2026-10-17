@@ -299,6 +299,17 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   The macOS menu bar gets entries for existing actions only.
 - Device-only checks, `NOT RUN`: VoiceOver order and the timeline adjustable action, tvOS focus restore after Back, glass
   legibility over bright frames, PiP, Dynamic Type up to AX5 on iPad, Mac and TV, RTL.
+- Accent flip: `AccentColorChoice.system` still returns the platform default. The coral tint is switched on in stage 3a together with a
+  prominent button style (fill `action`, label `onAction`); the 15 `.borderedProminent` call sites are migrated first.
+  Confirm on a device in Dark Mode that the system label is white on the coral fill before and dark after the change.
+- Increase Contrast: the colour pairs in `VFColor` have light/dark variants only. Ask design for high-contrast values
+  (the review suggested `#9A2819` light and `#FFBFB4` dark for `action`) and add a 7:1 test; `vfGlass` already thickens its stroke.
+- Glass modifier leftovers: the glass and opaque branches are different view types, so toggling Reduce Transparency live resets content
+  state; no `.interactive()` variant and no `GlassEffectContainer` guidance for adjacent glass shapes (mini-player plus bar).
+  The macOS `surface` is a translucent fill (`quaternarySystemFill`) and is untested; `elevated` has no shadow.
+- When the accent flips, on-video glyphs that use `Color.accentColor` (`PlayerControlsOverlay+QuickAccess.swift`) must move to `onMedia`.
+- `AGENTS.md` and `HANDOFF.ru.md` still say Catalyst for Mac; the target is native macOS.
+- macOS accent swatch: the "Default" swatch falls back to `systemBlue`; `NSColor.controlAccentColor` is the right fallback.
 - Assumption to confirm: the iPhone/iPad tab order puts Search last on every OS version, not only where the search role renders apart.
 - The package's HTML/CSS (`mockups/*.dc.html`, `mockups/vf.css`, `design-system/components/*/preview.html`, `bundle.css`) is not committed:
   the apple-hig commit gate asks for a passing `/hig-review` on staged UI files. Decide: review them, or commit with an explicit bypass.

@@ -75,7 +75,7 @@ public struct AppSettings: Codable {
     /// mechanism (`UIDesignRequiresCompatibility` in Info.plist) is build-time only and
     /// can't back a live, per-user toggle — see `TabBarLiquidGlassConfigurator`, which
     /// instead restyles the actual on-screen `UITabBar` instance directly. Takes effect
-    /// immediately, no restart needed.
+    /// immediately, no restart needed. Also turns `vfGlass` surfaces opaque.
     public var disableLiquidGlass: Bool
     /// #126: SHA256 hex digest of the Settings-screen parental-control PIN (see
     /// `SettingsPINHasher`). `nil` means no PIN is configured and Settings behaves as

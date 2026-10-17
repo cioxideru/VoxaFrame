@@ -23,7 +23,8 @@ so "System" currently means the platform default. The design tokens are a specif
   is on or `AppSettings.disableLiquidGlass` is set; views never decide this themselves.
 - Tokens are Swift constants in `Views/DesignSystem/` plus light/dark colour sets in package resources. Views use system semantic
   colours where they exist and never hard-code hex. `tokens.json` stays documentation.
-- Accent "System" resolves to the coral action colour on iOS, iPadOS and tvOS and to the system accent on macOS.
+- Accent "System" resolves to the coral action colour on iOS, iPadOS and tvOS and to the system accent on macOS, once the prominent
+  button style that pairs it with the `onAction` label exists (the system label is white and fails contrast on the dark-mode coral).
 - `AppSection` raw values and accessibility identifiers are not renamed with visible text.
 
 ## Consequences
