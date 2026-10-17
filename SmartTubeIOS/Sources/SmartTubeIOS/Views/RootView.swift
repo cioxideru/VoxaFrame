@@ -323,7 +323,7 @@ struct MainSidebarView: View {
                     Label(section.rawValue, systemImage: section.icon)
                         .tag(section)
                 }
-                .navigationTitle("SmartTube")
+                .navigationTitle("VoxaFrame")
                 if auth.isSignedIn {
                     Divider()
                     HStack {
