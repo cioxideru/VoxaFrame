@@ -58,6 +58,19 @@ public struct AppSettings: Codable {
     public var hideWatchedVideos: Bool
     /// 0.0...1.0 — how far into a video counts as "watched" for `hideWatchedVideos`.
     public var hideWatchedThreshold: Double
+    public static let hideWatchedThresholdPercentRange = 5...100
+    public static let hideWatchedThresholdPercentStep = 5
+
+    /// Integer steps avoid accumulating rounding errors at the selected boundary.
+    public var hideWatchedThresholdPercent: Int {
+        get { Int((hideWatchedThreshold * 100).rounded()) }
+        set { hideWatchedThreshold = Double(newValue) / 100 }
+    }
+
+    public func shouldHideWatched(_ video: Video, in section: BrowseSection.SectionType) -> Bool {
+        hideWatchedVideos && section != .history && video.isWatched(threshold: hideWatchedThreshold)
+    }
+
     /// #107/#143: opts the app out of iOS 26's Liquid Glass tab bar. Apple's documented
     /// mechanism (`UIDesignRequiresCompatibility` in Info.plist) is build-time only and
     /// can't back a live, per-user toggle — see `TabBarLiquidGlassConfigurator`, which

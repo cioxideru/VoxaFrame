@@ -27,6 +27,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0018: Watched-video settings and fork link](completed/hide-watched-settings.md) — consistent feed filtering, 5–100% thresholds and fork URL; 1088 native tests, three iPad UI tests and iOS/tvOS Release builds.
+
 - [PLAN-0017: Subscriptions](completed/subscriptions.md) — account operations and complete channel lists; five fixture UI tests, live subscribe/unsubscribe with restoration, native checks and platform builds.
 
 - [PLAN-0016: iPad menu overlap](completed/ipad-menu-overlap.md) — delegated correction; simulator and physical navigation checks pass, rare sequence remains OQ-0017.

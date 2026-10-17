@@ -8,6 +8,12 @@ All notable changes to SmartTube are documented here.
 
 ### Fixed — 2026-10-17
 
+- **Version 5.13 (31), watched-video settings (PLAN-0018):** Home and Shorts now
+  apply Hide Watched Videos consistently with other feed sections. The threshold
+  supports 5–100% in exact 5% steps, survives relaunch, and keeps History and unknown
+  progress visible. Filtered pages retain a manual continuation. Settings' GitHub
+  link and the tvOS QR code point to `cioxideru/SmartTubeIOS`.
+
 - **Subscription management (PLAN-0017):** account channel pages can subscribe and
   unsubscribe through the current authenticated API. Channels offers an accessible
   removal button and swipe action with confirmation, refresh and visible failures.

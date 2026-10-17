@@ -8,9 +8,7 @@ extension HomeView {
         let hideVideoPremieres = store.settings.hideVideoPremieres
         let isShorts = selectedSection.type == .shorts
         let applyHideShorts = hideShorts && selectedSection.type != .history
-        // #121: History is the one place watched videos are the point — never filtered.
-        let applyHideWatched = store.settings.hideWatchedVideos && selectedSection.type != .history
-        let hideWatchedThreshold = store.settings.hideWatchedThreshold
+        let showVideo: (Video) -> Bool = { !store.settings.shouldHideWatched($0, in: selectedSection.type) }
         // #62: channel filter only applies to (and is only shown for) Subscriptions —
         // it wouldn't make sense for a single-source list like a specific Channel page,
         // and Home mixes recommendations that don't necessarily come from a subscription.
@@ -22,9 +20,10 @@ extension HomeView {
         if isShorts || applyHideShorts {
             feedShorts = []
         } else if selectedSection.type == .recommended {
-            feedShorts = sectionVM.recommendedShortsVideos.filter { !hideLiveShorts || !($0.isLive && $0.isShort) }
+            feedShorts = sectionVM.recommendedShortsVideos.filter(showVideo)
+                .filter { !hideLiveShorts || !($0.isLive && $0.isShort) }
         } else {
-            feedShorts = sectionVM.videoGroups.flatMap(\.videos).filter(\.isShort).filter {
+            feedShorts = sectionVM.videoGroups.flatMap(\.videos).filter(showVideo).filter(\.isShort).filter {
                 !hideLiveShorts || !($0.isLive && $0.isShort)
             }.filter { channelFilter == nil || $0.channelId == channelFilter }
         }
@@ -34,11 +33,10 @@ extension HomeView {
         let shelves = sectionVM.videoGroups.filter { !isRecommended && $0.layout == .row }
         let rowGroups: [VideoGroup] = shelves.map { group in
             var copy = group
-            var videos = group.videos
+            var videos = group.videos.filter(showVideo)
             if applyHideShorts { videos = videos.filter { !$0.isShort } }
             if hideLiveShorts { videos = videos.filter { !($0.isLive && $0.isShort) } }
             if hideVideoPremieres { videos = videos.filter { !$0.isUpcoming } }
-            if applyHideWatched { videos = videos.filter { !$0.isWatched(threshold: hideWatchedThreshold) } }
             if let channelFilter { videos = videos.filter { $0.channelId == channelFilter } }
             copy.videos = isShorts ? videos : videos.filter { !$0.isShort }
             return copy
@@ -49,7 +47,7 @@ extension HomeView {
             .filter { !applyHideShorts || !$0.isShort }
             .filter { !hideLiveShorts || !($0.isLive && $0.isShort) }
             .filter { !hideVideoPremieres || !$0.isUpcoming }
-            .filter { !applyHideWatched || !$0.isWatched(threshold: hideWatchedThreshold) }
+            .filter(showVideo)
             .filter { channelFilter == nil || $0.channelId == channelFilter }
             .filter { isShorts || !$0.isShort }
 
@@ -123,7 +121,7 @@ extension HomeView {
                 // Shorts chip: vertical portrait card list driven by ShortsRowSection's
                 // internal ScrollView. frame(maxHeight: .infinity) ensures the internal
                 // ScrollView gets the full remaining height rather than sizing to content.
-                let shortsVideos = sectionVM.videoGroups.flatMap(\.videos)
+                let shortsVideos = sectionVM.videoGroups.flatMap(\.videos).filter(showVideo)
                 ShortsRowSection(
                     videos: shortsVideos,
                     onSelect: { selectVideo($0, from: shortsVideos) },
@@ -174,6 +172,16 @@ extension HomeView {
                             if let last = paginationTrigger {
                                 sectionVM.loadMoreIfNeeded(lastVideo: last)
                             }
+                        }
+                        // Filtering can remove the last card that normally requests the next page.
+                        if store.settings.hideWatchedVideos,
+                            selectedSection.type != .history,
+                            sectionVM.videoGroups.last?.nextPageToken != nil,
+                            let paginationTrigger
+                        {
+                            Button("More") { sectionVM.loadMoreIfNeeded(lastVideo: paginationTrigger) }
+                                .disabled(sectionVM.isLoading || sectionVM.isLoadingMore)
+                                .accessibilityIdentifier(AccessibilityID.homeFilteredLoadMoreButton)
                         }
                         if sectionVM.isLoading {
                             ProgressView().frame(maxWidth: .infinity).padding()

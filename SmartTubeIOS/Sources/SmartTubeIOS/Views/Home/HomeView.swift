@@ -96,6 +96,10 @@ public struct HomeView: View {
             Divider()
             #endif
             contentArea
+                .onChange(of: store.settings.hideWatchedVideos ? store.settings.hideWatchedThreshold : nil) {
+                    homeLayout = HomeFeedLayout()
+                    sectionLayout = HomeFeedLayout()
+                }
                 #if !os(iOS)
             .navigationDestination(item: $selectedVideo) { video in
                 PlayerView(video: video, api: api)
@@ -399,14 +403,29 @@ extension HomeView {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                let shortsVideos = store.settings.hideShorts ? [] : homeVM.homeShortsVideos
+                let shortsVideos =
+                    store.settings.hideShorts
+                    ? []
+                    : homeVM.homeShortsVideos.filter {
+                        !store.settings.shouldHideWatched($0, in: .home)
+                    }
+                let regularVideos = homeVM.homeRegularVideos.filter {
+                    !store.settings.shouldHideWatched($0, in: .home)
+                }
                 let segments = homeLayout.segments(
                     shorts: shortsVideos,
-                    videos: homeVM.homeRegularVideos,
+                    videos: regularVideos,
                     columns: videoGridColumnCount(store.settings, landscape: isLandscapeLayout)
                 )
                 let stack = LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(segments) { homeFeedSegment($0, in: segments, shorts: shortsVideos) }
+                    ForEach(segments) {
+                        homeFeedSegment($0, in: segments, shorts: shortsVideos, videos: regularVideos)
+                    }
+                    if store.settings.hideWatchedVideos, homeVM.sections.contains(where: { $0.nextPageToken != nil }) {
+                        Button("More") { homeVM.loadMoreMerged() }
+                            .disabled(homeVM.sections.contains { $0.isLoading || $0.isLoadingMore })
+                            .accessibilityIdentifier(AccessibilityID.homeFilteredLoadMoreButton)
+                    }
                     if homeVM.sections.contains(where: \.isLoadingMore) {
                         ProgressView().frame(maxWidth: .infinity).padding()
                     }
@@ -442,7 +461,7 @@ extension HomeView {
 
     @ViewBuilder
     private func homeFeedSegment(
-        _ segment: HomeFeedSegment<Video>, in segments: [HomeFeedSegment<Video>], shorts: [Video]
+        _ segment: HomeFeedSegment<Video>, in segments: [HomeFeedSegment<Video>], shorts: [Video], videos: [Video]
     ) -> some View {
         switch segment.kind {
         case .shorts:
@@ -455,7 +474,7 @@ extension HomeView {
             let isLastBlock = segment.id == segments.last { $0.kind == .videos }?.id
             let block = VideoGridSection(
                 videos: segment.items,
-                onSelect: { selectVideo($0, from: homeVM.homeRegularVideos) },
+                onSelect: { selectVideo($0, from: videos) },
                 loadMore: isLastBlock ? { homeVM.loadMoreMerged() } : nil,
                 eager: true
             )

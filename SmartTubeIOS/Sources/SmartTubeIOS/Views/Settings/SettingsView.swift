@@ -2,6 +2,8 @@ import AuthenticationServices
 import SmartTubeIOSCore
 import SwiftUI
 
+private let settingsGitHubURL = URL(string: "https://github.com/cioxideru/SmartTubeIOS")!
+
 // MARK: - SettingsView
 //
 // App preferences.  Mirrors the Android settings presenters
@@ -313,16 +315,24 @@ public struct SettingsView: View {
             if store.settings.hideWatchedVideos {
                 #if os(tvOS)
                 // tvOS has no Stepper.
-                Picker("Watched threshold", selection: $store.settings.hideWatchedThreshold) {
-                    ForEach(Array(stride(from: 50, through: 100, by: 5)), id: \.self) { percent in
-                        Text("\(percent)%").tag(Double(percent) / 100)
+                Picker("Watched threshold", selection: $store.settings.hideWatchedThresholdPercent) {
+                    ForEach(
+                        Array(
+                            stride(
+                                from: AppSettings.hideWatchedThresholdPercentRange.lowerBound,
+                                through: AppSettings.hideWatchedThresholdPercentRange.upperBound,
+                                by: AppSettings.hideWatchedThresholdPercentStep)), id: \.self
+                    ) { percent in
+                        Text("\(percent)%").tag(percent)
                     }
                 }
                 .accessibilityIdentifier(AccessibilityID.settingsHideWatchedThresholdStepper)
                 #else
                 Stepper(
-                    "Watched threshold: \(Int(store.settings.hideWatchedThreshold * 100))%",
-                    value: $store.settings.hideWatchedThreshold, in: 0.5...1.0, step: 0.05
+                    "Watched threshold: \(store.settings.hideWatchedThresholdPercent)%",
+                    value: $store.settings.hideWatchedThresholdPercent,
+                    in: AppSettings.hideWatchedThresholdPercentRange,
+                    step: AppSettings.hideWatchedThresholdPercentStep
                 )
                 .accessibilityIdentifier(AccessibilityID.settingsHideWatchedThresholdStepper)
                 #endif
@@ -537,10 +547,13 @@ extension SettingsView {
             } label: {
                 Label("View on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
             }
+            .accessibilityIdentifier(AccessibilityID.settingsGitHubLink)
             #else
-            Link(destination: URL(string: "https://github.com/milika/SmartTubeIOS")!) {
+            Link(destination: settingsGitHubURL) {
                 Label("View on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
             }
+            .accessibilityIdentifier(AccessibilityID.settingsGitHubLink)
+            .accessibilityValue(settingsGitHubURL.absoluteString)
             #endif
             Button("Reset All Settings", role: .destructive) { store.reset() }
                 .accessibilityIdentifier("settings.resetAllButton")
@@ -564,8 +577,6 @@ extension SettingsView {
 private struct GitHubQRView: View {
     @Environment(\.dismiss) private var dismiss
 
-    private let githubURL = "https://github.com/milika/SmartTubeIOS"
-
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Color.black.opacity(0.85).ignoresSafeArea()
@@ -585,13 +596,13 @@ private struct GitHubQRView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                QRCodeView(content: githubURL)
+                QRCodeView(content: settingsGitHubURL.absoluteString)
                     .frame(width: 280, height: 280)
                     .padding(16)
                     .background(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
 
-                Text(githubURL)
+                Text(settingsGitHubURL.absoluteString)
                     .font(.title3)
                     .foregroundStyle(.secondary)
             }

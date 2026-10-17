@@ -43,6 +43,8 @@ public enum AccessibilityID {
     public static var settingsH264Toggle: String { "settings.h264Toggle" }
     public static var settingsHideWatchedThresholdStepper: String { "settings.hideWatchedThresholdStepper" }
     public static var settingsHideWatchedVideosToggle: String { "settings.hideWatchedVideosToggle" }
+    public static var settingsGitHubLink: String { "settings.githubLink" }
+    public static var homeFilteredLoadMoreButton: String { "home.filteredLoadMoreButton" }
     public static var settingsRemovePINButton: String { "settings.removePINButton" }
     public static var settingsSetPINButton: String { "settings.setPINButton" }
     public static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }

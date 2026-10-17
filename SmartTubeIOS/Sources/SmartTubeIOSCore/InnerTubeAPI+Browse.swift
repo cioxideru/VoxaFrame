@@ -141,7 +141,9 @@ extension InnerTubeAPI {
         if HomePaginationUITestFixture.isMixedFeedEnabled {
             return VideoGroup(
                 title: "History",
-                videos: [Video(id: "history-fixture", title: "History fixture", channelTitle: "Fixture")])
+                videos: [
+                    Video(id: "history-fixture", title: "History fixture", channelTitle: "Fixture", watchProgress: 1)
+                ])
         }
         #endif
         var body = makeBody(client: tvClientContext, continuationToken: continuationToken)

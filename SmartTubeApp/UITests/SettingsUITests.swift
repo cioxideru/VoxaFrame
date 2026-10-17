@@ -157,3 +157,133 @@ final class IPadMenuLayoutUITests: XCTestCase {
     }
 }
 #endif
+
+final class HideWatchedSettingsUITests: XCTestCase {
+    private var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app = XCUIApplication()
+        app.launchArguments = [
+            "--uitesting", "--uitesting-signed-in", "--uitesting-reset-settings",
+            "--uitesting-enable-shorts", "--uitesting-watched-feed",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+        app.launch()
+    }
+
+    override func tearDownWithError() throws { app = nil }
+
+    func testLowThresholdPersistsAndGitHubPointsToFork() {
+        setHideWatched(true)
+        let stepper = app.steppers[AccessibilityID.settingsHideWatchedThresholdStepper]
+        XCTAssertTrue(stepper.waitForExistence(timeout: 5))
+        XCTAssertTrue(stepper.label.contains("90%"))
+        for _ in 0..<17 { stepper.buttons[AccessibilityID.settingsHideWatchedThresholdStepper + "-Decrement"].tap() }
+        XCTAssertTrue(stepper.label.contains("5%"))
+        stepper.buttons[AccessibilityID.settingsHideWatchedThresholdStepper + "-Decrement"].tap()
+        XCTAssertTrue(stepper.label.contains("5%"))
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Watched threshold minimum 5 percent"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
+        app.launch()
+        setHideWatched(true)
+        XCTAssertTrue(stepper.waitForExistence(timeout: 5))
+        XCTAssertTrue(stepper.label.contains("5%"))
+        for _ in 0..<19 { stepper.buttons[AccessibilityID.settingsHideWatchedThresholdStepper + "-Increment"].tap() }
+        XCTAssertTrue(stepper.label.contains("100%"))
+        stepper.buttons[AccessibilityID.settingsHideWatchedThresholdStepper + "-Increment"].tap()
+        XCTAssertTrue(stepper.label.contains("100%"))
+
+        let link = app.descendants(matching: .any).matching(identifier: AccessibilityID.settingsGitHubLink).firstMatch
+        UITestHelpers.scrollUntilVisible(link, in: app.collectionViews.firstMatch, maxSwipes: 16)
+        XCTAssertTrue(link.waitForExistence(timeout: 5))
+        XCTAssertEqual(link.value as? String, "https://github.com/cioxideru/SmartTubeIOS")
+    }
+
+    func testFilteringHomeSectionsShortsAndHistory() {
+        setHideWatched(true)
+        let stepper = app.steppers[AccessibilityID.settingsHideWatchedThresholdStepper]
+        XCTAssertTrue(stepper.waitForExistence(timeout: 5))
+        for _ in 0..<13 { stepper.buttons[AccessibilityID.settingsHideWatchedThresholdStepper + "-Decrement"].tap() }
+        XCTAssertTrue(stepper.label.contains("25%"))
+        UITestHelpers.tapTab(named: "Home", in: app)
+
+        for (title, prefix) in [
+            ("Home", "recommended"), ("Recommended", "recommended"), ("Subscriptions", "subscription"),
+        ] {
+            selectSection(title)
+            assertFilteredCards(prefix: prefix, shorts: false)
+            assertFilteredCards(prefix: "\(prefix)-short", shorts: true)
+        }
+        selectSection("Shorts")
+        assertFilteredCards(prefix: "initial-short", shorts: true)
+        selectSection("History")
+        XCTAssertTrue(card("history-fixture", shorts: false).waitForExistence(timeout: 10))
+
+        setHideWatched(false)
+        XCTAssertFalse(app.steppers[AccessibilityID.settingsHideWatchedThresholdStepper].exists)
+        UITestHelpers.tapTab(named: "Home", in: app)
+        selectSection("Home")
+        XCTAssertTrue(card("recommended-0", shorts: false).waitForExistence(timeout: 10))
+        XCTAssertTrue(card("recommended-short-0", shorts: true).waitForExistence(timeout: 10))
+    }
+
+    func testMoreWorksWhenTheEntirePageIsWatched() {
+        setHideWatched(true)
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
+        app.launchArguments.append("--uitesting-watched-page")
+        app.launch()
+        UITestHelpers.tapTab(named: "Home", in: app)
+        for title in ["Home", "Recommended", "Subscriptions"] {
+            selectSection(title)
+            let more = app.buttons[AccessibilityID.homeFilteredLoadMoreButton]
+            XCTAssertTrue(more.waitForExistence(timeout: 10))
+            more.tap()
+            let prefix = title == "Subscriptions" ? "subscription" : "recommended"
+            XCTAssertTrue(card("\(prefix)-next", shorts: false).waitForExistence(timeout: 10))
+            XCTAssertFalse(card("\(prefix)-0", shorts: false).exists)
+        }
+        setHideWatched(false)
+        UITestHelpers.tapTab(named: "Home", in: app)
+        selectSection("Home")
+        XCTAssertTrue(card("recommended-short-0", shorts: true).waitForExistence(timeout: 10))
+    }
+
+    private func setHideWatched(_ enabled: Bool) {
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        let toggle = app.switches[AccessibilityID.settingsHideWatchedVideosToggle]
+        UITestHelpers.scrollUntilVisible(toggle, in: app.collectionViews.firstMatch, maxSwipes: 16)
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        if (toggle.value as? String == "1") != enabled {
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        }
+    }
+
+    private func selectSection(_ title: String) {
+        let chips = app.scrollViews[AccessibilityID.homeChipBar]
+        let chip = chips.buttons[title]
+        XCTAssertTrue(chip.waitForExistence(timeout: 10))
+        UITestHelpers.scrollChipIntoView(chip, in: chips, app: app)
+        chip.tap()
+    }
+
+    private func card(_ id: String, shorts: Bool) -> XCUIElement {
+        app.descendants(matching: .any).matching(
+            identifier: shorts ? AccessibilityID.shortsCard(id) : AccessibilityID.videoCard(id)
+        ).firstMatch
+    }
+
+    private func assertFilteredCards(prefix: String, shorts: Bool) {
+        XCTAssertTrue(card("\(prefix)-2", shorts: shorts).waitForExistence(timeout: 10))
+        XCTAssertTrue(card("\(prefix)-3", shorts: shorts).exists, "Unknown progress remains visible")
+        XCTAssertFalse(card("\(prefix)-0", shorts: shorts).exists, "90% is above the 25% threshold")
+        XCTAssertFalse(card("\(prefix)-1", shorts: shorts).exists, "Exact threshold must be hidden")
+    }
+}

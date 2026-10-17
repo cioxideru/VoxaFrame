@@ -26,6 +26,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
 | [exec-plans/completed/subscriptions.md](exec-plans/completed/subscriptions.md) | PLAN-0017: subscriptions and channel management | current | 2026-10-17 |
 | [exec-plans/completed/ipad-menu-overlap.md](exec-plans/completed/ipad-menu-overlap.md) | PLAN-0016: iPad navigation menu overlap | current | 2026-10-17 |
+| [exec-plans/completed/hide-watched-settings.md](exec-plans/completed/hide-watched-settings.md) | PLAN-0018: watched-video filtering, threshold and fork link | current | 2026-10-17 |
 | [exec-plans/completed/shorts-preloading.md](exec-plans/completed/shorts-preloading.md) | PLAN-0015: bounded native Shorts preloading and Simulator evidence | current | 2026-10-17 |
 | [exec-plans/completed/shorts-feed-pagination.md](exec-plans/completed/shorts-feed-pagination.md) | PLAN-0014: preserve account feed pagination | current | 2026-10-17 |
 | [exec-plans/completed/shorts-translation-settings.md](exec-plans/completed/shorts-translation-settings.md) | PLAN-0013: independent Shorts translation settings | current | 2026-10-17 |

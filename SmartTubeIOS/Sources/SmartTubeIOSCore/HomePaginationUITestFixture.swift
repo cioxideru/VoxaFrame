@@ -11,7 +11,29 @@ enum HomePaginationUITestFixture {
 
     static var isMixedFeedEnabled: Bool {
         let arguments = ProcessInfo.processInfo.arguments
-        return arguments.contains("--uitesting") && arguments.contains("--uitesting-mixed-feed")
+        return arguments.contains("--uitesting")
+            && (arguments.contains("--uitesting-mixed-feed") || isWatchedFeedEnabled)
+    }
+
+    static var isWatchedFeedEnabled: Bool {
+        let arguments = ProcessInfo.processInfo.arguments
+        return arguments.contains("--uitesting") && arguments.contains("--uitesting-watched-feed")
+    }
+
+    private static var isWatchedPageEnabled: Bool {
+        isWatchedFeedEnabled && ProcessInfo.processInfo.arguments.contains("--uitesting-watched-page")
+    }
+
+    private static func progress(at index: Int) -> Double? {
+        guard isWatchedFeedEnabled else { return nil }
+        if isWatchedPageEnabled { return 1 }
+        switch index {
+        case 0: return 0.9
+        case 1: return 0.25
+        case 2: return 0.05
+        case 4: return 0.24
+        default: return nil
+        }
     }
 
     /// UI pagination must cross the parser boundary, including competing navigation/shelf cursors.
@@ -23,6 +45,13 @@ enum HomePaginationUITestFixture {
             ]
             if video.isShort {
                 fields["navigationEndpoint"] = ["reelWatchEndpoint": ["videoId": video.id]]
+            }
+            if let progress = video.watchProgress {
+                fields["thumbnailOverlays"] = [
+                    [
+                        "thumbnailOverlayResumePlaybackRenderer": ["percentDurationWatched": progress * 100]
+                    ]
+                ]
             }
             return ["videoRenderer": fields]
         }
@@ -91,21 +120,35 @@ enum HomePaginationUITestFixture {
 
     static func regularPage(subscriptions: Bool, continuationToken: String?) -> VideoGroup {
         let prefix = subscriptions ? "subscription" : "recommended"
+        if isWatchedFeedEnabled, continuationToken != nil {
+            return VideoGroup(
+                title: prefix,
+                videos: [
+                    Video(
+                        id: "\(prefix)-next", title: "Next unwatched video", channelTitle: "Fixture")
+                ])
+        }
         var videos =
             continuationToken == nil
-            ? (0..<60).map {
-                Video(id: "\(prefix)-\($0)", title: "\(prefix) video \($0)", channelTitle: "Fixture")
+            ? (0..<(isWatchedFeedEnabled ? 5 : 60)).map {
+                Video(
+                    id: "\(prefix)-\($0)", title: "\(prefix) video \($0)", channelTitle: "Fixture",
+                    watchProgress: progress(at: $0))
             } : []
         if isMixedFeedEnabled, continuationToken == nil {
-            videos += (0..<30).map {
-                Video(id: "\(prefix)-short-\($0)", title: "Short \($0)", channelTitle: "Fixture", isShort: true)
+            // Keep Home's independent Shorts prefetch satisfied while testing a fully hidden page.
+            let shortsCount = isWatchedFeedEnabled && !isWatchedPageEnabled ? 5 : 30
+            videos += (0..<shortsCount).map {
+                Video(
+                    id: "\(prefix)-short-\($0)", title: "Short \($0)", channelTitle: "Fixture", isShort: true,
+                    watchProgress: progress(at: $0))
             }
         }
         if subscriptions, !isMixedFeedEnabled {
             let shorts = shortsPage(continuationToken: continuationToken)
             return VideoGroup(title: prefix, videos: videos + shorts.videos, nextPageToken: shorts.nextPageToken)
         }
-        return VideoGroup(title: prefix, videos: videos)
+        return VideoGroup(title: prefix, videos: videos, nextPageToken: isWatchedFeedEnabled ? "watched-next" : nil)
     }
 
     static func shortsPage(continuationToken: String?) -> VideoGroup {
@@ -128,7 +171,8 @@ enum HomePaginationUITestFixture {
             title: "Shorts",
             videos: (0..<10).map {
                 Video(
-                    id: "\(prefix)-short-\($0)", title: "\(prefix) short \($0)", channelTitle: "Fixture", isShort: true)
+                    id: "\(prefix)-short-\($0)", title: "\(prefix) short \($0)", channelTitle: "Fixture", isShort: true,
+                    watchProgress: progress(at: $0))
             },
             nextPageToken: nextToken
         )
