@@ -24,3 +24,4 @@ ADR 0005 remains proposed: the cascade is split across files but no `StreamSourc
 | [0008](0008-standby-swap-disabled.md) | Shorts standby-swap "instant swipe" promotion is permanently disabled | superseded |
 | [0009](0009-docs-live-with-code.md) | Non-secret docs live in the public repo, with code | accepted |
 | [0010](0010-remove-iframe-player.md) | Remove the IFrame (TOS) and Shorts embed players; AVPlayer is the only engine | accepted |
+| [0011](0011-bounded-native-shorts-preloading.md) | Session-owned native Shorts preloading and bounded retention | accepted |

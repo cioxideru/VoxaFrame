@@ -15,9 +15,10 @@ import UIKit
 
 public struct ShortsPlayerView: View {
     public let startIndex: Int
-    @State var videos: [Video]
+    @State var window: ShortsFeedWindow
     @State var vm: PlaybackViewModel
-    @State var currentIndex: Int
+    var videos: [Video] { window.videos }
+    var currentIndex: Int { window.currentIndex }
     @Environment(\.dismiss) var dismiss
     @Environment(\.scenePhase) var scenePhase
     @Environment(SettingsStore.self) var store
@@ -38,7 +39,6 @@ public struct ShortsPlayerView: View {
     @State var showAudioTrackPicker = false
     @State var nextPageToken: String?
     @State var hasLoadedFeed = false
-    @State var consumedPageTokens: Set<String> = []
     /// True while the app is backgrounded — guards onDisappear from calling stop()
     /// when iOS fires it as a side-effect of backgrounding rather than navigation.
     @State var isInBackground = false
@@ -47,8 +47,7 @@ public struct ShortsPlayerView: View {
     public init(videos: [Video], startIndex: Int = 0, api: InnerTubeAPI) {
         self.startIndex = startIndex
         self.api = api
-        self._videos = State(initialValue: videos)
-        self._currentIndex = State(initialValue: min(max(startIndex, 0), max(videos.count - 1, 0)))
+        self._window = State(initialValue: ShortsFeedWindow(videos: videos, startIndex: startIndex))
         self._vm = State(initialValue: PlaybackViewModel(api: api, isShortsPlayer: true))
     }
 
@@ -182,6 +181,19 @@ public struct ShortsPlayerView: View {
                     PlayerAudioTrackPicker(vm: vm, showAudioTrackPicker: $showAudioTrackPicker)
                 }
             }
+            #if DEBUG
+            .overlay(alignment: .top) {
+                if ShortsPlaybackUITestFixture.baseURL != nil {
+                    TimelineView(.periodic(from: .now, by: 0.2)) { _ in
+                        Text(preloadTestStatus)
+                        .font(.caption2)
+                        .foregroundStyle(.white)
+                        .accessibilityIdentifier(AccessibilityID.shortsPreloadStatus)
+                    }
+                    .allowsHitTesting(false)
+                }
+            }
+            #endif
             #if os(iOS)
             .navigationBarHidden(true)
             .statusBarHidden(true)
@@ -222,6 +234,16 @@ public struct ShortsPlayerView: View {
                 vm.stop()
                 dismiss()
             }
+            .onChange(of: vm.isPlaying) { _, playing in
+                if playing { preloadNextShort() }
+            }
+            .onChange(of: vm.isLoading) { _, loading in
+                if !loading { preloadNextShort() }
+            }
+            .onChange(of: ShortsStreamPreference(settings: store.settings.shortsPlaybackSettings)) { _, _ in
+                vm.updateSettings(store.settings)
+                preloadNextShort()
+            }
             .onChange(of: scenePhase) { _, phase in
                 switch phase {
                 case .background:
@@ -230,11 +252,25 @@ public struct ShortsPlayerView: View {
                 case .active:
                     isInBackground = false
                     vm.handleForeground()
+                    preloadNextShort()
                 default:
                     break
                 }
             }
         }  // NavigationStack
     }
+
+    #if DEBUG
+    private var preloadTestStatus: String {
+        let next = vm.shortsPreloader?.prepared?.item
+        let queued = (vm.player.currentItem == nil ? 0 : 1) + (next == nil ? 0 : 1)
+        let buffered = next?.loadedTimeRanges.reduce(0.0) { $0 + $1.timeRangeValue.duration.seconds } ?? 0
+        return "id=\(vm.currentVideoId ?? "none") playing=\(vm.isPlaying && vm.currentTime > 0) "
+            + "ms=\(vm.timeToPlayMs) queue=\(queued) buffered=\(Int(buffered * 1000)) "
+            + "rate=\(vm.player.rate) time=\(vm.currentTime) native=\(vm.player.currentTime().seconds) "
+            + "control=\(vm.player.timeControlStatus.rawValue) "
+            + "retained=\(videos.count) \(vm.cacheStatusSummary)"
+    }
+    #endif
 
 }

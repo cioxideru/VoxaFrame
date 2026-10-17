@@ -16,6 +16,11 @@ All notable changes to SmartTube are documented here.
 
 ### Changed — 2026-10-17
 
+- **Version 5.12 (30), Shorts preloading (PLAN-0015):** prepare the next native video
+  while the current Short plays, reuse its player and buffer on swipe, and release speculative
+  work on background, memory pressure, expiry or dismissal. Retained feed/history/cursors stay
+  bounded; speculative work does not translate, track viewing or write a media disk cache.
+  The existing metadata cache now accounts for files from earlier sessions when enforcing its limit.
 - **Version 5.10 (28) (PLAN-0013)** gives Shorts separate audio language,
   automatic Yandex translation, lively voices and original background audio settings.
   Existing translation choices are copied once on upgrade; later changes in either

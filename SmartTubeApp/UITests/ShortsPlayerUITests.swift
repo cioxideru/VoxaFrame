@@ -1,5 +1,120 @@
 import XCTest
 
+/// Requires the local HLS fixture server; independent of YouTube and account recommendations.
+final class ShortsPreloadingUITests: XCTestCase {
+    private let mediaURL = "http://127.0.0.1:18765"
+
+    override func setUp() async throws {
+        let url = try XCTUnwrap(URL(string: mediaURL + "/health"))
+        let request = URLRequest(url: url, timeoutInterval: 2)
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            try XCTSkipUnless(
+                (response as? HTTPURLResponse)?.statusCode == 200,
+                "Start scripts/shorts-media-fixture.py to run local playback measurements")
+        } catch {
+            throw XCTSkip("Local Shorts media fixture is unavailable: \(error.localizedDescription)")
+        }
+    }
+
+    override func tearDown() async throws {
+        await MainActor.run { XCUIApplication().terminate() }
+    }
+
+    private func launch(preload: Bool, count: Int) -> XCUIApplication {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--uitesting", "--uitesting-shorts", "--uitesting-reset-settings",
+            "--uitesting-disable-sponsorblock", "--uitesting-sign-out",
+            "--uitesting-shorts-ids=" + (0..<count).map { "preload-\($0)" }.joined(separator: ","),
+        ]
+        if !preload { app.launchArguments.append("--uitesting-disable-shorts-preload") }
+        app.launchEnvironment["SHORTS_TEST_MEDIA_URL"] = mediaURL
+        app.launch()
+        return app
+    }
+
+    private func wait(_ app: XCUIApplication, id: Int, buffered: Bool) -> String {
+        let probe = app.staticTexts[AccessibilityID.shortsPreloadStatus]
+        XCTAssertTrue(probe.waitForExistence(timeout: 15))
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in
+                let text = probe.label
+                return text.contains("id=preload-\(id) playing=true")
+                    && (!buffered || (text.contains("queue=2") && self.number("buffered", in: text) > 0))
+            }, object: nil)
+        XCTAssertEqual(XCTWaiter().wait(for: [expectation], timeout: 20), .completed, probe.label)
+        return probe.label
+    }
+
+    private func number(_ name: String, in status: String) -> Int {
+        status.split(separator: " ").first { $0.hasPrefix(name + "=") }
+            .flatMap { Int($0.dropFirst(name.count + 1)) } ?? -1
+    }
+
+    private func next(_ app: XCUIApplication) {
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
+            .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)))
+    }
+
+    func testColdVersusPreparedPlayback() {
+        var measurements: [[Int]] = []
+        for preload in [false, true] {
+            let app = launch(preload: preload, count: 10)
+            _ = wait(app, id: 0, buffered: preload)
+            var times: [Int] = []
+            for index in 1...5 {
+                next(app)
+                let status = wait(app, id: index, buffered: preload)
+                times.append(number("ms", in: status))
+                if preload { XCTAssertTrue(status.contains("shorts:prepared"), status) }
+            }
+            measurements.append(times)
+            let screenshot = XCTAttachment(screenshot: app.screenshot())
+            screenshot.name = preload ? "Prepared Short" : "Cold Short"
+            screenshot.lifetime = .keepAlways
+            add(screenshot)
+            app.terminate()
+        }
+        let cold = measurements[0].sorted()[2]
+        let warm = measurements[1].sorted()[2]
+        let evidence = XCTAttachment(string: "cold_ms=\(measurements[0]) warm_ms=\(measurements[1])")
+        evidence.name = "Shorts load-to-ready measurements"
+        evidence.lifetime = .keepAlways
+        add(evidence)
+        XCTAssertGreaterThan(cold, 0)
+        XCTAssertLessThan(Double(warm), Double(cold) * 0.6)
+    }
+
+    func testSustainedPlaybackAndBackgroundRelease() {
+        let app = launch(preload: true, count: 200)
+        _ = wait(app, id: 0, buffered: true)
+        for index in 1...60 {
+            next(app)
+            let status = wait(app, id: index, buffered: true)
+            XCTAssertTrue(status.contains("shorts:prepared"), status)
+            XCTAssertLessThanOrEqual(number("queue", in: status), 2)
+            XCTAssertLessThanOrEqual(number("retained", in: status), 120)
+        }
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        // Background playback is disabled by default; the current item stays paused.
+        let paused = app.staticTexts[AccessibilityID.shortsPreloadStatus]
+        XCTAssertTrue(paused.waitForExistence(timeout: 5))
+        XCTAssertTrue(paused.label.contains("queue=1 buffered=0"), paused.label)
+        app.buttons[AccessibilityID.shortsPlayPauseButton].tap()
+        _ = wait(app, id: 60, buffered: true)
+        next(app)
+        _ = wait(app, id: 61, buffered: true)
+        app.buttons[AccessibilityID.shortsBackButton].tap()
+        let reopen = app.buttons[AccessibilityID.shortsReopenTestButton]
+        XCTAssertTrue(reopen.waitForExistence(timeout: 5))
+        reopen.tap()
+        _ = wait(app, id: 0, buffered: true)
+    }
+}
+
 // MARK: - ShortsPlayerUITests
 //
 // UI tests for ShortsPlayerView, split into two launch modes:

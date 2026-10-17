@@ -260,9 +260,10 @@ public final class PlaybackViewModel {
 
     // MARK: - AVPlayer
 
-    public let player = AVPlayer()
+    public internal(set) var player: AVPlayer
+    @ObservationIgnored var shortsPreloader: ShortsPreloader?
     // Created and replaced on MainActor; nonisolated access is only for cleanup after the last reference is released.
-    @ObservationIgnored nonisolated(unsafe) var timeObserver: Any?
+    @ObservationIgnored nonisolated(unsafe) var timeObserver: (player: AVPlayer, token: Any)?
     // Registered and removed on MainActor; deinit only removes the final token after all owners are gone.
     @ObservationIgnored nonisolated(unsafe) var audioSessionObserver: Any?
     @ObservationIgnored var audioSessionNotificationCenter = NotificationCenter.default
@@ -472,12 +473,17 @@ public final class PlaybackViewModel {
         settings: AppSettings = AppSettings(),
         isShortsPlayer: Bool = false
     ) {
+        let player = AVPlayer()
+        self.player = player
         self.api = api
         self.tracker = WatchtimeTracker(api: api)
         self.sponsorBlock = sponsorBlock
         self.deArrow = deArrow
         self.isShortsPlayer = isShortsPlayer
         self.settings = isShortsPlayer ? settings.shortsPlaybackSettings : settings
+        if isShortsPlayer {
+            shortsPreloader = ShortsPreloader(player: player, preparer: ShortsStreamPreparer(api: api))
+        }
 
         // Create managers before any other setup (they hold no back-references yet).
         let sbm = SponsorBlockSkipManager()
@@ -521,7 +527,7 @@ public final class PlaybackViewModel {
         audioPlaybackTask?.cancel()
         if let audioSessionID { audioSession.invalidate(audioSessionID) }
         backgroundQualityUpgradeTask?.cancel()
-        if let obs = timeObserver { player.removeTimeObserver(obs) }
+        if let obs = timeObserver { obs.player.removeTimeObserver(obs.token) }
         rateObserver?.invalidate()
         airPlayObserver?.invalidate()
         if let obs = audioSessionObserver { audioSessionNotificationCenter.removeObserver(obs) }

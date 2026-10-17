@@ -27,6 +27,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0015: Bounded Shorts preloading](completed/shorts-preloading.md) — native next-video preparation, bounded retention; 1069 native tests, five iPad UI tests, four memory graphs and iOS/tvOS builds.
+
 - [PLAN-0014: Preserve account feed pagination](completed/shorts-feed-pagination.md) — active-tab and continuation ownership; native checks, four iPad UI tests and iOS/tvOS builds pass.
 
 - [PLAN-0013: Independent Shorts translation settings](completed/shorts-translation-settings.md) — separate persisted preferences; native checks, four focused iPad UI tests and iOS/tvOS builds pass.

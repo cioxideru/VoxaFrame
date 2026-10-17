@@ -89,7 +89,7 @@ final class PlaybackQualityManager {
     private var hlsVideoCodecs: [String] = []
     /// Codecs the policy allows for this video; a picked row narrows `hlsVideoCodecs` to its own.
     private var hlsAllowedVideoCodecs: [String] = []
-    @ObservationIgnored private var nativeHLSProxyLoader: YTHLSProxyLoader? = nil
+    @ObservationIgnored var nativeHLSProxyLoader: YTHLSProxyLoader?
     /// `true` when the current stream is a muxed (360p) fallback.
     /// Quality-switch attempts while muxed trigger fresh WKWebView extraction
     /// rather than reusing potentially-expired wkHLSMasterURL variant URLs.
@@ -124,7 +124,7 @@ final class PlaybackQualityManager {
     // MARK: - Dependencies
 
     @ObservationIgnored weak var delegate: (any QualityDelegate)?
-    let player: any PlayerItemSwappable
+    @ObservationIgnored var player: any PlayerItemSwappable
     @ObservationIgnored let session: URLSession
 
     // MARK: - Init
@@ -259,7 +259,7 @@ final class PlaybackQualityManager {
             ?? requestedCap
         if let cap = effectiveCap {
             let h = CGFloat(cap)
-            let peakBR = peakBitRate(for: cap)
+            let peakBR = Self.peakBitRate(for: cap)
             item.preferredMaximumResolution = CGSize(width: h * 4, height: h)
             item.preferredPeakBitRate = peakBR
             playerLog.notice(
@@ -315,20 +315,34 @@ final class PlaybackQualityManager {
     }
 
     func makeHLSAsset(url: URL, options: [String: Any]) -> AVURLAsset {
-        guard !hlsVideoCodecs.isEmpty, let proxyURL = url.proxyURL
+        let (asset, loader) = Self.makeHLSAsset(
+            url: url, options: options,
+            userAgent: hlsPlaybackUserAgent, maximumHeight: hlsPlaybackMaximumHeight, codecs: hlsVideoCodecs)
+        nativeHLSProxyLoader = loader
+        return asset
+    }
+
+    static func makeHLSAsset(
+        url: URL, options: [String: Any], userAgent: String,
+        maximumHeight: Int?, codecs: [String], session: URLSession = .shared
+    ) -> (AVURLAsset, YTHLSProxyLoader?) {
+        #if DEBUG
+        if ShortsPlaybackUITestFixture.baseURL != nil, url.host == "127.0.0.1" {
+            return (AVURLAsset(url: url, options: options), nil)
+        }
+        #endif
+        guard !codecs.isEmpty, let proxyURL = url.proxyURL
         else {
-            nativeHLSProxyLoader = nil
-            return AVURLAsset(url: url, options: options)
+            return (AVURLAsset(url: url, options: options), nil)
         }
         let loader = YTHLSProxyLoader(
-            ua: hlsPlaybackUserAgent,
-            maximumVideoHeight: hlsPlaybackMaximumHeight,
-            videoCodecs: hlsVideoCodecs
+            ua: userAgent,
+            maximumVideoHeight: maximumHeight,
+            videoCodecs: codecs, session: session
         )
         let asset = AVURLAsset(url: proxyURL, options: options)
         asset.resourceLoader.setDelegate(loader, queue: .global(qos: .userInitiated))
-        nativeHLSProxyLoader = loader
-        return asset
+        return (asset, loader)
     }
 
 }
@@ -597,7 +611,7 @@ extension PlaybackQualityManager {
         360: 1_500_000,
     ]
 
-    func peakBitRate(for height: Int) -> Double {
+    static func peakBitRate(for height: Int) -> Double {
         if let exact = Self.bitRateCaps[height] { return exact }
         let sortedKeys = Self.bitRateCaps.keys.sorted()
         let lower = sortedKeys.last(where: { $0 <= height }) ?? sortedKeys.first ?? 480
@@ -625,7 +639,7 @@ extension PlaybackQualityManager {
         let item = AVPlayerItem(asset: asset)
         item.audioTimePitchAlgorithm = .spectral
         item.preferredMaximumResolution = CGSize(width: 1920, height: 1080)
-        item.preferredPeakBitRate = peakBitRate(for: 1080)
+        item.preferredPeakBitRate = Self.peakBitRate(for: 1080)
         itemObserverTask?.cancel()
         itemObserverTask = Task { [weak self] in
             for await status in item.statusStream {

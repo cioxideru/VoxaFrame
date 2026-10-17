@@ -62,7 +62,9 @@ extension PlaybackViewModel {
             parkedVideoId = nil
         }
 
+        let prepared = shortsPreloader?.take(video: video, settings: settings)
         resetPlaybackForLoad(video: video, incognito: incognito)
+        if let prepared { adoptPreparedShortPlayer(prepared.warmingPlayer) }
 
         // UI-testing synchronous inject for related videos.
         // Checked here (before the Task is created) so that hasNext = true is set
@@ -97,7 +99,7 @@ extension PlaybackViewModel {
         #endif
         loadTask = Task {
             guard !Task.isCancelled else { return }
-            await loadAsync(video: video)
+            await loadAsync(video: video, prepared: prepared)
         }
 
         // Kick off a background prefetch for the next video in the queue
@@ -164,6 +166,7 @@ extension PlaybackViewModel {
         // Stop and clear the current item immediately so the previous frame
         // is not visible while the next video is loading.
         player.pause()
+        shortsPreloader?.cancel()
         player.replaceCurrentItem(with: nil)
         isPlaying = false
         videoEnded = false
@@ -187,7 +190,7 @@ extension PlaybackViewModel {
         endCards = []
 
         // Push the currently playing video onto the history stack before switching
-        if let prev = currentVideo, prev.id != video.id {
+        if !isShortsPlayer, let prev = currentVideo, prev.id != video.id {
             history.append(prev)
         }
         currentVideo = video
@@ -245,6 +248,7 @@ extension PlaybackViewModel {
     /// Call when the app enters the background.
     /// Pauses playback when the user has disabled background audio.
     public func handleBackground() {
+        shortsPreloader?.cancel()
         guard !settings.backgroundPlaybackEnabled else { return }
         cancelPendingAudioPlayback()
         cancelBackgroundQualityUpgrade()
@@ -349,6 +353,7 @@ extension PlaybackViewModel {
     // MARK: - Cleanup
 
     public func stop() {
+        shortsPreloader?.cancel()
         qualityManager.cancel()
         sponsorBlockManager.cancelPendingSkip()
         cancelBackgroundQualityUpgrade()
@@ -430,7 +435,12 @@ extension PlaybackViewModel {
         if let routeChangeObserver { NotificationCenter.default.removeObserver(routeChangeObserver) }
         audioSessionObserver = nil
         routeChangeObserver = nil
-        scheduleParkedItemCleanup()
+        if isShortsPlayer {
+            player.replaceCurrentItem(with: nil)
+            qualityManager.reset()
+        } else {
+            scheduleParkedItemCleanup()
+        }
     }
 
     private func scheduleParkedItemCleanup() {
@@ -464,6 +474,14 @@ extension PlaybackViewModel {
         await loadPhase2SponsorSegments(video: video, cached: cached, sponsorCached: sponsorCached)
 
         guard !Task.isCancelled else { return }
+
+        if isShortsPlayer {
+            // Shorts has its own feed; /next and end cards are unused here.
+            let tracking = recordsHistory ? await api.fetchAuthenticatedTrackingURLs(videoId: video.id) : nil
+            guard !Task.isCancelled, currentVideo?.id == video.id else { return }
+            tracker.setTrackingURLs(tracking ?? info.trackingURLs)
+            return
+        }
 
         await loadPhase2RelatedVideos(video: video, cached: cached)
 

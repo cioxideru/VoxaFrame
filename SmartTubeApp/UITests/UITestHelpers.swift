@@ -75,6 +75,8 @@ enum AccessibilityID {
     static var shortsBackButton: String { "shorts.backButton" }
     static var shortsIndexLabel: String { "shorts.indexLabel" }
     static var shortsPlayPauseButton: String { "shorts.playPauseButton" }
+    static var shortsPreloadStatus: String { "shorts.preloadStatus" }
+    static var shortsReopenTestButton: String { "shorts.reopenTestButton" }
     static var shortsAudioTrackButton: String { "shorts.audioTrackButton" }
     static var shortsVideoScaleButton: String { "shorts.videoScaleButton" }
     static var shortsLoadMoreButton: String { "shorts.loadMoreButton" }

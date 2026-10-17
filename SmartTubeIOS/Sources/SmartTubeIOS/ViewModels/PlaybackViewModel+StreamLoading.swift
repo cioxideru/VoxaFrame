@@ -13,9 +13,12 @@ private let playerLog = ViewModelLogger(category: "Player")
 
 extension PlaybackViewModel {
 
-    func loadAsync(video: Video) async {
+    func loadAsync(video: Video, prepared: PreparedShort? = nil) async {
         guard await activatePlaybackAudioSession(), currentVideo?.id == video.id else { return }
         prepareStreamLoading(video: video)
+
+        if let prepared, await startPreparedShort(prepared, video: video) { return }
+        guard !Task.isCancelled, currentVideo?.id == video.id else { return }
 
         if startLocalPlayback(video: video) { return }
 
@@ -104,7 +107,7 @@ extension PlaybackViewModel {
         // ran before auth was ready; treat that as a miss so we still get live URLs.
         let cachedTrackingURLs: PlaybackTrackingURLs? = cached.trackingURLs.flatMap { $0 }
         let authTrackingTask: Task<PlaybackTrackingURLs?, Never>?
-        if cachedTrackingURLs != nil {
+        if cachedTrackingURLs != nil || isShortsPlayer {
             // Tracking URLs came from the cache; no need for a parallel TV-client call.
             authTrackingTask = nil
         } else {

@@ -15,7 +15,7 @@ extension ShortsPlayerView {
                 .accessibilityLabel("Back")
                 .accessibilityIdentifier(AccessibilityID.shortsBackButton)
                 Spacer()
-                Text("\(currentIndex + 1) / \(videos.count)")
+                Text("\(window.discardedCount + currentIndex + 1) / \(window.discardedCount + videos.count)")
                     .font(.caption.monospacedDigit())
                     .accessibilityIdentifier(AccessibilityID.shortsIndexLabel)
                 Button {

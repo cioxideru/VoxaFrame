@@ -2,6 +2,10 @@ import Foundation
 
 /// Shared timing values for initial playback, fallback attempts and quality changes.
 enum PlaybackTuning {
+    static let shortsPreparationSeconds: TimeInterval = 30
+    static let shortsPreloadRetention: Duration = .seconds(300)
+    static let shortsForwardBufferSeconds: TimeInterval = 3
+    static let shortsPreloadMaximumHeight = 720
     static let idleResourceRetention: Duration = .seconds(60)
     /// A stream that never reports readiness must yield to the next playback source.
     static let itemReadinessTimeout: Duration = .seconds(15)

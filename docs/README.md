@@ -24,6 +24,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0015) | current | 2026-10-15 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/completed/shorts-preloading.md](exec-plans/completed/shorts-preloading.md) | PLAN-0015: bounded native Shorts preloading and Simulator evidence | current | 2026-10-17 |
 | [exec-plans/completed/shorts-feed-pagination.md](exec-plans/completed/shorts-feed-pagination.md) | PLAN-0014: preserve account feed pagination | current | 2026-10-17 |
 | [exec-plans/completed/shorts-translation-settings.md](exec-plans/completed/shorts-translation-settings.md) | PLAN-0013: independent Shorts translation settings | current | 2026-10-17 |
 | [exec-plans/completed/shorts-account-controls.md](exec-plans/completed/shorts-account-controls.md) | PLAN-0012: account Shorts and shared playback controls | current | 2026-10-16 |
@@ -39,6 +40,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [exec-plans/completed/task-89-short-detection-issue.md](exec-plans/completed/task-89-short-detection-issue.md) | PLAN-0002 / #89: completed duration guard; tests present, not rerun | current | 2026-10-15 |
 | [design/2026-06-11-tos-player-shorts-design.md](design/2026-06-11-tos-player-shorts-design.md) | Historical Shorts embed design and reconciliation; superseded by ADR-0010 | archived | 2026-10-15 |
 | [adr/README.md](adr/README.md) | ADR index, statuses and preservation rules | current | 2026-10-15 |
+| [adr/0011-bounded-native-shorts-preloading.md](adr/0011-bounded-native-shorts-preloading.md) | 0011 — native Shorts preparation and resource ownership | current | 2026-10-17 |
 | [adr/template.md](adr/template.md) | ADR form: stable ID, Status, Date, Context, Decision, Consequences | current | 2026-10-15 |
 | [explanation/swift-style.md](explanation/swift-style.md) | Swift conventions | current | 2026-10-15 |
 | [explanation/solid.md](explanation/solid.md) | SOLID principles reference | current | 2026-10-15 |

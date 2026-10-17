@@ -14,11 +14,12 @@ extension PlaybackViewModel {
 
     func setupTimeObserver() {
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
-        timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: nil) { [weak self] time in
+        let source = player
+        let token = player.addPeriodicTimeObserver(forInterval: interval, queue: nil) { [weak self, weak source] time in
             guard let self else { return }
             let seconds = time.seconds
-            Task { @MainActor [weak self] in
-                guard let self else { return }
+            Task { @MainActor [weak self, weak source] in
+                guard let self, self.player === source else { return }
                 // Don't overwrite the slider position or trigger SponsorBlock auto-seeks
                 // while the user is scrubbing. Auto-seeks call seek() → showControls() →
                 // scheduleControlsHide(), which cancels and restarts the 4 s hide-timer
@@ -38,6 +39,7 @@ extension PlaybackViewModel {
                 }
             }
         }
+        timeObserver = (player, token)
     }
 
     func setupRateObserver() {
@@ -45,9 +47,10 @@ extension PlaybackViewModel {
         // pauses the player (e.g. headphones removed, audio session interruption ends
         // without shouldResume). Without this, isPlaying stays true while the player
         // is actually silent, causing handleForeground() to re-start a ghost session.
-        rateObserver = player.observe(\.rate, options: [.new]) { [weak self] _, change in
+        rateObserver = player.observe(\.rate, options: [.new]) { [weak self] source, change in
             guard let self, let newRate = change.newValue else { return }
-            Task { @MainActor [weak self] in
+            Task { @MainActor [weak self, weak source] in
+                guard self?.player === source else { return }
                 self?.handlePlayerRateChange(newRate)
             }
         }
@@ -214,9 +217,10 @@ extension PlaybackViewModel {
 
     #if canImport(UIKit)
     func setupAirPlayObserver() {
-        airPlayObserver = player.observe(\.isExternalPlaybackActive, options: [.new]) { [weak self] _, change in
+        airPlayObserver = player.observe(\.isExternalPlaybackActive, options: [.new]) { [weak self] source, change in
             guard let self, let active = change.newValue else { return }
-            Task { @MainActor [weak self] in
+            Task { @MainActor [weak self, weak source] in
+                guard self?.player === source else { return }
                 self?.isAirPlaying = active
             }
         }

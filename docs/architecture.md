@@ -90,6 +90,9 @@ PiP controller and delegate. Fullscreen and mini-player containers attach that
 same layer only when their presentation is active. PiP entry dismisses fullscreen;
 the UIKit presenter confirms restoration after presentation and layout finish.
 Shorts own a separate playback view model and stop the regular player on entry.
+That model owns one native next-video preloader; the prepared player is adopted intact on swipe
+and managers/observers follow it. Backgrounding, dismissal and memory pressure cancel preparation.
+The view's Core feed window bounds recent navigation and cursors; see [ADR-0011](adr/0011-bounded-native-shorts-preloading.md).
 Their audio/translation picker is shared with the regular player. `AppSettings`
 stores independent Shorts language, automatic translation, lively voice and original
 audio choices, seeded from legacy settings once on upgrade. The Shorts playback model

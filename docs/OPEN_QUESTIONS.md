@@ -160,6 +160,9 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 ## OQ-0013 — iOS HLS prewarm on card appearance
 
+- [PLAN-0015](exec-plans/completed/shorts-preloading.md) adds bounded native next-Short preparation.
+  Local iPad Simulator latency and memory evidence is recorded there; live YouTube and physical
+  iPad performance remain a separate acceptance step.
 - Status: targeted physical-device checks complete; broader reported slowdown remains unconfirmed;
   owner: playback / release maintainer;
   basis: [ADR-0010](adr/0010-remove-iframe-player.md) and [PLAN-0006](exec-plans/completed/feed-version-shorts.md).

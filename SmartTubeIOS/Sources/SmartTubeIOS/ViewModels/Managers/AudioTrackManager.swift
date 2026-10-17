@@ -37,7 +37,7 @@ final class AudioTrackManager {
     // MARK: - Dependencies
 
     @ObservationIgnored weak var delegate: (any AudioTrackDelegate)?
-    let player: AVPlayer
+    @ObservationIgnored var player: AVPlayer
 
     // MARK: - Init
 

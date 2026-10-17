@@ -148,6 +148,9 @@ extension InnerTubeAPI {
 
     /// Fetches player data using current yt-dlp's primary JS-less visionOS client.
     public func fetchPlayerInfoVisionOS(videoId: String) async throws -> PlayerInfo {
+        #if DEBUG
+        if let fixture = ShortsPlaybackUITestFixture.playerInfo(videoId: videoId) { return fixture }
+        #endif
         var clientFields = (visionOSClientContext["client"] as? [String: Any]) ?? [:]
         if let vd = await visionOSVisitorDataIfNeeded() { clientFields["visitorData"] = vd }
         var body = makeBody(client: ["client": clientFields])

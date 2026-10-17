@@ -226,11 +226,21 @@ struct AppEntry: App {
         #else
         WindowGroup {
             if isShortsUITesting {
-                let shorts = ShortsPlayerView(videos: AppEntry.shortsForUITesting(), startIndex: 0, api: api)
-                    .environment(authService)
-                    .environment(settingsStore)
-                    .environment(\.innerTubeAPI, api)
-                    .environment(playerStateStore)
+                let shorts = Group {
+                    #if DEBUG
+                    if ShortsPlaybackUITestFixture.baseURL != nil {
+                        ShortsPlaybackFixtureHost(videos: AppEntry.shortsForUITesting(), api: api)
+                    } else {
+                        ShortsPlayerView(videos: AppEntry.shortsForUITesting(), startIndex: 0, api: api)
+                    }
+                    #else
+                    ShortsPlayerView(videos: AppEntry.shortsForUITesting(), startIndex: 0, api: api)
+                    #endif
+                }
+                .environment(authService)
+                .environment(settingsStore)
+                .environment(\.innerTubeAPI, api)
+                .environment(playerStateStore)
                 withDownloads(shorts)
             } else {
                 let root = RootView()

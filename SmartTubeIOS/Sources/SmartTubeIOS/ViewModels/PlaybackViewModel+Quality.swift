@@ -41,7 +41,7 @@ extension PlaybackViewModel {
     }
 
     func peakBitRate(for height: Int) -> Double {
-        qualityManager.peakBitRate(for: height)
+        PlaybackQualityManager.peakBitRate(for: height)
     }
 
     func reloadHLSItemH264Capped(seekTo time: TimeInterval) async {

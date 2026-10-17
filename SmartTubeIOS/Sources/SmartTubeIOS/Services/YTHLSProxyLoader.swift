@@ -34,8 +34,8 @@ extension URL {
 // MARK: - YTHLSProxyLoader
 
 /// `AVAssetResourceLoaderDelegate` that forwards every HLS request through
-/// `URLSession.shared` with a desktop-Safari User-Agent header.
-/// Holds a strong reference to itself via the asset to keep it alive.
+/// the supplied URLSession with the selected client User-Agent header.
+/// The playback/preparation owner retains the loader; the asset's delegate is weak.
 final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecked Sendable {
     let ua: String
     /// When non-nil, the proxy rewrites all `/n/{unsolved}/` occurrences to `/n/{solved}/`
@@ -65,12 +65,13 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
     let videoCodecs: [String]
     private let lock = NSLock()
     private var activeTasks: [ObjectIdentifier: URLSessionDataTask] = [:]
+    private let session: URLSession
 
     init(
         ua: String, nSolver: (unsolved: String, solved: String)? = nil,
         webViewCookies: [HTTPCookie] = [], selectedLanguageContentID: String? = nil,
         poToken: String? = nil, maximumVideoHeight: Int? = nil,
-        videoCodecs: [String] = []
+        videoCodecs: [String] = [], session: URLSession = .shared
     ) {
         self.ua = ua
         self.nSolver = nSolver
@@ -79,7 +80,10 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
         self.poToken = poToken
         self.maximumVideoHeight = maximumVideoHeight
         self.videoCodecs = videoCodecs
+        self.session = session
     }
+
+    deinit { activeTasks.values.forEach { $0.cancel() } }
 
     // MARK: AVAssetResourceLoaderDelegate
 
@@ -97,7 +101,7 @@ final class YTHLSProxyLoader: NSObject, AVAssetResourceLoaderDelegate, @unchecke
         let request = makeRequest(realURL: realURL)
 
         let key = ObjectIdentifier(loadingRequest)
-        let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+        let task = session.dataTask(with: request) { [weak self] data, response, error in
             guard let self else { return }
             defer {
                 self.lock.lock()

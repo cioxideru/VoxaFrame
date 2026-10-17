@@ -6,6 +6,19 @@
 
 Run the commands below from the repository root.
 
+## Local Shorts preloading measurements
+
+Start `python3 scripts/shorts-media-fixture.py` in another terminal (requires an installed
+FFmpeg; `--ffmpeg /absolute/path` selects it). The server generates a synthetic H.264 movie in
+a temporary directory, binds only `127.0.0.1:18765`, adds fixed manifest/first-segment latency,
+and removes the media on Ctrl-C. No YouTube account or remote media is involved.
+
+Run `ShortsPreloadingUITests` on an iPad Simulator with the normal UI-test command below and
+`-only-testing:SmartTubeUITests/ShortsPreloadingUITests`. The suite skips with an explicit reason
+when this local fixture is absent. Attachments contain five cold and five prepared load-to-ready
+samples. The sustained case exercises 60 swipes, background release, manual resume and reopening.
+Load-to-ready is not a measure of first visible frame or live-network/device performance.
+
 ## Target simulator
 
 The following is the previously recorded development destination, not a portable requirement.

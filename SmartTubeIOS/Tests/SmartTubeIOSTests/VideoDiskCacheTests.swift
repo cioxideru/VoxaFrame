@@ -13,6 +13,22 @@ import Testing
 @Suite("Video Disk Cache")
 struct VideoDiskCacheTests {
 
+    @Test("Reopened cache includes existing files in its budget")
+    func reopenedCacheEvictsExistingBytes() async throws {
+        let cache = makeTempCache()
+        defer { try? FileManager.default.removeItem(at: cache.cacheDir) }
+        let old = cache.cacheDir.appendingPathComponent("old.json")
+        try Data(repeating: 1, count: VideoDiskCache.maxBytes).write(to: old)
+        try FileManager.default.setAttributes([.modificationDate: Date.distantPast], ofItemAtPath: old.path)
+        cache.store("new metadata", videoId: "new", dataType: "metadata")
+        let deadline = ContinuousClock.now + .seconds(3)
+        while FileManager.default.fileExists(atPath: old.path), ContinuousClock.now < deadline {
+            await Task.yield()
+        }
+        #expect(!FileManager.default.fileExists(atPath: old.path))
+        #expect(cache.load(String.self, videoId: "new", dataType: "metadata") == "new metadata")
+    }
+
     // A temporary directory unique to each test run.
     private func makeTempCache() -> VideoDiskCache {
         let tmp = FileManager.default.temporaryDirectory

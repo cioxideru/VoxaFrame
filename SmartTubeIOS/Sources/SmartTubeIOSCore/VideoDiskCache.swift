@@ -26,11 +26,12 @@ final class VideoDiskCache: @unchecked Sendable {
     // for VideoDiskCache.evictIfNeeded across 4.8 sessions). The scan is O(n files) and
     // is unnecessary when the cache is well below 20 MB.
     //
-    // Fix: track a running estimate here. Store() adds the written size; removeAll()
+    // Fix: track a running estimate here. Store() accounts for replacements; removeAll()
     // resets it to 0. evictIfNeeded() skips the full scan unless the estimate exceeds
     // the threshold — only a scan-and-evict is needed when the cache is actually full.
     // After eviction, the exact count is known from the scan, so the estimate is corrected.
-    private var estimatedBytes: Int = 0
+    // Unknown on reopen: reconcile once on the first write, not on the UI's launch path.
+    private var estimatedBytes: Int?
 
     // MARK: - Init
 
@@ -52,8 +53,11 @@ final class VideoDiskCache: @unchecked Sendable {
         let writtenBytes = data.count
         queue.async { [weak self] in
             guard let self else { return }
-            try? data.write(to: url, options: .atomic)
-            self.estimatedBytes += writtenBytes
+            let previousBytes = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+            do { try data.write(to: url, options: .atomic) } catch { return }
+            if let estimatedBytes {
+                self.estimatedBytes = estimatedBytes + writtenBytes - previousBytes
+            }
             self.evictIfNeeded()
         }
     }
@@ -69,10 +73,7 @@ final class VideoDiskCache: @unchecked Sendable {
     // MARK: - Eviction (LRU by modification date)
 
     func evictIfNeeded() {
-        // Skip the expensive filesystem scan unless the in-memory estimate suggests
-        // we might be over budget. Add 10% headroom so a single large write doesn't
-        // trigger an unnecessary scan when the cache is nearly full but not yet over.
-        guard estimatedBytes > Self.maxBytes - Self.maxBytes / 10 else { return }
+        guard estimatedBytes == nil || (estimatedBytes ?? 0) > Self.maxBytes else { return }
         let fm = FileManager.default
         let keys: [URLResourceKey] = [.fileSizeKey, .contentModificationDateKey]
         guard let files = try? fm.contentsOfDirectory(at: cacheDir, includingPropertiesForKeys: keys) else { return }
@@ -92,11 +93,11 @@ final class VideoDiskCache: @unchecked Sendable {
         }
         for file in sorted {
             guard totalSize > Self.maxBytes else { break }
-            if let size = (try? file.resourceValues(forKeys: [.fileSizeKey]))?.fileSize {
-                totalSize -= size
-            }
-            try? fm.removeItem(at: file)
+            let size = (try? file.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+            do { try fm.removeItem(at: file) } catch { continue }
+            totalSize -= size
         }
+        estimatedBytes = totalSize
     }
 
     // MARK: - Auth eviction (BUG-013 fix)

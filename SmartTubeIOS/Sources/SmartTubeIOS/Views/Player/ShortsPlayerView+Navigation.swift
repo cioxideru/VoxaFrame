@@ -38,11 +38,11 @@ extension ShortsPlayerView {
     func goTo(_ index: Int) {
         guard index >= 0, index < videos.count else { return }
 
-        currentIndex = index
-        loadVideo(at: index)
+        window.move(to: index)
+        loadVideo(at: currentIndex)
 
         // Pre-fetch more Shorts when within 2 of the end.
-        if index >= videos.count - 2 {
+        if currentIndex >= videos.count - 2 {
             loadMoreIfNeeded()
         }
     }
@@ -79,24 +79,24 @@ extension ShortsPlayerView {
                 } catch { return }  // Keep the token so a later swipe can retry.
                 guard !Task.isCancelled, session == authService.sessionGeneration else { return }
                 hasLoadedFeed = true
-                if let token { consumedPageTokens.insert(token) }
-                nextPageToken = group.nextPageToken.flatMap { consumedPageTokens.contains($0) ? nil : $0 }
+                nextPageToken = window.nextCursor(after: token, proposed: group.nextPageToken)
                 var seen = Set(videos.map(\.id))
                 let added = group.videos.filter { seen.insert($0.id).inserted }
                 if !added.isEmpty {
                     if prepending {
-                        videos.insert(contentsOf: added, at: 0)
-                        currentIndex += added.count
-                        if advanceWhenReady, currentIndex == added.count {
+                        let wasAtStart = currentIndex == 0
+                        window.insert(added, prepending: true)
+                        if advanceWhenReady, wasAtStart {
                             performVerticalTransition(direction: 1) { goTo(currentIndex - 1) }
                         }
                     } else {
                         let wasAtEnd = currentIndex == videos.count - 1
-                        videos.append(contentsOf: added)
+                        window.insert(added, prepending: false)
                         if advanceWhenReady, wasAtEnd {
                             performVerticalTransition(direction: -1) { goTo(currentIndex + 1) }
                         }
                     }
+                    preloadNextShort()
                     return
                 }
                 guard nextPageToken != nil else { return }
@@ -130,21 +130,10 @@ extension ShortsPlayerView {
         vm.load(video: video)
         vm.player.isMuted = isMuted
         vm.voiceOver.isMuted = isMuted
-        // Start lookahead on the first Short too, ahead of background feed-card requests.
-        let lookahead = videos[(index + 1)..<min(index + 3, videos.count)].map(\.id)
-        if !lookahead.isEmpty {
-            let token = authService.accessToken
-            let cats = store.settings.activeSponsorCategories
-            Task(priority: .background) {
-                for videoId in lookahead {
-                    await VideoPreloadCache.shared.prefetch(
-                        videoId: videoId,
-                        sponsorCategories: cats,
-                        authToken: token,
-                        priority: .immediate
-                    )
-                }
-            }
-        }
+    }
+
+    func preloadNextShort() {
+        guard !isInBackground else { return }
+        vm.preloadNextShort(videos.indices.contains(currentIndex + 1) ? videos[currentIndex + 1] : nil)
     }
 }
