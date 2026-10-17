@@ -30,7 +30,9 @@ struct PlayerSwipeGestureOverlay: UIViewRepresentable {
         let view = UIView()
         view.backgroundColor = .clear
         view.clipsToBounds = true
+        #if !targetEnvironment(macCatalyst)
         view.addSubview(context.coordinator.levels.volumeView)
+        #endif
 
         let pan = UIPanGestureRecognizer(
             target: context.coordinator,
@@ -142,6 +144,10 @@ struct PlayerSwipeGestureOverlay: UIViewRepresentable {
                 drag = PlayerPanGesture(
                     start: CGPoint(x: point.x - translation.x, y: point.y - translation.y), bounds: view.bounds,
                     allowsLevels: UIDevice.current.userInterfaceIdiom != .mac)
+                #if targetEnvironment(macCatalyst)
+                // Catalyst can report the iPad idiom as well as the Mac idiom.
+                drag?.allowsLevels = false
+                #endif
                 initialLevel = nil
             }
             guard var drag else { return }

@@ -70,3 +70,11 @@ preferences were restored and verified equal (settings, queue, local watch histo
 search history and video state). Keychain is outside that container. The installed
 build had downloads compiled out; caches are rebuilt. Do not repeat that cleanup
 option on a nested path; see the hardware-test instructions.
+After relaunch, the restored settings, queue, local history and video states still
+match the backup. The real account list, channel membership display and portrait/
+landscape navigation pass in `/private/tmp/smarttube-device-recovery-readonly.xcresult`.
+
+Catalyst is excluded explicitly with `targetEnvironment(macCatalyst)`, including
+its iPad-style interface idiom. Its existing downward minimize gesture is preserved.
+The current scheme does not expose a Catalyst destination; this branch has policy
+unit coverage but no Catalyst runtime/build acceptance.
