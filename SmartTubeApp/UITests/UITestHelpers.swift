@@ -1,7 +1,15 @@
 import XCTest
 
-// UI-test targets do not link SmartTubeIOSCore. Keep these values in sync with its AccessibilityID.
+// UI-test targets do not link SmartTubeIOSCore. Keep app identifiers in sync with its AccessibilityID.
 enum AccessibilityID {
+    // System-owned identifiers used only by iPad window-layout UI tests.
+    static var systemSettingsSidebar: String { "com.apple.settings.sidebar.collectionView" }
+    static var systemMultitasking: String { "com.apple.settings.multitaskingAndGestures" }
+    static var systemFullScreenApps: String { "com.apple.settings.multitaskingAndGestures.fullScreenApps" }
+    static var systemWindowedApps: String { "com.apple.settings.multitaskingAndGestures.windowedApps" }
+    static var systemStageManager: String { "com.apple.settings.multitaskingAndGestures.stageManager" }
+    static var systemSmartTubeWindowControls: String { "window-controls:com.ibaranov.smarttube.app" }
+    static var systemWindowZoom: String { "Zoom-button" }
     static var popoverDismissRegion: String { "PopoverDismissRegion" }
     static var homeChipBar: String { "home.chipBar" }
     static func homeSectionChip(_ title: String) -> String { "chip.\(title)" }
@@ -155,14 +163,14 @@ enum UITestHelpers {
     /// Uses coordinate drags on the chip bar itself, checking frame bounds so
     /// the chip is never scrolled past.
     static func scrollChipIntoView(_ chip: XCUIElement, in chipBar: XCUIElement, app: XCUIApplication) {
-        let screenWidth = app.windows.firstMatch.frame.width
+        let viewport = chipBar.frame.intersection(app.windows.firstMatch.frame)
         let near = chipBar.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5))
         let far = chipBar.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5))
 
         for _ in 0..<8 {
             let frame = chip.frame
-            if frame.origin.x >= 4 && frame.maxX <= screenWidth - 4 { break }
-            if frame.origin.x < 4 {
+            if frame.minX >= viewport.minX + 4 && frame.maxX <= viewport.maxX - 4 { break }
+            if frame.minX < viewport.minX + 4 {
                 near.press(forDuration: 0.05, thenDragTo: far)
             } else {
                 far.press(forDuration: 0.05, thenDragTo: near)

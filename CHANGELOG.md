@@ -22,9 +22,11 @@ All notable changes to SmartTube are documented here.
   preserve the list; late refreshes cannot undo a successful change. Local following
   remains separate from the account.
 - **iPad menu placement (PLAN-0016):** wide iPad layouts reserve the native top
-  navigation region when returning to Home. Regression coverage checks channel
-  and Settings round trips, tab changes and both orientations. Physical-iPad
-  channel/tab returns also pass; the rare original sequence remains unconfirmed.
+  navigation region when returning to Home. iPadOS 26+ also reserves it in compact
+  windows, where system window controls otherwise overlap the Home section button.
+  Physical-iPad regression coverage checks floating-window resizing, three Split View
+  sizes, full-screen restoration, channel/Settings round trips, tab changes and both
+  orientations. The rare original wide-screen sequence remains unconfirmed.
 
 - **Version 5.11 (29), account feed pagination (PLAN-0014):** Home, Recommended
   and subscription-backed Shorts keep the owning feed's continuation instead of

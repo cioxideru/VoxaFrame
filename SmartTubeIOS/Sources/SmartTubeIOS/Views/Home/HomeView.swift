@@ -79,8 +79,10 @@ public struct HomeView: View {
     #if os(iOS)
     private var navigationBarVisibility: Visibility {
         #if !targetEnvironment(macCatalyst)
-        if #available(iOS 18.0, *), UIDevice.current.userInterfaceIdiom == .pad, horizontalSizeClass == .regular {
-            return .visible
+        if #available(iOS 18.0, *), UIDevice.current.userInterfaceIdiom == .pad {
+            // Window controls also occupy the top of compact iPadOS 26 windows.
+            if #available(iOS 26.0, *) { return .visible }
+            if horizontalSizeClass == .regular { return .visible }
         }
         #endif
         return .hidden

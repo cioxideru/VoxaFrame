@@ -1,4 +1,4 @@
-> Status: current — general command/configuration review 2026-10-15; targeted physical iPad performance checks added and run 2026-10-16, not a full UI-suite rerun.
+> Status: current — general command/configuration review 2026-10-15; targeted physical iPad performance checks run 2026-10-16 and menu/window checks 2026-10-17, not a full UI-suite rerun.
 
 # How to run tests
 
@@ -109,3 +109,21 @@ sessions stopped, and do not interact with the iPad during measurements. The app
 an attached debugger in these tests. Compare network-dependent timings separately from
 rendering; one short run does not establish sustained performance or a debugger's overhead.
 See [PLAN-0010](../exec-plans/completed/ipad-performance.md) for measured evidence and limits.
+
+## iPad menu restoration and window resizing
+
+Run `IPadMenuLayoutUITests` with `-parallel-testing-enabled NO` on an iPad. The orientation
+case requires iPadOS 18+. `testMenusAcrossSplitViewAndWindowResizing` requires iPadOS 26+
+and English system UI for the window arrangement command. It temporarily selects Windowed
+Apps in Settings and restores the original multitasking mode in teardown.
+
+The window case uses system gestures and controls: floating-window resizing in both dimensions,
+SmartTube and Settings side by side, dragging the divider to narrow and wide layouts, then
+returning to full screen without relaunching SmartTube. Each layout runs two channel/back,
+Settings drill-down/back and Search/Library return cycles. Assertions cover the actual section
+buttons, native top or bottom tabs, system window controls and preserved section selection.
+Screenshots and window/button geometry are retained in the result bundle.
+
+Subscription content is a fixture. The suite retains the device's real account and does not
+reset SmartTube settings on physical hardware. Do not interact with the iPad during the run.
+See [PLAN-0016](../exec-plans/completed/ipad-menu-overlap.md) for evidence and remaining limits.

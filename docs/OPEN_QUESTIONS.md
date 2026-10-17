@@ -248,7 +248,8 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 ## OQ-0017 — Subscription and rare iPad menu live acceptance
 
-- Status: subscription functional acceptance complete; rare iPad layout sequence remains open.
+- Status: subscription and requested iPad window acceptance complete; original rare wide-screen
+  layout sequence remains unreproduced.
   Owner: navigation maintainer; basis: [PLAN-0017](exec-plans/completed/subscriptions.md)
   and [PLAN-0016](exec-plans/completed/ipad-menu-overlap.md).
 - The physical iPad loaded 338 subscriptions with avatars. An approved temporary NASA
@@ -257,6 +258,11 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - The original rare overlap was not reproduced in the baseline Simulator round trips.
   Corrected simulator channel/Settings drill-down/back, tab changes and both orientations pass;
   physical channel/back and Settings/Search/Library returns also pass in both orientations.
-- Next step: repeat the user's exact intermittent sequence on the affected iPad, including
-  Split View and window-size changes. Record reproduction before extending layout policy;
-  current passing navigation checks do not prove every restoration sequence is covered.
+- The physical window follow-up reproduced window controls overlapping Home in a 375 × 496 pt
+  floating window. PLAN-0016 now reserves the native top region at compact widths on iPadOS 26+.
+  Floating-window resizing, half/narrow/wide Split View with Settings, and full-screen restoration
+  passed two channel/Settings/back and tab-return cycles per layout, without restarting SmartTube.
+  The test restored the initial Full Screen Apps mode.
+- If the original wide-screen overlap recurs, capture the exact navigation sequence, orientation
+  and window mode before extending layout policy. The passing requested matrix does not prove
+  that every possible restoration sequence is covered.

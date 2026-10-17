@@ -72,37 +72,172 @@ final class SettingsUITests: XCTestCase {
 }
 
 #if os(iOS)
-/// PLAN-0016: tab restoration must keep the Home section controls below the iPad tab bar.
+/// PLAN-0016: Home sections must avoid native tabs and iPad window controls after restoration.
 final class IPadMenuLayoutUITests: XCTestCase {
     private let app = XCUIApplication()
+    private let systemSettings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+    private let springBoard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+    private var multitaskingModeToRestore: String?
+
+    private var windowControls: XCUIElement {
+        springBoard.buttons[AccessibilityID.systemSmartTubeWindowControls]
+    }
+
+    private var channels: XCUIElement {
+        app.scrollViews[AccessibilityID.homeChipBar].buttons["Channels"].firstMatch
+    }
+
+    private var searchTab: XCUIElement {
+        let tab = app.tabBars.buttons["Search"].firstMatch
+        return tab.exists ? tab : app.buttons["Search"].firstMatch
+    }
 
     override func setUpWithError() throws {
         continueAfterFailure = false
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Requires the iPad top tab bar")
         if #unavailable(iOS 18.0) { throw XCTSkip("Requires the iPadOS 18 top tab bar") }
         app.launchArguments = [
-            "--uitesting", "--uitesting-reset-settings", "--uitesting-subscriptions", "--uitesting-mixed-feed",
+            "--uitesting", "--uitesting-subscriptions", "--uitesting-mixed-feed",
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
         ]
+        #if targetEnvironment(simulator)
+        app.launchArguments.append("--uitesting-reset-settings")
+        #endif
         app.launch()
     }
 
     override func tearDown() {
+        if let multitaskingModeToRestore {
+            systemSettings.activate()
+            let originalMode = systemSettings.buttons[multitaskingModeToRestore]
+            XCTAssertTrue(originalMode.waitForExistence(timeout: 5))
+            if !originalMode.isSelected { originalMode.tap() }
+            XCTAssertTrue(originalMode.isSelected, "Restore the user's multitasking mode")
+        }
         app.terminate()
         XCUIDevice.shared.orientation = .portrait
         super.tearDown()
     }
 
+    func testMenusAcrossSplitViewAndWindowResizing() throws {
+        if #unavailable(iOS 26.0) { throw XCTSkip("Requires iPad Windowed Apps") }
+        XCUIDevice.shared.orientation = .landscapeLeft
+        selectChannels()
+        enableWindowedApps()
+        makeFullScreen()
+
+        let window = app.windows.firstMatch
+        let screen = springBoard.windows.firstMatch
+        window.coordinate(withNormalizedOffset: CGVector(dx: 0.995, dy: 0.995))
+            .press(forDuration: 0.2, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.62, dy: 0.72)))
+        waitForLayout("The system must create a smaller floating window") {
+            window.frame.width < screen.frame.width * 0.9 && window.frame.height < screen.frame.height * 0.9
+        }
+        exerciseNavigationRoundTrips(named: "Floating window")
+
+        let previousFrame = window.frame
+        let target = screen.coordinate(withNormalizedOffset: .zero).withOffset(
+            CGVector(
+                dx: previousFrame.minX + screen.frame.width * 0.5, dy: previousFrame.minY + screen.frame.height * 0.66))
+        window.coordinate(withNormalizedOffset: CGVector(dx: 0.995, dy: 0.995))
+            .press(forDuration: 0.2, thenDragTo: target)
+        waitForLayout("Dragging the corner must change both width and height") {
+            abs(window.frame.width - previousFrame.width) > 40 && abs(window.frame.height - previousFrame.height) > 20
+        }
+        exerciseNavigationRoundTrips(named: "Resized floating window")
+
+        windowControls.press(forDuration: 1)
+        let split = springBoard.buttons["Left and Right"]
+        XCTAssertTrue(split.waitForExistence(timeout: 5))
+        split.tap()
+        assertSplitView(fraction: 0.5)
+        exerciseNavigationRoundTrips(named: "Split View half", tabsAtBottom: true)
+        for fraction in [0.33, 0.67] {
+            let dividerX = (window.frame.maxX + systemSettings.windows.firstMatch.frame.minX) / 2
+            screen.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: dividerX, dy: screen.frame.midY))
+                .press(
+                    forDuration: 0.2,
+                    thenDragTo: screen.coordinate(withNormalizedOffset: CGVector(dx: fraction, dy: 0.5)))
+            assertSplitView(fraction: fraction)
+            exerciseNavigationRoundTrips(named: "Split View \(fraction)", tabsAtBottom: fraction < 0.5)
+        }
+        makeFullScreen()
+        exerciseNavigationRoundTrips(named: "Full screen restored", tabsAtBottom: false)
+    }
+
     func testMenusRemainSeparateAfterNavigationRoundTrips() {
+        selectChannels()
         for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
             XCUIDevice.shared.orientation = orientation
-            UITestHelpers.tapTab(named: "Home", in: app)
-            let chipBar = app.scrollViews[AccessibilityID.homeChipBar].firstMatch
-            XCTAssertTrue(chipBar.waitForExistence(timeout: 5))
-            let channels = chipBar.buttons["Channels"].firstMatch
-            UITestHelpers.scrollChipIntoView(channels, in: chipBar, app: app)
-            XCTAssertTrue(channels.waitForExistence(timeout: 5))
-            channels.tap()
+            exerciseNavigationRoundTrips(named: "Orientation \(orientation.rawValue)")
+        }
+    }
+
+    private func enableWindowedApps() {
+        systemSettings.activate()
+        let windowedApps = systemSettings.buttons[AccessibilityID.systemWindowedApps]
+        if !windowedApps.exists {
+            let multitasking = systemSettings.buttons[AccessibilityID.systemMultitasking]
+            UITestHelpers.scrollUntilVisible(
+                multitasking, in: systemSettings.collectionViews[AccessibilityID.systemSettingsSidebar])
+            XCTAssertTrue(multitasking.waitForExistence(timeout: 5))
+            multitasking.tap()
+        }
+        XCTAssertTrue(windowedApps.waitForExistence(timeout: 5))
+        multitaskingModeToRestore = [
+            AccessibilityID.systemFullScreenApps, AccessibilityID.systemWindowedApps,
+            AccessibilityID.systemStageManager,
+        ].first { systemSettings.buttons[$0].isSelected }
+        XCTAssertNotNil(multitaskingModeToRestore)
+        if !windowedApps.isSelected { windowedApps.tap() }
+        app.activate()
+    }
+
+    private func makeFullScreen() {
+        if windowControls.exists {
+            windowControls.tap()
+            let zoom = springBoard.buttons[AccessibilityID.systemWindowZoom].firstMatch
+            XCTAssertTrue(zoom.waitForExistence(timeout: 5))
+            zoom.tap()
+        }
+        waitForLayout("SmartTube must fill the screen") {
+            abs(self.app.windows.firstMatch.frame.width - self.springBoard.windows.firstMatch.frame.width) < 1
+        }
+    }
+
+    private func assertSplitView(fraction: CGFloat) {
+        waitForLayout("Both apps must occupy separate sides of Split View at \(fraction)") {
+            let left = self.app.windows.firstMatch.frame
+            let right = self.systemSettings.windows.firstMatch.frame
+            let screen = self.springBoard.windows.firstMatch.frame
+            return abs(left.minX - screen.minX) < 1 && left.maxX <= right.minX
+                && abs(right.maxX - screen.maxX) < 1 && right.width > 300
+                && abs(left.width - screen.width * fraction) < 40
+        }
+    }
+
+    private func waitForLayout(_ message: String, condition: @escaping () -> Bool) {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in condition() }, object: nil)
+        XCTAssertEqual(XCTWaiter().wait(for: [expectation], timeout: 5), .completed, message)
+    }
+
+    private func selectChannels() {
+        UITestHelpers.tapTab(named: "Home", in: app)
+        let chipBar = app.scrollViews[AccessibilityID.homeChipBar].firstMatch
+        XCTAssertTrue(chipBar.waitForExistence(timeout: 5))
+        UITestHelpers.scrollChipIntoView(channels, in: chipBar, app: app)
+        channels.tap()
+    }
+
+    private func exerciseNavigationRoundTrips(named name: String, tabsAtBottom: Bool? = nil) {
+        let chipBar = app.scrollViews[AccessibilityID.homeChipBar].firstMatch
+        XCTAssertTrue(chipBar.waitForExistence(timeout: 5))
+        UITestHelpers.scrollChipIntoView(channels, in: chipBar, app: app)
+        XCTAssertTrue(channels.isSelected, "Changing the window must preserve the selected section")
+        if let tabsAtBottom {
+            XCTAssertEqual(searchTab.frame.midY > app.windows.firstMatch.frame.midY, tabsAtBottom)
+        }
+        for _ in 0..<2 {
             XCTAssertTrue(app.buttons[AccessibilityID.subscriptionRow("UCfixtureAlpha")].waitForExistence(timeout: 5))
             assertMenusDoNotOverlap(channels)
             app.buttons[AccessibilityID.subscriptionRow("UCfixtureAlpha")].tap()
@@ -120,11 +255,17 @@ final class IPadMenuLayoutUITests: XCTestCase {
                 assertMenusDoNotOverlap(channels)
                 XCTAssertTrue(channels.isSelected, "Returning to Home must retain the selected Channels section")
             }
-            let screenshot = XCTAttachment(screenshot: app.screenshot())
-            screenshot.name = "Separated iPad menus - \(orientation.rawValue)"
-            screenshot.lifetime = .keepAlways
-            add(screenshot)
         }
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = name
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        let geometry = XCTAttachment(
+            string: "\(name): window \(app.windows.firstMatch.frame), section \(channels.frame), tab \(searchTab.frame)"
+        )
+        geometry.name = name + " geometry"
+        geometry.lifetime = .keepAlways
+        add(geometry)
     }
 
     private func openAndCloseVisibleSections() {
@@ -143,17 +284,20 @@ final class IPadMenuLayoutUITests: XCTestCase {
     private func assertMenusDoNotOverlap(
         _ sectionChip: XCUIElement, file: StaticString = #filePath, line: UInt = #line
     ) {
-        let searchTab = app.tabBars.buttons["Search"].firstMatch
-        let topTab = searchTab.exists ? searchTab : app.buttons["Search"].firstMatch
-        XCTAssertTrue(topTab.waitForExistence(timeout: 5), file: file, line: line)
+        let tab = searchTab
+        XCTAssertTrue(tab.waitForExistence(timeout: 5), file: file, line: line)
         let separated = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in
-                !sectionChip.frame.isEmpty && !topTab.frame.isEmpty && sectionChip.frame.minY >= topTab.frame.maxY
+                !sectionChip.frame.isEmpty && !tab.frame.isEmpty
+                    && (sectionChip.frame.minY >= tab.frame.maxY || sectionChip.frame.maxY <= tab.frame.minY)
+                    && (!self.windowControls.exists || sectionChip.frame.minY >= self.windowControls.frame.maxY)
             }, object: nil)
         XCTAssertEqual(
             XCTWaiter().wait(for: [separated], timeout: 5), .completed,
-            "Home controls \(sectionChip.frame) must stay below the iPad tab \(topTab.frame)", file: file, line: line)
-        XCTAssertTrue(topTab.isHittable, file: file, line: line)
+            "Home controls \(sectionChip.frame) must avoid native tabs \(tab.frame) and window controls", file: file,
+            line: line)
+        XCTAssertTrue(tab.isHittable, file: file, line: line)
+        XCTAssertTrue(sectionChip.isHittable, file: file, line: line)
     }
 }
 #endif
