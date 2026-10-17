@@ -318,8 +318,13 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - `AGENTS.md` and `HANDOFF.ru.md` still say Catalyst for Mac; the target is native macOS.
 - macOS accent swatch: the "Default" swatch falls back to `systemBlue`; `NSColor.controlAccentColor` is the right fallback.
 - Assumption to confirm: the iPhone/iPad tab order puts Search last on every OS version, not only where the search role renders apart.
-- The package's HTML/CSS (`mockups/*.dc.html`, `mockups/vf.css`, `design-system/components/*/preview.html`, `bundle.css`) is not committed:
-  the apple-hig commit gate asks for a passing `/hig-review` on staged UI files. Decide: review them, or commit with an explicit bypass.
-- `docs/design/voxaframe-redesign/docs/VoxaFrame-Functionality.ru.md` is byte-identical to DESIGN-0002 and is not committed, so the brief has one source;
-  the package's relative reference to it resolves only in the handoff copy.
+- The design package now includes its own copy of the functional brief (`278111b`); DESIGN-0002 stays the maintained source,
+  so a brief change must update both files or drop the copy.
+- Offline boards drawn before PLAN-0028 show things the code does not do (PLAN-0027, "Stage 6 basis"). Logic that stage 6 will not add:
+  sizes and storage totals, deleting one saved track apart from its job, audio-only listening, re-download of a saved variant,
+  saved date, queue position, byte progress, cached covers for offline use, remembering the translation choice.
+  Design docs to correct: `02-feature-coverage.md` §14 (storage error board, re-download status, notification not drawn),
+  `05-developer-notes.md` offline notes (one transfer at a time, yield only on start/rebuffer, HTTP status, restart from zero),
+  component READMEs DownloadRow (`cancelled`, `hls`, percent), OfflineAssetRow (`hls`, size only when known), ConfirmDeletion (job/video/library).
+- tvOS offline media lives under Documents, which tvOS may not keep; the TV offline path has been built but never run.
 - `docs/design/claude-design/HANDOFF.ru.md` still says "Mac Catalyst"; the target is native macOS.

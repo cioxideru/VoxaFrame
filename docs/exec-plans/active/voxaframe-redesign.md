@@ -46,3 +46,25 @@ Decisions: [ADR-0012](../../adr/0012-redesign-availability-and-tokens.md); accen
 The coral accent is not switched on in stage 1: with the system prominent button, the dark-mode label would be white on `#FF9988` (2.07:1). It flips together with the button style in stage 3a.
 
 Stages 0–2 run in order; stages 3–8 touch separate folders and may run in parallel once stage 2 is merged.
+
+## Stage 6 basis: offline after PLAN-0028
+
+Checked on 2026-10-17 against master `278111b`. The offline views are unchanged since the design snapshot `0e81d8a`;
+PLAN-0028 changed only the transport, error text and cleanup. The boards go beyond the code in several places, so stage 6 follows the code:
+
+- Six job states (`queued`, `resolving`, `downloading`, `completed`, `failed`, `cancelled`) plus "Waiting for translation" as a queued
+  sub-state. One transfer runs at a time, so a translation is drawn as queued or waiting, never in parallel, and there is no queue position.
+  Actions stay Cancel / Retry / Delete task and files; a completed job may link to its saved page.
+- Progress is a percentage only. Retry, a system task lost across relaunch, or process death between ranges restart from zero,
+  so no "resumes where it stopped" wording and no byte counts.
+- Error text is a localized prefix plus the raw reason (HTTP status, error domain and code); no "out of space" promise.
+- The yield banner appears only while the player starts or rebuffers; its copy says so.
+- Deletion dialogs name the video or track; conflicting actions are disabled while a removal is pending; no sizes.
+- A storage error replaces the empty state, and loading shows until the library is ready.
+- Saved-video page: "Included audio" means the included or first saved audio; "Without translation" stays the default on re-entry;
+  HLS cannot be paired with an external audio file, so that board frame is dropped.
+- Offline strings are English-only today; stage 6 adds catalog entries. UI tests match English labels
+  (`DownloadsPlaybackUITests.swift` 118–136 and 212–237): keep accessibility identifiers and update those tests with the copy.
+- Board items that need logic stay labels (OQ-0019). tvOS stores offline media under Documents (`OfflineCoordinator.swift` 59–62);
+  confirm tvOS keeps it before drawing the TV offline screen.
+
