@@ -35,6 +35,7 @@ public struct PlayerView: View {
     @State var showAudioTrackPicker = false
     @State var showSleepTimerPicker = false
     @State var showMoreMenu = false
+    @State var offlineDownloadVideo: Video?
     @State var moreMenuContentHeight: CGFloat = 0
     @State var showDescriptionSheet = false
     @State var showCommentsSheet = false
@@ -121,6 +122,7 @@ public struct PlayerView: View {
 
     public var body: some View {
         bodyWithLifecycleModifiers
+            .sheet(item: $offlineDownloadVideo) { OfflineDownloadSheet(video: $0) }
     }
 
     #if os(iOS)

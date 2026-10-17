@@ -5,9 +5,17 @@ public struct OfflineTrack: Codable, Hashable, Sendable, Identifiable {
     public enum Kind: String, Codable, Sendable { case video, audio, translation, hls }
     public let id: String
     public let kind: Kind
-    public let label: String
+    public var label: String
     public let language: String?
     public let hasAudio: Bool
+    public var videoSize: OfflineVideoSize?
+    public var fps: Int?
+    public var codec: VideoCodec?
+    public var audioLabel: String?
+    public var estimatedBytes: Int64?
+    public var isOriginalAudio: Bool?
+    public var hlsAudioName: String?
+    public var hlsPeakBitRate: Double?
     public init(id: String, kind: Kind, label: String, language: String? = nil, hasAudio: Bool = false) {
         self.id = id
         self.kind = kind
@@ -35,6 +43,7 @@ public struct OfflineAsset: Codable, Sendable, Identifiable {
     public let systemRelativePath: String?
     public var savedVideoSizes: [OfflineVideoSize]?
     public var systemNoFollow: Bool?
+    public var attempt: UUID?
 }
 public struct OfflineEntry: Codable, Sendable, Identifiable {
     public var id: String { video.id }
@@ -54,11 +63,17 @@ public struct OfflineJob: Codable, Sendable, Identifiable {
     public var nextResolutionAt: Date?
     public var resolutionAttempts: Int = 0
 }
+public struct OfflineRemoval: Codable, Sendable {
+    let videoID: String
+    public let jobIDs: Set<UUID>
+    let assetIDs: Set<String>
+}
 public struct OfflineSnapshot: Codable, Sendable {
     public var revision: UInt64 = 0
     public var entries: [OfflineEntry] = []
     public var jobs: [OfflineJob] = []
     public var notifiedBatches: Set<UUID> = []
+    public var pendingRemovals: [OfflineRemoval]?
     public init() {}
 }
 public struct OfflineTransferReceipt: Codable, Sendable {
@@ -66,11 +81,15 @@ public struct OfflineTransferReceipt: Codable, Sendable {
     public let url: URL
     public let systemPackage: Bool
     public let savedVideoSizes: [OfflineVideoSize]?
-    public init(attempt: UUID, url: URL, systemPackage: Bool, savedVideoSizes: [OfflineVideoSize]? = nil) {
+    public let isPartial: Bool?
+    public init(
+        attempt: UUID, url: URL, systemPackage: Bool, savedVideoSizes: [OfflineVideoSize]? = nil, isPartial: Bool? = nil
+    ) {
         self.attempt = attempt
         self.url = url
         self.systemPackage = systemPackage
         self.savedVideoSizes = savedVideoSizes
+        self.isPartial = isPartial
     }
     public func persist(in directory: URL) throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -131,6 +150,9 @@ public actor OfflineLibraryStore {
         video: Video, tracks: [OfflineTrack], batch: UUID = UUID()
     ) throws -> OfflineSnapshot {
         var next = try snapshot()
+        guard !(next.pendingRemovals ?? []).contains(where: { $0.videoID == video.id }) else {
+            throw OfflineLibraryError.unavailable
+        }
         if !next.entries.contains(where: { $0.id == video.id }) {
             let metadata = Video(
                 id: video.id, title: video.title, channelTitle: video.channelTitle,
@@ -223,7 +245,7 @@ public actor OfflineLibraryStore {
                 ? String(Self.comparisonURL(staged).path.dropFirst(Self.comparisonURL(homeDirectory).path.count + 1))
                 : nil,
             savedVideoSizes: savedVideoSizes,
-            systemNoFollow: systemPackage && Self.hasNoFollow(staged) ? true : nil)
+            systemNoFollow: systemPackage && Self.hasNoFollow(staged) ? true : nil, attempt: attempt)
 
         let replaced = next.entries[entryIndex].assets.first { $0.id == asset.id }
         next.entries[entryIndex].assets.removeAll { $0.id == asset.id }
@@ -241,7 +263,11 @@ public actor OfflineLibraryStore {
         guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
         return try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
             .filter { $0.lastPathComponent.hasPrefix("receipt-") && $0.pathExtension == "json" }
-            .map { try JSONDecoder().decode(OfflineTransferReceipt.self, from: Data(contentsOf: $0)) }
+            .compactMap { url in
+                do {
+                    return try JSONDecoder().decode(OfflineTransferReceipt.self, from: Data(contentsOf: url))
+                } catch CocoaError.fileReadNoSuchFile { return nil }
+            }
     }
     public func discard(attempt: UUID, url: URL, systemPackage: Bool) {
         let valid =
@@ -253,12 +279,15 @@ public actor OfflineLibraryStore {
             guard let published = try? fileURL(asset) else { return false }
             return Self.sameLocalFile(published, url)
         }
-        if valid, !isPublished { try? FileManager.default.removeItem(at: url) }
+        guard valid else { return }
+        if !isPublished {
+            do { try removeIfPresent(url) } catch { return }
+        }
         try? FileManager.default.removeItem(at: OfflineTransferReceipt.location(attempt, in: directory))
     }
     public func recover(activeAttempts: Set<UUID>) throws -> OfflineSnapshot {
         var next = try snapshot()
-        let received = Set(try pendingReceipts().map(\.attempt))
+        let received = Set(try pendingReceipts().filter { $0.isPartial != true }.map(\.attempt))
         for index in next.jobs.indices where [.resolving, .downloading].contains(next.jobs[index].state) {
             if !activeAttempts.union(received).contains(next.jobs[index].attempt) {
                 next.jobs[index].attempt = UUID()
@@ -281,7 +310,86 @@ public actor OfflineLibraryStore {
         if !result.isEmpty { try commit(next) }
         return result
     }
+    /// Invalidate attempts durably before cancellation; retained references let cleanup retry after disk errors.
+    public func beginRemoval(videoID: String, jobID: UUID? = nil) throws -> OfflineSnapshot {
+        var next = try snapshot()
+        let jobs = next.jobs.filter { $0.videoID == videoID && (jobID == nil || $0.id == jobID) }
+        let assets = next.entries.first { $0.id == videoID }?.assets ?? []
+        let selected = assets.filter { asset in
+            guard let jobID else { return true }
+            guard let job = jobs.first(where: { $0.id == jobID }) else { return false }
+            if let attempt = asset.attempt { return attempt == job.attempt }
+            // Manifests before PLAN-0025 did not record asset ownership by attempt.
+            return asset.id == job.track.id
+                && next.jobs.last(where: {
+                    $0.videoID == videoID && $0.track.id == asset.id && $0.state == .completed
+                })?.id == jobID
+        }
+        let removal = OfflineRemoval(
+            videoID: videoID, jobIDs: Set(jobs.map(\.id)), assetIDs: Set(selected.map(\.id)))
+        for index in next.jobs.indices where removal.jobIDs.contains(next.jobs[index].id) {
+            next.jobs[index].state = .cancelled
+        }
+        next.pendingRemovals = (next.pendingRemovals ?? []) + [removal]
+        return try commit(next)
+    }
+
+    public func completeRemovals() throws -> OfflineSnapshot {
+        var next = try snapshot()
+        for removal in next.pendingRemovals ?? [] {
+            let attempts = Set(next.jobs.filter { removal.jobIDs.contains($0.id) }.map(\.attempt))
+            let assets = next.entries.first { $0.id == removal.videoID }?.assets ?? []
+            let preserved = try next.entries.flatMap { entry in
+                try entry.assets.filter { entry.id != removal.videoID || !removal.assetIDs.contains($0.id) }
+                    .map { try assetURL($0) }
+            }
+            func removeOwned(_ url: URL) throws {
+                if !preserved.contains(where: { Self.sameLocalFile($0, url) }) { try removeIfPresent(url) }
+            }
+            for asset in assets where removal.assetIDs.contains(asset.id) {
+                try removeOwned(try assetURL(asset))
+            }
+            for receipt in try pendingReceipts() where attempts.contains(receipt.attempt) {
+                let owned =
+                    receipt.systemPackage
+                    ? Self.isSystemPackage(receipt.url, homeDirectory: homeDirectory)
+                    : Self.contains(receipt.url, in: directory)
+                        && receipt.url.deletingPathExtension().lastPathComponent == receipt.attempt.uuidString
+                guard owned else { throw OfflineLibraryError.invalidFile }
+                try removeOwned(receipt.url)
+                try removeIfPresent(OfflineTransferReceipt.location(receipt.attempt, in: directory))
+            }
+            // A process can exit between staging a direct file and writing its receipt.
+            for url in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            where UUID(uuidString: url.deletingPathExtension().lastPathComponent).map(attempts.contains) == true {
+                guard Self.contains(url, in: directory) else { throw OfflineLibraryError.invalidFile }
+                try removeOwned(url)
+            }
+            next.jobs.removeAll { removal.jobIDs.contains($0.id) }
+            if let index = next.entries.firstIndex(where: { $0.id == removal.videoID }) {
+                next.entries[index].assets.removeAll { removal.assetIDs.contains($0.id) }
+                if next.entries[index].assets.isEmpty && !next.jobs.contains(where: { $0.videoID == removal.videoID }) {
+                    next.entries.remove(at: index)
+                }
+            }
+        }
+        guard !(next.pendingRemovals ?? []).isEmpty else { return next }
+        next.pendingRemovals = nil
+        next.notifiedBatches.formIntersection(Set(next.jobs.map(\.batch)))
+        return try commit(next)
+    }
+
+    private func removeIfPresent(_ url: URL) throws {
+        do { try FileManager.default.removeItem(at: url) } catch CocoaError.fileNoSuchFile
+        { /* Already removed by an earlier cleanup attempt. */  }
+    }
+
     public func fileURL(_ asset: OfflineAsset) throws -> URL {
+        let url = try assetURL(asset)
+        guard fileExists(url) else { throw OfflineLibraryError.invalidFile }
+        return url
+    }
+    private func assetURL(_ asset: OfflineAsset) throws -> URL {
         let url: URL
         if let relative = asset.systemRelativePath {
             guard !relative.isEmpty, !relative.hasPrefix("/"), !relative.split(separator: "/").contains("..") else {
@@ -297,8 +405,7 @@ public actor OfflineLibraryStore {
         }
         guard
             asset.systemRelativePath != nil
-                ? Self.isSystemPackage(url, homeDirectory: homeDirectory) : Self.contains(url, in: directory),
-            fileExists(url)
+                ? Self.isSystemPackage(url, homeDirectory: homeDirectory) : Self.contains(url, in: directory)
         else {
             throw OfflineLibraryError.invalidFile
         }

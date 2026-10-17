@@ -58,7 +58,7 @@ extension PlaybackViewModel {
                 case .readyToPlay:
                     playerLog.notice(
                         "[benchmark] readyToPlay — local-file — videoId=\(video.id) title=\(video.title)")
-                    self.loadAudioTracks(from: item)
+                    // OfflineMedia already selected the saved audio; online language preferences must not replace it.
                     if let translation = video.localTranslationFileURL {
                         self.voiceOver.keepsOriginalAudio = self.settings.yandexVOTKeepOriginalAudio
                         self.voiceOver.startLocal(

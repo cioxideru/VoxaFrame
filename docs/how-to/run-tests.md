@@ -59,9 +59,12 @@ the running app/debugger, or leave them for the next calibration.
 Run `python3 scripts/shorts-media-fixture.py --port 18766` with the same FFmpeg requirement,
 then select `-only-testing:SmartTubeUITests/DownloadsPlaybackUITests` on an iPad Simulator.
 This suite uses real background URLSession/AVAssetDownloadURLSession and local AVPlayer/VOT
-playback; only source resolution points at synthetic loopback media. It checks MP4, extra AAC
-and translation tracks, HLS selected resolution, rotation, relaunch and unchanged media-request
-counts during saved playback. It fails if its fixture is absent.
+playback; only source resolution points at synthetic loopback media. It checks the video/audio/
+translation selection form, MP4, extra AAC and translation tracks, task/library deletion including a protected HLS package,
+rotation, relaunch and unchanged media-request counts during saved playback. The HLS fixture
+has both muxed audio and a two-resolution master with separate English/Russian audio groups;
+request counters reject downloads of an unselected resolution or language. It fails if its
+fixture is absent. Tests use unique video IDs and can scroll through entries from earlier runs.
 
 Build these test products with `CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-` on Simulator.
 An unsigned app can be rejected by the system background-session daemon (XPC 4097 / missing

@@ -197,6 +197,7 @@ enum AppSymbol {
     static let xmarkCircle = "xmark.circle.fill"
     static let share = "square.and.arrow.up"
     static let copyDoc = "doc.on.doc"
+    static let trash = "trash"
     static let download = "arrow.down.to.line"
     static let watchLater = "clock.badge"
     static let audioOnly = "waveform.circle"

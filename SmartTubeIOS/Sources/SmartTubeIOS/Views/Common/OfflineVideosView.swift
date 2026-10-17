@@ -3,20 +3,14 @@ import SwiftUI
 
 struct OfflineWatchButton: View {
     let video: Video
+    let action: () -> Void
     private var isQueued: Bool {
         OfflineCoordinator.shared.snapshot.jobs.contains {
             $0.videoID == video.id && [.queued, .resolving, .downloading].contains($0.state)
         }
     }
     var body: some View {
-        Menu {
-            Button("Video with included audio") { OfflineCoordinator.shared.enqueue(video: video) }
-            ForEach(YandexVOTClient.targetLanguages.sorted(), id: \.self) { language in
-                Button("Video + Yandex translation · \(language)") {
-                    OfflineCoordinator.shared.enqueue(video: video, translationLanguage: language)
-                }
-            }
-        } label: {
+        Button(action: action) {
             Label(isQueued ? "Offline watch · queued" : "Offline watch", systemImage: AppSymbol.download)
         }
         .accessibilityIdentifier(AccessibilityID.offlineWatch)
@@ -27,6 +21,7 @@ struct OfflineWatchButton: View {
 struct OfflineVideosView: View {
     @State private var coordinator = OfflineCoordinator.shared
     @State private var showsProgress = false
+    @State private var deletion: (videoID: String, jobID: UUID?)?
     var body: some View {
         VStack {
             Picker("Offline videos", selection: $showsProgress) {
@@ -44,6 +39,21 @@ struct OfflineVideosView: View {
         }
         .navigationTitle("Offline videos")
         .task { coordinator.start() }
+        .confirmationDialog(
+            "Delete downloaded files?",
+            isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let deletion { coordinator.remove(videoID: deletion.videoID, jobID: deletion.jobID) }
+                deletion = nil
+            }
+        } message: {
+            Text(
+                deletion?.jobID == nil
+                    ? "This removes the video, all downloaded audio and translations, and its pending downloads."
+                    : "This removes the task and its downloaded files. Other saved tracks are kept.")
+        }
     }
     private var libraryList: some View {
         List {
@@ -51,16 +61,27 @@ struct OfflineVideosView: View {
                 Text("Choose Offline watch from a video's menu. Accepted downloads continue when you leave this page.")
             }
             ForEach(coordinator.snapshot.entries) { entry in
-                NavigationLink {
-                    OfflineVideoDetail(videoID: entry.id)
-                } label: {
-                    VStack(alignment: .leading) {
-                        Text(entry.video.title)
-                        Text("\(entry.assets.count) saved variants and audio tracks").font(.caption).foregroundStyle(
-                            .secondary)
+                HStack {
+                    NavigationLink {
+                        OfflineVideoDetail(videoID: entry.id)
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text(entry.video.title)
+                            Text("\(entry.assets.count) saved variants and audio tracks").font(.caption)
+                                .foregroundStyle(
+                                    .secondary)
+                        }
                     }
+                    .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
+                    Button(role: .destructive) {
+                        deletion = (entry.id, nil)
+                    } label: {
+                        Label("Delete video and files", systemImage: AppSymbol.trash)
+                    }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.borderless)
+                    .accessibilityIdentifier(AccessibilityID.offlineDeleteEntry(entry.id))
                 }
-                .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
             }
         }
     }
@@ -87,10 +108,14 @@ struct OfflineVideosView: View {
                         Button("Retry") { coordinator.retry(job) }
                             .accessibilityIdentifier(AccessibilityID.offlineRetry(job.id))
                     }
+                    Button("Delete task and files", role: .destructive) { deletion = (job.videoID, job.id) }
+                        .accessibilityIdentifier(AccessibilityID.offlineDeleteJob(job.id))
                 }
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier(AccessibilityID.offlineJob(job.id))
             }
         }
+        .buttonStyle(.borderless)
     }
 }
 

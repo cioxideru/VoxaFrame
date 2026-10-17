@@ -98,6 +98,7 @@ public final class OfflineCoordinator {
         startup = Task {
             do {
                 apply(try await store.snapshot())
+                try await finishRemovals()
                 try await restoreCompletions()
                 let active = await transport.activeAttempts()
                 apply(try await store.recover(activeAttempts: active))
@@ -146,7 +147,15 @@ public final class OfflineCoordinator {
         Task { await transport.setYielding(true) }
     }
     private func restoreCompletions() async throws {
+        let active = await transport.activeAttempts()
         for receipt in try await store.pendingReceipts() {
+            if receipt.isPartial == true {
+                if !active.contains(receipt.attempt) {
+                    await store.discard(
+                        attempt: receipt.attempt, url: receipt.url, systemPackage: receipt.systemPackage)
+                }
+                continue
+            }
             if let job = snapshot.jobs.first(where: { $0.attempt == receipt.attempt && $0.state == .downloading }) {
                 do { try await validate(receipt.url, job.track, receipt.systemPackage) } catch {
                     apply(
@@ -174,6 +183,7 @@ public final class OfflineCoordinator {
         }
         Task {
             do {
+                try await finishRemovals()
                 try await restoreCompletions()
                 let active = await transport.activeAttempts()
                 apply(try await store.recover(activeAttempts: active))
@@ -243,7 +253,7 @@ public final class OfflineCoordinator {
         try await resolver.catalog(video: video).map(\.track)
     }
     private func pump() {
-        guard ready, !persistenceBlocked, !isYielding, resolverTask == nil,
+        guard ready, !persistenceBlocked, !isYielding, (snapshot.pendingRemovals ?? []).isEmpty, resolverTask == nil,
             !snapshot.jobs.contains(where: { $0.state == .downloading })
         else { return }
         guard
@@ -273,8 +283,12 @@ public final class OfflineCoordinator {
                 guard snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .resolving }) else {
                     return
                 }
-                if source.track.kind == .video, !source.track.hasAudio,
-                    !entry.assets.contains(where: { $0.track.kind == .audio })
+                if job.track.id == OfflineTrack.automatic.id, source.track.kind == .video, !source.track.hasAudio,
+                    !entry.assets.contains(where: { $0.track.kind == .audio }),
+                    !snapshot.jobs.contains(where: {
+                        $0.videoID == job.videoID && $0.track.kind == .audio
+                            && [.queued, .resolving, .downloading, .completed].contains($0.state)
+                    })
                 {
                     let catalog = try await resolver.catalog(video: entry.video)
                     try Task.checkCancellation()
@@ -291,7 +305,13 @@ public final class OfflineCoordinator {
                 guard !persistenceBlocked,
                     snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .downloading })
                 else { return }
-                try transport.start(source, attempt: job.attempt, yielding: isYielding)
+                try await transport.start(source, attempt: job.attempt, yielding: isYielding)
+                guard !Task.isCancelled,
+                    snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .downloading })
+                else {
+                    await transport.cancel(job.attempt)
+                    return
+                }
                 await transport.setYielding(isYielding)
             } catch let deferred as OfflineResolutionDeferred {
                 do {
@@ -395,5 +415,32 @@ public final class OfflineCoordinator {
         if let translation { video.localTranslationFileURL = try await store.fileURL(translation) }
         guard videoAsset.track.hasAudio || audio != nil else { throw OfflineLibraryError.missingAudio }
         return video
+    }
+}
+
+extension OfflineCoordinator {
+    func remove(videoID: String, jobID: UUID? = nil) {
+        guard !persistenceBlocked else { return }
+        Task {
+            do {
+                apply(try await store.beginRemoval(videoID: videoID, jobID: jobID))
+                try await finishRemovals()
+                error = nil
+                pump()
+            } catch { blockPersistence(error) }
+        }
+    }
+    private func finishRemovals() async throws {
+        let ids = Set((snapshot.pendingRemovals ?? []).flatMap { $0.jobIDs })
+        for job in snapshot.jobs where ids.contains(job.id) {
+            if resolvingAttempt == job.attempt {
+                resolverTask?.cancel()
+                resolverTask = nil
+                resolvingAttempt = nil
+            }
+            await transport.cancel(job.attempt)
+            transport.acknowledge(job.attempt)
+        }
+        apply(try await store.completeRemovals())
     }
 }

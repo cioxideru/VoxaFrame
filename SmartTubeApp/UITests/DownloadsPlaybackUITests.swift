@@ -95,6 +95,98 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertEqual(after, before, "The saved HLS package must play without fetching segments again")
     }
 
+    func testChooseOnlySelectedStreamsThenDeleteTaskAndLibraryFiles() async throws {
+        let id = "offline-ui-selection-" + UUID().uuidString
+        launch(videoID: id)
+        saveFromPlayer(selectTracks: true)
+        openEntry(id)
+        waitForSavedVideo("fixture-720")
+        let translation = app.buttons[AccessibilityID.offlineDownloadTranslation("ru")]
+        reveal(translation)
+        XCTAssertTrue(translation.waitForExistence(timeout: 5))
+        waitUntilDisabled(translation)
+        XCTAssertFalse(app.buttons[AccessibilityID.offlinePlay("fixture-360")].exists)
+        let metricsURL = try XCTUnwrap(URL(string: mediaURL + "/metrics"))
+        let (data, _) = try await URLSession.shared.data(from: metricsURL)
+        let counts = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Int])
+        XCTAssertGreaterThan(counts["/\(id)/video720.mp4"] ?? 0, 0)
+        XCTAssertGreaterThan(counts["/\(id)/original.m4a"] ?? 0, 0)
+        XCTAssertGreaterThan(counts["/\(id)/voice.mp3"] ?? 0, 0)
+        XCTAssertEqual(counts["/\(id)/video.mp4"] ?? 0, 0)
+
+        app.navigationBars.buttons.firstMatch.tap()
+        let pages = app.segmentedControls[AccessibilityID.offlinePagePicker]
+        XCTAssertTrue(pages.waitForExistence(timeout: 5))
+        pages.buttons["Downloads"].tap()
+        let job = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", "offline.job."))
+            .containing(.staticText, identifier: id)
+            .containing(.staticText, identifier: "en · Original").firstMatch
+        reveal(job)
+        XCTAssertTrue(job.waitForExistence(timeout: 8))
+        let remove = job.buttons["Delete task and files"]
+        XCTAssertTrue(remove.exists)
+        remove.tap()
+        let confirm = app.buttons["Delete"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        let removed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: job)
+        XCTAssertEqual(XCTWaiter().wait(for: [removed], timeout: 10), .completed)
+        pages.buttons["Library"].tap()
+        let deleteEntry = app.buttons[AccessibilityID.offlineDeleteEntry(id)]
+        reveal(deleteEntry)
+        XCTAssertTrue(deleteEntry.waitForExistence(timeout: 5))
+        deleteEntry.tap()
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        let entryRemoved = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"), object: deleteEntry)
+        XCTAssertEqual(XCTWaiter().wait(for: [entryRemoved], timeout: 10), .completed)
+        app.terminate()
+        launch(videoID: nil)
+        UITestHelpers.tapTab(named: "Offline videos", in: app)
+        XCTAssertTrue(app.segmentedControls[AccessibilityID.offlinePagePicker].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons[AccessibilityID.offlineEntry(id)].exists)
+    }
+
+    func testExternalHLSDownloadsOnlyChosenVideoAndLanguage() async throws {
+        let id = "offline-ui-external-" + UUID().uuidString
+        launch(videoID: id)
+        saveFromPlayer()
+        openEntry(id)
+        waitForSavedVideo("fixture-360")
+        app.buttons[AccessibilityID.offlineFindVariants].tap()
+        download("fixture-hls-ru")
+        waitForSavedVideo("fixture-hls-ru")
+        let before = try await requestCount(videoID: id)
+        play("fixture-hls-ru", translated: false)
+        app.terminate()
+        launch(videoID: nil)
+        openEntry(id)
+        play("fixture-hls-ru", translated: false)
+        let after = try await requestCount(videoID: id)
+        XCTAssertEqual(after, before)
+        let url = try XCTUnwrap(URL(string: mediaURL + "/metrics"))
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let counts = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Int])
+        XCTAssertGreaterThan(counts["/\(id)/russian-seg000.ts"] ?? 0, 0)
+        XCTAssertGreaterThan(counts["/\(id)/video720-seg000.ts"] ?? 0, 0)
+        XCTAssertEqual(counts.filter { $0.key.hasPrefix("/\(id)/english-seg") }.values.reduce(0, +), 0)
+        XCTAssertEqual(counts.filter { $0.key.hasPrefix("/\(id)/video-seg") }.values.reduce(0, +), 0)
+        app.terminate()
+        launch(videoID: nil)
+        UITestHelpers.tapTab(named: "Offline videos", in: app)
+        let remove = app.buttons[AccessibilityID.offlineDeleteEntry(id)]
+        reveal(remove)
+        XCTAssertTrue(remove.waitForExistence(timeout: 5))
+        remove.tap()
+        let confirm = app.buttons["Delete"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        let deleted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: remove)
+        XCTAssertEqual(XCTWaiter().wait(for: [deleted], timeout: 10), .completed)
+    }
+
     private func launch(videoID: String?) {
         app = XCUIApplication()
         app.launchArguments = [
@@ -107,7 +199,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         app.launch()
     }
 
-    private func saveFromPlayer() {
+    private func saveFromPlayer(selectTracks: Bool = false) {
         let more = app.buttons["player.moreButton"].firstMatch
         XCTAssertTrue(more.waitForExistence(timeout: 25))
         more.tap()
@@ -116,8 +208,24 @@ final class DownloadsPlaybackUITests: XCTestCase {
         let menu = app.scrollViews["player.moreMenu.scrollView"]
         for _ in 0..<3 where !save.isHittable { menu.swipeUp() }
         save.tap()
-        let original = app.buttons["Video with included audio"].firstMatch
-        XCTAssertTrue(original.waitForExistence(timeout: 5))
+        let original = app.buttons[AccessibilityID.offlineSelectionDownload].firstMatch
+        XCTAssertTrue(original.waitForExistence(timeout: 15))
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: original)
+        XCTAssertEqual(XCTWaiter().wait(for: [ready], timeout: 15), .completed)
+        app.buttons[AccessibilityID.offlineSelectionVideo].tap()
+        if selectTracks {
+            app.buttons["720p · H.264 · MP4"].firstMatch.tap()
+            app.buttons[AccessibilityID.offlineSelectionAudio].tap()
+            app.buttons["en · Original"].firstMatch.tap()
+            app.switches[AccessibilityID.offlineSelectionTranslate].switches.firstMatch.tap()
+            XCTAssertTrue(app.buttons[AccessibilityID.offlineSelectionLanguage].waitForExistence(timeout: 3))
+            let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            attachment.name = "Offline stream and translation selection"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        } else {
+            app.buttons["360p · H.264 · MP4"].firstMatch.tap()
+        }
         original.tap()
         let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Allow"].firstMatch
         if allow.waitForExistence(timeout: 3) { allow.tap() }
@@ -140,13 +248,13 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertTrue(library.waitForExistence(timeout: 8))
         library.tap()
         let entry = app.buttons[AccessibilityID.offlineEntry(id)].firstMatch
-        XCTAssertTrue(entry.waitForExistence(timeout: 15))
         reveal(entry)
+        XCTAssertTrue(entry.waitForExistence(timeout: 15))
         entry.tap()
     }
 
     private func reveal(_ element: XCUIElement) {
-        for _ in 0..<8 {
+        for _ in 0..<24 {
             if element.exists && element.isHittable { return }
             app.swipeUp()
         }

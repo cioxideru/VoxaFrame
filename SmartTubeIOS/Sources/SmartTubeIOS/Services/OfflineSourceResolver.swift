@@ -5,6 +5,7 @@ struct OfflineSource: Sendable {
     let track: OfflineTrack
     let url: URL
     let userAgent: String
+    var hlsVariantURL: URL?
 }
 
 struct OfflineResolutionDeferred: Error { let delay: TimeInterval }
@@ -21,7 +22,6 @@ actor OfflineSourceResolver: OfflineResolving {
 
     func catalog(video: Video) async throws -> [OfflineSource] {
         var sources: [OfflineSource] = []
-        var hasHLSCatalog = false
         do {
             let info = try await api.fetchPlayerInfoVisionOS(videoId: video.id)
             let agent = InnerTubeClients.VisionOS.userAgent
@@ -36,32 +36,23 @@ actor OfflineSourceResolver: OfflineResolving {
                 else {
                     throw OfflineLibraryError.unavailable
                 }
-                sources.insert(
-                    OfflineSource(
-                        track: .init(
-                            id: "hls-auto", kind: .hls,
-                            label: "Adaptive · system-selected audio", hasAudio: true), url: playlistURL,
-                        userAgent: agent), at: 0)
-                sources += offlineHLSVariants(manifest, baseURL: playlistURL).map {
-                    OfflineSource(track: $0.0, url: $0.1, userAgent: agent)
+                sources += offlineHLSVariants(manifest, baseURL: playlistURL, duration: info.video.duration).map {
+                    OfflineSource(track: $0.0, url: playlistURL, userAgent: agent, hlsVariantURL: $0.1)
                 }
-                hasHLSCatalog = true
             }
             #endif
         } catch {
             try Task.checkCancellation()
             if error is CancellationError || (error as? URLError)?.code == .cancelled { throw error }
         }
-        if !hasHLSCatalog {
-            do {
-                let direct = try await api.fetchPlayerInfoAndroid(videoId: video.id)
-                let alternatives = Self.directSources(direct, userAgent: InnerTubeClients.iOS.userAgent)
-                sources += alternatives.filter { candidate in !sources.contains { $0.track.id == candidate.track.id } }
-            } catch {
-                try Task.checkCancellation()
-                if sources.isEmpty || error is CancellationError || (error as? URLError)?.code == .cancelled {
-                    throw error
-                }
+        do {
+            let direct = try await api.fetchPlayerInfoAndroid(videoId: video.id)
+            let alternatives = Self.directSources(direct, userAgent: InnerTubeClients.Android.userAgent)
+            sources += alternatives.filter { candidate in !sources.contains { $0.track.id == candidate.track.id } }
+        } catch {
+            try Task.checkCancellation()
+            if sources.isEmpty || error is CancellationError || (error as? URLError)?.code == .cancelled {
+                throw error
             }
         }
         guard !sources.isEmpty else { throw OfflineLibraryError.unavailable }
@@ -118,7 +109,7 @@ actor OfflineSourceResolver: OfflineResolving {
         URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == name }?.value
     }
 
-    private static func directSources(_ info: PlayerInfo, userAgent: String) -> [OfflineSource] {
+    static func directSources(_ info: PlayerInfo, userAgent: String) -> [OfflineSource] {
         info.formats.compactMap { format in
             guard let url = format.url, url.scheme == "https", !url.absoluteString.contains("c=TVHTML5"),
                 format.mimeType.hasPrefix("video/mp4") || format.mimeType.hasPrefix("audio/mp4")
@@ -126,12 +117,22 @@ actor OfflineSourceResolver: OfflineResolving {
             let audio = format.mimeType.hasPrefix("audio/")
             let language = format.audioLanguage
             let itag = query("itag", url: url) ?? "\(format.height)-\(format.fps)-\(format.codecShortLabel)"
-            let track = OfflineTrack(
+            var track = OfflineTrack(
                 id: "direct-\(itag)-\(format.audioTrackID ?? "original")", kind: audio ? .audio : .video,
                 label: audio
-                    ? "\(language ?? "Unknown language") · \(format.isOriginalAudio == true ? "Original" : format.isOriginalAudio == false ? "Dubbed" : "Audio")"
+                    ? "\(language ?? "Unknown language") · \(format.isOriginalAudio == true ? "Original" : format.isOriginalAudio == false ? "Dubbed" : "Audio") · \(format.mimeType.contains("mp4a") ? "AAC" : "MP4 audio") \(format.bitrate.map { "\($0 / 1000) kbps" } ?? "")"
                     : "\(format.qualityLabel) · \(format.codecShortLabel)", language: language,
                 hasAudio: !audio && format.mimeType.contains(","))
+            track.isOriginalAudio = format.isOriginalAudio
+            if !audio {
+                track.videoSize = OfflineVideoSize(width: format.width, height: format.height)
+                track.fps = format.fps
+                track.codec = format.videoCodec
+                track.audioLabel = "Included audio"
+            }
+            track.estimatedBytes =
+                query("clen", url: url).flatMap(Int64.init).flatMap { $0 > 0 ? $0 : nil }
+
             return OfflineSource(track: track, url: url, userAgent: userAgent)
         }
     }

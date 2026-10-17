@@ -44,7 +44,24 @@ enum OfflineUITestFixture {
                 source(
                     video, track: .init(id: "fixture-audio", kind: .audio, label: "en · Original", language: "en"),
                     file: "original.m4a"),
-            ]
+            ] + [external(video, language: "en"), external(video, language: "ru")]
+        }
+
+        private func external(_ video: Video, language: String) -> OfflineSource {
+            let name = language == "ru" ? "Russian" : "English"
+            var track = OfflineTrack(
+                id: "fixture-hls-\(language)", kind: .hls,
+                label: "720p · H.264 · \(name)", language: language, hasAudio: true)
+            track.videoSize = OfflineVideoSize(width: 1280, height: 720)
+            track.codec = .h264
+            track.fps = 30
+            track.hlsPeakBitRate = 2_000_000
+            track.hlsAudioName = name
+            track.audioLabel = name
+            var result = source(video, track: track, file: "external-master.m3u8")
+            result.hlsVariantURL = baseURL.appendingPathComponent(video.id).appendingPathComponent(
+                "video720-stream.m3u8")
+            return result
         }
 
         func resolve(video: Video, track: OfflineTrack) throws -> OfflineSource {

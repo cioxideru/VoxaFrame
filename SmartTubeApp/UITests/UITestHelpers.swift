@@ -11,6 +11,13 @@ enum AccessibilityID {
     static var playerProgressBar: String { "player.progressBar" }
     static var playerBrightnessGesture: String { "player.brightnessGesture" }
     static var playerVolumeGesture: String { "player.volumeGesture" }
+    static var offlineSelectionVideo: String { "offline.selection.video" }
+    static var offlineSelectionAudio: String { "offline.selection.audio" }
+    static var offlineSelectionTranslate: String { "offline.selection.translate" }
+    static var offlineSelectionLanguage: String { "offline.selection.language" }
+    static var offlineSelectionDownload: String { "offline.selection.download" }
+    static func offlineDeleteEntry(_ id: String) -> String { "offline.deleteEntry.\(id)" }
+    static func offlineDeleteJob(_ id: UUID) -> String { "offline.deleteJob.\(id)" }
     static var offlineWatch: String { "offline.watch" }
     static var offlinePage: String { "offline.page" }
     static var offlinePagePicker: String { "offline.pagePicker" }

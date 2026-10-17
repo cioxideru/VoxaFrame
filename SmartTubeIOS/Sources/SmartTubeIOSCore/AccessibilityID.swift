@@ -15,6 +15,13 @@ public enum AccessibilityID {
     public static var offlineFindVariants: String { "offline.findVariants" }
     public static func offlineDownload(_ id: String) -> String { "offline.download.\(id)" }
     public static func offlineDownloadTranslation(_ language: String) -> String { "offline.translation.\(language)" }
+    public static var offlineSelectionVideo: String { "offline.selection.video" }
+    public static var offlineSelectionAudio: String { "offline.selection.audio" }
+    public static var offlineSelectionTranslate: String { "offline.selection.translate" }
+    public static var offlineSelectionLanguage: String { "offline.selection.language" }
+    public static var offlineSelectionDownload: String { "offline.selection.download" }
+    public static func offlineDeleteEntry(_ id: String) -> String { "offline.deleteEntry.\(id)" }
+    public static func offlineDeleteJob(_ id: UUID) -> String { "offline.deleteJob.\(id)" }
     public static var offlineWatch: String { "offline.watch" }
     public static var offlinePage: String { "offline.page" }
     public static var offlinePagePicker: String { "offline.pagePicker" }

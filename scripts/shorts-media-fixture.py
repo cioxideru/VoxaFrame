@@ -41,6 +41,24 @@ def main():
         subprocess.run(
             [args.ffmpeg, "-hide_banner", "-loglevel", "error", "-i", str(root / "video.mp4"),
              "-vn", "-c:a", "copy", str(root / "original.m4a")], check=True)
+        for source, stem, media_flag in [("video.mp4", "video", "-an"),
+                                         ("video720.mp4", "video720", "-an"),
+                                         ("original.m4a", "english", "-vn"),
+                                         ("voice.mp3", "russian", "-vn")]:
+            codec = ["-c", "copy"] if stem != "russian" else ["-c:a", "aac"]
+            subprocess.run(
+                [args.ffmpeg, "-hide_banner", "-loglevel", "error", "-i", str(root / source),
+                 media_flag, "-t", "20", *codec, "-f", "hls", "-hls_time", "2", "-hls_list_size", "0",
+                 "-hls_segment_filename", str(root / (stem + "-seg%03d.ts")),
+                 str(root / (stem + "-stream.m3u8"))], check=True)
+        (root / "external-master.m3u8").write_text(
+            '#EXTM3U\n'
+            '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",LANGUAGE="en",NAME="English",DEFAULT=YES,AUTOSELECT=YES,URI="english-stream.m3u8"\n'
+            '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",LANGUAGE="ru",NAME="Russian",DEFAULT=NO,AUTOSELECT=YES,URI="russian-stream.m3u8"\n'
+            '#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=360x640,FRAME-RATE=30,CODECS="avc1.64001e,mp4a.40.2",AUDIO="audio"\n'
+            'video-stream.m3u8\n'
+            '#EXT-X-STREAM-INF:BANDWIDTH=2000000,RESOLUTION=1280x720,FRAME-RATE=30,CODECS="avc1.64001f,mp4a.40.2",AUDIO="audio"\n'
+            'video720-stream.m3u8\n')
         counts = {}
         counts_lock = Lock()
 
@@ -59,8 +77,7 @@ def main():
                     time.sleep(0.35)
                     data = (b'#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=360x640,'
                             b'CODECS="avc1.4d401e,mp4a.40.2"\nstream.m3u8\n')
-                elif name in ("stream.m3u8", "voice.mp3", "video.mp4", "video720.mp4", "original.m4a") or (name.startswith("seg") and name.endswith(".ts")
-                                              and name[3:-3].isdigit()):
+                elif name in {path.name for path in root.iterdir() if path.is_file()}:
                     if name == "seg000.ts":
                         time.sleep(0.25)
                     try:

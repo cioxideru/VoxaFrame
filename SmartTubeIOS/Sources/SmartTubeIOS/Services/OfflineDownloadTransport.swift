@@ -15,7 +15,7 @@ enum OfflineTransferEvent: Sendable {
 protocol OfflineTransporting: Sendable {
     var events: AsyncStream<OfflineTransferEvent> { get }
     func activeAttempts() async -> Set<UUID>
-    func start(_ source: OfflineSource, attempt: UUID, yielding: Bool) throws
+    func start(_ source: OfflineSource, attempt: UUID, yielding: Bool) async throws
     func cancel(_ attempt: UUID) async
     func acknowledge(_ attempt: UUID)
     func setYielding(_ yielding: Bool) async
@@ -31,6 +31,7 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
     private var files: URLSession!
     #if os(iOS)
     private var hls: AVAssetDownloadURLSession!
+    private var expectedHLS: [UUID: OfflineSource] = [:]
     #endif
     private var finished: [UUID: (URL, Bool)] = [:]
     private var videoSizes: [UUID: [OfflineVideoSize]] = [:]
@@ -74,7 +75,7 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         return active.union(completionLock.withLock { completedAttempts })
     }
 
-    func start(_ source: OfflineSource, attempt: UUID, yielding: Bool) throws {
+    func start(_ source: OfflineSource, attempt: UUID, yielding: Bool) async throws {
         #if DEBUG
         let allowed = source.url.scheme == "https" || OfflineUITestFixture.allows(source.url)
         #else
@@ -84,15 +85,10 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         let task: URLSessionTask
         if source.track.kind == .hls {
             #if os(iOS)
-            let asset = AVURLAsset(url: source.url, options: ["AVURLAssetHTTPUserAgentKey": source.userAgent])
-            guard
-                let download = hls.makeAssetDownloadTask(
-                    asset: asset, assetTitle: source.track.label,
-                    assetArtworkData: nil, options: nil)
-            else {
-                throw OfflineLibraryError.unavailable
-            }
-            task = download
+            let configuration = try await Self.hlsConfiguration(source)
+            try Task.checkCancellation()
+            completionLock.withLock { expectedHLS[attempt] = source }
+            task = hls.makeAssetDownloadTask(downloadConfiguration: configuration)
             #else
             throw OfflineLibraryError.unavailable
             #endif
@@ -105,6 +101,67 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         task.priority = URLSessionTask.lowPriority
         if !yielding { task.resume() }
     }
+
+    #if os(iOS)
+    private static func hlsConfiguration(_ source: OfflineSource) async throws -> AVAssetDownloadConfiguration {
+        let asset = AVURLAsset(url: source.url, options: ["AVURLAssetHTTPUserAgentKey": source.userAgent])
+        let variants = try await asset.load(.variants)
+        let audible = try await asset.loadMediaSelectionGroup(for: .audible)
+        let legible = try await asset.loadMediaSelectionGroup(for: .legible)
+        let preferred = try await asset.load(.preferredMediaSelection)
+        try Task.checkCancellation()
+        let matches = variants.filter { matchesVariant($0, source: source) }
+        guard matches.count == 1, let variant = matches.first,
+            let peak = variant.peakBitRate, peak > 0,
+            let selection = preferred.mutableCopy() as? AVMutableMediaSelection
+        else { throw OfflineLibraryError.unavailable }
+        let predicate = NSPredicate(format: "peakBitRate == %@", NSNumber(value: peak))
+        guard variants.filter({ predicate.evaluate(with: $0) }).count == 1 else {
+            throw OfflineLibraryError.unavailable
+        }
+        if let name = source.track.hlsAudioName {
+            guard let audible else { throw OfflineLibraryError.missingAudio }
+            let named = audible.options.filter { $0.displayName == name }
+            let localized = audible.options.filter { $0.extendedLanguageTag == source.track.language }
+            let candidates = named.isEmpty ? localized : named
+            guard candidates.count == 1, let audio = candidates.first else { throw OfflineLibraryError.unavailable }
+            selection.select(audio, in: audible)
+        }
+        if let legible, legible.allowsEmptySelection { selection.select(nil, in: legible) }
+        let configuration = AVAssetDownloadConfiguration(asset: asset, title: source.track.label)
+        configuration.auxiliaryContentConfigurations = []
+        // Match one rendition; willDownloadVariants also rejects the system's automatic fallback.
+        configuration.primaryContentConfiguration.variantQualifiers = [AVAssetVariantQualifier(predicate: predicate)]
+        configuration.primaryContentConfiguration.mediaSelections = [selection]
+        return configuration
+    }
+    private static func matchesVariant(_ variant: AVAssetVariant, source: OfflineSource) -> Bool {
+        let matchesURL: Bool
+        if let url = source.hlsVariantURL, #available(iOS 26, *) {
+            guard variant.url.absoluteURL == url.absoluteURL else { return false }
+            matchesURL = true
+        } else {
+            matchesURL = false
+        }
+        if let size = source.track.videoSize {
+            guard variant.videoAttributes?.presentationSize == CGSize(width: size.width, height: size.height) else {
+                return false
+            }
+        }
+        // AVFoundation omits codecTypes for some VP9 variants; their exact playlist URL is authoritative.
+        if let codec = source.track.codec, !matchesURL {
+            let fourCC = codec.rawValue.utf8.reduce(UInt32(0)) { ($0 << 8) | UInt32($1) }
+            guard variant.videoAttributes?.codecTypes.contains(fourCC) == true else { return false }
+        }
+        if let fps = source.track.fps, let attributes = variant.videoAttributes,
+            let frameRate = attributes.nominalFrameRate, frameRate > 0, frameRate.rounded() != Double(fps)
+        {
+            return false
+        }
+        if let peak = source.track.hlsPeakBitRate, variant.peakBitRate != peak { return false }
+        return true
+    }
+    #endif
 
     func acknowledge(_ attempt: UUID) { completionLock.withLock { _ = completedAttempts.remove(attempt) } }
 
@@ -154,7 +211,12 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let id = task.taskDescription.flatMap(UUID.init(uuidString:)) else { return }
-        completionLock.withLock { _ = completedAttempts.insert(id) }
+        completionLock.withLock {
+            _ = completedAttempts.insert(id)
+            #if os(iOS)
+            expectedHLS[id] = nil
+            #endif
+        }
         lastProgress[id] = nil
         let staged = finished.removeValue(forKey: id)
         let sizes = videoSizes.removeValue(forKey: id)
@@ -170,7 +232,7 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         }
         let failure = stagingErrors.removeValue(forKey: id) ?? diagnostic
         if let failure {
-            if let staged { discardStaged(staged) }
+            if let staged { discardStaged(staged, attempt: id) }
             continuation.yield(.failed(id, failure))
         } else if let staged {
             do {
@@ -178,7 +240,7 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
                     .persist(in: directory)
                 continuation.yield(.finished(id, staged.0, systemPackage: staged.1, savedVideoSizes: sizes))
             } catch {
-                discardStaged(staged)
+                discardStaged(staged, attempt: id)
                 continuation.yield(.failed(id, "Could not save download completion: \(error.localizedDescription)"))
             }
         } else {
@@ -186,10 +248,19 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         }
     }
 
-    /// Only URLs obtained from this adapter's completed task callback enter this method.
+    /// Only URLs obtained from this adapter's transfer callbacks enter this method.
     /// They are unpublished, so deleting them cannot invalidate a committed library variant.
-    private func discardStaged(_ staged: (URL, Bool)) {
-        try? FileManager.default.removeItem(at: staged.0)
+    private func discardStaged(_ staged: (URL, Bool), attempt: UUID) {
+        do {
+            do { try FileManager.default.removeItem(at: staged.0) } catch CocoaError.fileNoSuchFile {}
+            try? FileManager.default.removeItem(at: OfflineTransferReceipt.location(attempt, in: directory))
+        } catch {
+            // Keep cleanup retryable after a temporary filesystem failure.
+            try? OfflineTransferReceipt(attempt: attempt, url: staged.0, systemPackage: staged.1, isPartial: true)
+                .persist(in: directory)
+            offlineTransportLog.error(
+                "Could not remove unfinished download: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     private func publishProgress(_ id: UUID, _ progress: Double) {
@@ -207,6 +278,19 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
 
 #if os(iOS)
 extension OfflineDownloadTransport: AVAssetDownloadDelegate {
+    func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, willDownloadTo location: URL) {
+        guard let id = assetDownloadTask.taskDescription.flatMap(UUID.init(uuidString:)) else { return }
+        let normalized = location.absoluteURL.standardizedFileURL
+        finished[id] = (normalized, true)
+        do {
+            // Keep a durable reference to partially written packages so cancellation/relaunch can remove their cache.
+            try OfflineTransferReceipt(attempt: id, url: normalized, systemPackage: true, isPartial: true)
+                .persist(in: directory)
+        } catch {
+            stagingErrors[id] = error.localizedDescription
+            assetDownloadTask.cancel()
+        }
+    }
     func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL)
     {
         guard let id = assetDownloadTask.taskDescription.flatMap(UUID.init(uuidString:)) else { return }
@@ -218,6 +302,13 @@ extension OfflineDownloadTransport: AVAssetDownloadDelegate {
         _ session: URLSession, assetDownloadTask: AVAssetDownloadTask, willDownloadVariants variants: [AVAssetVariant]
     ) {
         guard let id = assetDownloadTask.taskDescription.flatMap(UUID.init(uuidString:)) else { return }
+        if let expected = completionLock.withLock({ expectedHLS[id] }),
+            variants.count != 1 || !variants.allSatisfy({ Self.matchesVariant($0, source: expected) })
+        {
+            stagingErrors[id] = OfflineLibraryError.unavailable.localizedDescription
+            assetDownloadTask.cancel()
+            return
+        }
         let selected = variants.compactMap { variant -> OfflineVideoSize? in
             guard let size = variant.videoAttributes?.presentationSize,
                 let width = Int(exactly: size.width.rounded()), let height = Int(exactly: size.height.rounded()),

@@ -35,8 +35,16 @@ enum OfflineMedia {
         if url.pathExtension == "movpkg" {
             guard video.localAudioFileURL == nil else { throw OfflineLibraryError.unavailable }
             try validateOfflineCache(asset)
-            // Downloaded HLS exposes its media through the asset cache, not file/composition tracks.
-            return AVPlayerItem(asset: asset)
+            // Choose cached audio explicitly; the online master may default to an unsaved language.
+            let group = try await asset.loadMediaSelectionGroup(for: .audible)
+            let item = AVPlayerItem(asset: asset)
+            if let group {
+                guard let option = asset.assetCache?.mediaSelectionOptions(in: group).first else {
+                    throw OfflineLibraryError.missingAudio
+                }
+                item.select(option, in: group)
+            }
+            return item
         }
         guard let audioURL = video.localAudioFileURL else {
             guard try await !asset.loadTracks(withMediaType: .video).isEmpty else {

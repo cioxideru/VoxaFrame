@@ -42,6 +42,7 @@ public struct VideoCardView: View {
     @State private var localProgress: Double?
     @State private var isVisibleForPrefetch = false
     @State private var watchLaterAlert: DownloadAlertItem?
+    @State private var showsOfflineDownload = false
     @State private var playlistPickerMode: PlaylistPickerSheet.Mode?
     /// Index into `video.thumbnailFallbackURLs`. -1 = use primary `thumbnailURL`.
     @State private var thumbnailFallbackIndex: Int = -1
@@ -262,7 +263,7 @@ public struct VideoCardView: View {
                     }
                 }
             }
-            OfflineWatchButton(video: video)
+            OfflineWatchButton(video: video) { showsOfflineDownload = true }
             #if !os(tvOS) && ENABLE_DOWNLOADS
             Button {
                 downloadService.download(video: video)
@@ -340,6 +341,7 @@ extension VideoCardView {
             .scaleEffect(isFocused ? 1.08 : 1.0)
             .zIndex(isFocused ? 1 : 0)
             .animation(.easeInOut(duration: 0.15), value: isFocused)
+            .sheet(isPresented: $showsOfflineDownload) { OfflineDownloadSheet(video: video) }
             .feedbackAlert(item: $watchLaterAlert)
             .sheet(item: $playlistPickerMode) { mode in
                 PlaylistPickerSheet(
@@ -350,6 +352,7 @@ extension VideoCardView {
         #else
         cardContent
             .onAppear { feedLog.info("[feed] id=\(self.video.id) title=\(self.video.title)") }
+            .sheet(isPresented: $showsOfflineDownload) { OfflineDownloadSheet(video: video) }
             .feedbackAlert(item: $watchLaterAlert)
             .sheet(item: $playlistPickerMode) { mode in
                 PlaylistPickerSheet(

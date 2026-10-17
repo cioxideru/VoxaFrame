@@ -8,6 +8,15 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Added — 2026-10-17
 
+- **VoxaFrame 5.16 (34), offline choices and cleanup (PLAN-0025):** Offline watch now
+  asks for video resolution/codec, a compatible audio track, and optional Yandex translation
+  language. HLS downloads bind one video variant and one audio selection; direct downloads
+  queue only the chosen files. File-size estimates use known content length or average
+  bandwidth, never HLS peak bandwidth. Downloads can delete a task and its files; Library
+  can remove a video with all saved tracks and pending jobs. Interrupted cleanup resumes
+  after relaunch, and late transfer callbacks cannot restore a deleted entry. Saved HLS audio
+  stays selected during playback instead of reverting to an unsaved global language preference.
+
 - **Full-screen level gestures (PLAN-0024):** slow vertical drags adjust screen
   brightness on the left and system volume on the right. Control hints mark both
   halves, and a brief indicator shows the level. Brightness returns to its previous

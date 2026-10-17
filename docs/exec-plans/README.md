@@ -19,8 +19,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-
-
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
 
 - [PLAN-0005: Home feed review fixes](active/home-review-fixes.md) — implementation and coordinator acceptance.
@@ -28,6 +26,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0025: Offline selection and deletion](completed/offline-selection-cleanup.md) — explicit video/audio/translation choices and file cleanup.
 
 - [PLAN-0024: Full-screen level gestures](completed/player-level-gestures.md) — brightness/volume adjustment, iPhone/iPad gesture conflict checks and physical iPad calibration.
 - [PLAN-0023: VoxaFrame identity](completed/voxaframe-branding.md) — app name, original icon and platform acceptance.

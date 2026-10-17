@@ -24,6 +24,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0018) | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/completed/offline-selection-cleanup.md](exec-plans/completed/offline-selection-cleanup.md) | PLAN-0025: explicit offline streams, audio and file deletion | current | 2026-10-17 |
 | [exec-plans/completed/player-level-gestures.md](exec-plans/completed/player-level-gestures.md) | PLAN-0024: full-screen brightness/volume gestures | accepted | 2026-10-17 |
 | [exec-plans/completed/voxaframe-branding.md](exec-plans/completed/voxaframe-branding.md) | PLAN-0023: chosen app name, icon and preserved technical identity | current | 2026-10-17 |
 | [exec-plans/completed/playback-priority.md](exec-plans/completed/playback-priority.md) | PLAN-0020: shared playback demand and bounded optional transfers | current | 2026-10-17 |

@@ -83,6 +83,50 @@ struct OfflineCoordinatorTests {
         while await notifier.completedIDs.isEmpty, ContinuousClock.now < deadline { await Task.yield() }
         #expect(await notifier.completedIDs.count == 1)
     }
+    @Test func explicitSelectionDoesNotFetchOrEnqueueDefaultAudio() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let transport = OfflineFakeTransport()
+        defer { transport.continuation.finish() }
+        let resolver = OfflineCatalogGate()
+        let coordinator = OfflineCoordinator(
+            store: OfflineLibraryStore(directory: directory), transport: transport, resolver: resolver,
+            notifications: OfflineFakeNotifications(),
+            demand: PlaybackDemandCoordinator(waitForRecovery: {}, waitForBudget: {}), validate: { _, _, _ in })
+        let video = Video(id: "explicit", title: "Explicit", channelTitle: "Test")
+        coordinator.enqueue(
+            video: video,
+            tracks: [
+                OfflineTrack(id: "video", kind: .video, label: "Video"),
+                OfflineTrack(id: "chosen-audio", kind: .audio, label: "Chosen audio"),
+            ])
+        #expect(await wait { coordinator.snapshot.jobs.first?.state == .downloading })
+        #expect(coordinator.snapshot.jobs.map(\.track.id) == ["video", "chosen-audio"])
+        #expect(await !resolver.entered)
+    }
+
+    @Test func deletionCancelsActiveTransferAndLateCompletionCannotRestoreIt() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let transport = OfflineFakeTransport()
+        defer { transport.continuation.finish() }
+        let coordinator = OfflineCoordinator(
+            store: OfflineLibraryStore(directory: directory), transport: transport, resolver: OfflineFakeResolver(),
+            notifications: OfflineFakeNotifications(),
+            demand: PlaybackDemandCoordinator(waitForRecovery: {}, waitForBudget: {}), validate: { _, _, _ in })
+        coordinator.enqueue(video: Video(id: "delete", title: "Delete", channelTitle: "Test"))
+        #expect(await wait { coordinator.snapshot.jobs.first?.state == .downloading })
+        let job = try #require(coordinator.snapshot.jobs.first)
+        coordinator.remove(videoID: job.videoID, jobID: job.id)
+        #expect(await wait { coordinator.snapshot.jobs.isEmpty })
+        #expect(!transport.activeAttempts().contains(job.attempt))
+        let late = directory.appendingPathComponent(job.attempt.uuidString + ".mp4")
+        try Data([1]).write(to: late)
+        transport.continuation.yield(.finished(job.attempt, late, systemPackage: false))
+        #expect(await wait { !FileManager.default.fileExists(atPath: late.path) })
+        #expect(coordinator.snapshot.entries.isEmpty)
+    }
+
     @Test func failureAllowsNextVideoToDownload() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
