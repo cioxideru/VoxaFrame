@@ -300,23 +300,39 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 ## OQ-0019 — VoxaFrame redesign follow-ups
 
 - Status: open; owner: UI maintainer; basis: [PLAN-0027](exec-plans/active/voxaframe-redesign.md), [ADR-0012](adr/0012-redesign-availability-and-tokens.md).
-- Mini-player as a tab-bar bottom accessory (iOS 26+) is unproven: the current overlay exists because the persistent UIKit
-  player layer must not be duplicated across tabs. Stage 2 spikes this first; if the layer is duplicated, iOS 26+ keeps the overlay.
+- Mini-player: the tab-bar bottom accessory was rejected in stage 2a (`0d446f6`): it re-parented the persistent player
+  layer on every tab switch, has a fixed height, no opaque fallback and needs iOS 26.1. The overlay stays on every version.
+  Its space is reserved by a UIKit bridge (`NavigationBottomReserve`) that adds the bar height to each tab's navigation
+  controller; it was run only on an iOS 26 simulator, so check iOS 17 (`.tabItem`) and 18 (Tab API) on a runtime or device.
+  On iPad the floating sidebar edge is estimated from a 1 pt sidebar header (about 10 pt past the real edge); the docked
+  sidebar in landscape, a 600 pt window and rotation were not run. At AX5 the stacked bar still takes about a third of an
+  iPhone screen. A `smarttube://video/<id>` link opens with an empty mini-player title (the handler builds the video without one).
 - Not implemented, still labelled in the mockups: A3, A6–A12, B4–B8 (including the Mac keyboard map and shortcuts), C1.
   The macOS menu bar gets entries for existing actions only.
 - Device-only checks, `NOT RUN`: VoiceOver order and the timeline adjustable action, tvOS focus restore after Back, glass
   legibility over bright frames, PiP, Dynamic Type up to AX5 on iPad, Mac and TV, RTL.
-- Accent flip: `AccentColorChoice.system` still returns the platform default. The coral tint is switched on in stage 3a together with a
-  prominent button style (fill `action`, label `onAction`); the 15 `.borderedProminent` call sites are migrated first.
-  Confirm on a device in Dark Mode that the system label is white on the coral fill before and dark after the change.
+- Accent on tvOS: stage 3a (`8d7c981`) switched iPhone and iPad only. On tvOS `.system` keeps the platform accent and
+  `.vfProminent` stays `.borderedProminent`: white on the dark coral and coral on the white focus platter are both 2.07:1.
+  Switch only after checking focused and unfocused contrast and Back on a tvOS runtime or device (none is installed here).
+  Confirm on an iPhone in Dark Mode that `.vfProminent` labels are plum on the coral and black on the named accents.
 - Increase Contrast: the colour pairs in `VFColor` have light/dark variants only. Ask design for high-contrast values
-  (the review suggested `#9A2819` light and `#FFBFB4` dark for `action`) and add a 7:1 test; `vfGlass` already thickens its stroke.
+  (the review suggested `#9A2819` light and `#FFBFB4` dark for `action`) and add a 7:1 test; `vfGlass` thickens its stroke
+  and `.vfProminent` adds a 2 pt edge as the interim.
+- One button keeps the system style on purpose: the SponsorBlock skip toast is tinted with the segment colour, whose
+  label contrast is not tested.
+- macOS shell (stage 2b, `084cec3`): the harness never builds the macOS app scheme, so the two `AppEntry.swift` lines
+  that call `MacWindowCommands()` and `MacSettingsScene` are checked by reading only (the types compile in the package).
+  Build and run the macOS scheme in Xcode: inspector at 1440, 1000 and 800 pt windows, View > Show/Hide Inspector,
+  Settings window, and a deep link over a card-pushed player (card A → link B → link C → Back: visible video,
+  previous player stopped, navigation state). `InspectorCommands()` was replaced by one menu item, so ⌃⌘I is gone until B8.
+- Tab and sidebar labels on every platform use `AppSection.rawValue`, not localized strings (the value is also the
+  UI-test identifier, so localize the label only). On macOS `SearchView` sets `selectedVideo` but has
+  no player destination on macOS, so a search result does not open (existed before stage 2; stage 8).
+  `SmartTubeApp/UITests/MacWKHLSReplayRegressionUITests.swift:27` still describes the old ZStack overlay.
 - Glass modifier leftovers: the glass and opaque branches are different view types, so toggling Reduce Transparency live resets content
   state; no `.interactive()` variant and no `GlassEffectContainer` guidance for adjacent glass shapes (mini-player plus bar).
   The macOS `surface` is a translucent fill (`quaternarySystemFill`) and is untested; `elevated` has no shadow.
-- When the accent flips, on-video glyphs that use `Color.accentColor` (`PlayerControlsOverlay+QuickAccess.swift`) must move to `onMedia`.
 - `AGENTS.md` and `HANDOFF.ru.md` still say Catalyst for Mac; the target is native macOS.
-- macOS accent swatch: the "Default" swatch falls back to `systemBlue`; `NSColor.controlAccentColor` is the right fallback.
 - Assumption to confirm: the iPhone/iPad tab order puts Search last on every OS version, not only where the search role renders apart.
 - The design package now includes its own copy of the functional brief (`278111b`); DESIGN-0002 stays the maintained source,
   so a brief change must update both files or drop the copy.

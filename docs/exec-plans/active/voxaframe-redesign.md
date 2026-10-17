@@ -34,8 +34,9 @@ Decisions: [ADR-0012](../../adr/0012-redesign-availability-and-tokens.md); accen
 | --- | --- | --- |
 | 0 | This plan, ADR-0012, OQ-0019, document index | done: `452adac`; the remaining HTML/CSS mockups are now retained as design references. UI acceptance remains in OQ-0019 and the stage checks below |
 | 1 | `Views/DesignSystem/`: tokens and glass modifier. Accent flip deferred to the button stage (see OQ-0019) | done: `e483ec1`. Package tests and SwiftLint (`./h check`: 1157 tests, 160 suites), iOS and tvOS builds pass; HIG static review advisory-pass, high=0. macOS app scheme is not built by the harness (package compiles on macOS); device and Dark Mode checks NOT RUN |
-| 3a | `VFProminentButtonStyle` (fill `action`, label `onAction`), migrate the 15 `.borderedProminent` sites, then flip `.system` accent on iOS, iPadOS, tvOS | NOT RUN |
-| 2 | Shell: tabs / sidebar / split view / top tabs; mini-player accessory spike; macOS inspector and menu | NOT RUN |
+| 3a | `VFProminentButtonStyle` (fill `action`, label `onAction`), migrate the 15 `.borderedProminent` sites, then flip `.system` accent on iOS, iPadOS, tvOS | done on iPhone/iPad: `8d7c981`. 14 sites migrated (SponsorBlock toast keeps its segment tint); named accents use the vf.css pairs. `./h check` 1167 tests, iOS and tvOS builds pass; independent review round 3 blocking=0, HIG high=0. tvOS accent deferred (OQ-0019). Device, Dark Mode, AX5 and VoiceOver NOT RUN |
+| 2b | Shell on macOS: sidebar, player in the content stack, inspector, View menu, Settings scene | done: `084cec3`. `./h check` 1172 tests (on top of 3a), iOS and tvOS builds pass; review round 3 blocking=0, HIG high=0. macOS app scheme not built by the harness; runtime checks NOT RUN (OQ-0019) |
+| 2a | Shell on iPhone, iPad, tvOS: Tab API, sidebar-adaptable, search role, mini-player restyle (accessory spike rejected: overlay kept) | done: `0d446f6`. `./h check` 1179 tests (all of stage 2 and 3a), iOS and tvOS builds and UI-test compile pass; the new pushed-screen reserve UI test passed once on an iOS 26 iPhone simulator; review round 3 blocking=0, HIG high=0. iOS 17/18 paths, docked iPad sidebar, 600 pt window and rotation NOT RUN (OQ-0019) |
 | 3 | Home, cards, A2 | NOT RUN |
 | 4 | Player and option panels | NOT RUN |
 | 5 | Shorts | NOT RUN |
