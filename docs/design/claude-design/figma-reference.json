@@ -1,0 +1,7059 @@
+{
+  "source": {
+    "url": "https://www.figma.com/design/DuO7Y7LtPFaGhcPKDVfNfQ/iOS-and-iPadOS-27--Community-",
+    "fileKey": "DuO7Y7LtPFaGhcPKDVfNfQ",
+    "checkedDate": "2026-10-17",
+    "scope": "Read-only reference facts; not an exported Apple UI kit. Current app behavior is mapped separately.",
+    "totalVariablesDetected": 299,
+    "sourceLabel": "User-provided community copy; not independently verified as an unmodified official kit"
+  },
+  "pages": [
+    {
+      "id": "221:56229",
+      "name": "Cover"
+    },
+    {
+      "id": "223:56234",
+      "name": "Getting Started"
+    },
+    {
+      "id": "507:6",
+      "name": "---"
+    },
+    {
+      "id": "0:3329",
+      "name": "Examples"
+    },
+    {
+      "id": "12403:18003",
+      "name": "Page 47"
+    },
+    {
+      "id": "3370:15833",
+      "name": "---"
+    },
+    {
+      "id": "0:1746",
+      "name": "Colors"
+    },
+    {
+      "id": "215:105157",
+      "name": "Materials"
+    },
+    {
+      "id": "0:2194",
+      "name": "Text Styles and Dynamic Type"
+    },
+    {
+      "id": "12892:60611",
+      "name": "Layout Guides"
+    },
+    {
+      "id": "507:24672",
+      "name": "Product Bezels"
+    },
+    {
+      "id": "224:56252",
+      "name": "——————————————————"
+    },
+    {
+      "id": "507:24688",
+      "name": "System"
+    },
+    {
+      "id": "507:24669",
+      "name": "Action Sheets"
+    },
+    {
+      "id": "507:24670",
+      "name": "Activity Views"
+    },
+    {
+      "id": "507:24668",
+      "name": "Alerts"
+    },
+    {
+      "id": "507:24671",
+      "name": "App Icons"
+    },
+    {
+      "id": "507:24673",
+      "name": "Buttons"
+    },
+    {
+      "id": "507:26010",
+      "name": "Color Pickers"
+    },
+    {
+      "id": "507:25994",
+      "name": "Contextual Menus"
+    },
+    {
+      "id": "507:24680",
+      "name": "Date and Time Pickers"
+    },
+    {
+      "id": "5518:18111",
+      "name": "Empty States"
+    },
+    {
+      "id": "507:26011",
+      "name": "Face ID"
+    },
+    {
+      "id": "507:24674",
+      "name": "Keyboards"
+    },
+    {
+      "id": "507:24675",
+      "name": "Lists"
+    },
+    {
+      "id": "507:24676",
+      "name": "Menus"
+    },
+    {
+      "id": "507:24678",
+      "name": "Notifications"
+    },
+    {
+      "id": "507:24679",
+      "name": "Page Controls"
+    },
+    {
+      "id": "507:24681",
+      "name": "Popovers"
+    },
+    {
+      "id": "507:26009",
+      "name": "Pop-up Buttons"
+    },
+    {
+      "id": "507:24682",
+      "name": "Progress Indicators"
+    },
+    {
+      "id": "507:24683",
+      "name": "Segmented Controls"
+    },
+    {
+      "id": "507:24684",
+      "name": "Sheets"
+    },
+    {
+      "id": "507:26013",
+      "name": "Sidebars"
+    },
+    {
+      "id": "507:24685",
+      "name": "Sliders"
+    },
+    {
+      "id": "507:24686",
+      "name": "Status Bars and Menu Bars"
+    },
+    {
+      "id": "507:24687",
+      "name": "Steppers"
+    },
+    {
+      "id": "507:24689",
+      "name": "Tab Bars"
+    },
+    {
+      "id": "553:22762",
+      "name": "Text Fields"
+    },
+    {
+      "id": "507:24690",
+      "name": "Toggles"
+    },
+    {
+      "id": "507:25993",
+      "name": "Toolbars"
+    },
+    {
+      "id": "507:26511",
+      "name": "Widgets"
+    },
+    {
+      "id": "5413:10149",
+      "name": "Windows"
+    },
+    {
+      "id": "224:56254",
+      "name": "——————————————————"
+    },
+    {
+      "id": "29:95567",
+      "name": "Change log"
+    },
+    {
+      "id": "223:56245",
+      "name": "License"
+    },
+    {
+      "id": "507:29124",
+      "name": "_Kit Helpers"
+    }
+  ],
+  "collections": [
+    {
+      "id": "VariableCollectionId:507:29161",
+      "name": "Colors",
+      "modes": [
+        {
+          "name": "Light",
+          "modeId": "404:0"
+        },
+        {
+          "name": "Dark",
+          "modeId": "404:1"
+        }
+      ],
+      "count": 63
+    },
+    {
+      "id": "VariableCollectionId:2402:4072",
+      "name": "Icons",
+      "modes": [
+        {
+          "name": "Light",
+          "modeId": "2402:0"
+        },
+        {
+          "name": "Dark",
+          "modeId": "2402:1"
+        },
+        {
+          "name": "Clear Light",
+          "modeId": "2402:2"
+        }
+      ],
+      "count": 1
+    },
+    {
+      "id": "VariableCollectionId:5565:22724",
+      "name": "Kit",
+      "modes": [
+        {
+          "name": "Mode",
+          "modeId": "5565:0"
+        }
+      ],
+      "count": 40
+    },
+    {
+      "id": "VariableCollectionId:10442:64",
+      "name": "Dimensions",
+      "modes": [
+        {
+          "name": "iPhone",
+          "modeId": "10442:0"
+        },
+        {
+          "name": "iPad",
+          "modeId": "10442:2"
+        },
+        {
+          "name": "iPhone Duo Inner Landscape",
+          "modeId": "12956:0"
+        },
+        {
+          "name": "iPhone Duo Inner Portrait",
+          "modeId": "12956:1"
+        },
+        {
+          "name": "iPhone Duo Outer Landscape",
+          "modeId": "12956:2"
+        },
+        {
+          "name": "iPhone Duo Outer Portrait",
+          "modeId": "12956:3"
+        }
+      ],
+      "count": 41
+    },
+    {
+      "id": "VariableCollectionId:12434:7",
+      "name": "Text Leading",
+      "modes": [
+        {
+          "name": "Default",
+          "modeId": "12434:0"
+        },
+        {
+          "name": "Loose",
+          "modeId": "12436:0"
+        },
+        {
+          "name": "Tight",
+          "modeId": "12436:1"
+        }
+      ],
+      "count": 132
+    },
+    {
+      "id": "VariableCollectionId:12436:18",
+      "name": "Dynamic Type",
+      "modes": [
+        {
+          "name": "Large (Default)",
+          "modeId": "12436:5"
+        },
+        {
+          "name": "xSmall",
+          "modeId": "12436:2"
+        },
+        {
+          "name": "Small",
+          "modeId": "12436:3"
+        },
+        {
+          "name": "Medium",
+          "modeId": "12436:4"
+        },
+        {
+          "name": "xLarge",
+          "modeId": "12436:6"
+        },
+        {
+          "name": "xxLarge",
+          "modeId": "12436:7"
+        },
+        {
+          "name": "xxxLarge",
+          "modeId": "12436:8"
+        },
+        {
+          "name": "AX1",
+          "modeId": "12446:3"
+        },
+        {
+          "name": "AX2",
+          "modeId": "12446:4"
+        },
+        {
+          "name": "AX3",
+          "modeId": "12446:5"
+        },
+        {
+          "name": "AX4",
+          "modeId": "12446:6"
+        },
+        {
+          "name": "AX5",
+          "modeId": "12446:7"
+        }
+      ],
+      "count": 22
+    }
+  ],
+  "colors": [
+    {
+      "id": "VariableID:507:29162",
+      "name": "Labels/Secondary",
+      "light": {
+        "r": 0.23529411852359772,
+        "g": 0.23529411852359772,
+        "b": 0.26274511218070984,
+        "a": 0.6000000238418579
+      },
+      "dark": {
+        "r": 0.9215686321258545,
+        "g": 0.9215686321258545,
+        "b": 0.9607843160629272,
+        "a": 0.699999988079071
+      }
+    },
+    {
+      "id": "VariableID:507:29166",
+      "name": "Accents/Blue",
+      "light": {
+        "r": 0,
+        "g": 0.5333333611488342,
+        "b": 1,
+        "a": 1
+      },
+      "dark": {
+        "r": 0,
+        "g": 0.5686274766921997,
+        "b": 1,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:507:29167",
+      "name": "Labels/Primary",
+      "light": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1
+      },
+      "dark": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:508:77440",
+      "name": "Backgrounds/Primary",
+      "light": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "dark": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:508:77441",
+      "name": "Fills/Primary",
+      "light": {
+        "r": 0.47058823704719543,
+        "g": 0.47058823704719543,
+        "b": 0.47058823704719543,
+        "a": 0.20000000298023224
+      },
+      "dark": {
+        "r": 0.47058823704719543,
+        "g": 0.47058823704719543,
+        "b": 0.501960813999176,
+        "a": 0.36000001430511475
+      }
+    },
+    {
+      "id": "VariableID:508:77442",
+      "name": "Separators/Opaque",
+      "light": {
+        "r": 0.7764706015586853,
+        "g": 0.7764706015586853,
+        "b": 0.7843137383460999,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.21960784494876862,
+        "g": 0.21960784494876862,
+        "b": 0.22745098173618317,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:508:77449",
+      "name": "Labels/Tertiary",
+      "light": {
+        "r": 0.23529411852359772,
+        "g": 0.23529411852359772,
+        "b": 0.26274511218070984,
+        "a": 0.30000001192092896
+      },
+      "dark": {
+        "r": 0.9215686321258545,
+        "g": 0.9215686321258545,
+        "b": 0.9607843160629272,
+        "a": 0.30000001192092896
+      }
+    },
+    {
+      "id": "VariableID:508:77450",
+      "name": "Labels/Quaternary",
+      "light": {
+        "r": 0.23529411852359772,
+        "g": 0.23529411852359772,
+        "b": 0.26274511218070984,
+        "a": 0.18000000715255737
+      },
+      "dark": {
+        "r": 0.9215686321258545,
+        "g": 0.9215686321258545,
+        "b": 0.9607843160629272,
+        "a": 0.1599999964237213
+      }
+    },
+    {
+      "id": "VariableID:508:77458",
+      "name": "Backgrounds/Tertiary",
+      "light": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.1725490242242813,
+        "g": 0.1725490242242813,
+        "b": 0.18039216101169586,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:508:77460",
+      "name": "Backgrounds/Secondary",
+      "light": {
+        "r": 0.9490196108818054,
+        "g": 0.9490196108818054,
+        "b": 0.9686274528503418,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.10980392247438431,
+        "g": 0.10980392247438431,
+        "b": 0.11764705926179886,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:508:77464",
+      "name": "Backgrounds (Grouped)/Primary",
+      "light": {
+        "r": 0.9490196108818054,
+        "g": 0.9490196108818054,
+        "b": 0.9686274528503418,
+        "a": 1
+      },
+      "dark": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:508:77466",
+      "name": "Backgrounds (Grouped)/Secondary",
+      "light": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.10980392247438431,
+        "g": 0.10980392247438431,
+        "b": 0.11764705926179886,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:508:77468",
+      "name": "Backgrounds (Grouped)/Tertiary",
+      "light": {
+        "r": 0.9490196108818054,
+        "g": 0.9490196108818054,
+        "b": 0.9686274528503418,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.1725490242242813,
+        "g": 0.1725490242242813,
+        "b": 0.18039216101169586,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77471",
+      "name": "Accents/Red",
+      "light": {
+        "r": 1,
+        "g": 0.21960784494876862,
+        "b": 0.23529411852359772,
+        "a": 1
+      },
+      "dark": {
+        "r": 1,
+        "g": 0.25882354378700256,
+        "b": 0.2705882489681244,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77472",
+      "name": "Accents/Orange",
+      "light": {
+        "r": 1,
+        "g": 0.5529412031173706,
+        "b": 0.1568627506494522,
+        "a": 1
+      },
+      "dark": {
+        "r": 1,
+        "g": 0.572549045085907,
+        "b": 0.1882352977991104,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77473",
+      "name": "Accents/Yellow",
+      "light": {
+        "r": 1,
+        "g": 0.800000011920929,
+        "b": 0,
+        "a": 1
+      },
+      "dark": {
+        "r": 1,
+        "g": 0.8392156958580017,
+        "b": 0,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77474",
+      "name": "Accents/Green",
+      "light": {
+        "r": 0.20392157137393951,
+        "g": 0.7803921699523926,
+        "b": 0.3490196168422699,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.1882352977991104,
+        "g": 0.8196078538894653,
+        "b": 0.3450980484485626,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77475",
+      "name": "Accents/Mint",
+      "light": {
+        "r": 0,
+        "g": 0.7843137383460999,
+        "b": 0.7019608020782471,
+        "a": 1
+      },
+      "dark": {
+        "r": 0,
+        "g": 0.8549019694328308,
+        "b": 0.7647058963775635,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77476",
+      "name": "Accents/Teal",
+      "light": {
+        "r": 0,
+        "g": 0.7647058963775635,
+        "b": 0.8156862854957581,
+        "a": 1
+      },
+      "dark": {
+        "r": 0,
+        "g": 0.8235294222831726,
+        "b": 0.8784313797950745,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77477",
+      "name": "Accents/Cyan",
+      "light": {
+        "r": 0,
+        "g": 0.7529411911964417,
+        "b": 0.9098039269447327,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.23529411852359772,
+        "g": 0.8274509906768799,
+        "b": 0.9960784316062927,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77478",
+      "name": "Accents/Brown",
+      "light": {
+        "r": 0.6745098233222961,
+        "g": 0.49803921580314636,
+        "b": 0.3686274588108063,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.7176470756530762,
+        "g": 0.5411764979362488,
+        "b": 0.4000000059604645,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77479",
+      "name": "Accents/Indigo",
+      "light": {
+        "r": 0.3803921639919281,
+        "g": 0.3333333432674408,
+        "b": 0.9607843160629272,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.4274509847164154,
+        "g": 0.48627451062202454,
+        "b": 1,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77480",
+      "name": "Accents/Purple",
+      "light": {
+        "r": 0.7960784435272217,
+        "g": 0.1882352977991104,
+        "b": 0.8784313797950745,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.8588235378265381,
+        "g": 0.20392157137393951,
+        "b": 0.9490196108818054,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77481",
+      "name": "Accents/Pink",
+      "light": {
+        "r": 1,
+        "g": 0.1764705926179886,
+        "b": 0.3333333432674408,
+        "a": 1
+      },
+      "dark": {
+        "r": 1,
+        "g": 0.21568627655506134,
+        "b": 0.37254902720451355,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77483",
+      "name": "Grays/Black",
+      "light": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1
+      },
+      "dark": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77484",
+      "name": "Grays/White",
+      "light": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "dark": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77485",
+      "name": "Grays/Gray",
+      "light": {
+        "r": 0.5568627715110779,
+        "g": 0.5568627715110779,
+        "b": 0.5764706134796143,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.5568627715110779,
+        "g": 0.5568627715110779,
+        "b": 0.5764706134796143,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77486",
+      "name": "Grays/Gray 2",
+      "light": {
+        "r": 0.6823529601097107,
+        "g": 0.6823529601097107,
+        "b": 0.6980392336845398,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.38823530077934265,
+        "g": 0.38823530077934265,
+        "b": 0.4000000059604645,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77487",
+      "name": "Grays/Gray 3",
+      "light": {
+        "r": 0.7803921699523926,
+        "g": 0.7803921699523926,
+        "b": 0.800000011920929,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.2823529541492462,
+        "g": 0.2823529541492462,
+        "b": 0.29019609093666077,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77488",
+      "name": "Grays/Gray 4",
+      "light": {
+        "r": 0.8196078538894653,
+        "g": 0.8196078538894653,
+        "b": 0.8392156958580017,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.22745098173618317,
+        "g": 0.22745098173618317,
+        "b": 0.23529411852359772,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77489",
+      "name": "Grays/Gray 5",
+      "light": {
+        "r": 0.8980392217636108,
+        "g": 0.8980392217636108,
+        "b": 0.9176470637321472,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.1725490242242813,
+        "g": 0.1725490242242813,
+        "b": 0.18039216101169586,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77490",
+      "name": "Grays/Gray 6",
+      "light": {
+        "r": 0.9490196108818054,
+        "g": 0.9490196108818054,
+        "b": 0.9686274528503418,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.10980392247438431,
+        "g": 0.10980392247438431,
+        "b": 0.11764705926179886,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:509:77491",
+      "name": "Fills/Secondary",
+      "light": {
+        "r": 0.47058823704719543,
+        "g": 0.47058823704719543,
+        "b": 0.501960813999176,
+        "a": 0.1599999964237213
+      },
+      "dark": {
+        "r": 0.47058823704719543,
+        "g": 0.47058823704719543,
+        "b": 0.501960813999176,
+        "a": 0.3199999928474426
+      }
+    },
+    {
+      "id": "VariableID:509:77492",
+      "name": "Fills/Quaternary",
+      "light": {
+        "r": 0.45490196347236633,
+        "g": 0.45490196347236633,
+        "b": 0.501960813999176,
+        "a": 0.07999999821186066
+      },
+      "dark": {
+        "r": 0.4627451002597809,
+        "g": 0.4627451002597809,
+        "b": 0.501960813999176,
+        "a": 0.18000000715255737
+      }
+    },
+    {
+      "id": "VariableID:509:77493",
+      "name": "Fills/Tertiary",
+      "light": {
+        "r": 0.4627451002597809,
+        "g": 0.4627451002597809,
+        "b": 0.501960813999176,
+        "a": 0.11999999731779099
+      },
+      "dark": {
+        "r": 0.4627451002597809,
+        "g": 0.4627451002597809,
+        "b": 0.501960813999176,
+        "a": 0.23999999463558197
+      }
+    },
+    {
+      "id": "VariableID:509:77495",
+      "name": "Separators/Non-opaque",
+      "light": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0.11999999731779099
+      },
+      "dark": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 0.17000000178813934
+      }
+    },
+    {
+      "id": "VariableID:510:79129",
+      "name": "Mode",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    {
+      "id": "VariableID:513:90698",
+      "name": "Overlays/Default",
+      "light": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0.20000000298023224
+      },
+      "dark": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0.47999998927116394
+      }
+    },
+    {
+      "id": "VariableID:539:165749",
+      "name": "Miscellaneous/Keyboards/Emoji + Mic",
+      "light": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1
+      },
+      "dark": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:540:181602",
+      "name": "Overlays/Activity View Controller",
+      "light": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0.20000000298023224
+      },
+      "dark": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0.28999999165534973
+      }
+    },
+    {
+      "id": "VariableID:5469:7900",
+      "name": "Separators/Vibrant",
+      "light": {
+        "r": 0.9019607901573181,
+        "g": 0.9019607901573181,
+        "b": 0.9019607901573181,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.10196078568696976,
+        "g": 0.10196078568696976,
+        "b": 0.10196078568696976,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5473:20629",
+      "name": "Miscellaneous/Buttons/BG - Destructive",
+      "light": {
+        "r": 1,
+        "g": 0.21960784494876862,
+        "b": 0.23529411852359772,
+        "a": 0.14000000059604645
+      },
+      "dark": {
+        "r": 1,
+        "g": 0.25882354378700256,
+        "b": 0.2705882489681244,
+        "a": 0.14000000059604645
+      }
+    },
+    {
+      "id": "VariableID:5500:4615",
+      "name": "Labels - Vibrant/Primary",
+      "light": {
+        "r": 0.10196078568696976,
+        "g": 0.10196078568696976,
+        "b": 0.10196078568696976,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.9607843160629272,
+        "g": 0.9607843160629272,
+        "b": 0.9607843160629272,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5500:4616",
+      "name": "Labels - Vibrant/Secondary",
+      "light": {
+        "r": 0.4470588266849518,
+        "g": 0.4470588266849518,
+        "b": 0.4470588266849518,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.5411764979362488,
+        "g": 0.5411764979362488,
+        "b": 0.5411764979362488,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5500:4617",
+      "name": "Labels - Vibrant/Tertiary",
+      "light": {
+        "r": 0.7490196228027344,
+        "g": 0.7490196228027344,
+        "b": 0.7490196228027344,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.250980406999588,
+        "g": 0.250980406999588,
+        "b": 0.250980406999588,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5500:4619",
+      "name": "Fills - Vibrant/Primary",
+      "light": {
+        "r": 0.800000011920929,
+        "g": 0.800000011920929,
+        "b": 0.800000011920929,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.20000000298023224,
+        "g": 0.20000000298023224,
+        "b": 0.20000000298023224,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5500:4620",
+      "name": "Fills - Vibrant/Secondary",
+      "light": {
+        "r": 0.8784313797950745,
+        "g": 0.8784313797950745,
+        "b": 0.8784313797950745,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.12156862765550613,
+        "g": 0.12156862765550613,
+        "b": 0.12156862765550613,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5500:4621",
+      "name": "Fills - Vibrant/Tertiary",
+      "light": {
+        "r": 0.929411768913269,
+        "g": 0.929411768913269,
+        "b": 0.929411768913269,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.07058823853731155,
+        "g": 0.07058823853731155,
+        "b": 0.07058823853731155,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5500:6759",
+      "name": "Labels - Vibrant/Quaternary",
+      "light": {
+        "r": 0.8509804010391235,
+        "g": 0.8509804010391235,
+        "b": 0.8509804010391235,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.14901961386203766,
+        "g": 0.14901961386203766,
+        "b": 0.14901961386203766,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5704:37749",
+      "name": "Miscellaneous/Segmented Control - Selected Fill",
+      "light": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "dark": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 0.27000001072883606
+      }
+    },
+    {
+      "id": "VariableID:5719:30767",
+      "name": "Backgrounds/Primary - Elevated",
+      "light": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.10980392247438431,
+        "g": 0.10980392247438431,
+        "b": 0.11764705926179886,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5719:30768",
+      "name": "Backgrounds/Secondary - Elevated",
+      "light": {
+        "r": 0.9490196108818054,
+        "g": 0.9490196108818054,
+        "b": 0.9686274528503418,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.1725490242242813,
+        "g": 0.1725490242242813,
+        "b": 0.18039216101169586,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5719:30769",
+      "name": "Backgrounds/Tertiary - Elevated",
+      "light": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.22745098173618317,
+        "g": 0.22745098173618317,
+        "b": 0.23529411852359772,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5719:30770",
+      "name": "Backgrounds (Grouped)/Primary - Elevated",
+      "light": {
+        "r": 0.9490196108818054,
+        "g": 0.9490196108818054,
+        "b": 0.9686274528503418,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.10980392247438431,
+        "g": 0.10980392247438431,
+        "b": 0.11764705926179886,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5719:30771",
+      "name": "Backgrounds (Grouped)/Secondary - Elevated",
+      "light": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.1725490242242813,
+        "g": 0.1725490242242813,
+        "b": 0.18039216101169586,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5719:30772",
+      "name": "Backgrounds (Grouped)/Tertiary - Elevated",
+      "light": {
+        "r": 0.9490196108818054,
+        "g": 0.9490196108818054,
+        "b": 0.9686274528503418,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.22745098173618317,
+        "g": 0.22745098173618317,
+        "b": 0.23529411852359772,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5806:6572",
+      "name": "Labels - Vibrant - Controls/Tertiary",
+      "light": {
+        "r": 0.7490196228027344,
+        "g": 0.7490196228027344,
+        "b": 0.7490196228027344,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.250980406999588,
+        "g": 0.250980406999588,
+        "b": 0.250980406999588,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5806:6573",
+      "name": "Labels - Vibrant - Controls/Secondary",
+      "light": {
+        "r": 0.4470588266849518,
+        "g": 0.4470588266849518,
+        "b": 0.4470588266849518,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.5411764979362488,
+        "g": 0.5411764979362488,
+        "b": 0.5411764979362488,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5806:6574",
+      "name": "Labels - Vibrant - Controls/Primary",
+      "light": {
+        "r": 0.10196078568696976,
+        "g": 0.10196078568696976,
+        "b": 0.10196078568696976,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.9607843160629272,
+        "g": 0.9607843160629272,
+        "b": 0.9607843160629272,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:5806:6575",
+      "name": "Miscellaneous/Tab Bar Selection",
+      "light": {
+        "type": "VARIABLE_ALIAS",
+        "id": "VariableID:507:29166"
+      },
+      "dark": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:6152:1904",
+      "name": "Miscellaneous/Toggle/AX Label - Off",
+      "light": {
+        "r": 0.7019608020782471,
+        "g": 0.7019608020782471,
+        "b": 0.7019608020782471,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.6499999761581421,
+        "g": 0.6499999761581421,
+        "b": 0.6499999761581421,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:10473:46127",
+      "name": "Miscellaneous/Sidebar/Sidebar - BG - Active",
+      "light": {
+        "r": 0.8549019694328308,
+        "g": 0.9019607901573181,
+        "b": 0.9490196108818054,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.0784313753247261,
+        "g": 0.08235294371843338,
+        "b": 0.09019608050584793,
+        "a": 1
+      }
+    },
+    {
+      "id": "VariableID:10473:46128",
+      "name": "Miscellaneous/Sidebar/Sidebar - BG - Inactive",
+      "light": {
+        "r": 0.929411768913269,
+        "g": 0.95686274766922,
+        "b": 0.9803921580314636,
+        "a": 1
+      },
+      "dark": {
+        "r": 0.07450980693101883,
+        "g": 0.0784313753247261,
+        "b": 0.0784313753247261,
+        "a": 1
+      }
+    }
+  ],
+  "textStyles": [
+    {
+      "id": "S:017c3fcb4b70a964aade5d9f195f3a033689eade,",
+      "name": "Large Title/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 34,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 41
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.4000000059604645
+      }
+    },
+    {
+      "id": "S:ac22580a433ea8d16e044370dd9fa412dd9cce49,",
+      "name": "Large Title/Emphasized",
+      "font": "SF Pro",
+      "weight": "Bold",
+      "size": 34,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 41
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.4000000059604645
+      }
+    },
+    {
+      "id": "S:f54c8f6c00686a616d916c35429d6aa043d93bf4,",
+      "name": "Title1/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 28,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 34
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.3799999952316284
+      }
+    },
+    {
+      "id": "S:f888bdbead83bcbe0b27d3ac34c9841eeb544a1b,",
+      "name": "Title1/Emphasized",
+      "font": "SF Pro",
+      "weight": "Bold",
+      "size": 28,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 34
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.3799999952316284
+      }
+    },
+    {
+      "id": "S:45054f3970b514907c1a8df1283ea974a357edeb,",
+      "name": "Title2/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 22,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.25999999046325684
+      }
+    },
+    {
+      "id": "S:48466d307e2d2df337cb9f29f8f2dd7c3ed00597,",
+      "name": "Title2/Emphasized",
+      "font": "SF Pro",
+      "weight": "Bold",
+      "size": 22,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 28
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.25999999046325684
+      }
+    },
+    {
+      "id": "S:a403716cb23bd5b623c061195806ca54702a8e9c,",
+      "name": "Title3/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 25
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.44999998807907104
+      }
+    },
+    {
+      "id": "S:f7fc8d240fb48ddb4b946fb6b04192d61b7cdf8a,",
+      "name": "Title3/Emphasized",
+      "font": "SF Pro",
+      "weight": "Semibold",
+      "size": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 25
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.44999998807907104
+      }
+    },
+    {
+      "id": "S:cb2f0b59b3051905ff2176c8080c1a985caff6f5,",
+      "name": "Headline/Regular",
+      "font": "SF Pro",
+      "weight": "Semibold",
+      "size": 17,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 22
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.4300000071525574
+      }
+    },
+    {
+      "id": "S:34e24e9bb9f110753c0105e7768d63b1016d2a61,",
+      "name": "Headline/Italic",
+      "font": "SF Pro",
+      "weight": "Semibold Italic",
+      "size": 17,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 22
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.4300000071525574
+      }
+    },
+    {
+      "id": "S:742b9c5fe4664cb4c90f9c929b4d60941c04a571,",
+      "name": "Body/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 17,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 22
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.4300000071525574
+      }
+    },
+    {
+      "id": "S:9b386ab0ab76a928b2d6effaa2118092b66992ae,",
+      "name": "Body/Emphasized",
+      "font": "SF Pro",
+      "weight": "Semibold",
+      "size": 17,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 22
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.4300000071525574
+      }
+    },
+    {
+      "id": "S:4c8a176beff765d44d881358b7b3e47cd1ecc253,",
+      "name": "Body/Italic",
+      "font": "SF Pro",
+      "weight": "Regular Italic",
+      "size": 17,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 22
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.4300000071525574
+      }
+    },
+    {
+      "id": "S:3b365a50fb4c27d7f83e8b46bd7b0f4219f0c259,",
+      "name": "Body/Emphasized Italic",
+      "font": "SF Pro",
+      "weight": "Semibold Italic",
+      "size": 17,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 22
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.4300000071525574
+      }
+    },
+    {
+      "id": "S:7a2b5e208423f5c0076f0c72aaf9861cb09af450,",
+      "name": "Callout/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 21
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.3100000023841858
+      }
+    },
+    {
+      "id": "S:917cc14f76e8fef8cd315d26cc1cf421ed2f9f2b,",
+      "name": "Callout/Emphasized",
+      "font": "SF Pro",
+      "weight": "Semibold Italic",
+      "size": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 21
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.3100000023841858
+      }
+    },
+    {
+      "id": "S:56ba41920f7f370ecb1c1bef08de37f3f9dcb0a9,",
+      "name": "Callout/Italic",
+      "font": "SF Pro",
+      "weight": "Regular Italic",
+      "size": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 21
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.3100000023841858
+      }
+    },
+    {
+      "id": "S:2aad04f3610f655aae2228b93a89f78fc302c887,",
+      "name": "Subheadline/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 15,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.23000000417232513
+      }
+    },
+    {
+      "id": "S:d5830594f7bcb1b346f6e631366fd12be8839f7c,",
+      "name": "Subheadline/Emphasized",
+      "font": "SF Pro",
+      "weight": "Semibold",
+      "size": 15,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.23000000417232513
+      }
+    },
+    {
+      "id": "S:82b1b0cf1c9c15da9bf6f271af0dd88faa30aaa6,",
+      "name": "Subheadline/Italic",
+      "font": "SF Pro",
+      "weight": "Regular Italic",
+      "size": 15,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.23000000417232513
+      }
+    },
+    {
+      "id": "S:1236456148313e94253c9d8e629386bd91d681f8,",
+      "name": "Subheadline/Emphaized Italic",
+      "font": "SF Pro",
+      "weight": "Semibold Italic",
+      "size": 15,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 20
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.23000000417232513
+      }
+    },
+    {
+      "id": "S:f1e4b72ba03ed7a75aab8e0be6e717ac7b34214a,",
+      "name": "Footnote/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 13,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 18
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.07999999821186066
+      }
+    },
+    {
+      "id": "S:f9ca444b0d447a577ccda0c15673ccf6aa82e3df,",
+      "name": "Footnote/Emphasized",
+      "font": "SF Pro",
+      "weight": "Semibold",
+      "size": 13,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 18
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.07999999821186066
+      }
+    },
+    {
+      "id": "S:2df802473135f7b5d8d2141d4cf3809f8f59b1a7,",
+      "name": "Footnote/Italic",
+      "font": "SF Pro",
+      "weight": "Regular Italic",
+      "size": 13,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 18
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.07999999821186066
+      }
+    },
+    {
+      "id": "S:3510cd65c9eeffd830803de44d60e70de38b7bf4,",
+      "name": "Caption1/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:b0c21ffa9120944cda101d0ff48e3e2a5744bf59,",
+      "name": "Caption1/Emphasized",
+      "font": "SF Pro",
+      "weight": "Semibold",
+      "size": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:4aacf69580bd7ebddb4305d99e790b9d715028d0,",
+      "name": "Caption1/Italic",
+      "font": "SF Pro",
+      "weight": "Regular Italic",
+      "size": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:cd6d4d11590b5d75c636389d50e546c395a4f3bc,",
+      "name": "Caption1/Emphasized Italic",
+      "font": "SF Pro",
+      "weight": "Semibold Italic",
+      "size": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 16
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:c32cbddc5f4f8073edfa0e3d1d5393493f14d3cf,",
+      "name": "Callout/Emphasized Italic",
+      "font": "SF Pro",
+      "weight": "Semibold Italic",
+      "size": 16,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 21
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.3100000023841858
+      }
+    },
+    {
+      "id": "S:df6137060a7a0ea8b64d4d10f477cee6b59dabc9,",
+      "name": "Footnote/Emphasized Italic",
+      "font": "SF Pro",
+      "weight": "Semibold Italic",
+      "size": 13,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 18
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": -0.07999999821186066
+      }
+    },
+    {
+      "id": "S:d261d9340c4f185453ec6cd3febaf0f6f07c79a2,",
+      "name": "Caption2/Regular",
+      "font": "SF Pro",
+      "weight": "Regular",
+      "size": 11,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 13
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.05999999865889549
+      }
+    },
+    {
+      "id": "S:64f120cec3324b4448fc335978a17a52802c46cd,",
+      "name": "Caption2/Emphasized",
+      "font": "SF Pro",
+      "weight": "Semibold",
+      "size": 11,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 13
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.05999999865889549
+      }
+    },
+    {
+      "id": "S:0652f110485b31b4f976f6a108f763021e0acbd5,",
+      "name": "Caption2/Italic",
+      "font": "SF Pro",
+      "weight": "Regular Italic",
+      "size": 11,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 13
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.05999999865889549
+      }
+    },
+    {
+      "id": "S:d0f92eed39d39ed5d8602128e7ac4934a3e67c0a,",
+      "name": "Caption2/Emphasized Italic",
+      "font": "SF Pro",
+      "weight": "Semibold Italic",
+      "size": 11,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 13
+      },
+      "letterSpacing": {
+        "unit": "PIXELS",
+        "value": 0.05999999865889549
+      }
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "VariableID:10444:39",
+      "name": "Sheet Top Radius",
+      "values": {
+        "10442:0": 38,
+        "10442:2": 32,
+        "12956:0": 38,
+        "12956:1": 38,
+        "12956:2": 38,
+        "12956:3": 38
+      }
+    },
+    {
+      "id": "VariableID:10444:41",
+      "name": "Sheet Bottom Radius",
+      "values": {
+        "10442:0": 58,
+        "10442:2": 32,
+        "12956:0": 58,
+        "12956:1": 58,
+        "12956:2": 58,
+        "12956:3": 58
+      }
+    },
+    {
+      "id": "VariableID:10444:42",
+      "name": "Grabber Width",
+      "values": {
+        "10442:0": 60,
+        "10442:2": 60,
+        "12956:0": 60,
+        "12956:1": 60,
+        "12956:2": 60,
+        "12956:3": 60
+      }
+    },
+    {
+      "id": "VariableID:10444:43",
+      "name": "Grabber Height",
+      "values": {
+        "10442:0": 4,
+        "10442:2": 4,
+        "12956:0": 4,
+        "12956:1": 4,
+        "12956:2": 4,
+        "12956:3": 4
+      }
+    },
+    {
+      "id": "VariableID:10442:65",
+      "name": "Margin",
+      "values": {
+        "10442:0": 16,
+        "10442:2": 20,
+        "12956:0": 20,
+        "12956:1": 20,
+        "12956:2": 20,
+        "12956:3": 20
+      }
+    },
+    {
+      "id": "VariableID:10448:9598",
+      "name": "Menus/Section Titles/Font Size",
+      "values": {
+        "10442:0": 13,
+        "10442:2": 12,
+        "12956:0": 13,
+        "12956:1": 13,
+        "12956:2": 13,
+        "12956:3": 13
+      }
+    },
+    {
+      "id": "VariableID:10448:9599",
+      "name": "Menus/Section Titles/Top Padding",
+      "values": {
+        "10442:0": 4,
+        "10442:2": 5,
+        "12956:0": 4,
+        "12956:1": 4,
+        "12956:2": 4,
+        "12956:3": 4
+      }
+    },
+    {
+      "id": "VariableID:10448:9600",
+      "name": "Menus/Section Titles/Bottom Padding",
+      "values": {
+        "10442:0": 10,
+        "10442:2": 7,
+        "12956:0": 10,
+        "12956:1": 10,
+        "12956:2": 10,
+        "12956:3": 10
+      }
+    },
+    {
+      "id": "VariableID:10448:9608",
+      "name": "Menus/Control Group/Padding Top",
+      "values": {
+        "10442:0": 6,
+        "10442:2": 9,
+        "12956:0": 6,
+        "12956:1": 6,
+        "12956:2": 6,
+        "12956:3": 6
+      }
+    },
+    {
+      "id": "VariableID:10448:9609",
+      "name": "Menus/Control Group/Item Spacing",
+      "values": {
+        "10442:0": 5,
+        "10442:2": 1,
+        "12956:0": 5,
+        "12956:1": 5,
+        "12956:2": 5,
+        "12956:3": 5
+      }
+    },
+    {
+      "id": "VariableID:10448:9628",
+      "name": "Menus/Control Group/Symbol Height",
+      "values": {
+        "10442:0": 22,
+        "10442:2": 19,
+        "12956:0": 22,
+        "12956:1": 22,
+        "12956:2": 22,
+        "12956:3": 22
+      }
+    },
+    {
+      "id": "VariableID:10448:10433",
+      "name": "Menus/Menu Items/Subtitle Line Height",
+      "values": {
+        "10442:0": 18,
+        "10442:2": 16,
+        "12956:0": 18,
+        "12956:1": 18,
+        "12956:2": 18,
+        "12956:3": 18
+      }
+    },
+    {
+      "id": "VariableID:10448:10434",
+      "name": "Menus/Menu Items/Title Font Size",
+      "values": {
+        "10442:0": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:12436:24"
+        },
+        "10442:2": 15,
+        "12956:0": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:12436:24"
+        },
+        "12956:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:12436:24"
+        },
+        "12956:2": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:12436:24"
+        },
+        "12956:3": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:12436:24"
+        }
+      }
+    },
+    {
+      "id": "VariableID:10448:10435",
+      "name": "Menus/Menu Items/Padding Top + Bottom",
+      "values": {
+        "10442:0": 10,
+        "10442:2": 11,
+        "12956:0": 10,
+        "12956:1": 10,
+        "12956:2": 10,
+        "12956:3": 10
+      }
+    },
+    {
+      "id": "VariableID:10448:10436",
+      "name": "Menus/Menu Items/Label and Subtitle Padding Left",
+      "values": {
+        "10442:0": 0,
+        "10442:2": 4,
+        "12956:0": 0,
+        "12956:1": 0,
+        "12956:2": 0,
+        "12956:3": 0
+      }
+    },
+    {
+      "id": "VariableID:10448:10455",
+      "name": "Menus/Menu Items/Padding Sides",
+      "values": {
+        "10442:0": 16,
+        "10442:2": 8,
+        "12956:0": 16,
+        "12956:1": 16,
+        "12956:2": 16,
+        "12956:3": 16
+      }
+    },
+    {
+      "id": "VariableID:10448:10502",
+      "name": "Menus/Menu Items/Title Line Height",
+      "values": {
+        "10442:0": 20,
+        "10442:2": 18,
+        "12956:0": 20,
+        "12956:1": 20,
+        "12956:2": 20,
+        "12956:3": 20
+      }
+    },
+    {
+      "id": "VariableID:10448:10503",
+      "name": "Menus/Menu Items/Separator Padding Top",
+      "values": {
+        "10442:0": 10,
+        "10442:2": 8,
+        "12956:0": 10,
+        "12956:1": 10,
+        "12956:2": 10,
+        "12956:3": 10
+      }
+    },
+    {
+      "id": "VariableID:10448:10504",
+      "name": "Menus/Menu Items/Separator Padding Bottom",
+      "values": {
+        "10442:0": 10,
+        "10442:2": 9,
+        "12956:0": 10,
+        "12956:1": 10,
+        "12956:2": 10,
+        "12956:3": 10
+      }
+    },
+    {
+      "id": "VariableID:10478:14601",
+      "name": "Status Bar/Height",
+      "values": {
+        "10442:0": 62,
+        "10442:2": 32,
+        "12956:0": 62,
+        "12956:1": 62,
+        "12956:2": 62,
+        "12956:3": 62
+      }
+    },
+    {
+      "id": "VariableID:10482:20324",
+      "name": "Readable Content Margin",
+      "values": {
+        "10442:0": 260,
+        "10442:2": 260,
+        "12956:0": 260,
+        "12956:1": 260,
+        "12956:2": 260,
+        "12956:3": 260
+      }
+    },
+    {
+      "id": "VariableID:10486:20744",
+      "name": "Home Indicator/Portrait Width",
+      "values": {
+        "10442:0": 144,
+        "10442:2": 273,
+        "12956:0": 144,
+        "12956:1": 144,
+        "12956:2": 144,
+        "12956:3": 144
+      }
+    },
+    {
+      "id": "VariableID:10486:20745",
+      "name": "Home Indicator/Landscape Width",
+      "values": {
+        "10442:0": 226,
+        "10442:2": 315,
+        "12956:0": 226,
+        "12956:1": 226,
+        "12956:2": 226,
+        "12956:3": 226
+      }
+    },
+    {
+      "id": "VariableID:10486:20746",
+      "name": "Home Indicator/Height",
+      "values": {
+        "10442:0": 5,
+        "10442:2": 5.5,
+        "12956:0": 5,
+        "12956:1": 5,
+        "12956:2": 5,
+        "12956:3": 5
+      }
+    },
+    {
+      "id": "VariableID:12642:18617",
+      "name": "Popover Corner Radius",
+      "values": {
+        "10442:0": 38,
+        "10442:2": 38,
+        "12956:0": 38,
+        "12956:1": 38,
+        "12956:2": 38,
+        "12956:3": 38
+      }
+    },
+    {
+      "id": "VariableID:12956:23935",
+      "name": "Other/Cut Corners TL",
+      "values": {
+        "10442:0": 30,
+        "10442:2": 2,
+        "12956:0": 20,
+        "12956:1": 20,
+        "12956:2": 0,
+        "12956:3": 0
+      }
+    },
+    {
+      "id": "VariableID:12956:23936",
+      "name": "Other/Cut Corners TR",
+      "values": {
+        "10442:0": 30,
+        "10442:2": 2,
+        "12956:0": 20,
+        "12956:1": 20,
+        "12956:2": 0,
+        "12956:3": 20
+      }
+    },
+    {
+      "id": "VariableID:12956:23937",
+      "name": "Other/Cut Corners BL",
+      "values": {
+        "10442:0": 30,
+        "10442:2": 2,
+        "12956:0": 20,
+        "12956:1": 20,
+        "12956:2": 20,
+        "12956:3": 0
+      }
+    },
+    {
+      "id": "VariableID:12956:23938",
+      "name": "Other/Cut Corners BR",
+      "values": {
+        "10442:0": 30,
+        "10442:2": 2,
+        "12956:0": 20,
+        "12956:1": 20,
+        "12956:2": 20,
+        "12956:3": 20
+      }
+    },
+    {
+      "id": "VariableID:13066:19392",
+      "name": "Activity View/Icon Spacing",
+      "values": {
+        "10442:0": 25.33300018310547,
+        "10442:2": 23,
+        "12956:0": 20,
+        "12956:1": 19,
+        "12956:2": 38,
+        "12956:3": 34
+      }
+    },
+    {
+      "id": "VariableID:13066:19457",
+      "name": "Activity View/Row Margin Sides",
+      "values": {
+        "10442:0": 15,
+        "10442:2": 14,
+        "12956:0": 8,
+        "12956:1": 5,
+        "12956:2": 28,
+        "12956:3": 22
+      }
+    },
+    {
+      "id": "VariableID:13066:19458",
+      "name": "Activity View/Row Margin Top",
+      "values": {
+        "10442:0": 16,
+        "10442:2": 18,
+        "12956:0": 16,
+        "12956:1": 16,
+        "12956:2": 16,
+        "12956:3": 16
+      }
+    },
+    {
+      "id": "VariableID:13116:17667",
+      "name": "Activity View/Corner Radius Top",
+      "values": {
+        "10442:0": 38,
+        "10442:2": 38,
+        "12956:0": 40,
+        "12956:1": 40,
+        "12956:2": 42,
+        "12956:3": 40
+      }
+    },
+    {
+      "id": "VariableID:13116:17668",
+      "name": "Activity View/Corner Radius Bottom",
+      "values": {
+        "10442:0": 0,
+        "10442:2": 0,
+        "12956:0": 40,
+        "12956:1": 40,
+        "12956:2": 0,
+        "12956:3": 0
+      }
+    },
+    {
+      "id": "VariableID:13116:17669",
+      "name": "Activity View/Padding Top",
+      "values": {
+        "10442:0": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:10478:14601"
+        },
+        "10442:2": 62,
+        "12956:0": 90,
+        "12956:1": 106,
+        "12956:2": 8,
+        "12956:3": 90
+      }
+    },
+    {
+      "id": "VariableID:13116:17670",
+      "name": "Activity View/Padding Bottom",
+      "values": {
+        "10442:0": 0,
+        "10442:2": 0,
+        "12956:0": 90,
+        "12956:1": 106,
+        "12956:2": 0,
+        "12956:3": 0
+      }
+    },
+    {
+      "id": "VariableID:13116:17671",
+      "name": "Activity View/Width",
+      "values": {
+        "10442:0": 402,
+        "10442:2": 402,
+        "12956:0": 541,
+        "12956:1": 541,
+        "12956:2": 402,
+        "12956:3": 402
+      }
+    },
+    {
+      "id": "VariableID:13117:19254",
+      "name": "Activity View/Close Button WxH",
+      "values": {
+        "10442:0": 44,
+        "10442:2": 44,
+        "12956:0": 48,
+        "12956:1": 48,
+        "12956:2": 48,
+        "12956:3": 48
+      }
+    },
+    {
+      "id": "VariableID:13117:21051",
+      "name": "Activity View/Margin Top",
+      "values": {
+        "10442:0": 16,
+        "10442:2": 16,
+        "12956:0": 16,
+        "12956:1": 16,
+        "12956:2": 16,
+        "12956:3": 16
+      }
+    },
+    {
+      "id": "VariableID:13117:21053",
+      "name": "Activity View/Padding Sides",
+      "values": {
+        "10442:0": 0,
+        "10442:2": 0,
+        "12956:0": 206,
+        "12956:1": 64,
+        "12956:2": 68,
+        "12956:3": 8
+      }
+    },
+    {
+      "id": "VariableID:13117:21054",
+      "name": "Activity View/Thumbnail Inset",
+      "values": {
+        "10442:0": 16,
+        "10442:2": 16,
+        "12956:0": 8,
+        "12956:1": 8,
+        "12956:2": 28,
+        "12956:3": 22
+      }
+    }
+  ],
+  "componentPages": [
+    {
+      "page": {
+        "id": "507:24673",
+        "name": "Buttons"
+      },
+      "rootCount": 7,
+      "componentCount": 183,
+      "components": [
+        {
+          "id": "40:58696",
+          "name": "Button - Content Area",
+          "type": "COMPONENT_SET",
+          "variantCount": 108,
+          "properties": {
+            "Label#488:0": {
+              "type": "TEXT",
+              "defaultValue": "Play"
+            },
+            "Symbol#5473:145": {
+              "type": "TEXT",
+              "defaultValue": "􀊄"
+            },
+            "Size": {
+              "type": "VARIANT",
+              "defaultValue": "Small",
+              "variantOptions": [
+                "Small",
+                "Medium",
+                "Large"
+              ]
+            },
+            "Style": {
+              "type": "VARIANT",
+              "defaultValue": "Bordered - Prominent",
+              "variantOptions": [
+                "Bordered - Prominent",
+                "Bordered",
+                "Borderless"
+              ]
+            },
+            "Label Style": {
+              "type": "VARIANT",
+              "defaultValue": "Title and Icon",
+              "variantOptions": [
+                "Title and Icon",
+                "Icon only",
+                "Title only"
+              ]
+            },
+            "Is Enabled": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            },
+            "Destructive": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5473:20407",
+              "name": "Size=Large, Style=Borderless, Label Style=Icon only, Is Enabled=False, Destructive=True",
+              "width": 50,
+              "height": 50
+            },
+            {
+              "id": "5473:20409",
+              "name": "Size=Medium, Style=Borderless, Label Style=Icon only, Is Enabled=False, Destructive=True",
+              "width": 34,
+              "height": 34
+            },
+            {
+              "id": "5473:20411",
+              "name": "Size=Small, Style=Borderless, Label Style=Icon only, Is Enabled=False, Destructive=True",
+              "width": 28,
+              "height": 28
+            }
+          ],
+          "width": 950,
+          "height": 1070
+        },
+        {
+          "id": "5522:11886",
+          "name": "_Label - Symbol - Preferred",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Label#5429:13": {
+              "type": "TEXT",
+              "defaultValue": "􀆅"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "Is Enabled": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5566:15308",
+              "name": "Mode=Dark, Is Enabled=False",
+              "width": 28,
+              "height": 36
+            },
+            {
+              "id": "5566:15310",
+              "name": "Mode=Dark, Is Enabled=True",
+              "width": 28,
+              "height": 36
+            },
+            {
+              "id": "5522:11891",
+              "name": "Mode=Light, Is Enabled=False",
+              "width": 28,
+              "height": 36
+            }
+          ],
+          "width": 120,
+          "height": 130
+        },
+        {
+          "id": "5522:11873",
+          "name": "_Label - Symbol - Default",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Label#5429:13": {
+              "type": "TEXT",
+              "defaultValue": "􀆅"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "Is Enabled": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5566:15299",
+              "name": "Mode=Dark, Is Enabled=False",
+              "width": 28,
+              "height": 36
+            },
+            {
+              "id": "5566:15301",
+              "name": "Mode=Dark, Is Enabled=True",
+              "width": 28,
+              "height": 36
+            },
+            {
+              "id": "5522:11878",
+              "name": "Mode=Light, Is Enabled=False",
+              "width": 28,
+              "height": 36
+            }
+          ],
+          "width": 120,
+          "height": 130
+        },
+        {
+          "id": "10456:14165",
+          "name": "_Label - Symbol - Destructive Default",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Label#5429:13": {
+              "type": "TEXT",
+              "defaultValue": "􀆅"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "Is Enabled": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "10456:14166",
+              "name": "Mode=Dark, Is Enabled=False",
+              "width": 28,
+              "height": 36
+            },
+            {
+              "id": "10456:14170",
+              "name": "Mode=Dark, Is Enabled=True",
+              "width": 28,
+              "height": 36
+            },
+            {
+              "id": "10456:14174",
+              "name": "Mode=Light, Is Enabled=False",
+              "width": 28,
+              "height": 36
+            }
+          ],
+          "width": 120,
+          "height": 130
+        },
+        {
+          "id": "5473:21667",
+          "name": "Button - Liquid Glass - Text",
+          "type": "COMPONENT_SET",
+          "variantCount": 24,
+          "properties": {
+            "Size": {
+              "type": "VARIANT",
+              "defaultValue": "Large",
+              "variantOptions": [
+                "Small",
+                "Medium",
+                "Large"
+              ]
+            },
+            "Style": {
+              "type": "VARIANT",
+              "defaultValue": "Glass Prominent",
+              "variantOptions": [
+                "Glass Prominent",
+                "Glass"
+              ]
+            },
+            "Is Enabled": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            },
+            "Destructive": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "10456:14495",
+              "name": "Size=Small, Style=Glass, Is Enabled=False, Destructive=True",
+              "width": 60,
+              "height": 28
+            },
+            {
+              "id": "10456:14447",
+              "name": "Size=Medium, Style=Glass, Is Enabled=False, Destructive=True",
+              "width": 69,
+              "height": 34
+            },
+            {
+              "id": "10456:9809",
+              "name": "Size=Large, Style=Glass, Is Enabled=False, Destructive=True",
+              "width": 85,
+              "height": 50
+            }
+          ],
+          "width": 580,
+          "height": 320
+        },
+        {
+          "id": "5522:11866",
+          "name": "Button - Liquid Glass - Symbol",
+          "type": "COMPONENT_SET",
+          "variantCount": 8,
+          "properties": {
+            "Style": {
+              "type": "VARIANT",
+              "defaultValue": "Glass Prominent",
+              "variantOptions": [
+                "Glass Prominent",
+                "Glass"
+              ]
+            },
+            "Is Enabled": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            },
+            "Destructive": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "10456:9821",
+              "name": "Style=Glass, Is Enabled=False, Destructive=True",
+              "width": 50,
+              "height": 50
+            },
+            {
+              "id": "10456:9824",
+              "name": "Style=Glass, Is Enabled=True, Destructive=True",
+              "width": 50,
+              "height": 50
+            },
+            {
+              "id": "10456:9827",
+              "name": "Style=Glass Prominent, Is Enabled=False, Destructive=True",
+              "width": 50,
+              "height": 50
+            }
+          ],
+          "width": 180,
+          "height": 320
+        },
+        {
+          "id": "10462:31914",
+          "name": "_Label - Text",
+          "type": "COMPONENT_SET",
+          "variantCount": 24,
+          "properties": {
+            "Label#10462:47": {
+              "type": "TEXT",
+              "defaultValue": "Label"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Dark",
+                "Light"
+              ]
+            },
+            "Size": {
+              "type": "VARIANT",
+              "defaultValue": "Large",
+              "variantOptions": [
+                "Large",
+                "Small"
+              ]
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Preferred",
+              "variantOptions": [
+                "Destructive",
+                "Default",
+                "Preferred"
+              ]
+            },
+            "Is Enabled": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "False",
+                "True"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5566:15290",
+              "name": "Mode=Dark, Size=Large, Type=Preferred, Is Enabled=False",
+              "width": 45,
+              "height": 18
+            },
+            {
+              "id": "10462:31824",
+              "name": "Mode=Dark, Size=Small, Type=Preferred, Is Enabled=False",
+              "width": 40,
+              "height": 18
+            },
+            {
+              "id": "5566:15292",
+              "name": "Mode=Dark, Size=Large, Type=Preferred, Is Enabled=True",
+              "width": 45,
+              "height": 18
+            }
+          ],
+          "width": 515,
+          "height": 153
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "40:58696",
+          "name": "Button - Content Area",
+          "type": "COMPONENT_SET",
+          "width": 950,
+          "height": 1070
+        },
+        {
+          "id": "2539:14600",
+          "name": "Light Examples",
+          "type": "SECTION",
+          "width": 920,
+          "height": 1070
+        },
+        {
+          "id": "2666:16141",
+          "name": "Dark Examples",
+          "type": "SECTION",
+          "width": 920,
+          "height": 1070
+        },
+        {
+          "id": "5473:26157",
+          "name": "Example over a dark background context",
+          "type": "SECTION",
+          "width": 230,
+          "height": 320
+        },
+        {
+          "id": "5473:26011",
+          "name": "Example over a light background context",
+          "type": "SECTION",
+          "width": 230,
+          "height": 320
+        },
+        {
+          "id": "5522:11886",
+          "name": "_Label - Symbol - Preferred",
+          "type": "COMPONENT_SET",
+          "width": 120,
+          "height": 130
+        },
+        {
+          "id": "5522:11873",
+          "name": "_Label - Symbol - Default",
+          "type": "COMPONENT_SET",
+          "width": 120,
+          "height": 130
+        },
+        {
+          "id": "10456:14165",
+          "name": "_Label - Symbol - Destructive Default",
+          "type": "COMPONENT_SET",
+          "width": 120,
+          "height": 130
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "507:24675",
+        "name": "Lists"
+      },
+      "rootCount": 17,
+      "componentCount": 60,
+      "components": [
+        {
+          "id": "5469:7924",
+          "name": "_Separator",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5469:7923",
+              "name": "Mode=Dark",
+              "width": 370,
+              "height": 1
+            },
+            {
+              "id": "5469:7925",
+              "name": "Mode=Light",
+              "width": 370,
+              "height": 1
+            }
+          ],
+          "width": 410,
+          "height": 50
+        },
+        {
+          "id": "27:68008",
+          "name": "_Swipe Actions/Symbol only",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {
+            "Symbol#27:104": {
+              "type": "TEXT",
+              "defaultValue": "􀓞"
+            }
+          },
+          "examples": [],
+          "width": 60,
+          "height": 44
+        },
+        {
+          "id": "10472:44894",
+          "name": "_Swipe Actions/Symbol and Label",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 84,
+          "height": 44
+        },
+        {
+          "id": "27:68007",
+          "name": "_Swipe Actions/Symbol and Label Stacked",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {
+            "Label#27:103": {
+              "type": "TEXT",
+              "defaultValue": "Delete"
+            },
+            "Symbol#5532:11": {
+              "type": "TEXT",
+              "defaultValue": "􀓞"
+            }
+          },
+          "examples": [],
+          "width": 60,
+          "height": 68
+        },
+        {
+          "id": "20:60364",
+          "name": "_Edit Buttons/Light",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Unselected",
+              "variantOptions": [
+                "Selected",
+                "Unselected",
+                "Add",
+                "Remove"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "19:52844",
+              "name": "State=Remove",
+              "width": 25,
+              "height": 22
+            },
+            {
+              "id": "19:52845",
+              "name": "State=Add",
+              "width": 25,
+              "height": 22
+            },
+            {
+              "id": "19:52846",
+              "name": "State=Selected",
+              "width": 25,
+              "height": 22
+            }
+          ],
+          "width": 70,
+          "height": 182
+        },
+        {
+          "id": "24:55973",
+          "name": "_Images/Regular",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Fill",
+              "variantOptions": [
+                "Fill",
+                "Circular",
+                "Rounded",
+                "Symbol"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "30:57148",
+              "name": "Type=Symbol",
+              "width": 28,
+              "height": 20
+            },
+            {
+              "id": "24:56947",
+              "name": "Type=Rounded",
+              "width": 30,
+              "height": 30
+            },
+            {
+              "id": "24:56644",
+              "name": "Type=Circular",
+              "width": 42,
+              "height": 42
+            }
+          ],
+          "width": 100,
+          "height": 270
+        },
+        {
+          "id": "508:72799",
+          "name": "_Images/Tall",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Fill",
+              "variantOptions": [
+                "Fill",
+                "Circular",
+                "Rounded",
+                "Symbol"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "508:72800",
+              "name": "Type=Symbol",
+              "width": 28,
+              "height": 20
+            },
+            {
+              "id": "508:72804",
+              "name": "Type=Rounded",
+              "width": 44,
+              "height": 44
+            },
+            {
+              "id": "508:72808",
+              "name": "Type=Circular",
+              "width": 60,
+              "height": 60
+            }
+          ],
+          "width": 110,
+          "height": 270
+        },
+        {
+          "id": "212:117586",
+          "name": "_Trailing",
+          "type": "COMPONENT_SET",
+          "variantCount": 9,
+          "properties": {
+            "Show Drill-in#212:3": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Checkmark#212:4": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Symbol#212:5": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Info#212:7": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Button Label#212:66": {
+              "type": "TEXT",
+              "defaultValue": "Button"
+            },
+            "Detail Text#508:54": {
+              "type": "TEXT",
+              "defaultValue": "Detail"
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Button",
+                "Default",
+                "Disclosure",
+                "Picker - Date",
+                "Picker - Date and Time",
+                "Picker - Time",
+                "Pop-up",
+                "Stepper",
+                "Toggle"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "30:53968",
+              "name": "Type=Pop-up",
+              "width": 97,
+              "height": 22
+            },
+            {
+              "id": "29:56956",
+              "name": "Type=Button",
+              "width": 52,
+              "height": 16
+            },
+            {
+              "id": "29:56851",
+              "name": "Type=Stepper",
+              "width": 92,
+              "height": 32
+            }
+          ],
+          "width": 270,
+          "height": 490
+        },
+        {
+          "id": "5533:12351",
+          "name": "_Grabber",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 34,
+          "height": 25
+        },
+        {
+          "id": "35:55757",
+          "name": "Grouped Table Footer",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {
+            "Text#35:1": {
+              "type": "TEXT",
+              "defaultValue": "Footer text"
+            }
+          },
+          "examples": [],
+          "width": 300,
+          "height": 32
+        },
+        {
+          "id": "50:56535",
+          "name": "Section Title",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {
+            "Text#50:0": {
+              "type": "TEXT",
+              "defaultValue": "A"
+            }
+          },
+          "examples": [],
+          "width": 300,
+          "height": 39
+        },
+        {
+          "id": "550:49677",
+          "name": "Row - Button",
+          "type": "COMPONENT_SET",
+          "variantCount": 3,
+          "properties": {
+            "Value": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Disabled",
+                "Destructive"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "550:49735",
+              "name": "Value=Disabled",
+              "width": 300,
+              "height": 52
+            },
+            {
+              "id": "550:49747",
+              "name": "Value=Destructive",
+              "width": 300,
+              "height": 52
+            },
+            {
+              "id": "550:49759",
+              "name": "Value=Default",
+              "width": 300,
+              "height": 52
+            }
+          ],
+          "width": 340,
+          "height": 220
+        },
+        {
+          "id": "39:67340",
+          "name": "_Header Trailing Accessories",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Disclosure Open",
+              "variantOptions": [
+                "Disclosure Open",
+                "Action",
+                "Image",
+                "Button"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "39:67337",
+              "name": "Type=Disclosure Open",
+              "width": 63,
+              "height": 22
+            },
+            {
+              "id": "5534:9689",
+              "name": "Type=Action",
+              "width": 45,
+              "height": 20
+            },
+            {
+              "id": "5534:9694",
+              "name": "Type=Image",
+              "width": 42,
+              "height": 42
+            }
+          ],
+          "width": 280,
+          "height": 80
+        },
+        {
+          "id": "550:50430",
+          "name": "Row",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Show Image#508:256": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Show Edit Button#508:289": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Show Grabber#508:322": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Title#519:116": {
+              "type": "TEXT",
+              "defaultValue": "Title"
+            },
+            "Subtitle#519:149": {
+              "type": "TEXT",
+              "defaultValue": "Subtitle"
+            },
+            "Show Subtitle#525:450": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Trailing#5534:8": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Height": {
+              "type": "VARIANT",
+              "defaultValue": "Regular",
+              "variantOptions": [
+                "Regular",
+                "Tall"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "550:50515",
+              "name": "Height=Tall",
+              "width": 300,
+              "height": 68
+            },
+            {
+              "id": "550:50627",
+              "name": "Height=Regular",
+              "width": 300,
+              "height": 52
+            }
+          ],
+          "width": 340,
+          "height": 175
+        },
+        {
+          "id": "48:56457",
+          "name": "Index Bar",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Device": {
+              "type": "VARIANT",
+              "defaultValue": "iPhone",
+              "variantOptions": [
+                "iPhone",
+                "iPad"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "48:56455",
+              "name": "Device=iPad",
+              "width": 30,
+              "height": 700
+            },
+            {
+              "id": "48:56456",
+              "name": "Device=iPhone",
+              "width": 16,
+              "height": 700
+            }
+          ],
+          "width": 110,
+          "height": 740
+        },
+        {
+          "id": "550:49969",
+          "name": "Row with Swipe Actions",
+          "type": "COMPONENT_SET",
+          "variantCount": 6,
+          "properties": {
+            "Swipe Actions Symbol Only#10472:129": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 1,
+                "maxChildren": 3,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT",
+                  "key": "b35fe394908abd5074ea84f85f79fb826925983f"
+                }
+              ]
+            },
+            "Swipe Actions Symbol and Label#10472:136": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 1,
+                "maxChildren": 3,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT",
+                  "key": "9c32d5662afa88a763bbad2cf591345b2db5cf6c"
+                }
+              ]
+            },
+            "Swipe Actions Symbol and Label Tall#10472:143": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 1,
+                "maxChildren": 3,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT",
+                  "key": "560fa134927148192d807b621e369e8f070911ab"
+                }
+              ]
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Symbol Only",
+              "variantOptions": [
+                "Symbol and Label",
+                "Symbol Only",
+                "Symbol and Label Tall"
+              ]
+            },
+            "Swipe": {
+              "type": "VARIANT",
+              "defaultValue": "Left",
+              "variantOptions": [
+                "Right",
+                "Left"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "550:50088",
+              "name": "Type=Symbol and Label Tall, Swipe=Right",
+              "width": 402,
+              "height": 68
+            },
+            {
+              "id": "10472:44956",
+              "name": "Type=Symbol and Label, Swipe=Right",
+              "width": 402,
+              "height": 52
+            },
+            {
+              "id": "550:50185",
+              "name": "Type=Symbol Only, Swipe=Right",
+              "width": 402,
+              "height": 52
+            }
+          ],
+          "width": 900,
+          "height": 250
+        },
+        {
+          "id": "517:38042",
+          "name": "Header",
+          "type": "COMPONENT_SET",
+          "variantCount": 3,
+          "properties": {
+            "Text#35:2": {
+              "type": "TEXT",
+              "defaultValue": "Header"
+            },
+            "Show Trailing#48:26": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Subtitle#5533:0": {
+              "type": "TEXT",
+              "defaultValue": "Subtitle"
+            },
+            "Supertitle#5533:4": {
+              "type": "TEXT",
+              "defaultValue": "Supertitle"
+            },
+            "Show Subtitle#5534:0": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Show Supertitle#5534:4": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Nested",
+              "variantOptions": [
+                "Nested",
+                "Prominent",
+                "Extra Prominent"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "517:38048",
+              "name": "Type=Extra Prominent",
+              "width": 402,
+              "height": 48
+            },
+            {
+              "id": "517:38055",
+              "name": "Type=Prominent",
+              "width": 402,
+              "height": 45
+            },
+            {
+              "id": "517:38061",
+              "name": "Type=Nested",
+              "width": 402,
+              "height": 42
+            }
+          ],
+          "width": 440,
+          "height": 210
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5469:7924",
+          "name": "_Separator",
+          "type": "COMPONENT_SET",
+          "width": 410,
+          "height": 50
+        },
+        {
+          "id": "27:68008",
+          "name": "_Swipe Actions/Symbol only",
+          "type": "COMPONENT",
+          "width": 60,
+          "height": 44
+        },
+        {
+          "id": "10472:44894",
+          "name": "_Swipe Actions/Symbol and Label",
+          "type": "COMPONENT",
+          "width": 84,
+          "height": 44
+        },
+        {
+          "id": "27:68007",
+          "name": "_Swipe Actions/Symbol and Label Stacked",
+          "type": "COMPONENT",
+          "width": 60,
+          "height": 68
+        },
+        {
+          "id": "20:60364",
+          "name": "_Edit Buttons/Light",
+          "type": "COMPONENT_SET",
+          "width": 70,
+          "height": 182
+        },
+        {
+          "id": "24:55973",
+          "name": "_Images/Regular",
+          "type": "COMPONENT_SET",
+          "width": 100,
+          "height": 270
+        },
+        {
+          "id": "508:72799",
+          "name": "_Images/Tall",
+          "type": "COMPONENT_SET",
+          "width": 110,
+          "height": 270
+        },
+        {
+          "id": "212:117586",
+          "name": "_Trailing",
+          "type": "COMPONENT_SET",
+          "width": 270,
+          "height": 490
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "507:24676",
+        "name": "Menus"
+      },
+      "rootCount": 11,
+      "componentCount": 57,
+      "components": [
+        {
+          "id": "5853:4742",
+          "name": "_Selection",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5853:4743",
+              "name": "Mode=Dark",
+              "width": 40,
+              "height": 28
+            },
+            {
+              "id": "5853:4741",
+              "name": "Mode=Light",
+              "width": 40,
+              "height": 28
+            }
+          ],
+          "width": 80,
+          "height": 120
+        },
+        {
+          "id": "5711:35414",
+          "name": "Text Selection",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 94,
+          "height": 22
+        },
+        {
+          "id": "5713:49111",
+          "name": "_Edit Menu Item",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Item#5713:41": {
+              "type": "TEXT",
+              "defaultValue": "Item"
+            },
+            "Show Separator#10460:12": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Destructive"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5713:49112",
+              "name": "Mode=Light, State=Destructive",
+              "width": 63,
+              "height": 18
+            },
+            {
+              "id": "5713:49121",
+              "name": "Mode=Dark, State=Destructive",
+              "width": 63,
+              "height": 18
+            },
+            {
+              "id": "5713:47504",
+              "name": "Mode=Light, State=Default",
+              "width": 63,
+              "height": 18
+            }
+          ],
+          "width": 200,
+          "height": 96
+        },
+        {
+          "id": "5831:53946",
+          "name": "_Menu Indicator",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5831:53947",
+              "name": "Mode=Dark",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "id": "5831:53945",
+              "name": "Mode=Light",
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "width": 76,
+          "height": 132
+        },
+        {
+          "id": "5713:47505",
+          "name": "Edit Menu",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {
+            "Items#10448:19": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 2,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "1abf35cf2ef3c4308337969ac7c3dfd13b320295"
+                }
+              ]
+            }
+          },
+          "examples": [],
+          "width": 232,
+          "height": 44
+        },
+        {
+          "id": "5855:4981",
+          "name": "Section Title",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Text#5855:0": {
+              "type": "TEXT",
+              "defaultValue": "Section Title"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5855:4982",
+              "name": "Mode=Dark",
+              "width": 160,
+              "height": 29
+            },
+            {
+              "id": "0:10525",
+              "name": "Mode=Light",
+              "width": 160,
+              "height": 29
+            }
+          ],
+          "width": 200,
+          "height": 118
+        },
+        {
+          "id": "5855:5763",
+          "name": "Separator",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5855:5764",
+              "name": "Mode=Dark",
+              "width": 160,
+              "height": 21
+            },
+            {
+              "id": "5498:16580",
+              "name": "Mode=Light",
+              "width": 160,
+              "height": 21
+            }
+          ],
+          "width": 200,
+          "height": 102
+        },
+        {
+          "id": "5502:6049",
+          "name": "Menu Items",
+          "type": "COMPONENT_SET",
+          "variantCount": 12,
+          "properties": {
+            "Show Shortcut#5502:18": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Checkmark#5511:111": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Symbol#5856:110": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Label#5856:123": {
+              "type": "TEXT",
+              "defaultValue": "Label"
+            },
+            "Subtitle#5856:136": {
+              "type": "TEXT",
+              "defaultValue": "Subtitle"
+            },
+            "Show Subtitle#5856:149": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Symbol#5856:162": {
+              "type": "TEXT",
+              "defaultValue": "􀓔"
+            },
+            "Show Control#5856:397": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Show Option#5856:410": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Show Shift#5856:423": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Show Command#5856:436": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Letter#5856:449": {
+              "type": "TEXT",
+              "defaultValue": "A"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Destructive",
+                "Disabled"
+              ]
+            },
+            "Menu has Selection": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "False",
+                "True"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5854:8771",
+              "name": "Mode=Dark, State=Destructive, Menu has Selection=True",
+              "width": 190,
+              "height": 40
+            },
+            {
+              "id": "5854:8776",
+              "name": "Mode=Dark, State=Disabled, Menu has Selection=True",
+              "width": 190,
+              "height": 40
+            },
+            {
+              "id": "5854:8781",
+              "name": "Mode=Dark, State=Default, Menu has Selection=True",
+              "width": 190,
+              "height": 40
+            }
+          ],
+          "width": 480,
+          "height": 370
+        },
+        {
+          "id": "5848:33925",
+          "name": "Menu Items - Submenus",
+          "type": "COMPONENT_SET",
+          "variantCount": 16,
+          "properties": {
+            "Symbol#5856:175": {
+              "type": "TEXT",
+              "defaultValue": "􀓔"
+            },
+            "Label#5856:192": {
+              "type": "TEXT",
+              "defaultValue": "Label"
+            },
+            "Subtitle#5856:209": {
+              "type": "TEXT",
+              "defaultValue": "Subtitle"
+            },
+            "Show Subtitle#5856:226": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Show Symbol#5856:243": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Disabled"
+              ]
+            },
+            "Open": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "False",
+                "True"
+              ]
+            },
+            "Menu has Selection": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "False",
+                "True"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5856:13989",
+              "name": "Mode=Dark, State=Disabled, Open=True, Menu has Selection=True",
+              "width": 190,
+              "height": 40
+            },
+            {
+              "id": "5856:13992",
+              "name": "Mode=Dark, State=Default, Open=True, Menu has Selection=True",
+              "width": 190,
+              "height": 40
+            },
+            {
+              "id": "5856:13995",
+              "name": "Mode=Dark, State=Disabled, Open=False, Menu has Selection=True",
+              "width": 190,
+              "height": 40
+            }
+          ],
+          "width": 460,
+          "height": 460
+        },
+        {
+          "id": "5498:16565",
+          "name": "Quick Action",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Symbol#5498:3": {
+              "type": "TEXT",
+              "defaultValue": "􀋂"
+            },
+            "Label#5498:4": {
+              "type": "TEXT",
+              "defaultValue": "Label"
+            },
+            "Show Selection#5502:26": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "Destructive": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "False",
+                "True"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5712:39056",
+              "name": "Mode=Dark, Destructive=True",
+              "width": 70,
+              "height": 57
+            },
+            {
+              "id": "5712:39060",
+              "name": "Mode=Dark, Destructive=False",
+              "width": 70,
+              "height": 57
+            },
+            {
+              "id": "5498:16566",
+              "name": "Mode=Light, Destructive=True",
+              "width": 70,
+              "height": 57
+            }
+          ],
+          "width": 200,
+          "height": 170
+        },
+        {
+          "id": "5908:6487",
+          "name": "Menu",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Menu Items#10448:16": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": null,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "4b45530d0fedaaaca6864ed3d4a04c1bef8ab6e3"
+                },
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "7d159bdeb2ea41b00e2ca8f6d87a93d39d502135"
+                },
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "429c9a4eb522d0792e0067e32558e9248b3f58ae"
+                },
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "5fb2e7df61fde64f4d71bc8527a4cbef8bf8f9ea"
+                }
+              ]
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Dark",
+                "Light"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5908:6481",
+              "name": "Mode=Dark",
+              "width": 238,
+              "height": 578
+            },
+            {
+              "id": "492:52296",
+              "name": "Mode=Light",
+              "width": 238,
+              "height": 578
+            }
+          ],
+          "width": 540,
+          "height": 618
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5509:6385",
+          "name": "Light Examples",
+          "type": "SECTION",
+          "width": 980,
+          "height": 780
+        },
+        {
+          "id": "5511:17506",
+          "name": "Dark Examples",
+          "type": "SECTION",
+          "width": 980,
+          "height": 780
+        },
+        {
+          "id": "5831:54418",
+          "name": "",
+          "type": "SECTION",
+          "width": 1160,
+          "height": 2570
+        },
+        {
+          "id": "544:191897",
+          "name": "Header",
+          "type": "INSTANCE",
+          "width": 1400,
+          "height": 292
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "507:24684",
+        "name": "Sheets"
+      },
+      "rootCount": 4,
+      "componentCount": 9,
+      "components": [
+        {
+          "id": "5551:18479",
+          "name": "Overlay",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 100,
+          "height": 100
+        },
+        {
+          "id": "5827:57566",
+          "name": "Grabber",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5827:57545",
+              "name": "Mode=Light",
+              "width": 60,
+              "height": 4
+            },
+            {
+              "id": "5827:57567",
+              "name": "Mode=Dark",
+              "width": 60,
+              "height": 4
+            }
+          ],
+          "width": 100,
+          "height": 70
+        },
+        {
+          "id": "10525:1632",
+          "name": "Sheet - iPhone",
+          "type": "COMPONENT_SET",
+          "variantCount": 3,
+          "properties": {
+            "Show Grabber#10525:0": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Dimming Layer#10525:4": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Content#10525:8": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": null,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": false
+              },
+              "preferredValues": []
+            },
+            "Detent": {
+              "type": "VARIANT",
+              "defaultValue": "Medium",
+              "variantOptions": [
+                "Medium",
+                "Large",
+                "Large (Stacked)"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "10525:1633",
+              "name": "Detent=Medium",
+              "width": 402,
+              "height": 874
+            },
+            {
+              "id": "10525:1638",
+              "name": "Detent=Large",
+              "width": 402,
+              "height": 874
+            },
+            {
+              "id": "10525:1642",
+              "name": "Detent=Large (Stacked)",
+              "width": 402,
+              "height": 874
+            }
+          ],
+          "width": 1302,
+          "height": 914
+        },
+        {
+          "id": "5719:30145",
+          "name": "Sheet - iPad",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 936,
+          "height": 852
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5551:18479",
+          "name": "Overlay",
+          "type": "COMPONENT",
+          "width": 100,
+          "height": 100
+        },
+        {
+          "id": "5827:57566",
+          "name": "Grabber",
+          "type": "COMPONENT_SET",
+          "width": 100,
+          "height": 70
+        },
+        {
+          "id": "10525:1632",
+          "name": "Sheet - iPhone",
+          "type": "COMPONENT_SET",
+          "width": 1302,
+          "height": 914
+        },
+        {
+          "id": "5719:30145",
+          "name": "Sheet - iPad",
+          "type": "COMPONENT",
+          "width": 936,
+          "height": 852
+        },
+        {
+          "id": "544:191847",
+          "name": "Header",
+          "type": "INSTANCE",
+          "width": 1400,
+          "height": 208
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "507:26013",
+        "name": "Sidebars"
+      },
+      "rootCount": 12,
+      "componentCount": 86,
+      "components": [
+        {
+          "id": "5643:28168",
+          "name": "_Sidebar - Trailing",
+          "type": "COMPONENT_SET",
+          "variantCount": 24,
+          "properties": {
+            "Detail#5643:84": {
+              "type": "TEXT",
+              "defaultValue": "Detail"
+            },
+            "Symbol#5643:85": {
+              "type": "TEXT",
+              "defaultValue": "􀓔"
+            },
+            "Show Detail#5726:0": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Dark",
+                "Light"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Selected"
+              ]
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Detail",
+              "variantOptions": [
+                "Checkmark",
+                "Info",
+                "Disclosure",
+                "Symbol",
+                "Toggle",
+                "Detail"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5660:39588",
+              "name": "Mode=Dark, State=Selected, Type=Detail",
+              "width": 54,
+              "height": 44
+            },
+            {
+              "id": "5660:39590",
+              "name": "Mode=Dark, State=Selected, Type=Checkmark",
+              "width": 84,
+              "height": 44
+            },
+            {
+              "id": "5660:39593",
+              "name": "Mode=Dark, State=Selected, Type=Info",
+              "width": 84,
+              "height": 44
+            }
+          ],
+          "width": 260,
+          "height": 800
+        },
+        {
+          "id": "5659:15001",
+          "name": "_Sidebar - Edit Button",
+          "type": "COMPONENT_SET",
+          "variantCount": 6,
+          "properties": {
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Delete",
+              "variantOptions": [
+                "Delete",
+                "Selectable",
+                "Selected"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5660:37328",
+              "name": "Mode=Dark, Type=Selectable",
+              "width": 21,
+              "height": 21
+            },
+            {
+              "id": "5660:37329",
+              "name": "Mode=Dark, Type=Selected",
+              "width": 21,
+              "height": 21
+            },
+            {
+              "id": "5660:37331",
+              "name": "Mode=Dark, Type=Delete",
+              "width": 21,
+              "height": 21
+            }
+          ],
+          "width": 110,
+          "height": 150
+        },
+        {
+          "id": "147:62237",
+          "name": "_Sidebar - Leading",
+          "type": "COMPONENT_SET",
+          "variantCount": 16,
+          "properties": {
+            "Symbol#147:59": {
+              "type": "TEXT",
+              "defaultValue": "􀓔"
+            },
+            "Title#5660:0": {
+              "type": "TEXT",
+              "defaultValue": "Title"
+            },
+            "Subtitle#5660:7": {
+              "type": "TEXT",
+              "defaultValue": "Subtitle"
+            },
+            "Show Subtitle#5660:14": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Show Edit Button#5660:33": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Selected"
+              ]
+            },
+            "Image": {
+              "type": "VARIANT",
+              "defaultValue": "Symbol",
+              "variantOptions": [
+                "Symbol",
+                "Bitmap",
+                "Collection",
+                "Hidden"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5660:41138",
+              "name": "Mode=Dark, State=Selected, Image=Hidden",
+              "width": 34,
+              "height": 44
+            },
+            {
+              "id": "5660:39428",
+              "name": "Mode=Dark, State=Selected, Image=Collection",
+              "width": 85,
+              "height": 44
+            },
+            {
+              "id": "5660:39437",
+              "name": "Mode=Dark, State=Selected, Image=Bitmap",
+              "width": 85,
+              "height": 44
+            }
+          ],
+          "width": 300,
+          "height": 600
+        },
+        {
+          "id": "5643:20203",
+          "name": "_Trailing - Disclosure",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Open": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "False",
+                "True"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5643:20202",
+              "name": "Open=True",
+              "width": 18,
+              "height": 18
+            },
+            {
+              "id": "5643:20204",
+              "name": "Open=False",
+              "width": 18,
+              "height": 18
+            }
+          ],
+          "width": 58,
+          "height": 96
+        },
+        {
+          "id": "10472:45236",
+          "name": "BG",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Active": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "10472:45235",
+              "name": "Active=True",
+              "width": 100,
+              "height": 100
+            },
+            {
+              "id": "10472:45237",
+              "name": "Active=False",
+              "width": 100,
+              "height": 100
+            }
+          ],
+          "width": 260,
+          "height": 140
+        },
+        {
+          "id": "131:70029",
+          "name": "Sidebar Row",
+          "type": "COMPONENT_SET",
+          "variantCount": 12,
+          "properties": {
+            "Show Image#5643:52": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Trailing#5659:7": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Selected",
+                "Disabled",
+                "Disclosable"
+              ]
+            },
+            "Indent Level": {
+              "type": "VARIANT",
+              "defaultValue": "0",
+              "variantOptions": [
+                "0",
+                "1",
+                "2"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "147:62816",
+              "name": "State=Disabled, Indent Level=2",
+              "width": 320,
+              "height": 44
+            },
+            {
+              "id": "147:62819",
+              "name": "State=Disabled, Indent Level=1",
+              "width": 320,
+              "height": 44
+            },
+            {
+              "id": "147:62822",
+              "name": "State=Disabled, Indent Level=0",
+              "width": 320,
+              "height": 44
+            }
+          ],
+          "width": 360,
+          "height": 940
+        },
+        {
+          "id": "131:66427",
+          "name": "Section Header",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 260,
+          "height": 54
+        },
+        {
+          "id": "5840:30516",
+          "name": "Sidebar Search Field",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 200,
+          "height": 64
+        },
+        {
+          "id": "10464:33764",
+          "name": "Sidebar",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Sidebar Items#10464:53": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 1,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "31dc6ac0fce94d23300e715ba1ea73bbd3ba8307"
+                },
+                {
+                  "type": "COMPONENT",
+                  "key": "9ccd654cc89751e5ba090c529fe8df6f7b892d04"
+                },
+                {
+                  "type": "COMPONENT",
+                  "key": "26182448d5233a3631afd7b9eb768af78cfead68"
+                }
+              ]
+            },
+            "Floating Window": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "131:70868",
+              "name": "Floating Window=False",
+              "width": 320,
+              "height": 802
+            },
+            {
+              "id": "10464:33765",
+              "name": "Floating Window=True",
+              "width": 320,
+              "height": 802
+            }
+          ],
+          "width": 700,
+          "height": 842
+        },
+        {
+          "id": "5840:30471",
+          "name": "_Search Field",
+          "type": "COMPONENT_SET",
+          "variantCount": 6,
+          "properties": {
+            "Search Term#5657:0": {
+              "type": "TEXT",
+              "defaultValue": "Search"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Dark",
+                "Light"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Placeholder",
+              "variantOptions": [
+                "Placeholder",
+                "Typing",
+                "Value"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5840:30472",
+              "name": "Mode=Dark, State=Typing",
+              "width": 200,
+              "height": 44
+            },
+            {
+              "id": "5840:30479",
+              "name": "Mode=Dark, State=Value",
+              "width": 200,
+              "height": 44
+            },
+            {
+              "id": "5840:30484",
+              "name": "Mode=Dark, State=Placeholder",
+              "width": 200,
+              "height": 44
+            }
+          ],
+          "width": 470,
+          "height": 210
+        },
+        {
+          "id": "5840:25291",
+          "name": "_Selection BG",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5840:25286",
+              "name": "Mode=Dark",
+              "width": 100,
+              "height": 44
+            },
+            {
+              "id": "5840:25287",
+              "name": "Mode=Light",
+              "width": 100,
+              "height": 44
+            }
+          ],
+          "width": 140,
+          "height": 150
+        },
+        {
+          "id": "5840:30052",
+          "name": "_Section Header",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Show Disclosure#5840:7": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Detail#5840:8": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5840:30053",
+              "name": "Mode=Dark",
+              "width": 260,
+              "height": 54
+            },
+            {
+              "id": "5840:30051",
+              "name": "Mode=Light",
+              "width": 260,
+              "height": 54
+            }
+          ],
+          "width": 300,
+          "height": 170
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5643:28168",
+          "name": "_Sidebar - Trailing",
+          "type": "COMPONENT_SET",
+          "width": 260,
+          "height": 800
+        },
+        {
+          "id": "5659:15001",
+          "name": "_Sidebar - Edit Button",
+          "type": "COMPONENT_SET",
+          "width": 110,
+          "height": 150
+        },
+        {
+          "id": "147:62237",
+          "name": "_Sidebar - Leading",
+          "type": "COMPONENT_SET",
+          "width": 300,
+          "height": 600
+        },
+        {
+          "id": "5643:20203",
+          "name": "_Trailing - Disclosure",
+          "type": "COMPONENT_SET",
+          "width": 58,
+          "height": 96
+        },
+        {
+          "id": "5704:37671",
+          "name": "Sidebars",
+          "type": "SECTION",
+          "width": 1400,
+          "height": 2090
+        },
+        {
+          "id": "5840:30471",
+          "name": "_Search Field",
+          "type": "COMPONENT_SET",
+          "width": 470,
+          "height": 210
+        },
+        {
+          "id": "544:191842",
+          "name": "Header",
+          "type": "INSTANCE",
+          "width": 1400,
+          "height": 208
+        },
+        {
+          "id": "5840:25291",
+          "name": "_Selection BG",
+          "type": "COMPONENT_SET",
+          "width": 140,
+          "height": 150
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "507:25993",
+        "name": "Toolbars"
+      },
+      "rootCount": 24,
+      "componentCount": 164,
+      "components": [
+        {
+          "id": "5704:38375",
+          "name": "_Toolbar page control",
+          "type": "COMPONENT_SET",
+          "variantCount": 35,
+          "properties": {
+            "Dots": {
+              "type": "VARIANT",
+              "defaultValue": "2",
+              "variantOptions": [
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8+"
+              ]
+            },
+            "Selection": {
+              "type": "VARIANT",
+              "defaultValue": "1",
+              "variantOptions": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5704:38676",
+              "name": "Dots=8+, Selection=8",
+              "width": 168,
+              "height": 48
+            },
+            {
+              "id": "5704:38689",
+              "name": "Dots=8+, Selection=7",
+              "width": 168,
+              "height": 48
+            },
+            {
+              "id": "5704:38702",
+              "name": "Dots=8+, Selection=6",
+              "width": 168,
+              "height": 48
+            }
+          ],
+          "width": 1110,
+          "height": 510
+        },
+        {
+          "id": "5431:813",
+          "name": "_Back Bar Button Item",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Title#5429:13": {
+              "type": "TEXT",
+              "defaultValue": "Title"
+            },
+            "Show Title#5573:29": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Disabled"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5565:34929",
+              "name": "Mode=Dark,State=Disabled",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "id": "5565:34932",
+              "name": "Mode=Dark,State=Default",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "id": "5431:830",
+              "name": "Mode=Light,State=Disabled",
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "width": 220,
+          "height": 150
+        },
+        {
+          "id": "5429:6984",
+          "name": "_Button - Text",
+          "type": "COMPONENT_SET",
+          "variantCount": 8,
+          "properties": {
+            "Label#5429:13": {
+              "type": "TEXT",
+              "defaultValue": "Label"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Tinted",
+                "Selected",
+                "Disabled"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5565:34912",
+              "name": "Mode=Dark, State=Disabled",
+              "width": 57,
+              "height": 36
+            },
+            {
+              "id": "5565:34914",
+              "name": "Mode=Dark, State=Tinted",
+              "width": 57,
+              "height": 36
+            },
+            {
+              "id": "5565:34916",
+              "name": "Mode=Dark, State=Selected",
+              "width": 57,
+              "height": 36
+            }
+          ],
+          "width": 170,
+          "height": 240
+        },
+        {
+          "id": "10479:19510",
+          "name": "_Button - Text - Prominent",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Label#5429:13": {
+              "type": "TEXT",
+              "defaultValue": "Label"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Disabled"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "10479:19511",
+              "name": "Mode=Dark, State=Disabled",
+              "width": 57,
+              "height": 36
+            },
+            {
+              "id": "10479:19517",
+              "name": "Mode=Dark, State=Default",
+              "width": 57,
+              "height": 36
+            },
+            {
+              "id": "10479:19521",
+              "name": "Mode=Light,State=Disabled",
+              "width": 57,
+              "height": 36
+            }
+          ],
+          "width": 170,
+          "height": 140
+        },
+        {
+          "id": "5426:2003",
+          "name": "_Button - Symbol",
+          "type": "COMPONENT_SET",
+          "variantCount": 8,
+          "properties": {
+            "Symbol#5429:0": {
+              "type": "TEXT",
+              "defaultValue": "􀓔"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Tinted",
+                "Selected",
+                "Disabled"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5565:34895",
+              "name": "Mode=Dark, State=Disabled",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "id": "5565:34897",
+              "name": "Mode=Dark, State=Selected",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "id": "5565:34899",
+              "name": "Mode=Dark, State=Tinted",
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "width": 130,
+          "height": 240
+        },
+        {
+          "id": "10479:19527",
+          "name": "_Button - Symbol - Prominent",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Symbol#5429:0": {
+              "type": "TEXT",
+              "defaultValue": "􀓔"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Disabled"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "10479:19528",
+              "name": "Mode=Dark, State=Disabled",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "id": "10479:19534",
+              "name": "Mode=Dark, State=Default",
+              "width": 36,
+              "height": 36
+            },
+            {
+              "id": "10479:19536",
+              "name": "Mode=Light,State=Disabled",
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "width": 130,
+          "height": 140
+        },
+        {
+          "id": "5573:24524",
+          "name": "_Segmented Control Button",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "Selected": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5573:24522",
+              "name": "Mode=Dark,Selected=False",
+              "width": 126,
+              "height": 36
+            },
+            {
+              "id": "5573:24519",
+              "name": "Mode=Dark,Selected=True",
+              "width": 126,
+              "height": 36
+            },
+            {
+              "id": "5573:24515",
+              "name": "Mode=Light, Selected=False",
+              "width": 126,
+              "height": 36
+            }
+          ],
+          "width": 340,
+          "height": 120
+        },
+        {
+          "id": "5573:24624",
+          "name": "_Search Accessory",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Show Filters": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5573:24625",
+              "name": "Show Filters=True",
+              "width": 820,
+              "height": 44
+            },
+            {
+              "id": "5573:24623",
+              "name": "Show Filters=False",
+              "width": 820,
+              "height": 44
+            }
+          ],
+          "width": 860,
+          "height": 148
+        },
+        {
+          "id": "5720:33677",
+          "name": "_Search - 44pt",
+          "type": "COMPONENT_SET",
+          "variantCount": 6,
+          "properties": {
+            "Value#5720:2": {
+              "type": "TEXT",
+              "defaultValue": "Search Term"
+            },
+            "Placeholder#5738:15": {
+              "type": "TEXT",
+              "defaultValue": "Placeholder"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Placeholder",
+              "variantOptions": [
+                "Placeholder",
+                "Value",
+                "Typing"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5565:33301",
+              "name": "Mode=Dark, State=Value",
+              "width": 190,
+              "height": 44
+            },
+            {
+              "id": "5565:33296",
+              "name": "Mode=Dark, State=Typing",
+              "width": 190,
+              "height": 44
+            },
+            {
+              "id": "5565:33306",
+              "name": "Mode=Dark, State=Placeholder",
+              "width": 190,
+              "height": 44
+            }
+          ],
+          "width": 450,
+          "height": 230
+        },
+        {
+          "id": "5720:29596",
+          "name": "_Buttons - 44pt",
+          "type": "COMPONENT_SET",
+          "variantCount": 6,
+          "properties": {
+            "Buttons#10460:23": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 2,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "d2a228c38424d902418f704f7a943de4c510a768"
+                }
+              ]
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Symbol - Prominent",
+              "variantOptions": [
+                "Symbol - Prominent",
+                "Symbol",
+                "Button Group",
+                "Text",
+                "Text - Prominent",
+                "Back"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5432:23136",
+              "name": "Type=Back",
+              "width": 44,
+              "height": 44
+            },
+            {
+              "id": "5432:23118",
+              "name": "Type=Text",
+              "width": 73,
+              "height": 44
+            },
+            {
+              "id": "5432:23351",
+              "name": "Type=Text - Prominent",
+              "width": 73,
+              "height": 44
+            }
+          ],
+          "width": 220,
+          "height": 440
+        },
+        {
+          "id": "5720:33170",
+          "name": "_Search - 48pt",
+          "type": "COMPONENT_SET",
+          "variantCount": 6,
+          "properties": {
+            "Value#5720:1": {
+              "type": "TEXT",
+              "defaultValue": "Search Term"
+            },
+            "Placeholder#5738:8": {
+              "type": "TEXT",
+              "defaultValue": "Placeholder"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Placeholder",
+              "variantOptions": [
+                "Placeholder",
+                "Typing",
+                "Value"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5565:35246",
+              "name": "Mode=Dark, State=Typing",
+              "width": 190,
+              "height": 48
+            },
+            {
+              "id": "5565:35253",
+              "name": "Mode=Dark, State=Value",
+              "width": 190,
+              "height": 48
+            },
+            {
+              "id": "5565:35259",
+              "name": "Mode=Dark, State=Placeholder",
+              "width": 190,
+              "height": 48
+            }
+          ],
+          "width": 440,
+          "height": 240
+        },
+        {
+          "id": "5720:47981",
+          "name": "_Buttons - 48pt",
+          "type": "COMPONENT_SET",
+          "variantCount": 10,
+          "properties": {
+            "Buttons#10460:17": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 2,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "960982c6e55a985f12c87db1b5bb8d9ce9cbba94"
+                }
+              ]
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Symbol - Prominent",
+              "variantOptions": [
+                "Symbol - Prominent",
+                "Symbol",
+                "Text",
+                "Text - Prominent",
+                "Button Group"
+              ]
+            },
+            "Preferred Axis": {
+              "type": "VARIANT",
+              "defaultValue": "Horizontal",
+              "variantOptions": [
+                "Horizontal",
+                "Vertical"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5565:35638",
+              "name": "Type=Text, Preferred Axis=Horizontal",
+              "width": 69,
+              "height": 48
+            },
+            {
+              "id": "12894:62397",
+              "name": "Type=Text, Preferred Axis=Vertical",
+              "width": 48,
+              "height": 48
+            },
+            {
+              "id": "5565:35635",
+              "name": "Type=Text - Prominent, Preferred Axis=Horizontal",
+              "width": 69,
+              "height": 48
+            }
+          ],
+          "width": 300,
+          "height": 500
+        },
+        {
+          "id": "12884:8278",
+          "name": "_Title - iPhone Duo - Large Title",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Title#5827:0": {
+              "type": "TEXT",
+              "defaultValue": "Title"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "12884:8279",
+              "name": "Mode=Dark",
+              "width": 69,
+              "height": 34
+            },
+            {
+              "id": "12884:8281",
+              "name": "Mode=Light",
+              "width": 69,
+              "height": 34
+            }
+          ],
+          "width": 109,
+          "height": 142
+        },
+        {
+          "id": "5827:57551",
+          "name": "_Title - iPhone - Large Title",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Title#5827:0": {
+              "type": "TEXT",
+              "defaultValue": "Title"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5827:57552",
+              "name": "Mode=Dark",
+              "width": 69,
+              "height": 41
+            },
+            {
+              "id": "5827:57546",
+              "name": "Mode=Light",
+              "width": 69,
+              "height": 41
+            }
+          ],
+          "width": 109,
+          "height": 142
+        },
+        {
+          "id": "5827:57557",
+          "name": "_Title - iPhone - Subheadline",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Title#5827:6": {
+              "type": "TEXT",
+              "defaultValue": "Title"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5827:57558",
+              "name": "Mode=Dark",
+              "width": 32,
+              "height": 20
+            },
+            {
+              "id": "5827:57548",
+              "name": "Mode=Light",
+              "width": 32,
+              "height": 20
+            }
+          ],
+          "width": 72,
+          "height": 96
+        },
+        {
+          "id": "5827:57554",
+          "name": "_Title - iPhone - Body",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Title#5827:3": {
+              "type": "TEXT",
+              "defaultValue": "Title"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5827:57555",
+              "name": "Mode=Dark",
+              "width": 36,
+              "height": 22
+            },
+            {
+              "id": "5827:57547",
+              "name": "Mode=Light",
+              "width": 36,
+              "height": 22
+            }
+          ],
+          "width": 76,
+          "height": 104
+        },
+        {
+          "id": "5827:57563",
+          "name": "_Subtitle - iPhone - Caption",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Subtitle#5827:12": {
+              "type": "TEXT",
+              "defaultValue": "Subtitle"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5827:57564",
+              "name": "Mode=Dark",
+              "width": 46,
+              "height": 16
+            },
+            {
+              "id": "5827:57550",
+              "name": "Mode=Light",
+              "width": 46,
+              "height": 16
+            }
+          ],
+          "width": 86,
+          "height": 88
+        },
+        {
+          "id": "5827:57560",
+          "name": "_Subtitle - iPhone - Subheadline",
+          "type": "COMPONENT_SET",
+          "variantCount": 2,
+          "properties": {
+            "Subtitle#5827:9": {
+              "type": "TEXT",
+              "defaultValue": "Subtitle"
+            },
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5827:57561",
+              "name": "Mode=Dark",
+              "width": 55,
+              "height": 20
+            },
+            {
+              "id": "5827:57549",
+              "name": "Mode=Light",
+              "width": 55,
+              "height": 20
+            }
+          ],
+          "width": 95,
+          "height": 100
+        },
+        {
+          "id": "5561:41165",
+          "name": "Toolbar - Top - iPad",
+          "type": "COMPONENT_SET",
+          "variantCount": 8,
+          "properties": {
+            "Show Subtitle#5561:8": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Search#5573:19": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Leading#10464:83": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": null,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "c2e7c40af2b9bd7147662f3d370d85b67cfc1e8e"
+                }
+              ]
+            },
+            "Trailing#10464:92": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": null,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "c2e7c40af2b9bd7147662f3d370d85b67cfc1e8e"
+                }
+              ]
+            },
+            "Style": {
+              "type": "VARIANT",
+              "defaultValue": "Title 2 Line",
+              "variantOptions": [
+                "Title 2 Line",
+                "Title 2 Line Left",
+                "Compact Large",
+                "Large Title"
+              ]
+            },
+            "Tab Bar": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "False",
+                "True"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5573:24144",
+              "name": "Style=Compact Large, Tab Bar=True",
+              "width": 820,
+              "height": 54
+            },
+            {
+              "id": "5572:23773",
+              "name": "Style=Large Title, Tab Bar=True",
+              "width": 820,
+              "height": 131
+            },
+            {
+              "id": "5571:23159",
+              "name": "Style=Title 2 Line Left, Tab Bar=True",
+              "width": 820,
+              "height": 98
+            }
+          ],
+          "width": 870,
+          "height": 1150
+        },
+        {
+          "id": "12883:6008",
+          "name": "Toolbar - Top - iPhone Duo",
+          "type": "COMPONENT_SET",
+          "variantCount": 8,
+          "properties": {
+            "Show Subtitle#5561:8": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Leading#10464:71": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": null,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "9b1bd00e87290aed87e7e63aa46a080ed33fb715"
+                }
+              ]
+            },
+            "Trailing#10464:77": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": null,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "9b1bd00e87290aed87e7e63aa46a080ed33fb715"
+                }
+              ]
+            },
+            "Show Title#12884:2": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Leading#12886:12": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Trailing#12886:17": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Reserved Region#12886:22": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Status Bar#12887:15": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Style": {
+              "type": "VARIANT",
+              "defaultValue": "Title",
+              "variantOptions": [
+                "Title",
+                "Compact Large",
+                "Large Title",
+                "Title 2 Line"
+              ]
+            },
+            "Sheet": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "False",
+                "True"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "12886:11597",
+              "name": "Style=Title 2 Line, Sheet=True",
+              "width": 600,
+              "height": 74
+            },
+            {
+              "id": "12886:11607",
+              "name": "Style=Compact Large, Sheet=True",
+              "width": 600,
+              "height": 76
+            },
+            {
+              "id": "12886:11617",
+              "name": "Style=Large Title, Sheet=True",
+              "width": 600,
+              "height": 138
+            }
+          ],
+          "width": 1280,
+          "height": 500
+        },
+        {
+          "id": "1:54472",
+          "name": "Toolbar - Top - iPhone",
+          "type": "COMPONENT_SET",
+          "variantCount": 5,
+          "properties": {
+            "Show Subtitle#5561:8": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Leading#10464:71": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": null,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "c2e7c40af2b9bd7147662f3d370d85b67cfc1e8e"
+                }
+              ]
+            },
+            "Trailing#10464:77": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": null,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "c2e7c40af2b9bd7147662f3d370d85b67cfc1e8e"
+                }
+              ]
+            },
+            "Style": {
+              "type": "VARIANT",
+              "defaultValue": "Default",
+              "variantOptions": [
+                "Default",
+                "Compact Large",
+                "Large Title",
+                "Title 2 Line",
+                "Title 2 Line Left"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5553:32641",
+              "name": "Style=Compact Large",
+              "width": 402,
+              "height": 54
+            },
+            {
+              "id": "5553:39602",
+              "name": "Style=Large Title",
+              "width": 402,
+              "height": 125
+            },
+            {
+              "id": "5553:39536",
+              "name": "Style=Title 2 Line Left",
+              "width": 402,
+              "height": 54
+            }
+          ],
+          "width": 440,
+          "height": 450
+        },
+        {
+          "id": "4:55732",
+          "name": "Toolbar - Bottom - iPhone",
+          "type": "COMPONENT_SET",
+          "variantCount": 6,
+          "properties": {
+            "Buttons Leading#10464:54": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 1,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "9b1bd00e87290aed87e7e63aa46a080ed33fb715"
+                }
+              ]
+            },
+            "Buttons Trailing#10464:61": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 1,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "9b1bd00e87290aed87e7e63aa46a080ed33fb715"
+                }
+              ]
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Buttons",
+              "variantOptions": [
+                "Buttons",
+                "Buttons + Page Dots",
+                "Search",
+                "Search with Focus",
+                "Search + Trailing Item",
+                "Search + Leading Item"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5704:39190",
+              "name": "Type=Buttons + Page Dots",
+              "width": 402,
+              "height": 84
+            },
+            {
+              "id": "5432:24143",
+              "name": "Type=Search with Focus",
+              "width": 402,
+              "height": 84
+            },
+            {
+              "id": "5432:24116",
+              "name": "Type=Search + Leading Item",
+              "width": 402,
+              "height": 84
+            }
+          ],
+          "width": 440,
+          "height": 620
+        },
+        {
+          "id": "8515:13163",
+          "name": "Toolbar - Bottom - iPad",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {
+            "Buttons Leading#10464:68": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 1,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "c2e7c40af2b9bd7147662f3d370d85b67cfc1e8e"
+                }
+              ]
+            },
+            "Buttons Center#10464:69": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 1,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "c2e7c40af2b9bd7147662f3d370d85b67cfc1e8e"
+                }
+              ]
+            },
+            "Buttons Trailing#10464:70": {
+              "type": "SLOT",
+              "description": "",
+              "slotSettings": {
+                "stretchChildOnInsert": false,
+                "displayEmptyByDefault": false,
+                "minChildren": 1,
+                "maxChildren": null,
+                "allowPreferredValuesOnly": true
+              },
+              "preferredValues": [
+                {
+                  "type": "COMPONENT_SET",
+                  "key": "c2e7c40af2b9bd7147662f3d370d85b67cfc1e8e"
+                }
+              ]
+            }
+          },
+          "examples": [],
+          "width": 500,
+          "height": 58
+        },
+        {
+          "id": "5811:30646",
+          "name": "_Page Dots",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Mode": {
+              "type": "VARIANT",
+              "defaultValue": "Light",
+              "variantOptions": [
+                "Light",
+                "Dark"
+              ]
+            },
+            "Selected": {
+              "type": "VARIANT",
+              "defaultValue": "False",
+              "variantOptions": [
+                "False",
+                "True"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5811:30647",
+              "name": "Mode=Dark,Selected=False",
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "5811:30648",
+              "name": "Mode=Dark,Selected=True",
+              "width": 8,
+              "height": 8
+            },
+            {
+              "id": "5811:30644",
+              "name": "Mode=Light,Selected=False",
+              "width": 8,
+              "height": 8
+            }
+          ],
+          "width": 70,
+          "height": 70
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5704:38375",
+          "name": "_Toolbar page control",
+          "type": "COMPONENT_SET",
+          "width": 1110,
+          "height": 510
+        },
+        {
+          "id": "5431:813",
+          "name": "_Back Bar Button Item",
+          "type": "COMPONENT_SET",
+          "width": 220,
+          "height": 150
+        },
+        {
+          "id": "5429:6984",
+          "name": "_Button - Text",
+          "type": "COMPONENT_SET",
+          "width": 170,
+          "height": 240
+        },
+        {
+          "id": "10479:19510",
+          "name": "_Button - Text - Prominent",
+          "type": "COMPONENT_SET",
+          "width": 170,
+          "height": 140
+        },
+        {
+          "id": "5426:2003",
+          "name": "_Button - Symbol",
+          "type": "COMPONENT_SET",
+          "width": 130,
+          "height": 240
+        },
+        {
+          "id": "10479:19527",
+          "name": "_Button - Symbol - Prominent",
+          "type": "COMPONENT_SET",
+          "width": 130,
+          "height": 140
+        },
+        {
+          "id": "5573:24524",
+          "name": "_Segmented Control Button",
+          "type": "COMPONENT_SET",
+          "width": 340,
+          "height": 120
+        },
+        {
+          "id": "5573:24624",
+          "name": "_Search Accessory",
+          "type": "COMPONENT_SET",
+          "width": 860,
+          "height": 148
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "553:22762",
+        "name": "Text Fields"
+      },
+      "rootCount": 1,
+      "componentCount": 5,
+      "components": [
+        {
+          "id": "553:23047",
+          "name": "Text Field",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "properties": {
+            "Value#519:17": {
+              "type": "TEXT",
+              "defaultValue": "Value"
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Placeholder",
+              "variantOptions": [
+                "Placeholder",
+                "Focused",
+                "Typing",
+                "Value Entered"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "553:23061",
+              "name": "State=Placeholder",
+              "width": 402,
+              "height": 52
+            },
+            {
+              "id": "5433:15646",
+              "name": "State=Focused",
+              "width": 402,
+              "height": 52
+            },
+            {
+              "id": "5433:15631",
+              "name": "State=Value Entered",
+              "width": 402,
+              "height": 52
+            }
+          ],
+          "width": 442,
+          "height": 310
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5433:15705",
+          "name": "Light examples",
+          "type": "SECTION",
+          "width": 440,
+          "height": 280
+        },
+        {
+          "id": "5433:15709",
+          "name": "Dark examples",
+          "type": "SECTION",
+          "width": 440,
+          "height": 280
+        },
+        {
+          "id": "5433:20204",
+          "name": "",
+          "type": "SECTION",
+          "width": 642,
+          "height": 492
+        },
+        {
+          "id": "553:22763",
+          "name": "Header",
+          "type": "INSTANCE",
+          "width": 1400,
+          "height": 208
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "507:24685",
+        "name": "Sliders"
+      },
+      "rootCount": 6,
+      "componentCount": 21,
+      "components": [
+        {
+          "id": "5430:5333",
+          "name": "_Ticks",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 282,
+          "height": 4
+        },
+        {
+          "id": "5428:5456",
+          "name": "_Track",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 282,
+          "height": 6
+        },
+        {
+          "id": "5441:3942",
+          "name": "_Fill",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 282,
+          "height": 6
+        },
+        {
+          "id": "520:49468",
+          "name": "_Knob - Idle",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 2,
+          "height": 24
+        },
+        {
+          "id": "10456:2324",
+          "name": "_Knob - Pressed",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "properties": {},
+          "examples": [],
+          "width": 2,
+          "height": 24
+        },
+        {
+          "id": "7:53847",
+          "name": "Sliders",
+          "type": "COMPONENT_SET",
+          "variantCount": 15,
+          "properties": {
+            "Symbol - Max#495:0": {
+              "type": "TEXT",
+              "defaultValue": "􀓏"
+            },
+            "Symbol - Min#495:45": {
+              "type": "TEXT",
+              "defaultValue": "􀓑"
+            },
+            "Show Symbols#520:0": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "Show Ticks#5430:0": {
+              "type": "BOOLEAN",
+              "defaultValue": true
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Idle",
+              "variantOptions": [
+                "Idle",
+                "Pressed",
+                "Disabled"
+              ]
+            },
+            "Value": {
+              "type": "VARIANT",
+              "defaultValue": "0%",
+              "variantOptions": [
+                "0%",
+                "25%",
+                "50%",
+                "75%",
+                "100%"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "10456:2225",
+              "name": "State=Disabled, Value=100%",
+              "width": 400,
+              "height": 52
+            },
+            {
+              "id": "10456:2236",
+              "name": "State=Disabled, Value=75%",
+              "width": 400,
+              "height": 52
+            },
+            {
+              "id": "10456:2247",
+              "name": "State=Disabled, Value=50%",
+              "width": 400,
+              "height": 52
+            }
+          ],
+          "width": 440,
+          "height": 1084
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5430:5333",
+          "name": "_Ticks",
+          "type": "COMPONENT",
+          "width": 282,
+          "height": 4
+        },
+        {
+          "id": "5428:5456",
+          "name": "_Track",
+          "type": "COMPONENT",
+          "width": 282,
+          "height": 6
+        },
+        {
+          "id": "5441:3942",
+          "name": "_Fill",
+          "type": "COMPONENT",
+          "width": 282,
+          "height": 6
+        },
+        {
+          "id": "520:49468",
+          "name": "_Knob - Idle",
+          "type": "COMPONENT",
+          "width": 2,
+          "height": 24
+        },
+        {
+          "id": "10456:2324",
+          "name": "_Knob - Pressed",
+          "type": "COMPONENT",
+          "width": 2,
+          "height": 24
+        },
+        {
+          "id": "5430:1471",
+          "name": "Light examples",
+          "type": "SECTION",
+          "width": 440,
+          "height": 250
+        },
+        {
+          "id": "5430:2054",
+          "name": "Dark examples",
+          "type": "SECTION",
+          "width": 440,
+          "height": 250
+        },
+        {
+          "id": "7:53847",
+          "name": "Sliders",
+          "type": "COMPONENT_SET",
+          "width": 440,
+          "height": 1084
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "507:24690",
+        "name": "Toggles"
+      },
+      "rootCount": 1,
+      "componentCount": 9,
+      "components": [
+        {
+          "id": "29:56814",
+          "name": "Toggle - Switch",
+          "type": "COMPONENT_SET",
+          "variantCount": 8,
+          "properties": {
+            "Show AX Label#6152:0": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "State": {
+              "type": "VARIANT",
+              "defaultValue": "Idle",
+              "variantOptions": [
+                "Idle",
+                "Pressed"
+              ]
+            },
+            "Is On": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            },
+            "Is Enabled": {
+              "type": "VARIANT",
+              "defaultValue": "True",
+              "variantOptions": [
+                "True",
+                "False"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "10456:1252",
+              "name": "State=Idle, Is On=False, Is Enabled=False",
+              "width": 64,
+              "height": 28
+            },
+            {
+              "id": "10456:8396",
+              "name": "State=Pressed, Is On=False, Is Enabled=False",
+              "width": 64,
+              "height": 28
+            },
+            {
+              "id": "10456:1256",
+              "name": "State=Idle, Is On=True, Is Enabled=False",
+              "width": 64,
+              "height": 28
+            }
+          ],
+          "width": 220,
+          "height": 220
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5433:19063",
+          "name": "Dark Examples",
+          "type": "SECTION",
+          "width": 170,
+          "height": 180
+        },
+        {
+          "id": "5433:19059",
+          "name": "Light Examples",
+          "type": "SECTION",
+          "width": 170,
+          "height": 180
+        },
+        {
+          "id": "5433:20242",
+          "name": "",
+          "type": "SECTION",
+          "width": 410,
+          "height": 400
+        },
+        {
+          "id": "544:191812",
+          "name": "Header",
+          "type": "INSTANCE",
+          "width": 1400,
+          "height": 242
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "5518:18111",
+        "name": "Empty States"
+      },
+      "rootCount": 1,
+      "componentCount": 4,
+      "components": [
+        {
+          "id": "5583:24408",
+          "name": "Empty States",
+          "type": "COMPONENT_SET",
+          "variantCount": 3,
+          "properties": {
+            "Description#5582:0": {
+              "type": "TEXT",
+              "defaultValue": "Description"
+            },
+            "Message#5582:4": {
+              "type": "TEXT",
+              "defaultValue": "Message"
+            },
+            "Symbol#5582:8": {
+              "type": "TEXT",
+              "defaultValue": "􀋃"
+            },
+            "Type": {
+              "type": "VARIANT",
+              "defaultValue": "Title and Subtitle",
+              "variantOptions": [
+                "Title and Subtitle",
+                "Symbol in Circle",
+                "Large Symbol"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5583:24409",
+              "name": "Type=Large Symbol",
+              "width": 402,
+              "height": 874
+            },
+            {
+              "id": "5583:24421",
+              "name": "Type=Symbol in Circle",
+              "width": 402,
+              "height": 874
+            },
+            {
+              "id": "5583:24435",
+              "name": "Type=Title and Subtitle",
+              "width": 402,
+              "height": 874
+            }
+          ],
+          "width": 1370,
+          "height": 917
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5583:24408",
+          "name": "Empty States",
+          "type": "COMPONENT_SET",
+          "width": 1370,
+          "height": 917
+        },
+        {
+          "id": "5583:24897",
+          "name": "Header",
+          "type": "INSTANCE",
+          "width": 1400,
+          "height": 208
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "507:24682",
+        "name": "Progress Indicators"
+      },
+      "rootCount": 2,
+      "componentCount": 16,
+      "components": [
+        {
+          "id": "9:55875",
+          "name": "Progress Bar - Determinate Linear",
+          "type": "COMPONENT_SET",
+          "variantCount": 11,
+          "properties": {
+            "Show Label#10442:0": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Label#10442:12": {
+              "type": "TEXT",
+              "defaultValue": "Loading..."
+            },
+            "Value": {
+              "type": "VARIANT",
+              "defaultValue": "0%",
+              "variantOptions": [
+                "0%",
+                "10%",
+                "20%",
+                "30%",
+                "40%",
+                "50%",
+                "60%",
+                "70%",
+                "80%",
+                "90%",
+                "100%"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "9:56118",
+              "name": "Value=100%",
+              "width": 402,
+              "height": 44
+            },
+            {
+              "id": "9:56124",
+              "name": "Value=90%",
+              "width": 402,
+              "height": 44
+            },
+            {
+              "id": "9:56130",
+              "name": "Value=80%",
+              "width": 402,
+              "height": 44
+            }
+          ],
+          "width": 440,
+          "height": 680
+        },
+        {
+          "id": "5425:3431",
+          "name": "Progress Bar - Indeterminate Circular (\"Spinner\")",
+          "type": "COMPONENT_SET",
+          "variantCount": 3,
+          "properties": {
+            "Show Label#544:1": {
+              "type": "BOOLEAN",
+              "defaultValue": false
+            },
+            "Label#544:2": {
+              "type": "TEXT",
+              "defaultValue": "Status..."
+            },
+            "Size": {
+              "type": "VARIANT",
+              "defaultValue": "Large",
+              "variantOptions": [
+                "Small",
+                "Regular",
+                "Large"
+              ]
+            }
+          },
+          "examples": [
+            {
+              "id": "5425:3443",
+              "name": "Size=Small",
+              "width": 14,
+              "height": 14
+            },
+            {
+              "id": "5425:3432",
+              "name": "Size=Regular",
+              "width": 20,
+              "height": 20
+            },
+            {
+              "id": "10434:8231",
+              "name": "Size=Large",
+              "width": 35,
+              "height": 35
+            }
+          ],
+          "width": 140,
+          "height": 70
+        }
+      ],
+      "topFrames": [
+        {
+          "id": "5425:3472",
+          "name": "",
+          "type": "SECTION",
+          "width": 976,
+          "height": 880
+        },
+        {
+          "id": "5433:20243",
+          "name": "Light examples",
+          "type": "SECTION",
+          "width": 420,
+          "height": 180
+        },
+        {
+          "id": "5433:20248",
+          "name": "Dark examples",
+          "type": "SECTION",
+          "width": 410,
+          "height": 180
+        },
+        {
+          "id": "544:191857",
+          "name": "Header",
+          "type": "INSTANCE",
+          "width": 1400,
+          "height": 258
+        }
+      ]
+    },
+    {
+      "page": {
+        "id": "507:24689",
+        "name": "Tab Bars"
+      },
+      "rootCount": 9,
+      "componentCount": 81,
+      "components": [
+        {
+          "id": "5735:64660",
+          "name": "_Tab Bar Button - iPad - Text",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "examples": [
+            {
+              "id": "5569:7317",
+              "name": "Mode=Light, Selected=False",
+              "width": 75,
+              "height": 36
+            },
+            {
+              "id": "5569:7316",
+              "name": "Mode=Light, Selected=True",
+              "width": 77,
+              "height": 36
+            },
+            {
+              "id": "5569:7320",
+              "name": "Mode=Dark, Selected=False",
+              "width": 75,
+              "height": 36
+            }
+          ]
+        },
+        {
+          "id": "5735:64661",
+          "name": "_Tab Bar Button - iPad - Symbol",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "examples": [
+            {
+              "id": "5569:8168",
+              "name": "Mode=Light, Selected=False",
+              "width": 54,
+              "height": 36
+            },
+            {
+              "id": "5569:8170",
+              "name": "Mode=Light, Selected=True",
+              "width": 54,
+              "height": 36
+            },
+            {
+              "id": "5569:8174",
+              "name": "Mode=Dark,Selected=False, Selected=",
+              "width": 54,
+              "height": 36
+            }
+          ]
+        },
+        {
+          "id": "2524:7957",
+          "name": "Tab Bar - iPad",
+          "type": "COMPONENT",
+          "variantCount": 1,
+          "examples": []
+        },
+        {
+          "id": "5735:65306",
+          "name": "_Tab Bar Button Round - iPhone",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "examples": [
+            {
+              "id": "5535:23152",
+              "name": "Mode=Light, Is Selected=True",
+              "width": 54,
+              "height": 54
+            },
+            {
+              "id": "5538:24565",
+              "name": "Mode=Light, Is Selected=False",
+              "width": 54,
+              "height": 54
+            },
+            {
+              "id": "5568:3938",
+              "name": "Mode=Dark, Is Selected=True",
+              "width": 54,
+              "height": 54
+            }
+          ]
+        },
+        {
+          "id": "12887:21456",
+          "name": "_Tab Bar Button - iPhone Duo",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "examples": [
+            {
+              "id": "12887:21457",
+              "name": "Mode=Light, Is Selected=True",
+              "width": 48,
+              "height": 48
+            },
+            {
+              "id": "12887:21463",
+              "name": "Mode=Light, Is Selected=False",
+              "width": 48,
+              "height": 48
+            },
+            {
+              "id": "12887:21465",
+              "name": "Mode=Dark, Is Selected=True",
+              "width": 48,
+              "height": 48
+            }
+          ]
+        },
+        {
+          "id": "12887:21567",
+          "name": "_Tab Bar Button Round - iPhone Duo",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "examples": [
+            {
+              "id": "12887:21568",
+              "name": "Mode=Light, Is Selected=True",
+              "width": 48,
+              "height": 48
+            },
+            {
+              "id": "12887:21574",
+              "name": "Mode=Light, Is Selected=False",
+              "width": 48,
+              "height": 48
+            },
+            {
+              "id": "12887:21576",
+              "name": "Mode=Dark, Is Selected=True",
+              "width": 48,
+              "height": 48
+            }
+          ]
+        },
+        {
+          "id": "5735:65307",
+          "name": "_Tab Bar Button - iPhone",
+          "type": "COMPONENT_SET",
+          "variantCount": 4,
+          "examples": [
+            {
+              "id": "5535:23117",
+              "name": "Mode=Light, Selected=True",
+              "width": 72,
+              "height": 54
+            },
+            {
+              "id": "5535:23119",
+              "name": "Mode=Light, Selected=False",
+              "width": 72,
+              "height": 53.5
+            },
+            {
+              "id": "5568:3930",
+              "name": "Mode=Dark, Selected=True",
+              "width": 72,
+              "height": 54
+            }
+          ]
+        },
+        {
+          "id": "3:70967",
+          "name": "Tab Bar - iPhone",
+          "type": "COMPONENT_SET",
+          "variantCount": 24,
+          "examples": [
+            {
+              "id": "10508:1516",
+              "name": "Minimized=True, Tabs=5, Type=Prominent Tab",
+              "width": 402,
+              "height": 88
+            },
+            {
+              "id": "10508:1272",
+              "name": "Minimized=True, Tabs=4, Type=Prominent Tab",
+              "width": 402,
+              "height": 88
+            },
+            {
+              "id": "10508:1081",
+              "name": "Minimized=True, Tabs=3, Type=Prominent Tab",
+              "width": 402,
+              "height": 88
+            }
+          ]
+        },
+        {
+          "id": "12887:20935",
+          "name": "Tab Bar - iPhone Duo",
+          "type": "COMPONENT_SET",
+          "variantCount": 24,
+          "examples": [
+            {
+              "id": "12887:21095",
+              "name": "Minimized=True, Tabs=5, Type=Prominent Tab",
+              "width": 48,
+              "height": 108
+            },
+            {
+              "id": "12887:21033",
+              "name": "Minimized=True, Tabs=5, Type=Search Role",
+              "width": 48,
+              "height": 108
+            },
+            {
+              "id": "12887:20974",
+              "name": "Minimized=True, Tabs=5, Type=Default",
+              "width": 48,
+              "height": 48
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "knownSourceIssues": [
+    {
+      "page": "Tab Bars",
+      "issue": "componentPropertyDefinitions getter reports an existing component-set error; metadata-only fallback required"
+    }
+  ]
+}

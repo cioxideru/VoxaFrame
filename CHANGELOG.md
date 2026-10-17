@@ -8,6 +8,11 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Added — 2026-10-17
 
+- **Claude Design handoff (DESIGN-0001):** VoxaFrame design-system specification,
+  light/dark tokens, 23 component contracts, iPhone/iPad/Mac Catalyst/Apple TV patterns,
+  Figma reference catalog and visual guide. These are design proposals and import materials;
+  app behavior and the source Figma file are unchanged.
+
 - **VoxaFrame 5.16 (34), offline choices and cleanup (PLAN-0025):** Offline watch now
   asks for video resolution/codec, a compatible audio track, and optional Yandex translation
   language. HLS downloads bind one video variant and one audio selection; direct downloads

@@ -1,0 +1,1018 @@
+{
+  "$description": "VoxaFrame 1.0 / dark; DTCG 2025.10 token syntax. Design reference, not runtime state.",
+  "$extensions": {
+    "app.voxaframe": {
+      "version": "1.0",
+      "appearance": "dark",
+      "date": "2026-10-17",
+      "dimensionMapping": "1 design px = 1 native pt; do not multiply by display scale"
+    }
+  },
+  "color": {
+    "brand": {
+      "coral": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            1.0,
+            0.4196078431372549,
+            0.3411764705882353
+          ],
+          "alpha": 1,
+          "hex": "#FF6B57"
+        },
+        "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+        "$extensions": {
+          "app.voxaframe": {
+            "origin": "voxaframe-proposal",
+            "native": "custom semantic role"
+          }
+        }
+      },
+      "plum": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.14901960784313725,
+            0.027450980392156862,
+            0.1411764705882353
+          ],
+          "alpha": 1,
+          "hex": "#260724"
+        },
+        "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+        "$extensions": {
+          "app.voxaframe": {
+            "origin": "voxaframe-proposal",
+            "native": "custom semantic role"
+          }
+        }
+      },
+      "ivory": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            1.0,
+            0.9568627450980393,
+            0.8705882352941177
+          ],
+          "alpha": 1,
+          "hex": "#FFF4DE"
+        },
+        "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+        "$extensions": {
+          "app.voxaframe": {
+            "origin": "voxaframe-proposal",
+            "native": "custom semantic role"
+          }
+        }
+      }
+    },
+    "background": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "alpha": 1,
+        "hex": "#000000"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact",
+          "native": "UIColor.systemBackground / NSColor.windowBackgroundColor",
+          "figmaName": "Backgrounds/Primary",
+          "figmaVariableId": "VariableID:508:77440"
+        }
+      }
+    },
+    "surface": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.10980392156862745,
+          0.10980392156862745,
+          0.11764705882352941
+        ],
+        "alpha": 1,
+        "hex": "#1C1C1E"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact",
+          "native": "UIColor.secondarySystemBackground / NSColor.controlBackgroundColor",
+          "figmaName": "Backgrounds/Secondary",
+          "figmaVariableId": "VariableID:508:77460"
+        }
+      }
+    },
+    "elevated": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.17254901960784313,
+          0.17254901960784313,
+          0.1803921568627451
+        ],
+        "alpha": 1,
+        "hex": "#2C2C2E"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal",
+          "native": "custom semantic role"
+        }
+      }
+    },
+    "text": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "alpha": 1,
+        "hex": "#FFFFFF"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact",
+          "native": "Color.primary",
+          "figmaName": "Labels/Primary",
+          "figmaVariableId": "VariableID:507:29167"
+        }
+      }
+    },
+    "secondary": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.7215686274509804,
+          0.7215686274509804,
+          0.7607843137254902
+        ],
+        "alpha": 1,
+        "hex": "#B8B8C2"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal",
+          "native": "Color.secondary"
+        }
+      }
+    },
+    "action": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          1.0,
+          0.6,
+          0.5333333333333333
+        ],
+        "alpha": 1,
+        "hex": "#FF9988"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal",
+          "native": "user-selected accent; brand proposal only"
+        }
+      }
+    },
+    "onAction": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.14901960784313725,
+          0.027450980392156862,
+          0.1411764705882353
+        ],
+        "alpha": 1,
+        "hex": "#260724"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal",
+          "native": "custom semantic role"
+        }
+      }
+    },
+    "border": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.2196078431372549,
+          0.2196078431372549,
+          0.22745098039215686
+        ],
+        "alpha": 1,
+        "hex": "#38383A"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact",
+          "native": "UIColor.separator / NSColor.separatorColor",
+          "figmaName": "Separators/Opaque",
+          "figmaVariableId": "VariableID:508:77442"
+        }
+      }
+    },
+    "focus": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          1.0,
+          0.8509803921568627,
+          0.8235294117647058
+        ],
+        "alpha": 1,
+        "hex": "#FFD9D2"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal",
+          "native": "custom semantic role"
+        }
+      }
+    },
+    "success": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.5098039215686274,
+          0.8509803921568627,
+          0.6196078431372549
+        ],
+        "alpha": 1,
+        "hex": "#82D99E"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal",
+          "native": "custom semantic role"
+        }
+      }
+    },
+    "warning": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.9686274509803922,
+          0.807843137254902,
+          0.49019607843137253
+        ],
+        "alpha": 1,
+        "hex": "#F7CE7D"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal",
+          "native": "custom semantic role"
+        }
+      }
+    },
+    "danger": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          1.0,
+          0.7058823529411765,
+          0.6627450980392157
+        ],
+        "alpha": 1,
+        "hex": "#FFB4A9"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal",
+          "native": "custom semantic role"
+        }
+      }
+    },
+    "onMedia": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "alpha": 1,
+        "hex": "#FFFFFF"
+      },
+      "$description": "Static prototype fallback. Use native semantic color where mapped; validate final composited contrast.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal",
+          "native": "custom semantic role"
+        }
+      }
+    },
+    "scrim": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "alpha": 0.72,
+        "hex": "#000000"
+      },
+      "$description": "Media controls only, over arbitrary video.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    }
+  },
+  "space": {
+    "4": {
+      "$type": "dimension",
+      "$value": {
+        "value": 4,
+        "unit": "px"
+      },
+      "$description": "Custom content spacing; native pt equivalent.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "8": {
+      "$type": "dimension",
+      "$value": {
+        "value": 8,
+        "unit": "px"
+      },
+      "$description": "Custom content spacing; native pt equivalent.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "12": {
+      "$type": "dimension",
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      },
+      "$description": "Custom content spacing; native pt equivalent.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "16": {
+      "$type": "dimension",
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      },
+      "$description": "Custom content spacing; native pt equivalent.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "20": {
+      "$type": "dimension",
+      "$value": {
+        "value": 20,
+        "unit": "px"
+      },
+      "$description": "Custom content spacing; native pt equivalent.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "24": {
+      "$type": "dimension",
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      },
+      "$description": "Custom content spacing; native pt equivalent.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "32": {
+      "$type": "dimension",
+      "$value": {
+        "value": 32,
+        "unit": "px"
+      },
+      "$description": "Custom content spacing; native pt equivalent.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "48": {
+      "$type": "dimension",
+      "$value": {
+        "value": 48,
+        "unit": "px"
+      },
+      "$description": "Custom content spacing; native pt equivalent.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "64": {
+      "$type": "dimension",
+      "$value": {
+        "value": 64,
+        "unit": "px"
+      },
+      "$description": "Custom content spacing; native pt equivalent.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    }
+  },
+  "radius": {
+    "small": {
+      "$type": "dimension",
+      "$value": {
+        "value": 8,
+        "unit": "px"
+      },
+      "$description": "Content only; system controls use native geometry.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "card": {
+      "$type": "dimension",
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      },
+      "$description": "Content only; system controls use native geometry.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "panel": {
+      "$type": "dimension",
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      },
+      "$description": "Content only; system controls use native geometry.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "pill": {
+      "$type": "dimension",
+      "$value": {
+        "value": 999,
+        "unit": "px"
+      },
+      "$description": "Content only; system controls use native geometry.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    }
+  },
+  "size": {
+    "touchTarget": {
+      "$type": "dimension",
+      "$value": {
+        "value": 44,
+        "unit": "px"
+      },
+      "$description": "Design target; runtime safe areas and content adaptation take priority.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "macTarget": {
+      "$type": "dimension",
+      "$value": {
+        "value": 28,
+        "unit": "px"
+      },
+      "$description": "Design target; runtime safe areas and content adaptation take priority.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "tvTarget": {
+      "$type": "dimension",
+      "$value": {
+        "value": 66,
+        "unit": "px"
+      },
+      "$description": "Design target; runtime safe areas and content adaptation take priority.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "iphoneMargin": {
+      "$type": "dimension",
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      },
+      "$description": "Design target; runtime safe areas and content adaptation take priority.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact"
+        }
+      }
+    },
+    "ipadMargin": {
+      "$type": "dimension",
+      "$value": {
+        "value": 20,
+        "unit": "px"
+      },
+      "$description": "Design target; runtime safe areas and content adaptation take priority.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact"
+        }
+      }
+    },
+    "macMargin": {
+      "$type": "dimension",
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      },
+      "$description": "Design target; runtime safe areas and content adaptation take priority.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "tvMarginX": {
+      "$type": "dimension",
+      "$value": {
+        "value": 80,
+        "unit": "px"
+      },
+      "$description": "Design target; runtime safe areas and content adaptation take priority.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "tvMarginY": {
+      "$type": "dimension",
+      "$value": {
+        "value": 60,
+        "unit": "px"
+      },
+      "$description": "Design target; runtime safe areas and content adaptation take priority.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "cardMinWidth": {
+      "$type": "dimension",
+      "$value": {
+        "value": 240,
+        "unit": "px"
+      },
+      "$description": "Design target; runtime safe areas and content adaptation take priority.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    }
+  },
+  "type": {
+    "largeTitle": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 34,
+          "unit": "px"
+        },
+        "fontWeight": 700,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.2058823529411764
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.largeTitle",
+          "lineHeightPt": 41
+        }
+      }
+    },
+    "title1": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 28,
+          "unit": "px"
+        },
+        "fontWeight": 700,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.2142857142857142
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.title",
+          "lineHeightPt": 34
+        }
+      }
+    },
+    "title2": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 22,
+          "unit": "px"
+        },
+        "fontWeight": 700,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.2727272727272727
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.title2",
+          "lineHeightPt": 28
+        }
+      }
+    },
+    "title3": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 20,
+          "unit": "px"
+        },
+        "fontWeight": 600,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.25
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.title3",
+          "lineHeightPt": 25
+        }
+      }
+    },
+    "headline": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 17,
+          "unit": "px"
+        },
+        "fontWeight": 600,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.2941176470588236
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.headline",
+          "lineHeightPt": 22
+        }
+      }
+    },
+    "body": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 17,
+          "unit": "px"
+        },
+        "fontWeight": 400,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.2941176470588236
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.body",
+          "lineHeightPt": 22
+        }
+      }
+    },
+    "callout": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 16,
+          "unit": "px"
+        },
+        "fontWeight": 400,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.3125
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.callout",
+          "lineHeightPt": 21
+        }
+      }
+    },
+    "subheadline": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 15,
+          "unit": "px"
+        },
+        "fontWeight": 400,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.3333333333333333
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.subheadline",
+          "lineHeightPt": 20
+        }
+      }
+    },
+    "footnote": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 13,
+          "unit": "px"
+        },
+        "fontWeight": 400,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.3846153846153846
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.footnote",
+          "lineHeightPt": 18
+        }
+      }
+    },
+    "caption1": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 12,
+          "unit": "px"
+        },
+        "fontWeight": 400,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.3333333333333333
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.caption",
+          "lineHeightPt": 16
+        }
+      }
+    },
+    "caption2": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui"
+        ],
+        "fontSize": {
+          "value": 11,
+          "unit": "px"
+        },
+        "fontWeight": 400,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.1818181818181819
+      },
+      "$description": "iOS Large Dynamic Type baseline; native semantic font must scale. Zero tracking is a proposal; raw tracking is in figma-reference.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "source-fact-with-platform-mapping",
+          "native": "Font.caption2",
+          "lineHeightPt": 13
+        }
+      }
+    }
+  },
+  "motion": {
+    "fast": {
+      "$type": "duration",
+      "$value": {
+        "value": 120,
+        "unit": "ms"
+      },
+      "$description": "Custom UI only; retain native animation behavior.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "standard": {
+      "$type": "duration",
+      "$value": {
+        "value": 220,
+        "unit": "ms"
+      },
+      "$description": "Custom UI only; retain native animation behavior.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "layout": {
+      "$type": "duration",
+      "$value": {
+        "value": 320,
+        "unit": "ms"
+      },
+      "$description": "Custom UI only; retain native animation behavior.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    },
+    "reduced": {
+      "$type": "duration",
+      "$value": {
+        "value": 0,
+        "unit": "ms"
+      },
+      "$description": "Custom UI only; retain native animation behavior.",
+      "$extensions": {
+        "app.voxaframe": {
+          "origin": "voxaframe-proposal"
+        }
+      }
+    }
+  }
+}
