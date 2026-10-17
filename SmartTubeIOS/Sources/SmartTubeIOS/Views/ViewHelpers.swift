@@ -180,6 +180,8 @@ enum AppSymbol {
     static let pause = "pause.fill"
     static let muted = "speaker.slash.fill"
     static let speaker = "speaker.wave.2.fill"
+    static let brightness = "sun.max.fill"
+    static let verticalAdjustment = "arrow.up.and.down"
     static let videoFill = "arrow.up.left.and.arrow.down.right"
     static let videoFit = "arrow.down.right.and.arrow.up.left"
     static let previousTrack = "backward.end.fill"

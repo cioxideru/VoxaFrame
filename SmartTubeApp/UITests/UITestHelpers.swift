@@ -2,7 +2,19 @@ import XCTest
 
 // UI-test targets do not link SmartTubeIOSCore. Keep app identifiers in sync with its AccessibilityID.
 enum AccessibilityID {
+    static var playerStatsOverlay: String { "player.statsOverlay" }
+    static var playerHoldSpeedBadge: String { "player.holdSpeedBadge" }
+    static var playerMoreMenuCancelButton: String { "player.moreMenu.cancel" }
+    static var playerMoreButton: String { "player.moreButton" }
+    static var miniPlayerBar: String { "miniPlayer.bar" }
+    static var playerToast: String { "player.toast" }
+    static var playerProgressBar: String { "player.progressBar" }
+    static var playerBrightnessGesture: String { "player.brightnessGesture" }
+    static var playerVolumeGesture: String { "player.volumeGesture" }
     // System-owned identifiers used only by iPad window-layout UI tests.
+    static var systemVolumeSlider: String { "cc-volume-slider" }
+    static var systemBrightnessSlider: String { "cc-brightness-slider" }
+    static var systemControlCenterPages: String { "Page control" }
     static var systemSettingsSidebar: String { "com.apple.settings.sidebar.collectionView" }
     static var systemMultitasking: String { "com.apple.settings.multitaskingAndGestures" }
     static var systemFullScreenApps: String { "com.apple.settings.multitaskingAndGestures.fullScreenApps" }

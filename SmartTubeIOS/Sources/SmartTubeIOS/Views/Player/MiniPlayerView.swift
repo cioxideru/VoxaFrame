@@ -69,7 +69,7 @@ struct MiniPlayerView: View {
         // the enclosing HStack carries its own onTapGesture (which can cause SwiftUI
         // to group all children into a single accessibility element).
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("miniPlayer.bar")
+        .accessibilityIdentifier(AccessibilityID.miniPlayerBar)
         .overlay(alignment: .top) {
             Divider()
         }

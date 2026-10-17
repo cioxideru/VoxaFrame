@@ -19,6 +19,41 @@ when this local fixture is absent. Attachments contain five cold and five prepar
 samples. The sustained case exercises 60 swipes, background release, manual resume and reopening.
 Load-to-ready is not a measure of first visible frame or live-network/device performance.
 
+## Full-screen player gestures
+
+`PlayerLevelGestureUITests` uses the same local server on Simulator and checks both orientations,
+slow level drags, fast minimize, horizontal navigation, taps, hold-to-speed, buttons and scrubbing.
+
+`PlayerLevelDeviceUITests` calibrates real brightness and volume on a connected iPad. It uses a
+local movie through the downloaded-video path, retains account/settings/queue, and restores the
+captured system levels. Prepare its file while the local server above is running:
+
+```bash
+mkdir -p /tmp/smarttube-gesture-fixture
+ffmpeg -i http://127.0.0.1:18765/preload-0/master.m3u8 -c copy /tmp/smarttube-gesture-fixture/fixture.mp4
+xcrun devicectl device copy to --device <device-UDID> \
+  --source /tmp/smarttube-gesture-fixture --domain-type appDataContainer \
+  --domain-identifier com.ibaranov.smarttube.app --destination Documents/SmartTubeDownloads/UITestMedia
+xcodebuild test -workspace SmartTube.xcworkspace -scheme SmartTube \
+  -destination 'platform=iOS,id=<device-UDID>' -parallel-testing-enabled NO \
+  SYMROOT=/private/tmp/smarttube-gestures/Build/Products \
+  OBJROOT=/private/tmp/smarttube-gestures/Build/Intermediates.noindex \
+  -only-testing:SmartTubeUITests/PlayerLevelDeviceUITests
+```
+
+Unlock the iPad and leave its display and audio route unchanged during calibration. Simulator
+cannot validate system levels. Hardware checks read Control Center's visible controls rather
+than the separate test runner's cached audio-session volume. `SHORTS_TEST_MEDIA_URL=downloads`
+is a DEBUG-only fixture selector; it does not register a download or replace the current queue.
+The hardware suite disables UIKit animations with `--uitesting-disable-animations`: on iPadOS 27,
+XCTest otherwise waits 60 seconds for an animation-completion notification even with no active
+layer animations. The ordinary simulator gesture/conflict tests run with animations enabled.
+Control Center is opened over the running player so measurements keep the same audio route.
+Do not use `devicectl device copy to --remove-existing-content true` to clean a nested fixture
+directory: on Xcode 27 this cleared the whole app data container despite the destination path.
+Keep a device-container backup before hardware tests; remove only the exact fixture files from
+the running app/debugger, or leave them for the next calibration.
+
 ## Target simulator
 
 The following is the previously recorded development destination, not a portable requirement.

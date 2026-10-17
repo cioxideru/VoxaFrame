@@ -114,7 +114,7 @@ extension PlayerView {
                 #endif
 
                 #if os(iOS)
-                // Horizontal swipe layer: left → next video, right → previous video.
+                // One gesture surface for navigation, taps and vertical level adjustment.
                 // Uses UIKit-level UIPanGestureRecognizer so it fires above AVPlayerLayer.
                 PlayerSwipeGestureOverlay(
                     onSwipeLeft: {
@@ -178,10 +178,12 @@ extension PlayerView {
                             playerState.stop()
                         }
                     },
-                    // Disabled during scrubbing so the Slider can claim touches uncontested.
-                    // Also disabled when controls are visible so SwiftUI buttons (Menu, etc.)
-                    // receive touches directly without UIKit gesture interference.
-                    isEnabled: !vm.isScrubbing && !vm.controlsVisible
+                    onLevelChanged: { showLevelFeedback($0, value: $1) },
+                    onLevelEnded: { finishLevelAdjustment() },
+                    isActive: playerState.presentation == .fullScreen,
+                    isEnabled: !vm.isScrubbing && !isTransitioning && !vm.hasVisibleEndCards
+                        && !showMoreMenu && !showQualityPicker && !showSpeedPicker && !showCaptionPicker
+                        && !showAudioTrackPicker && !showSleepTimerPicker && !showDescriptionSheet && !showCommentsSheet
                 )
                 .ignoresSafeArea()
                 .accessibilityHidden(true)
@@ -258,40 +260,12 @@ extension PlayerView {
                         .ignoresSafeArea()
                         .transition(.opacity)
                         .animation(.easeInOut(duration: 0.25), value: vm.controlsVisible)
-                        #if os(iOS)
-                    // Allow horizontal swipe navigation even when the controls overlay is
-                    // on screen.  .simultaneousGesture fires alongside button taps so the
-                    // controls remain fully interactive; only clear horizontal drags
-                    // (abs(dx) > abs(dy), distance > 50 pt) trigger navigation.
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 50, coordinateSpace: .global)
-                            .onEnded { value in
-                                let dx = value.translation.width
-                                let dy = value.translation.height
-                                guard !isTransitioning, !vm.isScrubbing else { return }
-                                // Swipe-down → minimize to mini-player (or stop if disabled)
-                                if dy > 50, abs(dy) > abs(dx) {
-                                    if store.settings.miniPlayerEnabled {
-                                        playerState.minimize()
-                                    } else {
-                                        playerState.stop()
-                                    }
-                                    return
-                                }
-                                guard abs(dx) > abs(dy) else { return }
-                                if dx < 0, vm.hasNext {
-                                    performHorizontalTransition(direction: -1, screenWidth: geo.size.width) {
-                                        vm.playNext()
-                                    }
-                                } else if dx > 0, vm.hasPrevious {
-                                    performHorizontalTransition(direction: 1, screenWidth: geo.size.width) {
-                                        vm.playPrevious()
-                                    }
-                                }
-                            }
-                    )
-                        #endif
+
                 }
+
+                #if os(iOS) && !targetEnvironment(macCatalyst)
+                levelGestureOverlay
+                #endif
 
                 // Error banner
                 if let err = vm.error {

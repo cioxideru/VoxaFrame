@@ -160,7 +160,7 @@ struct PlayerControlsOverlay: View {
                     highlighted: highlightedControl == .more,
                     scale: 1.5,
                     shadowRadius: 12,
-                    identifier: "player.moreButton",
+                    identifier: AccessibilityID.playerMoreButton,
                     width: 64,
                     height: 64
                 ) {
@@ -181,7 +181,7 @@ struct PlayerControlsOverlay: View {
                         .background(.black.opacity(0.4))
                         .clipShape(Circle())
                 }
-                .accessibilityIdentifier("player.moreButton")
+                .accessibilityIdentifier(AccessibilityID.playerMoreButton)
                 .buttonStyle(.plain)
                 #endif
             }
@@ -425,11 +425,15 @@ struct PlayerControlsOverlay: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
+            #if os(iOS)
+            .allowsHitTesting(false)
+            #else
             .contentShape(Rectangle())
             .onTapGesture {
                 controlsLog.notice("[menu] gradient background tap — controlsVisible=\(vm.controlsVisible)")
                 vm.toggleControls()
             }
+            #endif
         )
         #if os(tvOS)
         // Controls overlay is not a focus section — the outer view handles all input.
@@ -644,7 +648,7 @@ extension PlayerControlsOverlay {
             #endif
         }
         .frame(height: 60)
-        .accessibilityIdentifier("player.progressBar")
+        .accessibilityIdentifier(AccessibilityID.playerProgressBar)
     }
 
     // Chapter tick marks on the progress bar — small white notches at each chapter boundary.

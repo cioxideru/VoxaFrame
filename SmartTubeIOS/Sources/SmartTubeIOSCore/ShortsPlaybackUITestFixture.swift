@@ -11,6 +11,14 @@ public enum ShortsPlaybackUITestFixture {
         return url
     }
 
+    /// Device calibration reuses the downloaded-video path and never needs a network stream.
+    public static var localFileURL: URL? {
+        guard ProcessInfo.processInfo.arguments.contains("--uitesting"),
+            ProcessInfo.processInfo.environment["SHORTS_TEST_MEDIA_URL"] == "downloads"
+        else { return nil }
+        return URL.documentsDirectory.appendingPathComponent("SmartTubeDownloads/UITestMedia/fixture.mp4")
+    }
+
     static func playerInfo(videoId: String) -> PlayerInfo? {
         guard let baseURL else { return nil }
         let url = baseURL.appendingPathComponent(videoId).appendingPathComponent("master.m3u8")

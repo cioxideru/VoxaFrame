@@ -49,6 +49,7 @@ struct StatsForNerdsOverlay: View {
         .padding(.top, 30)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .allowsHitTesting(false)
+        .accessibilityIdentifier(AccessibilityID.playerStatsOverlay)
     }
 
     private func row(_ key: String, _ value: String) -> some View {

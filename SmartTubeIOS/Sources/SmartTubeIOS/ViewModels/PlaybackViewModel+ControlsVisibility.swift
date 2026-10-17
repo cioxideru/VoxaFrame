@@ -37,9 +37,7 @@ extension PlaybackViewModel {
         // UI-testing: when --uitesting-show-controls is active, controls must never
         // auto-hide so XCUITest can always click player.nextBtn. Any call that restarts
         // the timer (e.g. from readyToPlay → showControls()) is suppressed here.
-        #if !os(iOS)
         if ProcessInfo.processInfo.arguments.contains("--uitesting-show-controls") { return }
-        #endif
         // Fix #125: in landscape (fullscreen), give the user 50% more time before controls
         // disappear. The default timeout (from AppSettings) is 4 s → 6 s in landscape.
         let timeout =

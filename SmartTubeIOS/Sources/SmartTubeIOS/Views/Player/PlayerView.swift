@@ -66,6 +66,8 @@ public struct PlayerView: View {
     @State var scaleToast: String?
     /// Drives the brief seek-direction toast shown after a double-tap in the left/right zone.
     @State var seekToastMessage: String?
+    @State private var levelFeedback: PlayerLevelFeedback?
+    @State private var isAdjustingLevel = false
     #endif
     /// Drives the quality-change toast shown after the user picks a resolution.
     @State var qualityToastMessage: String?
@@ -120,6 +122,26 @@ public struct PlayerView: View {
     public var body: some View {
         bodyWithLifecycleModifiers
     }
+
+    #if os(iOS)
+    func showLevelFeedback(_ level: PlayerPanGesture.Level, value: CGFloat?) {
+        isAdjustingLevel = true
+        levelFeedback = PlayerLevelFeedback(level: level, value: value)
+    }
+
+    func finishLevelAdjustment() { isAdjustingLevel = false }
+
+    var levelGestureOverlay: some View {
+        PlayerLevelOverlay(feedback: levelFeedback, showsHints: vm.controlsVisible)
+            .task(id: isAdjustingLevel ? nil : levelFeedback) {
+                guard !isAdjustingLevel, levelFeedback != nil else { return }
+                do {
+                    try await Task.sleep(for: PlaybackTuning.levelFeedbackDuration)
+                    levelFeedback = nil
+                } catch {}
+            }
+    }
+    #endif
 
     // MARK: - Lifecycle + full player body
     // bodyWithLifecycleModifiers, makeControlsOverlay

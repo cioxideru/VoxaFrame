@@ -1,5 +1,6 @@
 import AVFoundation
 import AVKit
+import SmartTubeIOSCore
 import SwiftUI
 
 #if canImport(UIKit)
@@ -167,143 +168,10 @@ struct HoldSpeedBadge: View {
         .padding(.vertical, 10)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .allowsHitTesting(false)
+        .accessibilityIdentifier(AccessibilityID.playerHoldSpeedBadge)
     }
 }
 
-// MARK: - SwipeGestureOverlay (horizontal)
-
-#if os(iOS)
-/// Left swipe → `onSwipeLeft`, right swipe → `onSwipeRight`, tap → `onTap`.
-/// Set `isEnabled = false` (e.g. while the progress slider is being scrubbed) to
-/// temporarily suppress pan recognition so the scrub drag is not mistaken for a swipe.
-/// Named `PlayerSwipeGestureOverlay` to avoid a module-level clash with the
-/// identically-structured private copy in `ShortsPlayerView.swift`.
-struct PlayerSwipeGestureOverlay: UIViewRepresentable {
-    var onSwipeLeft: () -> Void
-    var onSwipeRight: () -> Void
-    var onTap: () -> Void
-    var onDoubleTap: (CGFloat) -> Void = { _ in }
-    var onTwoFingerTap: () -> Void = {}
-    var onPanChanged: ((CGFloat) -> Void)?
-    var onSwipeCancelled: (() -> Void)?
-    var onLongPressStart: (() -> Void)?
-    var onLongPressEnd: (() -> Void)?
-    var onSwipeDown: (() -> Void)? = nil
-    var isEnabled: Bool = true
-
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
-
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        view.backgroundColor = .clear
-
-        let pan = UIPanGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.handlePan(_:)))
-        pan.cancelsTouchesInView = true
-        view.addGestureRecognizer(pan)
-        context.coordinator.pan = pan
-
-        let doubleTap = UITapGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleDoubleTap(_:)))
-        doubleTap.numberOfTapsRequired = 2
-        doubleTap.cancelsTouchesInView = false
-        doubleTap.require(toFail: pan)
-        view.addGestureRecognizer(doubleTap)
-        context.coordinator.doubleTap = doubleTap
-
-        let tap = UITapGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleTap))
-        tap.cancelsTouchesInView = false
-        tap.require(toFail: pan)
-        tap.require(toFail: doubleTap)
-        view.addGestureRecognizer(tap)
-        context.coordinator.tap = tap
-
-        let twoFingerTap = UITapGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleTwoFingerTap))
-        twoFingerTap.numberOfTouchesRequired = 2
-        twoFingerTap.cancelsTouchesInView = false
-        view.addGestureRecognizer(twoFingerTap)
-
-        let longPress = UILongPressGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleLongPress(_:)))
-        longPress.minimumPressDuration = 0.4
-        longPress.cancelsTouchesInView = false
-        view.addGestureRecognizer(longPress)
-        context.coordinator.longPress = longPress
-
-        return view
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {
-        context.coordinator.parent = self
-        context.coordinator.pan?.isEnabled = isEnabled
-        context.coordinator.tap?.isEnabled = isEnabled
-        context.coordinator.doubleTap?.isEnabled = isEnabled
-        context.coordinator.longPress?.isEnabled = isEnabled
-    }
-
-    final class Coordinator: NSObject {
-        var parent: PlayerSwipeGestureOverlay
-        weak var pan: UIPanGestureRecognizer?
-        weak var tap: UITapGestureRecognizer?
-        weak var doubleTap: UITapGestureRecognizer?
-        weak var longPress: UILongPressGestureRecognizer?
-        private let minDistance: CGFloat = 40
-
-        init(_ parent: PlayerSwipeGestureOverlay) { self.parent = parent }
-
-        @MainActor @objc func handlePan(_ gr: UIPanGestureRecognizer) {
-            let t = gr.translation(in: gr.view)
-            switch gr.state {
-            case .changed:
-                // Only forward horizontal pan for slide-offset animation.
-                if abs(t.x) >= abs(t.y) { parent.onPanChanged?(t.x) }
-            case .ended:
-                // Swipe-down: vertical-dominant, downward, meets threshold → minimize
-                if abs(t.y) > minDistance, t.y > 0, abs(t.y) > abs(t.x) {
-                    parent.onSwipeCancelled?()  // reset any horizontal offset
-                    parent.onSwipeDown?()
-                    return
-                }
-                guard abs(t.x) > minDistance, abs(t.x) > abs(t.y) else {
-                    parent.onSwipeCancelled?()
-                    return
-                }
-                if t.x < 0 { parent.onSwipeLeft() } else { parent.onSwipeRight() }
-            case .cancelled, .failed:
-                parent.onSwipeCancelled?()
-            default:
-                break
-            }
-        }
-
-        @MainActor @objc func handleTap() { parent.onTap() }
-        @MainActor @objc func handleDoubleTap(_ gr: UITapGestureRecognizer) {
-            let width = gr.view?.bounds.width ?? 1
-            let normalizedX = width > 0 ? gr.location(in: gr.view).x / width : 0.5
-            parent.onDoubleTap(normalizedX)
-        }
-        @MainActor @objc func handleTwoFingerTap() { parent.onTwoFingerTap() }
-
-        @MainActor @objc func handleLongPress(_ gr: UILongPressGestureRecognizer) {
-            switch gr.state {
-            case .began:
-                parent.onLongPressStart?()
-            case .ended, .cancelled, .failed:
-                parent.onLongPressEnd?()
-            default:
-                break
-            }
-        }
-    }
-}
-#endif  // os(iOS)
 #endif  // os(iOS) || os(tvOS)
 
 // MARK: - PlayerNSLayerView (macOS)

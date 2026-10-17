@@ -12,6 +12,16 @@ private let appDelegateLog = Logger(subsystem: "com.void.smarttube.app", categor
 /// portrait↔landscape transitions are managed by `OrientationManager`.
 @MainActor
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    override init() {
+        super.init()
+        #if DEBUG
+        // Hardware calibration avoids XCTest waiting for system-control animation completion.
+        if ProcessInfo.processInfo.arguments.contains("--uitesting-disable-animations") {
+            UIView.setAnimationsEnabled(false)
+        }
+        #endif
+    }
+
     func application(
         _ application: UIApplication,
         supportedInterfaceOrientationsFor window: UIWindow?

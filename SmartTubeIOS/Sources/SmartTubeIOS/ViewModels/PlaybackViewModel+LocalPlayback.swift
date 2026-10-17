@@ -14,10 +14,14 @@ private let playerLog = ViewModelLogger(category: "Player")
 extension PlaybackViewModel {
 
     func startLocalPlayback(video: Video) -> Bool {
+        var localURL = video.localFileURL
+        #if DEBUG
+        localURL = localURL ?? ShortsPlaybackUITestFixture.localFileURL
+        #endif
         // Local-file fast path — bypass all network fetches for downloaded videos.
         // The path must be inside Documents/SmartTubeDownloads/ to prevent path-traversal
         // from a crafted Video object.
-        if let localURL = video.localFileURL {
+        if let localURL {
             let downloadsDir = FileManager.default
                 .urls(for: .documentDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("SmartTubeDownloads").path

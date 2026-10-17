@@ -240,3 +240,309 @@ final class PlayerDoubleTapUITests: XCTestCase {
             "App must still be running after two consecutive left-zone double-taps")
     }
 }
+
+/// Local media keeps the gesture regression independent of YouTube and account state.
+final class PlayerLevelGestureUITests: XCTestCase {
+    private let app = XCUIApplication()
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        #if !targetEnvironment(simulator)
+        throw XCTSkip("This fixture uses the simulator's localhost; device calibration runs separately")
+        #else
+        app.launchArguments = [
+            "--uitesting", "--uitesting-reset-settings", "--uitesting-disable-sponsorblock",
+            "--uitesting-show-controls", "--uitesting-mixed-feed",
+            "--uitesting-inject-queue-video-ids=preload-0,preload-1,preload-2",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+        app.launchEnvironment["SHORTS_TEST_MEDIA_URL"] = "http://127.0.0.1:18765"
+        app.launch()
+        let play = app.buttons[AccessibilityID.playerPlayPauseButton]
+        XCTAssertTrue(play.waitForExistence(timeout: 20))
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: play)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 20), .completed)
+        #endif
+    }
+
+    override func tearDown() {
+        app.terminate()
+        XCUIDevice.shared.orientation = .portrait
+        super.tearDown()
+    }
+
+    private func feedback(_ id: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: id).firstMatch
+    }
+
+    private func drag(x: CGFloat, from: CGFloat, to: CGFloat, velocity: CGFloat = 160) {
+        app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: from)).press(
+            forDuration: 0.05,
+            thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: to)),
+            withVelocity: XCUIGestureVelocity(rawValue: velocity), thenHoldForDuration: 0)
+    }
+
+    private func controls(_ visible: Bool) {
+        let button = app.buttons[AccessibilityID.playerPlayPauseButton]
+        if button.exists != visible {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
+        }
+        XCTAssertTrue(visible ? button.waitForExistence(timeout: 5) : button.waitForNonExistence(timeout: 5))
+    }
+
+    private func percent(_ element: XCUIElement) -> Int {
+        Int((element.value as? String ?? "").filter(\.isNumber)) ?? -1
+    }
+
+    func testSlowVerticalGesturesStayInPlayerInBothOrientations() {
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
+            XCUIDevice.shared.orientation = orientation
+            let rotated = XCTNSPredicateExpectation(
+                predicate: NSPredicate { _, _ in
+                    let frame = self.app.frame
+                    return (frame.width > frame.height) == (orientation == .landscapeLeft)
+                }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [rotated], timeout: 10), .completed)
+            controls(true)
+            drag(x: 0.2, from: 0.55, to: 0.4)
+            let brightness = feedback(AccessibilityID.playerBrightnessGesture)
+            XCTAssertTrue(brightness.waitForExistence(timeout: 3))
+            let raised = percent(brightness)
+            XCTAssertGreaterThan(raised, 0)
+            drag(x: 0.2, from: 0.4, to: 0.55)
+            XCTAssertTrue(brightness.waitForExistence(timeout: 3))
+            // Simulator reports a fixed screen brightness; hardware calibration checks the actual change.
+            XCTAssertTrue((0...100).contains(percent(brightness)))
+            XCTAssertFalse(feedback(AccessibilityID.miniPlayerBar).exists)
+            controls(false)
+            drag(x: 0.8, from: 0.65, to: 0.4)
+            XCTAssertTrue(feedback(AccessibilityID.playerVolumeGesture).waitForExistence(timeout: 3))
+            XCTAssertFalse(brightness.exists)
+            drag(x: 0.8, from: 0.4, to: 0.65)
+            XCTAssertTrue(feedback(AccessibilityID.playerVolumeGesture).waitForExistence(timeout: 3))
+            XCTAssertFalse(feedback(AccessibilityID.miniPlayerBar).exists)
+            let screenshot = XCTAttachment(screenshot: app.screenshot())
+            screenshot.name = "Level gestures orientation \(orientation.rawValue)"
+            screenshot.lifetime = .keepAlways
+            add(screenshot)
+        }
+    }
+
+    func testButtonsScrubbingDoubleTapAndFastMinimize() {
+        controls(true)
+        let play = app.buttons[AccessibilityID.playerPlayPauseButton]
+        let label = play.label
+        play.tap()
+        let toggled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", label), object: play)
+        XCTAssertEqual(XCTWaiter.wait(for: [toggled], timeout: 5), .completed)
+        let progress = feedback(AccessibilityID.playerProgressBar)
+        XCTAssertTrue(progress.waitForExistence(timeout: 5))
+        progress.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.8)).press(
+            forDuration: 0.05,
+            thenDragTo: progress.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.8)),
+            withVelocity: .slow, thenHoldForDuration: 0)
+        XCTAssertFalse(feedback(AccessibilityID.playerBrightnessGesture).exists)
+        XCTAssertFalse(feedback(AccessibilityID.playerVolumeGesture).exists)
+        controls(false)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).doubleTap()
+        let toast = app.staticTexts[AccessibilityID.playerToast]
+        XCTAssertTrue(toast.waitForExistence(timeout: 3))
+        XCTAssertTrue(toast.label.hasSuffix("→"))
+        XCTAssertFalse(feedback(AccessibilityID.playerVolumeGesture).exists)
+        controls(true)
+        let more = app.buttons[AccessibilityID.playerMoreButton]
+        more.tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.playerMoreMenuCancelButton].waitForExistence(timeout: 5))
+        app.buttons[AccessibilityID.playerMoreMenuCancelButton].tap()
+        controls(false)
+        drag(x: 0.8, from: 0.3, to: 0.8, velocity: 3_000)
+        XCTAssertTrue(feedback(AccessibilityID.miniPlayerBar).waitForExistence(timeout: 5))
+    }
+
+    func testHorizontalNavigationKeepsItsMeaning() {
+        controls(false)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5)).press(
+            forDuration: 0.05,
+            thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5)),
+            withVelocity: .fast, thenHoldForDuration: 0)
+        let title = app.staticTexts.matching(identifier: AccessibilityID.playerTitleLabel).firstMatch
+        let next = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == 'preload-1'"), object: title)
+        XCTAssertEqual(XCTWaiter.wait(for: [next], timeout: 15), .completed)
+        XCTAssertFalse(feedback(AccessibilityID.playerBrightnessGesture).exists)
+        XCTAssertFalse(feedback(AccessibilityID.playerVolumeGesture).exists)
+    }
+
+    func testTwoFingerTapAndHoldStaySeparateFromLevelDrags() {
+        controls(false)
+        app.tap(withNumberOfTaps: 1, numberOfTouches: 2)
+        let stats = feedback(AccessibilityID.playerStatsOverlay)
+        XCTAssertTrue(stats.waitForExistence(timeout: 5))
+        app.tap(withNumberOfTaps: 1, numberOfTouches: 2)
+        XCTAssertTrue(stats.waitForNonExistence(timeout: 5))
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5)).press(forDuration: 1)
+        XCTAssertFalse(feedback(AccessibilityID.playerBrightnessGesture).exists)
+        XCTAssertFalse(feedback(AccessibilityID.playerVolumeGesture).exists)
+        XCTAssertFalse(feedback(AccessibilityID.playerHoldSpeedBadge).exists)
+        XCTAssertFalse(app.buttons[AccessibilityID.playerPlayPauseButton].exists)
+    }
+
+    func testShortLevelDragFeedbackDisappears() {
+        controls(false)
+        drag(x: 0.2, from: 0.4, to: 0.43)
+        let brightness = feedback(AccessibilityID.playerBrightnessGesture)
+        XCTAssertTrue(brightness.waitForExistence(timeout: 2))
+        XCTAssertTrue(brightness.waitForNonExistence(timeout: 5))
+    }
+}
+
+/// Explicitly run on an iPad: Simulator cannot change system output volume or brightness.
+final class PlayerLevelDeviceUITests: XCTestCase {
+    private let app = XCUIApplication()
+    private let system = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+
+    @MainActor
+    func testActualLevelsAndBrightnessRestoration() throws {
+        #if targetEnvironment(simulator)
+        throw XCTSkip("Requires physical display and system audio volume")
+        #else
+        try XCTSkipIf(UIDevice.current.userInterfaceIdiom != .pad, "Calibration uses iPad Control Center")
+        continueAfterFailure = true
+        XCUIDevice.shared.orientation = .portrait
+        var restoreVolume: CGFloat?
+        var restoreBrightness: CGFloat?
+        app.launchArguments = [
+            "--uitesting", "--uitesting-disable-sponsorblock", "--uitesting-show-controls", "--uitesting-mixed-feed",
+            "--uitesting-deeplink-video=preload-0", "--uitesting-disable-animations",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+        app.launchEnvironment["SHORTS_TEST_MEDIA_URL"] = "downloads"
+        defer {
+            if let restoreVolume, let slider = try? openSystemVolume() {
+                try? restoreSystemLevel(slider, to: restoreVolume)
+                if let restoreBrightness {
+                    try? restoreSystemLevel(
+                        system.otherElements[AccessibilityID.systemBrightnessSlider], to: restoreBrightness)
+                }
+                closeControlCenter()
+            }
+            app.terminate()
+        }
+        app.launch()
+        waitForPlayback()
+        let volumeSlider = try openSystemVolume()
+        let originalVolume = try sliderValue(volumeSlider)
+        let originalSystemBrightness = try sliderValue(system.otherElements[AccessibilityID.systemBrightnessSlider])
+        restoreVolume = originalVolume
+        restoreBrightness = originalSystemBrightness
+        closeControlCenter()
+
+        let brightnessDelta: CGFloat = originalSystemBrightness < 0.75 ? -0.15 : 0.15
+        adjust(x: 0.2, delta: brightnessDelta)
+        let raisedBrightness = try levelValue(AccessibilityID.playerBrightnessGesture)
+        adjust(x: 0.2, delta: -brightnessDelta)
+        let restoredBrightness = try levelValue(AccessibilityID.playerBrightnessGesture)
+        XCTAssertEqual(raisedBrightness, restoredBrightness - brightnessDelta, accuracy: 0.04)
+        attach("Display brightness: \(restoredBrightness) -> \(raisedBrightness) -> \(restoredBrightness)")
+
+        let volumeDelta: CGFloat = originalVolume < 0.75 ? -0.15 : 0.15
+        adjust(x: 0.8, delta: volumeDelta)
+        let changedVolume = try sliderValue(openSystemVolume())
+        attach("System Control Center volume: \(originalVolume) -> \(changedVolume)")
+        XCTAssertEqual(changedVolume, originalVolume - volumeDelta, accuracy: 0.05)
+        closeControlCenter()
+        adjust(x: 0.8, delta: -volumeDelta)
+        let restoredSlider = try openSystemVolume()
+        XCTAssertEqual(try sliderValue(restoredSlider), originalVolume, accuracy: 0.05)
+        try restoreSystemLevel(restoredSlider, to: originalVolume)
+        closeControlCenter()
+
+        func assertRestored() throws {
+            _ = try openSystemVolume()
+            XCTAssertEqual(
+                try sliderValue(system.otherElements[AccessibilityID.systemBrightnessSlider]), originalSystemBrightness,
+                accuracy: 0.04)
+            closeControlCenter()
+        }
+        adjust(x: 0.2, delta: brightnessDelta)
+        XCUIDevice.shared.press(.home)
+        try assertRestored()
+        app.activate()
+        XCTAssertTrue(app.buttons[AccessibilityID.playerPlayPauseButton].waitForExistence(timeout: 5))
+        adjust(x: 0.2, delta: brightnessDelta)
+        app.buttons.matching(identifier: AccessibilityID.playerBackButton).firstMatch.tap()
+        try assertRestored()
+        #endif
+    }
+
+    private func waitForPlayback() {
+        let title = app.staticTexts.matching(identifier: AccessibilityID.playerTitleLabel).firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 40))
+        let play = app.buttons[AccessibilityID.playerPlayPauseButton]
+        XCTAssertTrue(play.waitForExistence(timeout: 15))
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: play)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 20), .completed)
+        if play.label == "Pause" { play.tap() }
+    }
+
+    private func openSystemVolume() throws -> XCUIElement {
+        let slider = system.otherElements[AccessibilityID.systemVolumeSlider]
+        if slider.exists, slider.isHittable { return slider }
+        // Keep the player's audio session/route alive while reading its system volume.
+        let surface = app.state == .runningForeground ? app : system
+        surface.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.005)).press(
+            forDuration: 0.01,
+            thenDragTo: surface.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.2)),
+            withVelocity: .fast, thenHoldForDuration: 0)
+        let pages = system.pageIndicators[AccessibilityID.systemControlCenterPages].firstMatch
+        if pages.waitForExistence(timeout: 3) {
+            pages.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        }
+        guard slider.waitForExistence(timeout: 5), slider.isHittable else {
+            attach(system.debugDescription)
+            throw NSError(domain: "PlayerLevelDeviceUITests", code: 1)
+        }
+        return slider
+    }
+
+    private func closeControlCenter() {
+        system.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.5)).tap()
+    }
+
+    private func sliderValue(_ slider: XCUIElement) throws -> CGFloat {
+        CGFloat(try XCTUnwrap(Int((slider.value as? String ?? "").filter(\.isNumber)))) / 100
+    }
+
+    private func restoreSystemLevel(_ slider: XCUIElement, to value: CGFloat) throws {
+        for _ in 0..<5 {
+            let difference = value - (try sliderValue(slider))
+            if abs(difference) <= 0.02 { return }
+            let delta = min(0.35, max(-0.35, difference * 0.75))
+            slider.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(
+                forDuration: 0.05,
+                thenDragTo: slider.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5 - delta)),
+                withVelocity: .slow, thenHoldForDuration: 0)
+        }
+        XCTAssertEqual(try sliderValue(slider), value, accuracy: 0.03)
+    }
+
+    private func levelValue(_ identifier: String) throws -> CGFloat {
+        let hud = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+        guard hud.waitForExistence(timeout: 3) else {
+            throw NSError(domain: "PlayerLevelDeviceUITests", code: 2)
+        }
+        return try sliderValue(hud)
+    }
+
+    private func adjust(x: CGFloat, delta: CGFloat) {
+        app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: 0.5)).press(
+            forDuration: 0.05,
+            thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: 0.5 + delta * 0.6)),
+            withVelocity: XCUIGestureVelocity(rawValue: 160), thenHoldForDuration: 0)
+    }
+
+    private func attach(_ text: String) {
+        let evidence = XCTAttachment(string: text)
+        evidence.lifetime = .keepAlways
+        add(evidence)
+    }
+}

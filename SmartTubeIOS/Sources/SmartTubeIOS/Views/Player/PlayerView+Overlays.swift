@@ -653,7 +653,7 @@ extension PlayerView {
         }
         .buttonStyle(.plain)
         .foregroundStyle(.primary)
-        .accessibilityIdentifier("player.moreMenu.cancel")
+        .accessibilityIdentifier(AccessibilityID.playerMoreMenuCancelButton)
         #if os(tvOS)
         .background(moreMenuFocusedRow == .cancel ? Color.gray.opacity(0.35) : .clear)
         .clipShape(RoundedRectangle(cornerRadius: 10))

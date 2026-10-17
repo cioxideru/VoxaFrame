@@ -2,6 +2,15 @@ import Foundation
 
 /// Accessibility identifiers used by app views.
 public enum AccessibilityID {
+    public static var playerStatsOverlay: String { "player.statsOverlay" }
+    public static var playerHoldSpeedBadge: String { "player.holdSpeedBadge" }
+    public static var playerMoreMenuCancelButton: String { "player.moreMenu.cancel" }
+    public static var playerMoreButton: String { "player.moreButton" }
+    public static var miniPlayerBar: String { "miniPlayer.bar" }
+    public static var playerToast: String { "player.toast" }
+    public static var playerProgressBar: String { "player.progressBar" }
+    public static var playerBrightnessGesture: String { "player.brightnessGesture" }
+    public static var playerVolumeGesture: String { "player.volumeGesture" }
     public static var homeChipBar: String { "home.chipBar" }
     public static func homeSectionChip(_ title: String) -> String { "chip.\(title)" }
     public static var channelSubscriptionButton: String { "channel.followButton" }

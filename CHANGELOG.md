@@ -8,6 +8,12 @@ All notable changes to SmartTube are documented here.
 
 ### Added — 2026-10-17
 
+- **Full-screen level gestures (PLAN-0024):** slow vertical drags adjust screen
+  brightness on the left and system volume on the right. Control hints mark both
+  halves, and a brief indicator shows the level. Brightness returns to its previous
+  value when leaving the player or backgrounding its window. Fast downward swipes
+  still minimize; horizontal navigation, scrubbing, taps and hold-to-speed remain separate.
+
 - **Version 5.14 (32), independent Shorts speed (PLAN-0019):** Shorts has the same
   0.25–2× playback-speed picker as regular videos, with a separately saved choice.
   Upgrades copy the former shared speed once. Pause/resume, prepared next videos
