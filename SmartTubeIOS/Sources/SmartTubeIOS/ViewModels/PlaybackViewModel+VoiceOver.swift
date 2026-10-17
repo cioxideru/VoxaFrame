@@ -10,6 +10,7 @@ extension PlaybackViewModel {
     /// video has none and Yandex VOT is enabled, it is voice-over translated into that language.
     /// The player's per-video toggle (`voiceOverOverride`) overrides both checks.
     func applyAudioLanguagePolicy() {
+        guard currentVideo?.isDownloaded != true else { return }
         let forced = voiceOverOverride == true
         guard voiceOverOverride ?? settings.yandexVOTEnabled, let video = currentVideo, let info = playerInfo,
             let target = voiceOverTargetLanguage

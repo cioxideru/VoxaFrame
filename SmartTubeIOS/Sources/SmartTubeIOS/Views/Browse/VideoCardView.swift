@@ -262,6 +262,7 @@ public struct VideoCardView: View {
                     }
                 }
             }
+            OfflineWatchButton(video: video)
             #if !os(tvOS) && ENABLE_DOWNLOADS
             Button {
                 downloadService.download(video: video)

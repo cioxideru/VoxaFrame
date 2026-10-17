@@ -64,6 +64,7 @@ final class VoiceOverTranslationController {
     /// Consecutive network errors tolerated before giving up on the translation.
     private static let maxRequestErrors = 3
 
+    @ObservationIgnored private let localFileAllowed: (URL) -> Bool
     @ObservationIgnored private let client = YandexVOTClient()
     @ObservationIgnored private let voicePlayer = AVPlayer()
     @ObservationIgnored private weak var mainPlayer: AVPlayer?
@@ -77,7 +78,8 @@ final class VoiceOverTranslationController {
     @ObservationIgnored private var isSeekingVoice = false
     @ObservationIgnored private var seekTask: Task<Void, Never>?
 
-    init() {
+    init(localFileAllowed: @escaping (URL) -> Bool = OfflineMedia.validLocalURL) {
+        self.localFileAllowed = localFileAllowed
         voicePlayer.automaticallyWaitsToMinimizeStalling = false
     }
 
@@ -94,6 +96,20 @@ final class VoiceOverTranslationController {
         setVideoPlaying(false)
         state = .waiting(remainingSeconds: nil)
         task = Task { [weak self] in await self?.run(request) }
+    }
+
+    /// Attaches a fully saved translation without contacting Yandex or YouTube.
+    func startLocal(url: URL, videoID: String, mainPlayer: AVPlayer, setVideoPlaying: @escaping (Bool) -> Void) {
+        stop()
+        guard url.isFileURL, localFileAllowed(url) else {
+            state = .failed("The saved translation is unavailable.")
+            return
+        }
+        self.videoId = videoID
+        self.mainPlayer = mainPlayer
+        self.setVideoPlaying = setVideoPlaying
+        mainVolume = mainPlayer.volume
+        attach(url, livelyVoice: false)
     }
 
     /// Pauses I/O while the video awaits audio-session activation, retaining the translation.

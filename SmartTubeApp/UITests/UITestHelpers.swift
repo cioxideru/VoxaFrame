@@ -2,6 +2,18 @@ import XCTest
 
 // UI-test targets do not link SmartTubeIOSCore. Keep app identifiers in sync with its AccessibilityID.
 enum AccessibilityID {
+    static var offlineWatch: String { "offline.watch" }
+    static var offlinePage: String { "offline.page" }
+    static var offlinePagePicker: String { "offline.pagePicker" }
+    static var offlineAudioPicker: String { "offline.audioPicker" }
+    static var offlineTranslationPicker: String { "offline.translationPicker" }
+    static var offlinePlaybackStatus: String { "offline.playbackStatus" }
+    static var offlineFindVariants: String { "offline.findVariants" }
+    static func offlineEntry(_ id: String) -> String { "offline.entry.\(id)" }
+    static func offlinePlay(_ id: String) -> String { "offline.play.\(id)" }
+    static func offlineDownload(_ id: String) -> String { "offline.download.\(id)" }
+    static func offlineDownloadTranslation(_ language: String) -> String { "offline.translation.\(language)" }
+
     // System-owned identifiers used only by iPad window-layout UI tests.
     static var systemSettingsSidebar: String { "com.apple.settings.sidebar.collectionView" }
     static var systemMultitasking: String { "com.apple.settings.multitaskingAndGestures" }

@@ -20,6 +20,7 @@ tracks unfinished work, debt, missing verification, and decisions.
 ## Active
 
 - [PLAN-0020: Playback priority](active/playback-priority.md) — shared playback demand and bounded optional transfers.
+- [PLAN-0021: Offline library](active/offline-library.md) — background media downloads and saved audio translations.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
 

@@ -426,8 +426,7 @@ extension InnerTubeAPI {
         let title = videoDetails?["title"] as? String ?? ""
         let channelTitle = videoDetails?["author"] as? String ?? ""
         let description = videoDetails?["shortDescription"] as? String
-        let durationStr = videoDetails?["lengthSeconds"] as? String
-        let duration = durationStr.flatMap { Double($0) }
+        let duration = (videoDetails?["lengthSeconds"] as? String).flatMap(Double.init)
         let isLive = videoDetails?["isLiveContent"] as? Bool ?? false
         let viewCount = (videoDetails?["viewCount"] as? String).flatMap { Int($0) }
         let thumbURL = ((videoDetails?["thumbnail"] as? [String: Any])?["thumbnails"] as? [[String: Any]])?
@@ -492,9 +491,10 @@ extension InnerTubeAPI {
                 }
                 let fps = f["fps"] as? Int ?? 30
                 let bitrate = f["bitrate"] as? Int
-                return VideoFormat(
-                    label: quality, width: width, height: height, fps: fps, mimeType: mimeType, url: url,
-                    bitrate: bitrate)
+                return withAudioMetadata(
+                    VideoFormat(
+                        label: quality, width: width, height: height, fps: fps, mimeType: mimeType, url: url,
+                        bitrate: bitrate), raw: f["audioTrack"] as? [String: Any])
             }
         }
 
@@ -619,6 +619,15 @@ extension InnerTubeAPI {
         return PlayerInfo(
             video: video, formats: formats, hlsURL: hlsURL, dashURL: dashURL, captionTracks: captionTracks,
             trackingURLs: trackingURLs, endCards: endCards)
+    }
+
+    private func withAudioMetadata(_ format: VideoFormat, raw: [String: Any]?) -> VideoFormat {
+        var enriched = format
+        enriched.audioTrackID = raw?["id"] as? String
+        enriched.audioLanguage = enriched.audioTrackID.map { String($0.split(separator: ".").first ?? "") }
+        let name = (raw?["displayName"] as? String)?.lowercased()
+        enriched.isOriginalAudio = name.flatMap { $0.contains("original") ? true : $0.contains("dubbed") ? false : nil }
+        return enriched
     }
 
     // MARK: – End cards parser

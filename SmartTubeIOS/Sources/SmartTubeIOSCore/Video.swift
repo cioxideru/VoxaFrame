@@ -46,8 +46,14 @@ public struct Video: Identifiable, Hashable, Codable, Sendable {
     /// Transient local file URL set when playing a downloaded video.
     /// Excluded from `CodingKeys` — never persisted to JSON cache.
     public var localFileURL: URL? = nil
+    public var localAudioFileURL: URL?
+    public var localTranslationFileURL: URL?
     /// `true` when this video refers to a local downloaded file rather than a remote stream.
     public var isDownloaded: Bool { localFileURL != nil }
+    public func hasSamePlaybackSource(as other: Video) -> Bool {
+        id == other.id && localFileURL == other.localFileURL && localAudioFileURL == other.localAudioFileURL
+            && localTranslationFileURL == other.localTranslationFileURL
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id, title, channelTitle, channelId, description, thumbnailURL, duration

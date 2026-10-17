@@ -33,7 +33,7 @@ extension PlaybackViewModel {
         // SwiftUI can trigger load() multiple times during a single navigation (e.g.
         // selectedVideo binding re-evaluated while a queue autoplay is in flight).
         // Each duplicate spawns its own loadAsync → its own duplicate request storm.
-        if currentVideo?.id == video.id, isIncognito == incognito, isLoading {
+        if currentVideo?.hasSamePlaybackSource(as: video) == true, isIncognito == incognito, isLoading {
             playerLog.notice("[load] already loading \(video.id) — ignoring duplicate call")
             return
         }
@@ -117,7 +117,7 @@ extension PlaybackViewModel {
     }
 
     private func resumeParkedItem(for video: Video) -> Bool {
-        guard let parked = parkedVideoId, parked == video.id,
+        guard let parked = parkedVideoId, parked == video.id, currentVideo?.hasSamePlaybackSource(as: video) == true,
             let parkedItem = player.currentItem, parkedItem.status == .readyToPlay
         else { return false }
         playerLog.notice("[fix12] same-video re-open — reusing parked AVPlayerItem for \(video.id)")

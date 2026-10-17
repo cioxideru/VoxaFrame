@@ -19,6 +19,24 @@ when this local fixture is absent. Attachments contain five cold and five prepar
 samples. The sustained case exercises 60 swipes, background release, manual resume and reopening.
 Load-to-ready is not a measure of first visible frame or live-network/device performance.
 
+## Local offline-library acceptance
+
+Run `python3 scripts/shorts-media-fixture.py --port 18766` with the same FFmpeg requirement,
+then select `-only-testing:SmartTubeUITests/DownloadsPlaybackUITests` on an iPad Simulator.
+This suite uses real background URLSession/AVAssetDownloadURLSession and local AVPlayer/VOT
+playback; only source resolution points at synthetic loopback media. It checks MP4, extra AAC
+and translation tracks, HLS selected resolution, rotation, relaunch and unchanged media-request
+counts during saved playback. It fails if its fixture is absent.
+
+Build these test products with `CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-` on Simulator.
+An unsigned app can be rejected by the system background-session daemon (XPC 4097 / missing
+client bundle identifier), even when ordinary foreground playback works. Keep parallel work
+isolated with explicit `SYMROOT` and `OBJROOT` as well as `-derivedDataPath`; global Xcode output
+settings can otherwise redirect separate worktrees into the same Build/Products directory.
+Use a prepared `.xctestproducts` bundle for subsequent `test-without-building` runs.
+
+This is not a physical-device, live YouTube/Yandex, airplane-mode or background-wakeup result.
+
 ## Target simulator
 
 The following is the previously recorded development destination, not a portable requirement.

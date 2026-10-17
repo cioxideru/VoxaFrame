@@ -123,7 +123,7 @@ public final class PlayerStateStore {
         //      AVPlayerItem alive but pauses and sets isPlaying=false. On re-tap,
         //      call load() so the park fast-path in PlaybackViewModel resumes it.
         // A privacy-mode change needs a fresh tracking session even for the same video.
-        if vm.currentVideoId != video.id || vm.isIncognito != incognito
+        if vm.currentVideo?.hasSamePlaybackSource(as: video) != true || vm.isIncognito != incognito
             || vm.player.currentItem == nil || !vm.isPlaying
         {
             vm.load(video: video, incognito: incognito)
