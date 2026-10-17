@@ -103,6 +103,7 @@ private struct LandscapePresenter<Item: Identifiable & Hashable>: UIViewControll
         coordinator.contentBuilder = { [content] item in
             AnyView(
                 content(item)
+                    .vfGlassScope()
                     .environment(capturedStore)
                     .environment(capturedAuth)
                     .environment(capturedPlayerState)

@@ -32,7 +32,8 @@ Decisions: [ADR-0012](../../adr/0012-redesign-availability-and-tokens.md); accen
 | Stage | Content | Status / evidence |
 | --- | --- | --- |
 | 0 | This plan, ADR-0012, OQ-0019, document index | in progress |
-| 1 | `Views/DesignSystem/`: tokens, glass modifier, accent per platform | NOT RUN |
+| 1 | `Views/DesignSystem/`: tokens and glass modifier. Accent flip deferred to the button stage (see OQ-0019) | in progress |
+| 3a | `VFProminentButtonStyle` (fill `action`, label `onAction`), migrate the 15 `.borderedProminent` sites, then flip `.system` accent on iOS, iPadOS, tvOS | NOT RUN |
 | 2 | Shell: tabs / sidebar / split view / top tabs; mini-player accessory spike; macOS inspector and menu | NOT RUN |
 | 3 | Home, cards, A2 | NOT RUN |
 | 4 | Player and option panels | NOT RUN |
@@ -40,5 +41,7 @@ Decisions: [ADR-0012](../../adr/0012-redesign-availability-and-tokens.md); accen
 | 6 | Offline | NOT RUN |
 | 7 | Settings, B1, B2 | NOT RUN |
 | 8 | Search, Library, RSS, channels, sign-in, A1, A4, A5, B3 | NOT RUN |
+
+The coral accent is not switched on in stage 1: with the system prominent button, the dark-mode label would be white on `#FF9988` (2.07:1). It flips together with the button style in stage 3a.
 
 Stages 0–2 run in order; stages 3–8 touch separate folders and may run in parallel once stage 2 is merged.

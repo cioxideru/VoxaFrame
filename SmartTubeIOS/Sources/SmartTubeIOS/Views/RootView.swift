@@ -43,6 +43,7 @@ public struct RootView: View {
             #endif
         }
         .environment(\.isLandscapeLayout, isLandscapeLayout)
+        .vfGlassScope()
         .onGeometryChange(for: Bool.self) {
             $0.size.width > $0.size.height
         } action: {
