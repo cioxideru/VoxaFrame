@@ -25,6 +25,7 @@ private final class OfflineFakeTransport: OfflineTransporting, @unchecked Sendab
     func acknowledge(_ attempt: UUID) { lock.withLock { _ = acknowledged.insert(attempt) } }
     func isAcknowledged(_ attempt: UUID) -> Bool { lock.withLock { acknowledged.contains(attempt) } }
     func setYielding(_ yielding: Bool) {}
+    func setForeground(_ foreground: Bool) {}
 }
 private struct OfflineFakeResolver: OfflineResolving {
     let track = OfflineTrack(id: "test-muxed", kind: .video, label: "360p H.264", hasAudio: true)

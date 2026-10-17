@@ -18,14 +18,14 @@ struct OfflineDownloadChunk {
         return total
     }
 
-    static func prepare(_ request: URLRequest) -> URLRequest {
+    static func prepare(_ request: URLRequest, bounded: Bool = true) -> URLRequest {
         guard let total = totalBytes(in: request), total > maximumBytes else { return request }
-        return ranged(request, start: 0, total: total)
+        return ranged(request, start: 0, total: total, bounded: bounded)
     }
 
-    private static func ranged(_ request: URLRequest, start: Int64, total: Int64) -> URLRequest {
+    private static func ranged(_ request: URLRequest, start: Int64, total: Int64, bounded: Bool) -> URLRequest {
         var next = request
-        let end = start + min(maximumBytes, total - start) - 1
+        let end = bounded ? start + min(maximumBytes, total - start) - 1 : total - 1
         next.setValue("bytes=\(start)-\(end)", forHTTPHeaderField: "Range")
         next.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
         return next
@@ -74,9 +74,9 @@ struct OfflineDownloadChunk {
         try output.synchronize()
     }
 
-    func nextRequest(after request: URLRequest) -> URLRequest? {
+    func nextRequest(after request: URLRequest, bounded: Bool = true) -> URLRequest? {
         guard end < total - 1 else { return nil }
-        return Self.ranged(request, start: end + 1, total: total)
+        return Self.ranged(request, start: end + 1, total: total, bounded: bounded)
     }
 
     static func progress(request: URLRequest?, written: Int64, expected: Int64) -> Double? {

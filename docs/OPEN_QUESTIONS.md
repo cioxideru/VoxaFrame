@@ -276,15 +276,22 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   the saved translation attached locally. The user confirmed audible English after explicitly
   selecting it. Legacy protected HLS deletion and Delete all of the three new files passed;
   queue, receipts and owned media were empty afterward. Offline listening and synchronization
-  still need confirmation beyond the remote video image.
+  still need confirmation beyond the remote video image; the user did not observe the last
+  Wi-Fi-off listening check. Build 37 again played local video with the selected translation
+  attached and Wi-Fi off at 23:04–23:07; audible English still lacks confirmation. Delete all
+  then removed all three files and download cache; the library stayed empty after relaunch.
+  The failed retry jobs and interrupted test media had also been removed at 22:13.
 - Simulator fixtures exercise the real system download sessions and local AVPlayer; they do not
   establish current YouTube signed-URL availability, Yandex translation generation, physical
   background-session wakeup or audio synchronization under device load.
-- Next checks: confirm offline translation listening/synchronization, verify background
-  completion notification and retained progress (fresh-URL retries at 21:40–21:41 returned HTTP 403;
-  their two failed test jobs need UI cleanup after the Mac is unlocked),
-  then add another quality/audio track online. Separately compare startup/buffering with
-  competing downloads on the same connection.
+- Build 37 completed the remaining 291 MB of the selected video while suspended, then started
+  original audio automatically. This removes the reproduced per-range wake delay, but large
+  CDN responses remain slow (about 0.27 MiB/s video and 32 KB/s audio in this run). Audio was
+  cancelled/retried after returning to the app; the complete batch finished in the foreground.
+  An active remainder does not shrink back into chunks when the app returns to the foreground.
+- Next checks: confirm offline translation listening/synchronization, an entire multi-file batch
+  and completion notification in the background, then add another quality/audio track online.
+  Separately compare startup/buffering with competing downloads on the same connection.
 - Source resolution and translation preparation need a running app. Accepted media transfers
   use system background sessions; force-quitting the app does not promise continued downloads.
 - HLS uses its included audio with optional local VOT. External audio-file overrides require a

@@ -285,6 +285,7 @@ struct AppEntry: App {
                     }
                     .onOpenURL { url in handleOpenURL(url) }
                     .onChange(of: scenePhase, initial: true) { _, phase in
+                        OfflineCoordinator.shared.setForeground(phase != .background)
                         if phase == .active {
                             consumePendingVideoID()
                             consumePendingVideoFromLaunchArgs()

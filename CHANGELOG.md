@@ -8,6 +8,11 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed — 2026-10-17
 
+- **VoxaFrame 5.16 (37), background offline transfers (PLAN-0028):** on iOS, a direct download
+  switches from small foreground ranges to one remaining range after leaving the app. This
+  avoids repeated background scheduling delays between parts; byte validation and cancellation
+  still apply. Foreground throughput measurements do not predict background transfer speed.
+
 - **VoxaFrame 5.16 (36), physical iPad offline cleanup (PLAN-0028):** restored protected HLS
   paths keep the physical app-container location instead of a `/var` symlink. Previously saved
   downloads can be played and deleted after relaunch; a pending failed deletion resumes on update.

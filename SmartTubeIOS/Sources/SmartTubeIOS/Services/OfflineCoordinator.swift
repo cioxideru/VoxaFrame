@@ -96,6 +96,9 @@ public final class OfflineCoordinator {
         #endif
         start()
     }
+    public func setForeground(_ foreground: Bool) {
+        transport.setForeground(foreground)
+    }
     public func start() {
         guard startup == nil else { return }
         startup = Task {

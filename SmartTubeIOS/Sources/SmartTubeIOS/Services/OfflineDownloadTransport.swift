@@ -19,6 +19,7 @@ protocol OfflineTransporting: Sendable {
     func cancel(_ attempt: UUID) async
     func acknowledge(_ attempt: UUID)
     func setYielding(_ yielding: Bool) async
+    func setForeground(_ foreground: Bool)
 }
 
 /// Sessions are immutable after init; delegate bookkeeping runs on one serial OperationQueue.
@@ -39,7 +40,12 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
     private let completionLock = NSLock()
     private var retainedAttempts: Set<UUID> = []
     private var cancelledAttempts: Set<UUID> = []
-    private var nextChunks: [UUID: URLRequest] = [:]
+    private var nextChunks: [UUID: (OfflineDownloadChunk, URLRequest)] = [:]
+    #if os(iOS)
+    private var allowsChunking = false
+    #else
+    private var allowsChunking = true
+    #endif
     private var pressureYielding = false
     private var pressureRevision: UInt64 = 0
     private var stagingErrors: [UUID: String] = [:]
@@ -98,7 +104,9 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         } else {
             var request = URLRequest(url: source.url)
             request.setValue(source.userAgent, forHTTPHeaderField: "User-Agent")
-            task = files.downloadTask(with: OfflineDownloadChunk.prepare(request))
+            task = completionLock.withLock {
+                files.downloadTask(with: OfflineDownloadChunk.prepare(request, bounded: allowsChunking))
+            }
         }
         completionLock.withLock {
             retainedAttempts.insert(attempt)
@@ -169,6 +177,12 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
     }
     #endif
 
+    func setForeground(_ foreground: Bool) {
+        #if os(iOS)
+        completionLock.withLock { allowsChunking = foreground }
+        #endif
+    }
+
     func acknowledge(_ attempt: UUID) {
         completionLock.withLock {
             retainedAttempts.remove(attempt)
@@ -230,7 +244,7 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
                 try OfflineTransferReceipt(attempt: id, url: destination, systemPackage: false, isPartial: true)
                     .persist(in: directory)
                 try chunk.append(location, to: destination)
-                nextChunks[id] = chunk.nextRequest(after: request)
+                nextChunks[id] = (chunk, request)
             } else {
                 try FileManager.default.moveItem(at: location, to: destination)
             }
@@ -251,9 +265,12 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         let next = nextChunks.removeValue(forKey: id)
         if error == nil, stagingErrors[id] == nil, let next {
             let continued = completionLock.withLock {
-                guard !cancelledAttempts.contains(id) else { return false }
+                guard !cancelledAttempts.contains(id),
+                    let request = next.0.nextRequest(after: next.1, bounded: allowsChunking)
+                else { return false }
+                // iOS rate-limits background wakes; keep one remainder request, even after returning to the app.
                 retainedAttempts.insert(id)
-                let chunk = files.downloadTask(with: next)
+                let chunk = files.downloadTask(with: request)
                 chunk.taskDescription = id.uuidString
                 chunk.priority = URLSessionTask.lowPriority
                 if !pressureYielding { chunk.resume() }

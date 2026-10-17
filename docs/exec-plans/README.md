@@ -29,7 +29,7 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
-- [PLAN-0028: Physical iPad offline cleanup](completed/offline-ipad-cleanup.md) — protected-package deletion, bounded direct transfers and physical acceptance; background scheduling remains OQ-0018.
+- [PLAN-0028: Physical iPad offline cleanup](completed/offline-ipad-cleanup.md) — protected-package deletion, foreground transfers and background video completion; remaining hardware acceptance in OQ-0018.
 
 - [PLAN-0026: Delete all offline videos](completed/offline-delete-all.md) — confirmed bulk cancellation and cache cleanup.
 

@@ -37,6 +37,30 @@ struct OfflineDownloadChunkTests {
         translation.setValue("Test agent", forHTTPHeaderField: "User-Agent")
         #expect(OfflineDownloadChunk.prepare(translation) == translation)
     }
+    @Test func backgroundContinuationKeepsOffsetAndFinishesWithoutMoreChunks() throws {
+        let total = OfflineDownloadChunk.maximumBytes * 3 + 7
+        let first = OfflineDownloadChunk.prepare(try request(total: total))
+        let chunk = try OfflineDownloadChunk(
+            response: response("bytes 0-\(OfflineDownloadChunk.maximumBytes - 1)/\(total)"),
+            request: first, fileSize: OfflineDownloadChunk.maximumBytes)
+        let remainder = try #require(chunk.nextRequest(after: first, bounded: false))
+        #expect(remainder.url == first.url)
+        #expect(remainder.value(forHTTPHeaderField: "User-Agent") == "Test agent")
+        #expect(
+            remainder.value(forHTTPHeaderField: "Range")
+                == "bytes=\(OfflineDownloadChunk.maximumBytes)-\(total - 1)")
+        let completed = try OfflineDownloadChunk(
+            response: response("bytes \(OfflineDownloadChunk.maximumBytes)-\(total - 1)/\(total)"),
+            request: remainder, fileSize: total - OfflineDownloadChunk.maximumBytes)
+        #expect(completed.nextRequest(after: remainder) == nil)
+        #expect(
+            OfflineDownloadChunk.progress(
+                request: remainder, written: total - OfflineDownloadChunk.maximumBytes,
+                expected: total - OfflineDownloadChunk.maximumBytes) == 1)
+        let backgroundStart = OfflineDownloadChunk.prepare(try request(total: total), bounded: false)
+        #expect(backgroundStart.value(forHTTPHeaderField: "Range") == "bytes=0-\(total - 1)")
+    }
+
     @Test func appendsExactRangesAndStopsAtTotal() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

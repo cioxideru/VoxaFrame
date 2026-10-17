@@ -77,7 +77,8 @@ struct SmartTubeApp: App {
             root
             #endif
         }
-        .onChange(of: scenePhase) { _, phase in
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            OfflineCoordinator.shared.setForeground(phase != .background)
             if phase == .active {
                 Task {
                     await authService.refreshIfNeeded()
