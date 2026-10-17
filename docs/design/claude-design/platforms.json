@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "1.0",
+  "units": "logical design px mapped to native pt",
+  "safeAreas": "runtime system values always take priority",
+  "platforms": [
+    {
+      "id": "iphone",
+      "os": "iOS",
+      "targetVisualVersion": "27",
+      "currentMinimumOS": "17.0",
+      "primaryViewport": [
+        393,
+        852
+      ],
+      "qaViewports": [
+        [
+          320,
+          568
+        ],
+        [
+          430,
+          932
+        ],
+        [
+          852,
+          393
+        ]
+      ],
+      "navigation": "Native five-tab TabView; one navigation stack per branch",
+      "layout": {
+        "margin": 16,
+        "columns": "1 compact; reduce density for accessibility text",
+        "player": "portrait inline, landscape fullscreen",
+        "miniPlayer": "reserve safe-area space above native tab bar"
+      },
+      "input": [
+        "touch",
+        "VoiceOver",
+        "external keyboard"
+      ],
+      "targetSize": 44,
+      "status": "native patterns + proposed composition"
+    },
+    {
+      "id": "ipad",
+      "os": "iPadOS",
+      "targetVisualVersion": "27",
+      "currentMinimumOS": "17.0",
+      "primaryViewport": [
+        1194,
+        834
+      ],
+      "qaViewports": [
+        [
+          834,
+          1194
+        ],
+        [
+          600,
+          834
+        ]
+      ],
+      "navigation": "Adaptive tabs/sidebar according to available width",
+      "layout": {
+        "margin": 20,
+        "sidebarWidth": [
+          240,
+          300
+        ],
+        "columns": "respect current user preference 1...3; adapt to available content width",
+        "cardMinWidthProposal": 240,
+        "player": "optional side pane only when readable"
+      },
+      "input": [
+        "touch",
+        "pointer",
+        "keyboard",
+        "VoiceOver"
+      ],
+      "targetSize": 44,
+      "status": "iOS kit facts + proposed regular-width composition"
+    },
+    {
+      "id": "mac",
+      "os": "macOS via Mac Catalyst",
+      "targetVisualVersion": "27",
+      "currentMinimumOS": "14.0",
+      "primaryViewport": [
+        1440,
+        900
+      ],
+      "qaViewports": [
+        [
+          1024,
+          768
+        ],
+        [
+          800,
+          600
+        ]
+      ],
+      "navigation": "Proposed sidebar and native toolbar/window chrome",
+      "layout": {
+        "margin": 24,
+        "sidebarWidth": [
+          240,
+          300
+        ],
+        "columns": "adaptive, honor existing 1...3 preference",
+        "secondaryPane": "collapse first when narrow"
+      },
+      "input": [
+        "pointer",
+        "keyboard",
+        "VoiceOver"
+      ],
+      "targetSize": 28,
+      "shortcutsProposed": {
+        "Command-F": "focus search",
+        "Space": "play/pause when text input is not focused",
+        "Escape": "dismiss top transient layer"
+      },
+      "status": "proposed Catalyst adaptation; os(macOS) branch does not establish Catalyst behavior"
+    },
+    {
+      "id": "tv",
+      "os": "tvOS",
+      "targetVisualVersion": "27 platform direction; no tvOS 27 kit extracted",
+      "currentMinimumOS": "17.0",
+      "primaryViewport": [
+        1920,
+        1080
+      ],
+      "qaViewports": [
+        [
+          1920,
+          1080
+        ]
+      ],
+      "navigation": "Native top tabs and focus-driven shelves",
+      "layout": {
+        "marginXProposal": 80,
+        "marginYProposal": 60,
+        "columnsProposal": "3...4 visible cards per shelf",
+        "focusGapProposal": 32,
+        "typeProposal": {
+          "title": [
+            48,
+            58
+          ],
+          "heading": [
+            36,
+            44
+          ],
+          "body": [
+            29,
+            36
+          ],
+          "metadata": [
+            23,
+            30
+          ]
+        }
+      },
+      "input": [
+        "Siri Remote",
+        "keyboard",
+        "VoiceOver"
+      ],
+      "targetSize": 66,
+      "focus": {
+        "enter": "selected tab or last meaningful item",
+        "restore": "origin after dismissing player/menu",
+        "back": "dismiss top layer before navigating back",
+        "distinguish": [
+          "focused",
+          "selected",
+          "playing"
+        ],
+        "reduceMotion": "disable custom scale and parallax; preserve visible ring"
+      },
+      "status": "Apple HIG interpretation + VoxaFrame proposal; requires real remote and display checks"
+    }
+  ]
+}

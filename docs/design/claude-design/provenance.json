@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "checkedDate": "2026-10-17",
+  "appRevisionAtAuthoring": "761c9f3475e94ac9c691c57af2956ecd14702b5e",
+  "brand": {
+    "source": "brand-assets/voxaframe-master.png",
+    "sha256": "80983436902ea1a9d5371d7aad511d409aeb4efafc67813bc52fd43996624006",
+    "note": "User-selected existing project artwork; palette is authored from its visual direction, not a claim of exact pixel sampling"
+  },
+  "classification": {
+    "source-fact": "Observed Figma or repository facts",
+    "platform-guidance": "Apple guidance interpreted for the product",
+    "voxaframe-proposal": "New design choices; not implemented or user-approved individually"
+  },
+  "sourceFigma": {
+    "url": "https://www.figma.com/design/DuO7Y7LtPFaGhcPKDVfNfQ/iOS-and-iPadOS-27--Community-",
+    "fileKey": "DuO7Y7LtPFaGhcPKDVfNfQ",
+    "checkedDate": "2026-10-17",
+    "scope": "Read-only reference facts; not an exported Apple UI kit. Current app behavior is mapped separately.",
+    "totalVariablesDetected": 299,
+    "sourceLabel": "User-provided community copy; not independently verified as an unmodified official kit"
+  },
+  "sourceCoverage": {
+    "pagesDetected": 47,
+    "variablesDetected": 299,
+    "colorVariablesCaptured": 63,
+    "dimensionVariablesCaptured": 41,
+    "textStylesCaptured": 34,
+    "componentPagesInspected": 12
+  },
+  "externalReferences": [
+    "https://developer.apple.com/design/resources/",
+    "https://developer.apple.com/design/human-interface-guidelines/materials",
+    "https://developer.apple.com/design/human-interface-guidelines/designing-for-tvos",
+    "https://developer.apple.com/design/human-interface-guidelines/designing-for-macos",
+    "https://developer.apple.com/design/human-interface-guidelines/accessibility",
+    "https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design",
+    "https://www.designtokens.org/tr/2025.10/format/"
+  ],
+  "notIncluded": [
+    "Apple UI-kit component geometry/vector assets",
+    "SF Pro font files",
+    "SF Symbols font/artwork",
+    "account screenshots",
+    "credentials",
+    "runtime app source"
+  ],
+  "limitations": [
+    "No import in user Claude account performed",
+    "No new Figma library created",
+    "Native controls/materials are approximated in HTML/PDF; validate in SwiftUI",
+    "Mac and TV layouts are proposals, not extracted from the supplied iOS library",
+    "Source Tab Bars contains a component property-definition error; metadata fallback captured"
+  ]
+}

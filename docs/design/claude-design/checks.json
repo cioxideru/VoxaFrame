@@ -1,0 +1,91 @@
+{
+  "browser": {
+    "status": "pass",
+    "screenshots": 8,
+    "javascriptErrors": [],
+    "externalRequests": [],
+    "themeToggle": true,
+    "keyboardFocus": true,
+    "textHorizontalOverflow": [],
+    "reducedMotion": "media preference emulated; prototype has no spatial animation"
+  },
+  "nativeApp": "not run; design artifacts only",
+  "claudeImport": "not performed",
+  "package": {
+    "status": "pass",
+    "tokensPerAppearance": 54,
+    "components": 23,
+    "platforms": 4,
+    "contrastRatios": {
+      "light": {
+        "text/background": 21.0,
+        "text/surface": 18.82,
+        "text/elevated": 21.0,
+        "secondary/background": 6.12,
+        "secondary/surface": 5.49,
+        "secondary/elevated": 6.12,
+        "action/background": 5.78,
+        "action/surface": 5.18,
+        "action/elevated": 5.78,
+        "success/background": 6.57,
+        "success/surface": 5.88,
+        "success/elevated": 6.57,
+        "warning/background": 6.66,
+        "warning/surface": 5.96,
+        "warning/elevated": 6.66,
+        "danger/background": 6.57,
+        "danger/surface": 5.89,
+        "danger/elevated": 6.57,
+        "onAction/action": 5.78,
+        "focus/surface": 5.18,
+        "focus/background": 5.78,
+        "onMedia/scrim-over-white": 9.23
+      },
+      "dark": {
+        "text/background": 21.0,
+        "text/surface": 17.01,
+        "text/elevated": 13.94,
+        "secondary/background": 10.67,
+        "secondary/surface": 8.65,
+        "secondary/elevated": 7.08,
+        "action/background": 10.16,
+        "action/surface": 8.24,
+        "action/elevated": 6.75,
+        "success/background": 12.37,
+        "success/surface": 10.02,
+        "success/elevated": 8.21,
+        "warning/background": 14.08,
+        "warning/surface": 11.41,
+        "warning/elevated": 9.34,
+        "danger/background": 12.35,
+        "danger/surface": 10.01,
+        "danger/elevated": 8.2,
+        "onAction/action": 8.93,
+        "focus/surface": 13.05,
+        "focus/background": 16.11,
+        "onMedia/scrim-over-white": 9.23
+      }
+    },
+    "scope": "Token subset syntax/value checks, measured static contrast, JSON, local links, assets. Not an official DTCG schema certification or native accessibility audit."
+  },
+  "pdf": {
+    "pages": 9,
+    "renderedWith": "Poppler",
+    "visualReview": "all nine pages inspected; Mac layout and player actual-quality label corrected",
+    "textExtraction": "pass, including Cyrillic"
+  },
+  "swiftlint": {
+    "status": "pass",
+    "files": 437,
+    "violations": 0,
+    "command": "swiftlint lint --strict --no-cache --baseline .swiftlint.baseline --config .swiftlint.yml"
+  },
+  "repositoryCI": {
+    "status": "pass",
+    "command": "scripts/ci.sh",
+    "tests": 1152,
+    "suites": 159,
+    "toolchain": "Xcode 27.0 (27A266a)",
+    "scope": "existing repository pre-commit gate; no runtime code changed"
+  }
+}

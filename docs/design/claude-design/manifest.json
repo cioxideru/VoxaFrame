@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "date": "2026-10-17",
+  "sha256": {
+    "CLAUDE_IMPORT.md": "2acbc205de1017676f202b836ac205dce12937308270b298175b5315dcc03b24",
+    "IMPORT_PROMPT.txt": "092ed1529050c87d9808251bbc8df50130477062dd39515a7219204c8798fe0d",
+    "README.md": "cf16a0dc9d2f08114c7abf49ca3e8ea79b8fa78984e363afe3a7dc0d5bdc38b5",
+    "VoxaFrame-Design-System.pdf": "7847b492180d18734077cdb8141762f0e0daee3d55405f1bb49e0f64f2c3016b",
+    "assets/voxaframe-icon.png": "80983436902ea1a9d5371d7aad511d409aeb4efafc67813bc52fd43996624006",
+    "checks.json": "23587e5507b281930f519752bbd5bf6f01b4c9cb36fea83c86547fab931fabc1",
+    "components.json": "1b16077ab071a98ec6c24f074df1873a943352dda5b145be36412872eb72c707",
+    "figma-reference.json": "fa55860e1e1543070ad4e139c5bb549e26ba7ef3c9119f6bd6848b83eef07ee3",
+    "platforms.json": "3a30d70c5d134ff894b7d97ca8ce4f4e002b1fc377311c7a5c9493c59ca6a77b",
+    "preview.html": "9f602d321dd7cabc65cd2a82d917360a61c2c280f1b157558d6d5aa7158b979a",
+    "previews/components-dark.png": "7210b5d7965bab1f6263b212f977fcbcae16ed27f1004a87547c538fd959f4c5",
+    "previews/components-light.png": "ca22d8be6b008311688ba9df9c70cafef0800f9834a896df8f3548b7f0e32857",
+    "previews/ipad.png": "79eb532fed39e3b8f0314e6d54463c28378d5221415f9734366153abb862d174",
+    "previews/iphone-dark.png": "91eae1af8589247fe8ab6c4f344cda5d3925b730c29155edfd6c5ff1799af7fe",
+    "previews/iphone.png": "1fcf5f4bff5d5574c929c6c0d058f4754538893d0731e33dedb1eb6c7a4d2bcc",
+    "previews/mac.png": "f3fde60fb748327089d5a74b621f98d32848c44f46fbe6ec9c48c12aeb729fc2",
+    "previews/player.png": "ad2f91eba4005425a379a0ead081f4adbb971cef81d365d632bd384e4ae183e6",
+    "previews/tv.png": "3fbec6a81a5c52262bbdfc5cbf67a29da56670e955e39982e700d5c02cfa5776",
+    "provenance.json": "b072488998adc9a9699fcfffb18a1d62c67f1069ba8432977a2aa332c600c460",
+    "tokens/dark.tokens.json": "a45e8402a52e657d42f9f3da8c822de2e6ba1c401af70ae3c66619ad094add60",
+    "tokens/light.tokens.json": "766cc58bfcab8eee829428c2b0158176c1b51a59ba56cfa23fc29dde3fbd5094",
+    "tokens/voxaframe.css": "a36452d0d0dea42266fd0fdddaedd25e752e352a2f27ac6244d050116d413603",
+    "verify.py": "762caa86e528010d21ecaaaff85b7ac2b0cd9196451050934821ea6ca4da1a24"
+  }
+}
