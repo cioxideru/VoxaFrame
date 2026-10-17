@@ -192,6 +192,7 @@ enum AppSymbol {
     static let chevronLeft = "chevron.left"
     static let chevronUp = "chevron.up"
     static let chevronDown = "chevron.down"
+    static let inspector = "sidebar.trailing"
 
     // MARK: - Playback controls
     static let play = "play.fill"

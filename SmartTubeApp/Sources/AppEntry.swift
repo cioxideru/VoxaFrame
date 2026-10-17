@@ -176,15 +176,9 @@ struct AppEntry: App {
             withDownloads(root)
         }
         .defaultSize(width: 1280, height: 800)
+        .commands { MacWindowCommands() }
 
-        Settings {
-            SettingsView()
-                .environment(authService)
-                .environment(browseViewModel)
-                .environment(settingsStore)
-                .tint(settingsStore.settings.accentColor.color)
-                .frame(minWidth: 480)
-        }
+        MacSettingsScene(authService: authService, browseViewModel: browseViewModel, settingsStore: settingsStore)
         #elseif os(tvOS)
         // tvOS: no Share Extension, no Settings scene, no App Group pending video.
         // The device-code + QR sign-in flow works natively on Apple TV.

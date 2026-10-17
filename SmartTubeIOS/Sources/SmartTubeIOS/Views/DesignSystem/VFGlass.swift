@@ -19,7 +19,8 @@ extension EnvironmentValues {
 
 extension View {
     /// Puts `AppSettings.disableLiquidGlass` into the environment. Apply it on every root that hosts glass, inside the
-    /// `SettingsStore` injection: `RootView` and each UIKit-hosted cover, because the environment does not cross a hosting controller.
+    /// `SettingsStore` injection: `RootView`, the macOS `Settings` scene and each UIKit-hosted cover, because the environment
+    /// does not cross a hosting controller.
     func vfGlassScope() -> some View {
         modifier(VFGlassScope())
     }

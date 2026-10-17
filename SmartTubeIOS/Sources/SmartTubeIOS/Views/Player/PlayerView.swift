@@ -28,6 +28,12 @@ public struct PlayerView: View {
     @Environment(AuthService.self) var authService
     #if os(macOS)
     @Environment(BrowseViewModel.self) var browseVM
+    @Environment(\.isNarrowWindow) var isNarrowWindow
+    /// Inspector (or, in a narrow window, the panel under the video). Hiding it never stops playback.
+    @State var showInspector = true
+    @State var inspectorTab = PlayerInspectorTab.upNext
+    /// Remaining Current Queue items after the playing one; empty when the video is not from the queue.
+    @State var upNextQueue: [Video] = []
     #endif
     @State var showSpeedPicker = false
     @State var showQualityPicker = false

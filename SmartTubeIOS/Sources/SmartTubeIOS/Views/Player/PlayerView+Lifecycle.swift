@@ -258,8 +258,7 @@ extension PlayerView {
                 .statusBarHidden(true)
                 .toolbar(.hidden, for: .tabBar)
             #else
-            playerContentView
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            macPlayerLayout
             #endif
         }
         // Always-visible title badge so XCUITest can read the current video title

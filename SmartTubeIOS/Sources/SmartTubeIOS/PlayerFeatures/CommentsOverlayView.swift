@@ -40,24 +40,7 @@ struct CommentsOverlayView: View {
                 }
                 .padding(.horizontal, 4)
                 Divider()
-                if isLoading {
-                    ProgressView()
-                        .padding(40)
-                } else if comments.isEmpty {
-                    Text("No comments available.")
-                        .foregroundStyle(.secondary)
-                        .padding(40)
-                } else {
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 12) {
-                            ForEach(comments) { comment in
-                                CommentRowView(comment: comment)
-                            }
-                        }
-                        .padding()
-                    }
-                    .frame(maxHeight: 400)
-                }
+                CommentsList(comments: comments, isLoading: isLoading, maxScrollHeight: 400)
             }
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -71,6 +54,34 @@ struct CommentsOverlayView: View {
         }
         .ignoresSafeArea()
         .accessibilityIdentifier(accessibilityId)
+    }
+}
+
+/// Loading, empty or scrolling list of comments; shared by the overlay and the Mac inspector.
+struct CommentsList: View {
+    let comments: [Comment]
+    let isLoading: Bool
+    var maxScrollHeight: CGFloat?
+
+    var body: some View {
+        if isLoading {
+            ProgressView()
+                .padding(40)
+        } else if comments.isEmpty {
+            Text("No comments available.")
+                .foregroundStyle(.secondary)
+                .padding(40)
+        } else {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 12) {
+                    ForEach(comments) { comment in
+                        CommentRowView(comment: comment)
+                    }
+                }
+                .padding()
+            }
+            .frame(maxHeight: maxScrollHeight)
+        }
     }
 }
 

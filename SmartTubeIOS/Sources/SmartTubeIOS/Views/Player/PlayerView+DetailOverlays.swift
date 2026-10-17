@@ -5,9 +5,7 @@ extension PlayerView {
     // MARK: - Description overlay
 
     var descriptionOverlay: some View {
-        let currentVideo = vm.playerInfo?.video ?? video
-        let description = currentVideo.description ?? ""
-        return ZStack(alignment: .bottom) {
+        ZStack(alignment: .bottom) {
             Color.black.opacity(0.5)
                 .ignoresSafeArea()
                 .onTapGesture { showDescriptionSheet = false }
@@ -30,28 +28,8 @@ extension PlayerView {
                 }
                 .padding(.horizontal, 4)
                 Divider()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(currentVideo.title)
-                            .font(.headline)
-                        if !currentVideo.channelTitle.isEmpty {
-                            Text(currentVideo.channelTitle)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        if !description.isEmpty {
-                            Text(descriptionAttributedString(description))
-                                .font(.body)
-                        } else {
-                            Text("No description available.")
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                }
-                .frame(maxHeight: 400)
+                ScrollView { descriptionContent }
+                    .frame(maxHeight: 400)
             }
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -64,6 +42,31 @@ extension PlayerView {
             .padding(.bottom, 8)
         }
         .ignoresSafeArea()
+    }
+
+    /// Title, channel and linkified description of the current video; shared with the Mac inspector.
+    var descriptionContent: some View {
+        let currentVideo = vm.playerInfo?.video ?? video
+        let description = currentVideo.description ?? ""
+        return VStack(alignment: .leading, spacing: 12) {
+            Text(currentVideo.title)
+                .font(.headline)
+            if !currentVideo.channelTitle.isEmpty {
+                Text(currentVideo.channelTitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            if !description.isEmpty {
+                Text(descriptionAttributedString(description))
+                    .font(.body)
+            } else {
+                Text("No description available.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
     }
 
     func descriptionAttributedString(_ string: String) -> AttributedString {
