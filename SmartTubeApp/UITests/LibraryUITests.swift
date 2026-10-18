@@ -11,7 +11,7 @@ import XCTest
 // Total: 30 tests — 1 app launch instead of 30 (one per original class).
 //
 // Launch args: --uitesting
-// Requirements: iOS 17+ simulator, SmartTubeApp scheme.
+// Requirements: iOS 18+ simulator, SmartTubeApp scheme.
 // Some tests require a signed-in account; they use captureAndSkip when
 // network / account conditions are not met.
 

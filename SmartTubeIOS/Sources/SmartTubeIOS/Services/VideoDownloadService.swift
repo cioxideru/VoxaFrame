@@ -51,7 +51,6 @@ public final class VideoDownloadService {
     private var downloadTask: Task<Void, Never>?
 
     #if os(iOS)
-    @available(iOS 16.1, *)
     @ObservationIgnored
     private var liveActivity: Activity<DownloadActivityAttributes>?
     #endif
@@ -92,9 +91,7 @@ public final class VideoDownloadService {
         guard !state.isActive else { return }
         state = .fetching
         #if os(iOS)
-        if #available(iOS 16.1, *) {
-            startLiveActivity(video: video)
-        }
+        startLiveActivity(video: video)
         #endif
         downloadTask = Task { await performDownload(video: video) }
     }
@@ -110,7 +107,6 @@ public final class VideoDownloadService {
     // MARK: Live Activity helpers
 
     #if os(iOS)
-    @available(iOS 16.1, *)
     private func startLiveActivity(video: Video) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let attrs = DownloadActivityAttributes(videoTitle: video.title)
@@ -126,7 +122,6 @@ public final class VideoDownloadService {
         }
     }
 
-    @available(iOS 16.1, *)
     private func updateLiveActivity(
         phase: DownloadActivityAttributes.DownloadContentState.Phase,
         progress: Double = 0
@@ -138,7 +133,6 @@ public final class VideoDownloadService {
         await Self.sendActivityUpdate(activity, state: newState)
     }
 
-    @available(iOS 16.1, *)
     private func endLiveActivity(phase: DownloadActivityAttributes.DownloadContentState.Phase) async {
         guard let activity = liveActivity else { return }
         let finalState = DownloadActivityAttributes.DownloadContentState(progress: 1, phase: phase)
@@ -148,7 +142,6 @@ public final class VideoDownloadService {
 
     /// Dispatches `Activity.update` from a nonisolated context.
     /// `Activity<T>` is a `Sendable` struct so transferring it via `sending` is safe.
-    @available(iOS 16.1, *)
     nonisolated private static func sendActivityUpdate(
         _ activity: sending Activity<DownloadActivityAttributes>,
         state: DownloadActivityAttributes.DownloadContentState
@@ -157,7 +150,6 @@ public final class VideoDownloadService {
     }
 
     /// Dispatches `Activity.end` from a nonisolated context. See `sendActivityUpdate` for rationale.
-    @available(iOS 16.1, *)
     nonisolated private static func sendActivityEnd(
         _ activity: sending Activity<DownloadActivityAttributes>,
         state: DownloadActivityAttributes.DownloadContentState
@@ -173,7 +165,7 @@ public final class VideoDownloadService {
             guard await requestPhotoAddAccess() else {
                 state = .failed("Photo library access is required to save the video")
                 #if os(iOS)
-                if #available(iOS 16.1, *) { await endLiveActivity(phase: .failed) }
+                await endLiveActivity(phase: .failed)
                 #endif
                 return
             }
@@ -181,7 +173,7 @@ public final class VideoDownloadService {
             if let tempURL = await tryDirectDownload(videoId: video.id) {
                 downloadLog.notice("[download] remuxing for Photos compatibility")
                 #if os(iOS)
-                if #available(iOS 16.1, *) { await updateLiveActivity(phase: .saving, progress: 1) }
+                await updateLiveActivity(phase: .saving, progress: 1)
                 #endif
                 let photosURL = try await passthroughRemux(inputURL: tempURL, videoId: video.id, suffix: "muxed")
                 try? FileManager.default.removeItem(at: tempURL)
@@ -192,14 +184,14 @@ public final class VideoDownloadService {
                 downloadLog.notice("[download] ✅ saved to Photos \(video.id)")
                 state = .done
                 #if os(iOS)
-                if #available(iOS 16.1, *) { await endLiveActivity(phase: .done) }
+                await endLiveActivity(phase: .done)
                 #endif
                 return
             }
 
             downloadLog.notice("[download] direct download failed, trying adaptive merge fallback")
             #if os(iOS)
-            if #available(iOS 16.1, *) { await updateLiveActivity(phase: .downloading, progress: 0.1) }
+            await updateLiveActivity(phase: .downloading, progress: 0.1)
             #endif
             let androidInfo = try await api.fetchPlayerInfoAndroid(videoId: video.id)
             downloadLog.notice("[download] adaptive fallback formats=\(androidInfo.formats.count)")
@@ -214,7 +206,7 @@ public final class VideoDownloadService {
                 downloadLog.error("[download] ❌ no adaptive video/audio streams found")
                 state = .failed("No downloadable stream found for this video")
                 #if os(iOS)
-                if #available(iOS 16.1, *) { await endLiveActivity(phase: .failed) }
+                await endLiveActivity(phase: .failed)
                 #endif
                 return
             }
@@ -226,7 +218,7 @@ public final class VideoDownloadService {
                 userAgent: InnerTubeClients.Android.userAgent)
             state = .saving
             #if os(iOS)
-            if #available(iOS 16.1, *) { await updateLiveActivity(phase: .saving, progress: 1) }
+            await updateLiveActivity(phase: .saving, progress: 1)
             #endif
             try await saveToPhotoLibrary(fileURL: mergedURL)
             storeInDownloadStore(video: video, mergedFileURL: mergedURL)
@@ -234,12 +226,12 @@ public final class VideoDownloadService {
             downloadLog.notice("[download] ✅ adaptive merge saved to Photos \(video.id)")
             state = .done
             #if os(iOS)
-            if #available(iOS 16.1, *) { await endLiveActivity(phase: .done) }
+            await endLiveActivity(phase: .done)
             #endif
         } catch is CancellationError {
             state = .idle
             #if os(iOS)
-            if #available(iOS 16.1, *) { await endLiveActivity(phase: .failed) }
+            await endLiveActivity(phase: .failed)
             #endif
         } catch {
             let nsErr = error as NSError
@@ -256,7 +248,7 @@ public final class VideoDownloadService {
             }
             state = .failed(userMessage)
             #if os(iOS)
-            if #available(iOS 16.1, *) { await endLiveActivity(phase: .failed) }
+            await endLiveActivity(phase: .failed)
             #endif
         }
     }
@@ -294,7 +286,7 @@ public final class VideoDownloadService {
             downloadLog.notice("[download] \(label) ✅ muxed URL found, downloading")
             state = .downloading(progress: 0)
             #if os(iOS)
-            if #available(iOS 16.1, *) { await updateLiveActivity(phase: .downloading, progress: 0) }
+            await updateLiveActivity(phase: .downloading, progress: 0)
             #endif
             if let tempURL = try? await downloadToTemp(url: muxedURL, videoId: videoId, userAgent: clientUA) {
                 let size = (try? FileManager.default.attributesOfItem(atPath: tempURL.path)[.size] as? Int) ?? 0

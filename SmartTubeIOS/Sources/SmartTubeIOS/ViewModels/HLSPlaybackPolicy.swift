@@ -17,7 +17,7 @@ struct HLSPlaybackPolicy: Equatable, Sendable {
     /// iOS/tvOS 26.2+ ship a VP9 decoder that apps must opt into. With it, the VISIONOS
     /// ladder's VP9 variants (1440p, 2160p) play natively; without it, H.264 tops out at 1080p.
     static let isVP9DecodingAvailable: Bool = {
-        if #available(iOS 26.2, tvOS 26.2, macOS 11.0, *) {
+        if #available(iOS 26.2, tvOS 26.2, *) {
             VTRegisterSupplementalVideoDecoderIfAvailable(kCMVideoCodecType_VP9)
         }
         return VTIsHardwareDecodeSupported(kCMVideoCodecType_VP9)

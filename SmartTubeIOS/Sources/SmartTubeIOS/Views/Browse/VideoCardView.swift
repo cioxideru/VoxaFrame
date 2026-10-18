@@ -114,35 +114,28 @@ public struct VideoCardView: View {
     }
 
     private var cardContent: some View {
-        Group {
-            if #available(iOS 18, macOS 15, tvOS 18, *) {
-                summary.onScrollVisibilityChange { isVisibleForPrefetch = $0 }
-            } else {
-                summary
-                    .onAppear { isVisibleForPrefetch = true }
-                    .onDisappear { isVisibleForPrefetch = false }
+        summary
+            .onScrollVisibilityChange { isVisibleForPrefetch = $0 }
+            .task {
+                localProgress = await VideoStateStore.shared.state(for: video.id)?.watchedFraction
             }
-        }
-        .task {
-            localProgress = await VideoStateStore.shared.state(for: video.id)?.watchedFraction
-        }
-        .task(id: isVisibleForPrefetch ? video.id : nil) {
-            guard isVisibleForPrefetch else { return }
-            await VideoPreloadCache.shared.prefetch(
-                videoId: video.id,
-                sponsorCategories: store.settings.activeSponsorCategories,
-                authToken: authService.accessToken,
-                priority: .visible
-            )
-        }
-        .contextMenu {
-            menuItems
-        } preview: {
-            layout
-                .padding(VFSpace.s12)
-                .frame(width: 300)
-                .background(.background)
-        }
+            .task(id: isVisibleForPrefetch ? video.id : nil) {
+                guard isVisibleForPrefetch else { return }
+                await VideoPreloadCache.shared.prefetch(
+                    videoId: video.id,
+                    sponsorCategories: store.settings.activeSponsorCategories,
+                    authToken: authService.accessToken,
+                    priority: .visible
+                )
+            }
+            .contextMenu {
+                menuItems
+            } preview: {
+                layout
+                    .padding(VFSpace.s12)
+                    .frame(width: 300)
+                    .background(.background)
+            }
     }
 }
 

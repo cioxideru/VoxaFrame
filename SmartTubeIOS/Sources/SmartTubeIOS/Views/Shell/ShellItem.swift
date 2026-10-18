@@ -5,7 +5,7 @@ import SwiftUI
 //
 // A root destination of the iPad and Mac sidebars: one of the five sections, or the Queue (PLAN-0027 A1).
 // The Queue has no `AppSection` case, so the section raw values, tab identifiers and the tvOS/iPhone tab
-// bars stay as they are; iPhone, iOS 17 and tvOS reach the queue through Library › Queue.
+// bars stay as they are; iPhone, compact iPad windows and tvOS reach the queue through Library › Queue.
 
 enum ShellItem: Hashable, Identifiable {
     case section(AppSection)

@@ -24,7 +24,7 @@ import XCTest
 //   • Network access is required (downloads real YouTube CDN content).
 //   • Photo library access is requested at runtime — the test handles the
 //     system permission dialog automatically via addUIInterruptionMonitor.
-//   • Run on an iOS 17+ simulator with the SmartTubeApp scheme selected.
+//   • Run on an iOS 18+ simulator with the SmartTubeApp scheme selected.
 //   • Tests skip gracefully when the network or environment is unavailable.
 
 private let kDownloadVideoID = "JhCjw57u8mQ"

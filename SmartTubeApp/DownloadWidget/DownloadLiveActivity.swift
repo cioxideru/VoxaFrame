@@ -1,7 +1,7 @@
 import ActivityKit
+import SmartTubeIOSCore
 import SwiftUI
 import WidgetKit
-import SmartTubeIOSCore
 
 // Downloading is compiled out (App Store guideline 5.2.3). Define ENABLE_DOWNLOADS to build it.
 #if ENABLE_DOWNLOADS
@@ -14,7 +14,6 @@ import SmartTubeIOSCore
 // Dynamic Island minimal:  just the arc
 // Lock Screen banner:      title + phase label + progress bar
 
-@available(iOS 16.1, *)
 struct DownloadLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: DownloadActivityAttributes.self) { context in
@@ -34,8 +33,11 @@ struct DownloadLiveActivityWidget: Widget {
                         Circle()
                             .stroke(Color.white.opacity(0.25), lineWidth: 4)
                         Circle()
-                            .trim(from: 0, to: context.state.phase == .downloading
-                                  ? context.state.progress : 1)
+                            .trim(
+                                from: 0,
+                                to: context.state.phase == .downloading
+                                    ? context.state.progress : 1
+                            )
                             .stroke(Color.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                     }
@@ -64,8 +66,11 @@ struct DownloadLiveActivityWidget: Widget {
                     Circle()
                         .stroke(Color.white.opacity(0.3), lineWidth: 2.5)
                     Circle()
-                        .trim(from: 0, to: context.state.phase == .downloading
-                              ? context.state.progress : 1)
+                        .trim(
+                            from: 0,
+                            to: context.state.phase == .downloading
+                                ? context.state.progress : 1
+                        )
                         .stroke(Color.white, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                 }
@@ -81,7 +86,6 @@ struct DownloadLiveActivityWidget: Widget {
 
 // MARK: - Lock Screen Banner View
 
-@available(iOS 16.1, *)
 private struct LockScreenView: View {
     let context: ActivityViewContext<DownloadActivityAttributes>
 
@@ -114,15 +118,14 @@ private struct LockScreenView: View {
 
 // MARK: - Phase display label
 
-@available(iOS 16.1, *)
 private extension DownloadActivityAttributes.DownloadContentState.Phase {
     var displayLabel: String {
         switch self {
-        case .fetching:    return "Preparing download…"
+        case .fetching: return "Preparing download…"
         case .downloading: return "Downloading…"
-        case .saving:      return "Saving to Photos…"
-        case .done:        return "Saved to Photos"
-        case .failed:      return "Download failed"
+        case .saving: return "Saving to Photos…"
+        case .done: return "Saved to Photos"
+        case .failed: return "Download failed"
         }
     }
 }
@@ -131,7 +134,6 @@ private extension DownloadActivityAttributes.DownloadContentState.Phase {
 
 // MARK: - Widget Bundle entry point
 
-@available(iOS 16.1, *)
 @main
 struct SmartTubeDownloadWidgetBundle: WidgetBundle {
     var body: some Widget {

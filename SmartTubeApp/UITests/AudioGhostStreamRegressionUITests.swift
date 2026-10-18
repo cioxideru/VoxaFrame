@@ -25,7 +25,7 @@ import XCTest
 //
 // Requirements:
 //   • Network access is required for most tests.
-//   • Run on an iOS 17+ simulator with the SmartTubeApp scheme selected.
+//   • Run on an iOS 18+ simulator with the SmartTubeApp scheme selected.
 //   • Launch args: --uitesting  (disables animations; adds --uitesting-enable-shorts
 //     where Shorts access is required).
 

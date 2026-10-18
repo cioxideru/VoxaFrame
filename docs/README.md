@@ -13,15 +13,15 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 
 | Doc | What it is | Status | Last reviewed |
 |---|---|---|---|
-| [../AGENTS.md](../AGENTS.md) | Agent map: commands, rules, gotchas and document entry points | current | 2026-10-16 |
+| [../AGENTS.md](../AGENTS.md) | Agent map: commands, rules, gotchas and document entry points | current | 2026-10-18 |
 | [../CLAUDE.md](../CLAUDE.md) | Shared agent workflow and plan location | current | 2026-10-15 |
-| [../README.md](../README.md) | Published product overview | current | 2026-10-15 |
+| [../README.md](../README.md) | Published product overview | current | 2026-10-18 |
 | [../CHANGELOG.md](../CHANGELOG.md) | Release history and closed documentation findings | current | 2026-10-15 |
 | [../CONTEXT.md](../CONTEXT.md) | Domain and architecture vocabulary | current | 2026-10-15 |
 | [../PRIVACY_POLICY.md](../PRIVACY_POLICY.md) | Published policy; lists the services the app contacts (no analytics or crash reporting) | current | 2026-10-15 |
 | [../SmartTubeIOS/README.md](../SmartTubeIOS/README.md) | Package entry point and links to canonical guides | current | 2026-10-15 |
-| [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-15 |
-| [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-15 |
+| [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-18 |
+| [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-18 |
 | [design/VoxaFrame-Functionality.ru.md](design/VoxaFrame-Functionality.ru.md) | DESIGN-0002: standalone Russian functional brief for redesigning VoxaFrame on four Apple platforms | current | 2026-10-17 |
 | [design/voxaframe-redesign/START-HERE.md](design/voxaframe-redesign/START-HERE.md) | DESIGN-0003: VoxaFrame redesign handoff — screen map, tokens, component contracts, mockups | current | 2026-10-17 |
 | [design/voxaframe-redesign/docs/VoxaFrame-Functionality.ru.md](design/voxaframe-redesign/docs/VoxaFrame-Functionality.ru.md) | Functional brief snapshot included in the design export; maintained source is design/VoxaFrame-Functionality.ru.md | current | 2026-10-17 |
@@ -59,9 +59,10 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [exec-plans/completed/tos-player-ios-plan.md](exec-plans/completed/tos-player-ios-plan.md) | PLAN-0001: historical port and closure evidence; superseded by ADR-0010 | archived | 2026-10-15 |
 | [exec-plans/completed/task-89-short-detection-issue.md](exec-plans/completed/task-89-short-detection-issue.md) | PLAN-0002 / #89: completed duration guard; tests present, not rerun | current | 2026-10-15 |
 | [design/2026-06-11-tos-player-shorts-design.md](design/2026-06-11-tos-player-shorts-design.md) | Historical Shorts embed design and reconciliation; superseded by ADR-0010 | archived | 2026-10-15 |
-| [adr/README.md](adr/README.md) | ADR index, statuses and preservation rules | current | 2026-10-15 |
+| [adr/README.md](adr/README.md) | ADR index, statuses and preservation rules | current | 2026-10-18 |
 | [adr/0011-bounded-native-shorts-preloading.md](adr/0011-bounded-native-shorts-preloading.md) | 0011 — native Shorts preparation and resource ownership | current | 2026-10-17 |
 | [adr/0012-redesign-availability-and-tokens.md](adr/0012-redesign-availability-and-tokens.md) | 0012 — availability fallbacks and token ownership for the redesign (proposed) | current | 2026-10-17 |
+| [adr/0013-minimum-os-18.md](adr/0013-minimum-os-18.md) | 0013 — accepted 18/15/18 minimum; supersedes ADR-0012's OS baseline | current | 2026-10-18 |
 | [adr/template.md](adr/template.md) | ADR form: stable ID, Status, Date, Context, Decision, Consequences | current | 2026-10-15 |
 | [explanation/swift-style.md](explanation/swift-style.md) | Swift conventions | current | 2026-10-15 |
 | [explanation/solid.md](explanation/solid.md) | SOLID principles reference | current | 2026-10-15 |

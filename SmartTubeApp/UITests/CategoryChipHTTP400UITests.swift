@@ -11,7 +11,7 @@ import XCTest
 //
 // Requirements:
 //   • The simulator must have network access so InnerTube requests are made.
-//   • Run on an iOS 17+ simulator with the SmartTubeApp scheme selected.
+//   • Run on an iOS 18+ simulator with the SmartTubeApp scheme selected.
 
 final class CategoryChipHTTP400UITests: XCTestCase {
 

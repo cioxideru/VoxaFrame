@@ -19,7 +19,7 @@ import XCTest
 // Requirements:
 //   • The simulator must have network access.
 //   • A signed-in account is expected so the Subscriptions feed is non-empty.
-//   • Run on an iOS 17+ simulator with the SmartTubeApp scheme selected.
+//   • Run on an iOS 18+ simulator with the SmartTubeApp scheme selected.
 
 final class SubscriptionsScrollRestorationUITests: XCTestCase {
 

@@ -24,6 +24,8 @@ Decisions: [ADR-0012](../../adr/0012-redesign-availability-and-tokens.md); accen
 ## Constraints
 
 - Minimum OS stays iOS/iPadOS 17, macOS 14, tvOS 17. Liquid Glass and iOS 18+/26+ navigation APIs sit behind `#available`.
+  Update (2026-10-18): [ADR-0013](../../adr/0013-minimum-os-18.md) supersedes this baseline with iOS/iPadOS 18,
+  native macOS 15 and tvOS 18; OS 26+ checks and fallbacks remain.
 - Do not rename `AppSection` raw values or any accessibility identifier; do not touch `PlaybackViewModel*`.
 - One source for symbols (`AppSymbol`), identifiers (`AccessibilityID`, mirrored in `UITestHelpers.swift`), timeouts (`PlaybackTuning`) and settings.
 - No hand edits of `project.pbxproj`; new UI-test files are added in Xcode.

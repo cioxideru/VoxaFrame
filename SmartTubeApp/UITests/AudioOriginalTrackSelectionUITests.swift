@@ -24,7 +24,7 @@ import XCTest
 //
 // Requirements:
 //   • Network access is required.
-//   • Run on an iOS 17+ simulator with the SmartTubeApp scheme selected.
+//   • Run on an iOS 18+ simulator with the SmartTubeApp scheme selected.
 //   • The test skips when no video with multiple audio tracks is found on the Home feed.
 
 final class AudioOriginalTrackSelectionUITests: XCTestCase {

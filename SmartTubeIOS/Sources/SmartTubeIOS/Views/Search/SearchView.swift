@@ -465,8 +465,8 @@ extension SearchView {
 // MARK: - SearchField
 
 #if !os(tvOS)
-/// `.searchable` with the platform placement: always visible under the title on iOS 17 and 18, the system
-/// position on iOS 26 (bottom on iPhone, the search tab), the window toolbar on the Mac.
+/// `.searchable` with the platform placement: always visible under the title on iOS 18–25, the system
+/// position on iOS 26+ (bottom on iPhone, the search tab), the window toolbar on the Mac.
 private struct SearchField<Suggestions: View>: ViewModifier {
     let isFocused: FocusState<Bool>.Binding
     @ViewBuilder let suggestions: () -> Suggestions
@@ -478,7 +478,9 @@ private struct SearchField<Suggestions: View>: ViewModifier {
             .searchable(text: $vm.query, placement: placement, prompt: Text("Search YouTube", bundle: .module))
             .searchSuggestions { suggestions() }
             .onSubmit(of: .search) { vm.search() }
-            .modifier(SearchPresentation(isFocused: isFocused))
+            // Keep filters reachable during search and let a picked suggestion dismiss the keyboard.
+            .searchFocused(isFocused)
+            .searchPresentationToolbarBehavior(.avoidHidingContent)
     }
 
     private var placement: SearchFieldPlacement {
@@ -491,22 +493,6 @@ private struct SearchField<Suggestions: View>: ViewModifier {
     }
 }
 
-/// Keeps the title and the filter button while a search is active (iOS 17.1 / macOS 14.1; the system hides
-/// them otherwise, leaving the filters out of reach next to results), and lets a picked suggestion drop the
-/// keyboard (iOS 18 / macOS 15; older systems keep it until scrolling).
-private struct SearchPresentation: ViewModifier {
-    let isFocused: FocusState<Bool>.Binding
-
-    func body(content: Content) -> some View {
-        if #available(iOS 18, macOS 15, *) {
-            content.searchFocused(isFocused).searchPresentationToolbarBehavior(.avoidHidingContent)
-        } else if #available(iOS 17.1, macOS 14.1, *) {
-            content.searchPresentationToolbarBehavior(.avoidHidingContent)
-        } else {
-            content
-        }
-    }
-}
 #endif
 
 // MARK: - FilterChip

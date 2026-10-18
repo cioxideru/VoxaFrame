@@ -7,7 +7,7 @@ A maintained fork of [SmartTubeIOS by milika](https://github.com/milika/SmartTub
 A native Swift/SwiftUI YouTube client for **iPhone**, **iPad**, **macOS**, and **Apple TV**.  
 Zero ads. SponsorBlock auto-skip. DeArrow community titles. Google sign-in. Up to 8K.
 
-[![iOS 17+](https://img.shields.io/badge/iOS-17%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![tvOS 17+](https://img.shields.io/badge/tvOS-17%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)](https://swift.org) [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/milikadelic)
+[![iOS 18+](https://img.shields.io/badge/iOS-18%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![tvOS 18+](https://img.shields.io/badge/tvOS-18%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![macOS 15+](https://img.shields.io/badge/macOS-15%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)](https://swift.org) [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/milikadelic)
 
 Build this fork with Xcode; the upstream App Store release is a separate product.
 
@@ -75,9 +75,9 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 - Comments, Stats for Nerds
 
 ### Platforms
-- **iPhone & iPad** — iOS 17+
-- **macOS** — Mac Catalyst, macOS 14+ (Sonoma)
-- **Apple TV** — tvOS 17+, full Siri Remote / d-pad navigation
+- **iPhone & iPad** — iOS/iPadOS 18+
+- **macOS** — native macOS 15+
+- **Apple TV** — tvOS 18+, full Siri Remote / d-pad navigation
 
 ---
 
@@ -95,9 +95,9 @@ SmartTube.xcworkspace/ Xcode workspace (references both above)
 
 | Platform | Minimum |
 |---|---|
-| iOS / iPadOS | 17.0 |
-| macOS | 14.0 (Sonoma) |
-| tvOS | 17.0 |
+| iOS / iPadOS | 18.0 |
+| macOS (native) | 15.0 |
+| tvOS | 18.0 |
 | Xcode | 27.0 (project toolchain) |
 | Swift | 6.0 |
 

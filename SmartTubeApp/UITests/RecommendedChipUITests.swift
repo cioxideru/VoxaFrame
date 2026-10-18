@@ -7,7 +7,7 @@ import XCTest
 // recommended-only feed (fetchHomeRows) without subscriptions mixed in.
 //
 // Requirements:
-//   • Run on an iOS 17+ simulator with the SmartTubeApp scheme selected.
+//   • Run on an iOS 18+ simulator with the SmartTubeApp scheme selected.
 //   • Tests inject real video IDs via `--uitesting-inject-recommended-ids` so the
 //     Recommended feed populates instantly without network or auth dependency.
 

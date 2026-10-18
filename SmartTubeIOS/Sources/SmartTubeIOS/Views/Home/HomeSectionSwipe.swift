@@ -7,12 +7,7 @@ struct HomeSectionSwipe: ViewModifier {
     let onSwipe: (CGFloat) -> Void
 
     func body(content: Content) -> some View {
-        if #available(iOS 18, *) {
-            content.gesture(HorizontalPan(onEnded: finish))
-        } else {
-            content.simultaneousGesture(
-                DragGesture(minimumDistance: 30).onEnded { finish($0.translation) })
-        }
+        content.gesture(HorizontalPan(onEnded: finish))
     }
 
     private func finish(_ translation: CGSize) {
@@ -26,7 +21,6 @@ struct HomeSectionSwipe: ViewModifier {
         abs(x) > abs(y) * 2
     }
 
-    @available(iOS 18, *)
     private struct HorizontalPan: UIGestureRecognizerRepresentable {
         let onEnded: (CGSize) -> Void
 

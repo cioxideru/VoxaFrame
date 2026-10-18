@@ -14,7 +14,7 @@ import XCTest
 //
 // Requirements:
 //   • Network access is required.
-//   • Run on an iOS 17+ simulator with the SmartTubeApp scheme selected.
+//   • Run on an iOS 18+ simulator with the SmartTubeApp scheme selected.
 
 final class ChannelViewUITests: XCTestCase {
 

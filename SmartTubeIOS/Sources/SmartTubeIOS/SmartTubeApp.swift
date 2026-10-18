@@ -1,7 +1,7 @@
 import SmartTubeIOSCore
 import SwiftUI
 
-/// App entry point – supports iOS 17+, iPadOS 17+, macOS 14+.
+/// App entry point – supports iOS 18+, iPadOS 18+, macOS 15+.
 struct SmartTubeApp: App {
     @State private var api: InnerTubeAPI
     @State private var authService: AuthService

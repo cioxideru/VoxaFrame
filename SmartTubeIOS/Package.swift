@@ -5,9 +5,9 @@ let package = Package(
     name: "SmartTubeIOS",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v17),
-        .macOS(.v14),
-        .tvOS(.v17),
+        .iOS(.v18),
+        .macOS(.v15),
+        .tvOS(.v18),
     ],
     products: [
         // Cross-platform core: models + InnerTube/SponsorBlock services (Foundation only).

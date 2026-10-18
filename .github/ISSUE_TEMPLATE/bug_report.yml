@@ -29,8 +29,8 @@ body:
     id: os_version
     attributes:
       label: OS Version
-      description: iOS / iPadOS / tvOS version. e.g. `iOS 17.4`
-      placeholder: "iOS 17.4"
+      description: iOS / iPadOS / tvOS version. e.g. `iOS 18.4`
+      placeholder: "iOS 18.4"
     validations:
       required: true
 

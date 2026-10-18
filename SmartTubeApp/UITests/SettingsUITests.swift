@@ -135,7 +135,6 @@ final class IPadMenuLayoutUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Requires the iPad top tab bar")
-        if #unavailable(iOS 18.0) { throw XCTSkip("Requires the iPadOS 18 top tab bar") }
         app.launchArguments = [
             "--uitesting", "--uitesting-subscriptions", "--uitesting-mixed-feed",
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",

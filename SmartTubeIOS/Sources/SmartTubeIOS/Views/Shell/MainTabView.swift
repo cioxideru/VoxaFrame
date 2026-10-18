@@ -27,8 +27,8 @@ private struct TabContentFrameKey: PreferenceKey {
     }
 }
 
-// iOS 18+: `Tab` API with `.sidebarAdaptable` (sidebar in a wide iPad window, tabs in a narrow one);
-// Search is the search-role tab on iOS 26+. iOS 17 keeps `.tabItem`.
+// `Tab` API with `.sidebarAdaptable` (sidebar in a wide iPad window, tabs in a narrow one);
+// Search is the search-role tab on iOS 26+.
 // The mini player stays one overlay on every version. A PLAN-0027 spike of `.tabViewBottomAccessory`
 // (iOS 26.5) showed SwiftUI recreating the accessory content on every tab switch, the new copy appearing
 // before the old one left, so the shared player layer was re-parented each time; the accessory also has a
@@ -174,54 +174,42 @@ struct MainTabView: View {
         )
     }
 
-    @ViewBuilder
     private var tabs: some View {
-        if #available(iOS 18, *) {
-            TabView(selection: $selectedTab) {
-                ForEach(Self.tabOrder.prefix(2)) { section in
-                    sectionTab(section)
-                }
-                // A1: the Queue under Library in the sidebar of a regular-width window only. A compact width
-                // shows `.sidebarOnly` tabs in the tab bar too (a sixth tab pushes Search into More), so there
-                // the queue stays in Library › Queue.
-                if horizontalSizeClass == .regular {
-                    Tab(
-                        String(localized: "Queue", bundle: .module), systemImage: ShellItem.queue.icon,
-                        value: ShellItem.queue
-                    ) {
-                        tabContent(.queue)
-                    }
-                    .tabPlacement(.sidebarOnly)
-                }
-                ForEach(Self.tabOrder.dropFirst(2)) { section in
-                    sectionTab(section)
-                }
+        TabView(selection: $selectedTab) {
+            ForEach(Self.tabOrder.prefix(2)) { section in
+                sectionTab(section)
             }
-            .tabViewStyle(.sidebarAdaptable)
-            // An invisible header that reports where the sidebar is while it is on screen.
-            .tabViewSidebarHeader {
-                Color.clear
-                    .frame(height: 1)
-                    .accessibilityHidden(true)
-                    .onGeometryChange(for: CGRect.self) {
-                        $0.frame(in: .global)
-                    } action: {
-                        sidebarHeaderFrame = $0
-                    }
-                    .onDisappear { sidebarHeaderFrame = nil }
-            }
-        } else {
-            TabView(selection: $selectedTab) {
-                ForEach(Self.tabOrder) { section in
-                    tabContent(.section(section))
-                        .tabItem { Label(section.rawValue, systemImage: section.icon) }
-                        .tag(ShellItem.section(section))
+            // A1: the Queue under Library in the sidebar of a regular-width window only. A compact width
+            // shows `.sidebarOnly` tabs in the tab bar too (a sixth tab pushes Search into More), so there
+            // the queue stays in Library › Queue.
+            if horizontalSizeClass == .regular {
+                Tab(
+                    String(localized: "Queue", bundle: .module), systemImage: ShellItem.queue.icon,
+                    value: ShellItem.queue
+                ) {
+                    tabContent(.queue)
                 }
+                .tabPlacement(.sidebarOnly)
             }
+            ForEach(Self.tabOrder.dropFirst(2)) { section in
+                sectionTab(section)
+            }
+        }
+        .tabViewStyle(.sidebarAdaptable)
+        // An invisible header that reports where the sidebar is while it is on screen.
+        .tabViewSidebarHeader {
+            Color.clear
+                .frame(height: 1)
+                .accessibilityHidden(true)
+                .onGeometryChange(for: CGRect.self) {
+                    $0.frame(in: .global)
+                } action: {
+                    sidebarHeaderFrame = $0
+                }
+                .onDisappear { sidebarHeaderFrame = nil }
         }
     }
 
-    @available(iOS 18, *)
     private func sectionTab(_ section: AppSection) -> some TabContent<ShellItem> {
         Tab(section.rawValue, systemImage: section.icon, value: ShellItem.section(section), role: section.tabRole) {
             tabContent(.section(section))
@@ -326,7 +314,6 @@ private struct NavigationBottomReserve: UIViewRepresentable {
     }
 }
 
-@available(iOS 18, *)
 extension AppSection {
     /// Search is the system search-role tab on iOS 26+; a regular tab before that.
     fileprivate var tabRole: TabRole? {

@@ -14,7 +14,7 @@ import XCTest
 //
 // Requirements:
 //   • Network access is required.
-//   • Run on an iOS 17+ simulator with the SmartTubeApp scheme selected.
+//   • Run on an iOS 18+ simulator with the SmartTubeApp scheme selected.
 //   • Launch args: --uitesting --uitesting-reset-settings --uitesting-audio-only-mode
 
 final class AudioOnlyModeUITests: XCTestCase {

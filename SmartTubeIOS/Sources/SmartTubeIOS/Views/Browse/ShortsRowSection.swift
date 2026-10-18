@@ -75,7 +75,7 @@ struct ShortsRowSection: View {
         .accessibilityIdentifier(accessibilityID)
         .focusSection()
         #else
-        let scrollView = ScrollView(.horizontal, showsIndicators: true) {
+        ScrollView(.horizontal, showsIndicators: true) {
             // Eager HStack (not LazyHStack): the endless-scroll cascade pre-loads
             // dozens of cards into `videos` in the background,
             // and a LazyHStack would only materialize the few cards near the
@@ -107,15 +107,11 @@ struct ShortsRowSection: View {
         // .onAppear at creation/array-growth time regardless of viewport
         // visibility, so an .onAppear-based trigger only fires once during the
         // initial preload cascade and never again on user scroll.
-        if #available(iOS 18, macOS 15, tvOS 18, *) {
-            scrollView.onScrollGeometryChange(for: Bool.self) { geometry in
-                let distanceToEnd = geometry.contentSize.width - geometry.visibleRect.maxX
-                return distanceToEnd <= cardWidth * 2
-            } action: { _, isNearEnd in
-                if isNearEnd { loadMore?() }
-            }
-        } else {
-            scrollView
+        .onScrollGeometryChange(for: Bool.self) { geometry in
+            let distanceToEnd = geometry.contentSize.width - geometry.visibleRect.maxX
+            return distanceToEnd <= cardWidth * 2
+        } action: { _, isNearEnd in
+            if isNearEnd { loadMore?() }
         }
         #endif
     }
@@ -143,7 +139,7 @@ struct ShortsRowSection: View {
         .accessibilityIdentifier(accessibilityID)
         .focusSection()
         #else
-        let scrollView = ScrollView(.vertical, showsIndicators: true) {
+        ScrollView(.vertical, showsIndicators: true) {
             LazyVStack(alignment: .leading, spacing: videoGridRowSpacing) {
                 ForEach(videos) { video in
                     ShortsCardView(video: video, onTap: { onSelect(video) })
@@ -160,15 +156,11 @@ struct ShortsRowSection: View {
         // Fire loadMore? based on scroll position (distance from the bottom edge
         // of content to the bottom edge of the visible viewport) — see horizontalBody
         // for why an .onAppear-based trigger doesn't work here.
-        if #available(iOS 18, macOS 15, tvOS 18, *) {
-            scrollView.onScrollGeometryChange(for: Bool.self) { geometry in
-                let distanceToEnd = geometry.contentSize.height - geometry.visibleRect.maxY
-                return distanceToEnd <= cardWidth * 8
-            } action: { _, isNearEnd in
-                if isNearEnd { loadMore?() }
-            }
-        } else {
-            scrollView
+        .onScrollGeometryChange(for: Bool.self) { geometry in
+            let distanceToEnd = geometry.contentSize.height - geometry.visibleRect.maxY
+            return distanceToEnd <= cardWidth * 8
+        } action: { _, isNearEnd in
+            if isNearEnd { loadMore?() }
         }
         #endif
     }

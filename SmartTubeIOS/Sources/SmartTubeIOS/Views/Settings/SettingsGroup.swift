@@ -93,16 +93,16 @@ extension SettingsView {
     var settingsPanes: some View {
         TabView {
             ForEach(Self.panes) { pane in
-                paneForm(pane)
-                    .frame(width: Self.paneWidth, height: pane.height)
-                    // tabItem, not Tab: Tab needs macOS 15 and the app still supports macOS 14.
-                    .tabItem {
-                        Label {
-                            Text(pane.title, bundle: .module)
-                        } icon: {
-                            Image(systemName: pane.symbol)
-                        }
+                Tab {
+                    paneForm(pane)
+                        .frame(width: Self.paneWidth, height: pane.height)
+                } label: {
+                    Label {
+                        Text(pane.title, bundle: .module)
+                    } icon: {
+                        Image(systemName: pane.symbol)
                     }
+                }
             }
         }
     }

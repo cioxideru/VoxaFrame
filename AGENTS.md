@@ -1,9 +1,9 @@
 # VoxaFrame (SmartTube fork) — agent guide
 
-Native Swift/SwiftUI YouTube client for iOS/iPadOS (17+), macOS Catalyst (14+) and tvOS (17+).
+Native Swift/SwiftUI YouTube client for iOS/iPadOS (18+), native macOS (15+) and tvOS (18+).
 Package `SmartTubeIOS/` (targets `SmartTubeIOSCore` = models/API/stores (Foundation-only boundary is the target),
 `SmartTubeIOS` = SwiftUI views, view models, services) + Xcode project `SmartTubeApp/`
-(iOS+Catalyst app, tvOS app, Share/Safari extensions, Download widget, UI-test targets).
+(iOS/iPadOS + native macOS app, tvOS app, Share/Safari extensions, Download widget, UI-test targets).
 Architecture map: [docs/architecture.md](docs/architecture.md) · Glossary: [CONTEXT.md](CONTEXT.md) · Decisions: [decisions](docs/adr/README.md) · Docs index: [docs/README.md](docs/README.md)
 Overview: [README.md](README.md) · [CHANGELOG.md](CHANGELOG.md) · [PRIVACY_POLICY.md](PRIVACY_POLICY.md) · Workflow: [CLAUDE.md](CLAUDE.md)
 

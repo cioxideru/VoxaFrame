@@ -5,12 +5,15 @@
 > the system as it is. Planned work and verification gaps are in [open questions](OPEN_QUESTIONS.md).
 > Source boundaries and ownership updated on 2026-10-17; physical-device acceptance remains separate.
 
+Minimum supported systems are iOS/iPadOS 18.0, native macOS 15.0 and tvOS 18.0
+([ADR-0013](adr/0013-minimum-os-18.md)). APIs introduced in OS 26 or later retain availability checks and fallbacks.
+
 ## Containers
 
 ```mermaid
 graph TD
     subgraph Apps["App targets (SmartTubeApp/)"]
-        iOS["iOS + Catalyst app<br/>(iPhone/iPad/Mac)"]
+        iOS["iOS/iPadOS + native macOS app<br/>(iPhone/iPad/Mac)"]
         TV["tvOS app"]
         Share["Share Extension"]
         Safari["Safari Web Extension"]

@@ -15,7 +15,7 @@ import XCTest
 //
 // Requirements:
 //   • Network access (YouTube must serve dQw4w9WgXcQ).
-//   • Run on an iOS 17+ simulator with the SmartTube scheme.
+//   • Run on an iOS 18+ simulator with the SmartTube scheme.
 
 final class PlayerDoubleTapUITests: XCTestCase {
 

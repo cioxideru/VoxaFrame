@@ -299,11 +299,11 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 ## OQ-0019 — VoxaFrame redesign follow-ups
 
-- Status: open; owner: UI maintainer; basis: [PLAN-0027](exec-plans/active/voxaframe-redesign.md), [ADR-0012](adr/0012-redesign-availability-and-tokens.md).
+- Status: open; owner: UI maintainer; basis: [PLAN-0027](exec-plans/active/voxaframe-redesign.md), [ADR-0012](adr/0012-redesign-availability-and-tokens.md), [ADR-0013](adr/0013-minimum-os-18.md).
 - Mini-player: the tab-bar bottom accessory was rejected in stage 2a (`0d446f6`): it re-parented the persistent player
   layer on every tab switch, has a fixed height, no opaque fallback and needs iOS 26.1. The overlay stays on every version.
   Its space is reserved by a UIKit bridge (`NavigationBottomReserve`) that adds the bar height to each tab's navigation
-  controller; it was run only on an iOS 26 simulator, so check iOS 17 (`.tabItem`) and 18 (Tab API) on a runtime or device.
+  controller; it was run only on an iOS 26 simulator, so check iOS 18–25 (Tab API) and 26 on a runtime or device.
   On iPad the floating sidebar edge is estimated from a 1 pt sidebar header (about 10 pt past the real edge); the docked
   sidebar in landscape, a 600 pt window and rotation were not run. At AX5 the stacked bar still takes about a third of an
   iPhone screen. A `smarttube://video/<id>` link opens with an empty mini-player title (the handler builds the video without one).
