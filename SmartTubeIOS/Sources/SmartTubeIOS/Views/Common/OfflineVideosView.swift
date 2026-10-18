@@ -22,7 +22,8 @@ struct OfflineWatchButton: View {
     }
 }
 
-/// Minimum target of the icon-only row buttons (cancel, delete) on each input model; tvOS keeps its focus effect.
+/// Minimum target of the icon-only row buttons on each input model: cancel everywhere, delete on tvOS only (other
+/// platforms delete by swipe or context menu). tvOS keeps its focus effect.
 #if os(iOS)
 private let offlineIconTarget = VFTarget.touch
 #elseif os(macOS)
@@ -37,6 +38,10 @@ struct OfflineVideosView: View {
     @State private var showsDeleteAll = false
     @State private var deletion: Deletion?
     @State private var selectedVideoID: String?
+    /// Set once a video has filled the detail column; from then on only the person's choice is kept.
+    @State private var hasShownVideo = false
+    /// Video pushed from a completed download in a single column.
+    @State private var openedVideoID: String?
     @State private var contentWidth: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var typeSize
     #if os(iOS)
@@ -61,10 +66,11 @@ struct OfflineVideosView: View {
 
     private var showsColumns: Bool {
         #if os(macOS)
-        VFColumn.supportsColumns(width: contentWidth, typeSize: typeSize)
+        VFColumn.supportsColumns(width: contentWidth, typeSize: typeSize, listMinimum: VFColumn.offlineListMinimum)
         #elseif os(iOS)
         UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
-            && VFColumn.supportsColumns(width: contentWidth, typeSize: typeSize)
+            && VFColumn.supportsColumns(
+                width: contentWidth, typeSize: typeSize, listMinimum: VFColumn.offlineListMinimum)
         #else
         false
         #endif
@@ -74,8 +80,11 @@ struct OfflineVideosView: View {
         adaptiveContent
             .navigationTitle(Text("Offline videos", bundle: .module))
             .onGeometryChange(for: CGFloat.self, of: \.size.width) { contentWidth = $0 }
-            .onChange(of: snapshot.entries.map(\.id)) { _, _ in
-                selectedVideoID = OfflinePresentation.retainedSelection(selectedVideoID, entries: snapshot.entries)
+            .onAppear(perform: syncSelection)
+            .onChange(of: snapshot.entries.map(\.id)) { _, _ in syncSelection() }
+            .onChange(of: showsColumns) { _, _ in syncSelection() }
+            .onChange(of: selectedVideoID) { _, videoID in
+                if videoID != nil { hasShownVideo = true }
             }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -113,6 +122,7 @@ struct OfflineVideosView: View {
                 }
             }
             .task { coordinator.start() }
+            .navigationDestination(item: $openedVideoID) { OfflineVideoDetail(videoID: $0) }
             .confirmationDialog(
                 deletionTitle,
                 isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }),
@@ -146,12 +156,24 @@ struct OfflineVideosView: View {
             }
     }
 
+    private func syncSelection() {
+        selectedVideoID = OfflinePresentation.columnSelection(
+            selectedVideoID, entries: snapshot.entries, showsColumns: showsColumns, hasShownVideo: hasShownVideo)
+    }
+
     @ViewBuilder private var adaptiveContent: some View {
         if showsColumns {
             GeometryReader { geometry in
+                let listWidth = VFColumn.listWidth(
+                    in: geometry.size.width, minimum: VFColumn.offlineListMinimum,
+                    fraction: VFColumn.offlineListFraction, maximum: VFColumn.offlineListMaximum)
                 HStack(spacing: 0) {
-                    libraryPane
-                        .frame(width: VFColumn.listWidth(in: geometry.size.width, maximum: VFColumn.offlineListMaximum))
+                    #if os(iOS)
+                    // Plain rows: the grouped inset would take another 40 pt from a narrow column.
+                    libraryPane.listStyle(.plain).frame(width: listWidth)
+                    #else
+                    libraryPane.frame(width: listWidth)
+                    #endif
                     Divider()
                     Group {
                         if let videoID = OfflinePresentation.retainedSelection(
@@ -256,17 +278,14 @@ struct OfflineVideosView: View {
             notices
             ForEach(snapshot.entries) { entry in
                 let title = OfflinePresentation.title(of: entry.id, in: snapshot.entries)
-                HStack(spacing: VFSpace.s8) {
+                let entryLabel = OfflineEntryLabel(
+                    entry: entry, title: title, status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs))
+                Group {
                     if showsColumns {
                         Button {
                             selectedVideoID = entry.id
                         } label: {
-                            OfflineEntryLabel(
-                                entry: entry, title: title,
-                                status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs)
-                            )
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
+                            entryLabel.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(.primary)
@@ -276,26 +295,16 @@ struct OfflineVideosView: View {
                         NavigationLink {
                             OfflineVideoDetail(videoID: entry.id)
                         } label: {
-                            OfflineEntryLabel(
-                                entry: entry, title: title,
-                                status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs))
+                            entryLabel
                         }
                         .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
                     }
-                    Button(role: .destructive) {
-                        deletion = .video(id: entry.id, title: title)
-                    } label: {
-                        Label {
-                            Text("Delete video and files", bundle: .module)
-                        } icon: {
-                            Image(systemName: AppSymbol.trash)
-                        }
-                        .frame(minWidth: offlineIconTarget, minHeight: offlineIconTarget)
-                    }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.borderless)
-                    .disabled(isLocked)
-                    .accessibilityIdentifier(AccessibilityID.offlineDeleteEntry(entry.id))
+                }
+                .offlineDeleteActions(
+                    Text("Delete video and files", bundle: .module), isDisabled: isLocked,
+                    identifier: AccessibilityID.offlineDeleteEntry(entry.id)
+                ) {
+                    deletion = .video(id: entry.id, title: title)
                 }
                 .tag(entry.id)
             }
@@ -334,7 +343,6 @@ struct OfflineVideosView: View {
                 .headerProminence(.increased)
             }
         }
-        .buttonStyle(.borderless)
         .accessibilityIdentifier(AccessibilityID.offlineJobsList)
     }
 
@@ -347,7 +355,7 @@ struct OfflineVideosView: View {
     private func jobRow(_ job: OfflineJob, title: String) -> some View {
         let status = OfflinePresentation.status(job)
         let part = OfflinePresentation.part(of: job.track)
-        return rowLayout {
+        let row = rowLayout {
             Image(systemName: part.symbol)
                 .foregroundStyle(.secondary)
                 .frame(minWidth: VFSpace.s24)
@@ -367,7 +375,9 @@ struct OfflineVideosView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: VFSpace.s8) {
+                #if os(tvOS)
                 jobAction(job)
+                // No swipe on tvOS, and the row itself takes no focus for a context menu.
                 Button(role: .destructive) {
                     deletion = .job(job)
                 } label: {
@@ -381,11 +391,31 @@ struct OfflineVideosView: View {
                 .labelStyle(.iconOnly)
                 .disabled(isLocked)
                 .accessibilityIdentifier(AccessibilityID.offlineDeleteJob(job.id))
+                #else
+                // The `.contain` row is no VoiceOver element of its own, so its main control carries the delete.
+                jobAction(job).accessibilityAction(named: Text("Delete task and files", bundle: .module)) {
+                    guard !isLocked else { return }
+                    deletion = .job(job)
+                }
+                #endif
             }
+            // Borderless on the row's own controls only: on the whole List it also reaches the swipe buttons,
+            // and the trailing swipe then reveals nothing.
+            .buttonStyle(.borderless)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(title)
         .accessibilityIdentifier(AccessibilityID.offlineJob(job.id))
+        #if os(tvOS)
+        return row
+        #else
+        return row.offlineDeleteActions(
+            Text("Delete task and files", bundle: .module), isDisabled: isLocked,
+            identifier: AccessibilityID.offlineDeleteJob(job.id)
+        ) {
+            deletion = .job(job)
+        }
+        #endif
     }
 
     @ViewBuilder private func jobAction(_ job: OfflineJob) -> some View {
@@ -417,21 +447,14 @@ struct OfflineVideosView: View {
             .disabled(isLocked)
             .accessibilityIdentifier(AccessibilityID.offlineRetry(job.id))
         case .open:
-            if showsColumns {
-                Button {
-                    selectedVideoID = job.videoID
-                } label: {
-                    Text("Open", bundle: .module)
-                }
-                .buttonStyle(.bordered)
-            } else {
-                NavigationLink {
-                    OfflineVideoDetail(videoID: job.videoID)
-                } label: {
-                    Text("Open", bundle: .module)
-                }
-                .buttonStyle(.bordered)
+            // A Button, not a NavigationLink: a link inside the row turns the whole List cell into a push row,
+            // and a swipe on it then opens the video instead of revealing Delete.
+            Button {
+                if showsColumns { selectedVideoID = job.videoID } else { openedVideoID = job.videoID }
+            } label: {
+                Text("Open", bundle: .module)
             }
+            .buttonStyle(.bordered)
         }
     }
 }
@@ -462,185 +485,6 @@ extension OfflineVideosView {
             }
         } description: {
             Text("Downloads you start with Offline watch appear here until you delete them.", bundle: .module)
-        }
-    }
-}
-
-// MARK: - Rows and status
-
-/// List section shown above content while the library cannot be read or saved:
-/// the localized title, the reason exactly as reported, and a retry.
-struct OfflineStorageNotice: View {
-    let message: String
-
-    var body: some View {
-        Section {
-            Label {
-                Text(message)
-            } icon: {
-                Image(systemName: AppSymbol.warning)
-            }
-            .foregroundStyle(VFColor.danger)
-            Button {
-                OfflineCoordinator.shared.retryStorage()
-            } label: {
-                Text("Try Again", bundle: .module)
-            }
-        } header: {
-            Text("Offline library is unavailable", bundle: .module)
-        }
-    }
-}
-
-/// Video cover from the network. Without a URL (a deep link carries none) a still placeholder, not a spinner;
-/// offline the load fails to the same kind of placeholder, as covers are not cached (OQ-0019).
-struct OfflineCover: View {
-    let url: URL?
-    let width: CGFloat
-
-    var body: some View {
-        Group {
-            if let url {
-                ThumbnailFillView(primaryURL: url)
-            } else {
-                VFColor.surface.overlay {
-                    Image(systemName: AppSymbol.film).foregroundStyle(.secondary)
-                }
-            }
-        }
-        .aspectRatio(16 / 9, contentMode: .fit)
-        .frame(width: width)
-        .clipShape(RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous))
-        .accessibilityHidden(true)
-    }
-}
-
-private struct OfflineEntryLabel: View {
-    let entry: OfflineEntry
-    let title: String
-    let status: OfflinePresentation.EntryStatus
-    @Environment(\.dynamicTypeSize) private var typeSize
-
-    #if os(tvOS)
-    private static let thumbnailWidth: CGFloat = 240
-    #else
-    private static let thumbnailWidth: CGFloat = 112
-    #endif
-
-    var body: some View {
-        let layout =
-            typeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: VFSpace.s8))
-            : AnyLayout(HStackLayout(alignment: .top, spacing: VFSpace.s12))
-        let parts = OfflinePresentation.parts(entry)
-        layout {
-            OfflineCover(url: entry.video.thumbnailURL, width: Self.thumbnailWidth)
-            VStack(alignment: .leading, spacing: VFSpace.s4) {
-                Text(title).font(.headline)
-                if !entry.video.channelTitle.isEmpty {
-                    Text(entry.video.channelTitle).font(.footnote).foregroundStyle(.secondary)
-                }
-                status.label
-                if !parts.isEmpty {
-                    Text(parts.map(\.title).joined(separator: " · "))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-    }
-}
-
-/// Symbol and text; the colour is never the only signal.
-struct OfflineStatusLabel: View {
-    let text: Text
-    let symbol: String
-    let style: AnyShapeStyle
-
-    var body: some View {
-        // Not a Label: in a List row it takes the wide list icon column and wraps the text.
-        HStack(alignment: .firstTextBaseline, spacing: VFSpace.s4) {
-            Image(systemName: symbol).accessibilityHidden(true)
-            text
-        }
-        .font(.footnote.weight(.semibold))
-        .foregroundStyle(style)
-    }
-}
-
-extension OfflinePresentation.JobStatus {
-    var label: OfflineStatusLabel {
-        switch self {
-        case .queued:
-            OfflineStatusLabel(
-                text: Text("Queued", bundle: .module), symbol: AppSymbol.clock, style: AnyShapeStyle(.secondary))
-        case .waitingForTranslation:
-            OfflineStatusLabel(
-                text: Text("Waiting for translation", bundle: .module), symbol: AppSymbol.hourglass,
-                style: AnyShapeStyle(.secondary))
-        case .resolving:
-            OfflineStatusLabel(
-                text: Text("Preparing", bundle: .module), symbol: AppSymbol.hourglass,
-                style: AnyShapeStyle(.secondary))
-        case .downloading(let progress):
-            OfflineStatusLabel(
-                text: Text(
-                    "Downloading · \(progress, format: .percent.precision(.fractionLength(0)))", bundle: .module),
-                symbol: AppSymbol.download, style: AnyShapeStyle(.primary))
-        case .completed:
-            OfflineStatusLabel(
-                text: Text("Completed", bundle: .module), symbol: AppSymbol.checkmarkCircle,
-                style: AnyShapeStyle(VFColor.success))
-        case .failed:
-            OfflineStatusLabel(
-                text: Text("Failed", bundle: .module), symbol: AppSymbol.warning, style: AnyShapeStyle(VFColor.danger))
-        case .cancelled:
-            OfflineStatusLabel(
-                text: Text("Cancelled", bundle: .module), symbol: AppSymbol.xmarkCircle,
-                style: AnyShapeStyle(.secondary))
-        }
-    }
-}
-
-extension OfflinePresentation.EntryStatus {
-    fileprivate var label: OfflineStatusLabel {
-        switch self {
-        case .downloading(let progress):
-            OfflinePresentation.JobStatus.downloading(progress).label
-        case .preparing:
-            OfflinePresentation.JobStatus.resolving.label
-        case .queued:
-            OfflinePresentation.JobStatus.queued.label
-        case .failed:
-            OfflineStatusLabel(
-                text: Text("A download failed", bundle: .module), symbol: AppSymbol.warning,
-                style: AnyShapeStyle(VFColor.danger))
-        case .ready:
-            OfflineStatusLabel(
-                text: Text("Ready to watch", bundle: .module), symbol: AppSymbol.checkmarkCircle,
-                style: AnyShapeStyle(VFColor.success))
-        case .notReady:
-            OfflineStatusLabel(
-                text: Text("Video not saved yet", bundle: .module), symbol: AppSymbol.film,
-                style: AnyShapeStyle(.secondary))
-        }
-    }
-}
-
-extension OfflinePresentation.Part {
-    fileprivate var title: String {
-        switch self {
-        case .video: String(localized: "Video", bundle: .module)
-        case .audio: String(localized: "Audio", bundle: .module)
-        case .translation: String(localized: "Translation", bundle: .module)
-        }
-    }
-
-    fileprivate var symbol: String {
-        switch self {
-        case .video: AppSymbol.film
-        case .audio: AppSymbol.audioTrack
-        case .translation: AppSymbol.translation
         }
     }
 }

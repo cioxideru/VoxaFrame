@@ -46,7 +46,7 @@ struct ChannelListView: View {
                     } label: {
                         Label("Unsubscribe", systemImage: AppSymbol.personCircleMinus)
                     }
-                    .tint(.red)
+                    .tint(VFColor.destructiveFill)
                     .disabled(changingIDs.contains(channel.id))
                 }
         }

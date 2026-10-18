@@ -15658,6 +15658,24 @@
         }
       }
     },
+    "offline.statusLine %@ %@" : {
+      "comment" : "Offline library row: the video's status, then the saved parts (e.g. Video, Audio)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "OK" : {
       "comment" : "Generic alert dismiss button",
       "extractionState" : "manual",

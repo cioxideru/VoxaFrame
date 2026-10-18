@@ -38,6 +38,19 @@ struct OfflinePresentationTests {
         #expect(OfflinePresentation.retainedSelection("a", entries: []) == nil)
     }
 
+    @Test func columnsOpenOnTheFirstVideoUntilOneHasBeenShown() {
+        func select(_ id: String?, _ entries: [OfflineEntry], columns: Bool = true, shown: Bool = false) -> String? {
+            OfflinePresentation.columnSelection(id, entries: entries, showsColumns: columns, hasShownVideo: shown)
+        }
+        #expect(select(nil, [entry("a"), entry("b")]) == "a")
+        #expect(select(nil, []) == nil)
+        #expect(select(nil, [entry("a")], columns: false) == nil)
+        // The person's choice is kept; a deleted choice leaves the detail empty instead of picking a neighbour.
+        #expect(select("b", [entry("a"), entry("b")], shown: true) == "b")
+        #expect(select("b", [entry("a")], shown: true) == nil)
+        #expect(select(nil, [entry("a")], shown: true) == nil)
+    }
+
     @Test func sixStatesAndWaitingForTranslationMapToTheirActions() {
         func expect(
             _ job: OfflineJob, _ status: OfflinePresentation.JobStatus, _ action: OfflinePresentation.JobAction

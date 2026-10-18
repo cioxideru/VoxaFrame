@@ -63,6 +63,9 @@ enum VFColor {
     static let success = Color(VFColorPair.success)
     static let warning = Color(VFColorPair.warning)
     static let danger = Color(VFColorPair.danger)
+    /// Fill of destructive swipe actions under the system's white label. `danger` is a text colour and too light
+    /// as a fill in dark mode, so this stays the system red.
+    static let destructiveFill = Color.red
 
     /// Black at 72 %: only under white controls drawn over an arbitrary video frame.
     /// Over glass and video use `onMedia` or system label styles, not the colours above.

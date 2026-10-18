@@ -27,6 +27,29 @@ struct DesignTokenTests {
         #expect(VFColumn.listWidth(in: 800, maximum: VFColumn.offlineListMaximum) == 320)
     }
 
+    @Test("Offline columns start where both the list and the detail stay readable")
+    func offlineColumnsKeepListAndDetailReadable() {
+        let minimum = VFColumn.offlineListMinimum
+        let threshold = minimum + VFColumn.detailMinimum
+        func offlineList(_ width: CGFloat) -> CGFloat {
+            VFColumn.listWidth(
+                in: width, minimum: minimum, fraction: VFColumn.offlineListFraction,
+                maximum: VFColumn.offlineListMaximum)
+        }
+        #expect(!VFColumn.supportsColumns(width: threshold - 1, typeSize: .large, listMinimum: minimum))
+        #expect(VFColumn.supportsColumns(width: threshold, typeSize: .large, listMinimum: minimum))
+        #expect(!VFColumn.supportsColumns(width: 1200, typeSize: .accessibility1, listMinimum: minimum))
+        // Default list minimum: the settings threshold stays at the shared content width.
+        #expect(VFColumn.supportsColumns(width: VFColumn.minimumContentWidth, typeSize: .large))
+        #expect(offlineList(threshold) == minimum)
+        // iPad 11-inch portrait: the larger offline share, and the detail keeps its minimum at every width.
+        #expect(offlineList(834) == 834 * VFColumn.offlineListFraction)
+        for width: CGFloat in [threshold, 744, 834, 1024, 1366, 2400] {
+            #expect(width - offlineList(width) >= VFColumn.detailMinimum)
+        }
+        #expect(offlineList(2400) == VFColumn.offlineListMaximum)
+    }
+
     private struct Surface {
         let name: String
         let light: UInt32

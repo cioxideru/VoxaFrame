@@ -10,6 +10,15 @@ enum OfflinePresentation {
         return videoID
     }
 
+    /// Two columns open on the first video until a video has filled the detail; after that only the retained
+    /// choice counts, so a deletion still leaves the detail empty. A single column selects nothing.
+    static func columnSelection(
+        _ videoID: String?, entries: [OfflineEntry], showsColumns: Bool, hasShownVideo: Bool
+    ) -> String? {
+        if let kept = retainedSelection(videoID, entries: entries) { return kept }
+        return showsColumns && !hasShownVideo ? entries.first?.id : nil
+    }
+
     /// A job's visible status. Waiting for translation is a queued job whose resolution was deferred.
     enum JobStatus: Equatable {
         case queued, waitingForTranslation, resolving, downloading(Double), completed, failed, cancelled

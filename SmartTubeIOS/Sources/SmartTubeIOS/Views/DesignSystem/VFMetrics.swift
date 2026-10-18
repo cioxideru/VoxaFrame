@@ -48,16 +48,27 @@ enum VFColumn {
     static let minimumContentWidth: CGFloat = 600
     static let listMinimum: CGFloat = 280
     static let listFraction: CGFloat = 0.4
-    static let offlineListMaximum: CGFloat = 380
+    /// Narrowest useful detail column beside a list; below it the list pushes the detail instead.
+    static let detailMinimum: CGFloat = 320
+    /// Offline rows carry a cover, a title of up to three lines and a status line, so their list takes a larger
+    /// share; the detail still keeps at least `detailMinimum`.
+    static let offlineListMinimum: CGFloat = 320
+    static let offlineListFraction: CGFloat = 0.45
+    static let offlineListMaximum: CGFloat = 420
     static let settingsCategoriesMaximum: CGFloat = 320
     static let settingsCategoriesTVMaximum: CGFloat = 620
 
-    static func supportsColumns(width: CGFloat, typeSize: DynamicTypeSize) -> Bool {
-        width >= minimumContentWidth && !typeSize.isAccessibilitySize
+    /// Two columns need room for the list at its `listMinimum` and a readable detail.
+    static func supportsColumns(
+        width: CGFloat, typeSize: DynamicTypeSize, listMinimum: CGFloat = listMinimum
+    ) -> Bool {
+        width >= max(minimumContentWidth, listMinimum + detailMinimum) && !typeSize.isAccessibilitySize
     }
 
-    static func listWidth(in width: CGFloat, maximum: CGFloat) -> CGFloat {
-        max(listMinimum, min(width * listFraction, maximum))
+    static func listWidth(
+        in width: CGFloat, minimum: CGFloat = listMinimum, fraction: CGFloat = listFraction, maximum: CGFloat
+    ) -> CGFloat {
+        max(minimum, min(width * fraction, maximum))
     }
 }
 

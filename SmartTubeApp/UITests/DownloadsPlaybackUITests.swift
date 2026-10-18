@@ -147,23 +147,21 @@ final class DownloadsPlaybackUITests: XCTestCase {
             .containing(.staticText, identifier: "en · Original").firstMatch
         reveal(job, in: AccessibilityID.offlineJobsList)
         XCTAssertTrue(job.waitForExistence(timeout: 8))
-        let remove = job.buttons["Delete task and files"]
-        XCTAssertTrue(remove.exists)
-        remove.tap()
+        swipeToDelete(job, action: "Delete task and files", identifierPrefix: "offline.deleteJob.")
         let confirm = app.buttons["Delete"].firstMatch
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
         confirm.tap()
         let removed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: job)
         XCTAssertEqual(XCTWaiter().wait(for: [removed], timeout: 10), .completed)
         pages.buttons["Library"].tap()
-        let deleteEntry = app.buttons[AccessibilityID.offlineDeleteEntry(id)]
-        reveal(deleteEntry, in: AccessibilityID.offlineLibraryList)
-        XCTAssertTrue(deleteEntry.waitForExistence(timeout: 5))
-        deleteEntry.tap()
+        let entry = app.buttons[AccessibilityID.offlineEntry(id)].firstMatch
+        reveal(entry, in: AccessibilityID.offlineLibraryList)
+        XCTAssertTrue(entry.waitForExistence(timeout: 5))
+        swipeToDelete(entry, action: "Delete video and files", identifierPrefix: AccessibilityID.offlineDeleteEntry(id))
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
         confirm.tap()
         let entryRemoved = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "exists == false"), object: deleteEntry)
+            predicate: NSPredicate(format: "exists == false"), object: entry)
         XCTAssertEqual(XCTWaiter().wait(for: [entryRemoved], timeout: 10), .completed)
         app.terminate()
         launch(videoID: nil)
@@ -204,14 +202,14 @@ final class DownloadsPlaybackUITests: XCTestCase {
         app.terminate()
         launch(videoID: nil)
         UITestHelpers.tapTab(named: "Offline videos", in: app)
-        let remove = app.buttons[AccessibilityID.offlineDeleteEntry(id)]
-        reveal(remove, in: AccessibilityID.offlineLibraryList)
-        XCTAssertTrue(remove.waitForExistence(timeout: 5))
-        remove.tap()
+        let entry = app.buttons[AccessibilityID.offlineEntry(id)].firstMatch
+        reveal(entry, in: AccessibilityID.offlineLibraryList)
+        XCTAssertTrue(entry.waitForExistence(timeout: 5))
+        swipeToDelete(entry, action: "Delete video and files", identifierPrefix: AccessibilityID.offlineDeleteEntry(id))
         let confirm = app.buttons["Delete"].firstMatch
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
         confirm.tap()
-        let deleted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: remove)
+        let deleted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: entry)
         XCTAssertEqual(XCTWaiter().wait(for: [deleted], timeout: 10), .completed)
     }
 
@@ -246,7 +244,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
             XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
             dismiss.tap()
         }
-        XCTAssertTrue(app.buttons[AccessibilityID.offlineDeleteEntry(second)].exists)
+        XCTAssertTrue(app.buttons[AccessibilityID.offlineEntry(second)].exists)
         let pages = app.segmentedControls[AccessibilityID.offlinePagePicker]
         pages.buttons["Downloads"].tap()
         remove.tap()
@@ -358,6 +356,22 @@ extension DownloadsPlaybackUITests {
         XCTAssertTrue(back.waitForExistence(timeout: 5))
         back.tap()
         XCTAssertTrue(pages.waitForExistence(timeout: 5))
+    }
+
+    /// Rows delete through a trailing swipe; its button opens the confirmation.
+    /// The swipe button may lose its identifier, so the label (outside other offline controls) is the fallback.
+    private func swipeToDelete(_ row: XCUIElement, action label: String, identifierPrefix: String) {
+        let action = app.buttons.matching(
+            NSPredicate(
+                format: "identifier BEGINSWITH %@ OR (label == %@ AND NOT (identifier BEGINSWITH 'offline.'))",
+                identifierPrefix, label)
+        ).firstMatch
+        // Swipe the List cell: a swipe that starts on a control inside it may not reveal the actions.
+        let cell = app.cells.containing(.any, identifier: row.identifier).firstMatch
+        (cell.exists ? cell : row).swipeLeft()
+        XCTAssertTrue(action.waitForExistence(timeout: 5), "The trailing swipe must reveal \(label)")
+        XCTAssertTrue(row.exists, "A swipe on the row must not leave the list")
+        action.tap()
     }
 
     private func reveal(_ element: XCUIElement, in listID: String = AccessibilityID.offlineDetailList) {
