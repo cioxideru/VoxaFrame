@@ -12,6 +12,10 @@ Code reconciliation: 2026-10-15. `accepted` records a decision, not a passing ru
 ADR 0005 remains proposed: the cascade is split across files but no `StreamSource` or
 `ResolutionPipeline` exists. ADRs 0006–0008 are superseded by ADR 0010, which removed the embed players.
 
+The [October 2026 architecture audit](../architecture-audit-2026-10.md) supplies source evidence and a
+prioritised roadmap for PLAN-0029. ADR-0013 is reserved for the separate 18/15/18 minimum-OS decision;
+ADR-0014–0018 below are proposals, not implemented migrations or runtime acceptance.
+
 | ADR | Title | Status |
 |---|---|---|
 | [0001](0001-maintainability-baseline.md) | Maintainability baseline | accepted |
@@ -27,3 +31,8 @@ ADR 0005 remains proposed: the cascade is split across files but no `StreamSourc
 | [0011](0011-bounded-native-shorts-preloading.md) | Session-owned native Shorts preloading and bounded retention | accepted |
 | [0012](0012-redesign-availability-and-tokens.md) | Redesign: availability fallbacks and token ownership; minimum OS baseline superseded by [0013](0013-minimum-os-18.md) | proposed |
 | [0013](0013-minimum-os-18.md) | Minimum OS: iOS/iPadOS 18, native macOS 15 and tvOS 18 | accepted |
+| [0014](0014-scene-navigation-and-external-actions.md) | Scene-owned navigation and typed external actions | proposed |
+| [0015](0015-composition-and-playback-lifetimes.md) | Explicit process, scene and playback lifetimes | proposed |
+| [0016](0016-core-platform-adapters.md) | Enforce the Core boundary with explicit platform adapters | proposed |
+| [0017](0017-durable-store-and-sync-ownership.md) | Local durable stores own mutations; sync transports revisions | proposed |
+| [0018](0018-localization-resource-ownership.md) | Localize at the owning resource bundle; keep identity stable | proposed |

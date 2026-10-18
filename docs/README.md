@@ -22,6 +22,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [../SmartTubeIOS/README.md](../SmartTubeIOS/README.md) | Package entry point and links to canonical guides | current | 2026-10-15 |
 | [README.md](README.md) | Canonical document inventory and review meaning | current | 2026-10-18 |
 | [architecture.md](architecture.md) | Containers, package boundaries, current playback and navigation | current | 2026-10-18 |
+| [architecture-audit-2026-10.md](architecture-audit-2026-10.md) | PLAN-0029 AUDIT: source findings, framework assessment, ownership proposals and prioritised roadmap; no runtime acceptance | current | 2026-10-18 |
 | [design/VoxaFrame-Functionality.ru.md](design/VoxaFrame-Functionality.ru.md) | DESIGN-0002: standalone Russian functional brief for redesigning VoxaFrame on four Apple platforms | current | 2026-10-17 |
 | [design/voxaframe-redesign/START-HERE.md](design/voxaframe-redesign/START-HERE.md) | DESIGN-0003: VoxaFrame redesign handoff — screen map, tokens, component contracts, mockups | current | 2026-10-17 |
 | [design/voxaframe-redesign/docs/VoxaFrame-Functionality.ru.md](design/voxaframe-redesign/docs/VoxaFrame-Functionality.ru.md) | Functional brief snapshot included in the design export; maintained source is design/VoxaFrame-Functionality.ru.md | current | 2026-10-17 |
@@ -63,6 +64,11 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [adr/0011-bounded-native-shorts-preloading.md](adr/0011-bounded-native-shorts-preloading.md) | 0011 — native Shorts preparation and resource ownership | current | 2026-10-17 |
 | [adr/0012-redesign-availability-and-tokens.md](adr/0012-redesign-availability-and-tokens.md) | 0012 — availability fallbacks and token ownership for the redesign (proposed) | current | 2026-10-17 |
 | [adr/0013-minimum-os-18.md](adr/0013-minimum-os-18.md) | 0013 — accepted 18/15/18 minimum; supersedes ADR-0012's OS baseline | current | 2026-10-18 |
+| [adr/0014-scene-navigation-and-external-actions.md](adr/0014-scene-navigation-and-external-actions.md) | 0014 — scene-owned navigation and typed external actions (proposed) | current | 2026-10-18 |
+| [adr/0015-composition-and-playback-lifetimes.md](adr/0015-composition-and-playback-lifetimes.md) | 0015 — explicit process, scene and playback lifetimes (proposed) | current | 2026-10-18 |
+| [adr/0016-core-platform-adapters.md](adr/0016-core-platform-adapters.md) | 0016 — Core boundary and explicit platform adapters (proposed) | current | 2026-10-18 |
+| [adr/0017-durable-store-and-sync-ownership.md](adr/0017-durable-store-and-sync-ownership.md) | 0017 — local durable stores own mutations; sync transports revisions (proposed) | current | 2026-10-18 |
+| [adr/0018-localization-resource-ownership.md](adr/0018-localization-resource-ownership.md) | 0018 — owning resource bundle and stable localized UI identity (proposed) | current | 2026-10-18 |
 | [adr/template.md](adr/template.md) | ADR form: stable ID, Status, Date, Context, Decision, Consequences | current | 2026-10-15 |
 | [explanation/swift-style.md](explanation/swift-style.md) | Swift conventions | current | 2026-10-15 |
 | [explanation/solid.md](explanation/solid.md) | SOLID principles reference | current | 2026-10-15 |
