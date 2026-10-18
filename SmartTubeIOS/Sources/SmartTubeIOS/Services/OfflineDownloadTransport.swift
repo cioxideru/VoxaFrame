@@ -131,7 +131,9 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         let preferred = try await asset.load(.preferredMediaSelection)
         try Task.checkCancellation()
         let track = source.track.id
-        let matches = variants.filter { matchesVariant($0, source: source) }
+        // Variant URLs carry per-request tokens, so a fresh load rarely repeats them; fall back to attributes.
+        var matches = variants.filter { matchesVariant($0, source: source, byURL: true) }
+        if matches.isEmpty { matches = variants.filter { matchesVariant($0, source: source, byURL: false) } }
         guard matches.count == 1, let variant = matches.first else {
             if matches.isEmpty { logVariantMismatch(variants, source: source) }
             throw unavailable("HLS variant matches=\(matches.count) of \(variants.count) track=\(track)")
@@ -204,9 +206,9 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         }
     }
 
-    private static func matchesVariant(_ variant: AVAssetVariant, source: OfflineSource) -> Bool {
+    private static func matchesVariant(_ variant: AVAssetVariant, source: OfflineSource, byURL: Bool) -> Bool {
         let matchesURL: Bool
-        if let url = source.hlsVariantURL, #available(iOS 26, *) {
+        if byURL, let url = source.hlsVariantURL, #available(iOS 26, *) {
             guard variant.url.absoluteURL == url.absoluteURL else { return false }
             matchesURL = true
         } else {
@@ -455,7 +457,11 @@ extension OfflineDownloadTransport: AVAssetDownloadDelegate {
     ) {
         guard let id = assetDownloadTask.taskDescription.flatMap(UUID.init(uuidString:)) else { return }
         if let expected = completionLock.withLock({ expectedHLS[id] }),
-            variants.count != 1 || !variants.allSatisfy({ Self.matchesVariant($0, source: expected) })
+            variants.count != 1
+                || !variants.allSatisfy({
+                    Self.matchesVariant($0, source: expected, byURL: true)
+                        || Self.matchesVariant($0, source: expected, byURL: false)
+                })
         {
             offlineTransportLog.error(
                 "Offline unavailable: system chose \(variants.count) HLS variants not matching track=\(expected.track.id, privacy: .public)"
