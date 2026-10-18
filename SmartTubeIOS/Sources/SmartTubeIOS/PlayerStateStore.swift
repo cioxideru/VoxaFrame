@@ -116,6 +116,7 @@ public final class PlayerStateStore {
         storeLog.notice(
             "[PlayerStateStore] play — id=\(video.id) currentPresentation=\(String(describing: self.presentation))")
         vm.updateSettings(settings)
+        successorCheck?.cancel()
         // Also reload when:
         //   1. Different video — always load
         //   2. No current item — item was cleared by stop() (legacy path)
@@ -123,14 +124,46 @@ public final class PlayerStateStore {
         //      AVPlayerItem alive but pauses and sets isPlaying=false. On re-tap,
         //      call load() so the park fast-path in PlaybackViewModel resumes it.
         // A privacy-mode change needs a fresh tracking session even for the same video.
-        if vm.currentVideo?.hasSamePlaybackSource(as: video) != true || vm.isIncognito != incognito
-            || vm.player.currentItem == nil || !vm.isPlaying
-        {
+        let sameSource = vm.currentVideo?.hasSamePlaybackSource(as: video) == true
+        // Before `load`: its duplicate-loading guard keeps the item it is still loading, with the old position.
+        if sameSource { adoptQueueContext(of: video) }
+        if !sameSource || vm.isIncognito != incognito || vm.player.currentItem == nil || !vm.isPlaying {
             vm.load(video: video, incognito: incognito)
         }
         expand()
         storeLog.notice("[PlayerStateStore] play — presentation set to .fullScreen")
     }
+
+    /// The Current Queue checked for a successor (`.shared` in the app; tests give the store their own).
+    @ObservationIgnored var queue = CurrentQueueStore.shared
+
+    /// The playing video picked again from another list keeps playing but takes that list's position, so Play Next
+    /// and auto-advance follow the queue the user started it from last. A successor in that queue enables Next
+    /// (button, swipe, remote command) as `load` would.
+    private func adoptQueueContext(of video: Video) {
+        guard var current = vm.currentVideo,
+            current.playlistId != video.playlistId || current.playlistIndex != video.playlistIndex
+                || current.setVideoId != video.setVideoId
+        else { return }
+        current.playlistId = video.playlistId
+        current.playlistIndex = video.playlistIndex
+        current.setVideoId = video.setVideoId
+        vm.currentVideo = current
+        guard let index = CurrentQueueStore.queueIndex(of: current) else { return }
+        // Cancelled by stop() and by the next play(); stop() keeps currentVideo, so the checks after the await
+        // also require the same video, still at `index`, not parked.
+        successorCheck = Task { [vm, queue] in
+            let hasSuccessor = await queue.videoAt(index: index + 1) != nil
+            guard hasSuccessor, !Task.isCancelled, vm.parkedVideoId == nil,
+                vm.currentVideo?.hasSamePlaybackSource(as: current) == true,
+                CurrentQueueStore.queueIndex(of: vm.currentVideo) == index, !vm.hasNext
+            else { return }
+            vm.hasNext = true
+            vm.updateNowPlayingInfo()
+        }
+    }
+
+    @ObservationIgnored private(set) var successorCheck: Task<Void, Never>?
 
     /// Collapse the full-screen player to the mini-player bar. Playback continues.
     public func minimize() {
@@ -161,6 +194,7 @@ public final class PlayerStateStore {
         pipRestoreCompletion?(false)
         pipRestoreCompletion = nil
         pipController?.stopPictureInPicture()
+        successorCheck?.cancel()
         vm.stop()
         presentation = .hidden
         let action = dismissPlayerAction

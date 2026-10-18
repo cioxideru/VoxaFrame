@@ -134,6 +134,12 @@ enum AccessibilityID {
         "video.card.\(videoId)"
     }
 
+    static func videoCardMenu(_ videoId: String) -> String {
+        "videoCardMenu.\(videoId)"
+    }
+
+    static var videoCardTitle: String { "videoCardTitle" }
+
     static func shortsCard(_ videoId: String) -> String {
         "shorts.card.\(videoId)"
     }
@@ -254,6 +260,13 @@ enum UITestHelpers {
             return nil
         }
         return cards.firstMatch
+    }
+
+    /// What VoiceOver reads for a `video.card.*` element ("Title, Channel, …"). On iPhone and iPad the card
+    /// is a container whose first button is that summary (its More button follows); elsewhere it is the card.
+    static func cardSummary(_ card: XCUIElement) -> String {
+        let summary = card.buttons.firstMatch
+        return summary.exists ? summary.label : card.label
     }
 
     // MARK: - Player

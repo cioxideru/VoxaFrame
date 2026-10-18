@@ -81,6 +81,85 @@ struct CurrentQueueStoreTests {
         #expect(await store.videos[0].id == "aaa11111111")
     }
 
+    // MARK: - playNext (Play Next after the playing item)
+
+    private func makeQueue(_ ids: [String]) async -> CurrentQueueStore {
+        let store = makeStore()
+        await store.replaceAll(with: ids.map(makeVideo(id:)))
+        return store
+    }
+
+    @Test("Play Next with nothing playing from the queue puts the video first")
+    func playNextNothingPlaying() async {
+        let store = await makeQueue(["a", "b", "c"])
+        await store.playNext(makeVideo(id: "new"), playingIndex: nil)
+        #expect(await store.videos.map(\.id) == ["new", "a", "b", "c"])
+    }
+
+    @Test("Play Next into an empty queue makes it the only item")
+    func playNextEmptyQueue() async {
+        let store = makeStore()
+        await store.playNext(makeVideo(id: "new"), playingIndex: nil)
+        #expect(await store.videos.map(\.id) == ["new"])
+    }
+
+    @Test("Play Next goes right after the playing item (first, middle, last)", arguments: [0, 1, 2])
+    func playNextAfterPlaying(playing: Int) async {
+        let store = await makeQueue(["a", "b", "c"])
+        await store.playNext(makeVideo(id: "new"), playingIndex: playing)
+        let ids = await store.videos.map(\.id)
+        #expect(ids.count == 4)
+        #expect(ids.firstIndex(of: "new") == playing + 1)
+        #expect(ids.filter { $0 != "new" } == ["a", "b", "c"])
+    }
+
+    @Test("Play Next while the last item plays appends, and a stale index past the end appends too")
+    func playNextLastAndStale() async {
+        let store = await makeQueue(["a", "b"])
+        await store.playNext(makeVideo(id: "last"), playingIndex: 1)
+        await store.playNext(makeVideo(id: "stale"), playingIndex: 40)
+        #expect(await store.videos.map(\.id) == ["a", "b", "last", "stale"])
+    }
+
+    @Test("Play Next keeps the playing item's index valid for the player's next step")
+    func playNextIsNextForPlayer() async {
+        let store = await makeQueue(["a", "b", "c"])
+        let playing = await store.videoAt(index: 1)
+        await store.playNext(makeVideo(id: "new"), playingIndex: CurrentQueueStore.queueIndex(of: playing))
+        #expect(await store.videoAt(index: 1)?.id == "b")
+        #expect(await store.videoAt(index: 2)?.id == "new")
+    }
+
+    @Test("Play Next of a video already queued changes nothing")
+    func playNextDuplicate() async {
+        let store = await makeQueue(["a", "b", "c"])
+        await store.playNext(makeVideo(id: "c"), playingIndex: 0)
+        await store.playNext(makeVideo(id: "a"), playingIndex: nil)
+        #expect(await store.videos.map(\.id) == ["a", "b", "c"])
+    }
+
+    @Test("Play Next into a full queue is ignored")
+    func playNextAtCapacity() async {
+        let store = await makeQueue((0..<500).map { String(format: "v%011d", $0) })
+        await store.playNext(makeVideo(id: "new"), playingIndex: nil)
+        await store.playNext(makeVideo(id: "new"), playingIndex: 3)
+        let ids = await store.videos.map(\.id)
+        #expect(ids.count == 500)
+        #expect(!ids.contains("new"))
+    }
+
+    @Test("queueIndex reads the position only from Current Queue items")
+    func queueIndexOfVideo() async {
+        let store = await makeQueue(["a", "b"])
+        #expect(CurrentQueueStore.queueIndex(of: await store.videoAt(index: 1)) == 1)
+        var fromPlaylist = makeVideo(id: "a")
+        fromPlaylist.playlistId = "PL123"
+        fromPlaylist.playlistIndex = 4
+        #expect(CurrentQueueStore.queueIndex(of: fromPlaylist) == nil)
+        #expect(CurrentQueueStore.queueIndex(of: makeVideo(id: "a")) == nil)
+        #expect(CurrentQueueStore.queueIndex(of: nil) == nil)
+    }
+
     // MARK: - remove
 
     @Test("remove(at:) shrinks the queue")

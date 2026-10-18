@@ -34,13 +34,13 @@ struct ThumbnailFillView: View {
                         .clipped()
                 case .failure:
                     let next = fallbackIndex < 0 ? 0 : fallbackIndex + 1
-                    Color.secondary.opacity(0.15)
+                    VFColor.surface
                         .onAppear {
                             if next < fallbackURLs.count { fallbackIndex = next }
                         }
                 default:
-                    Color.secondary.opacity(0.15)
-                        .overlay { ProgressView().tint(.white) }
+                    // The empty surface stands for loading, like the design's skeleton.
+                    VFColor.surface
                 }
             }
         }

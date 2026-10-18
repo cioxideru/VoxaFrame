@@ -26,6 +26,9 @@ struct ShortsRowSection: View {
     #else
     /// Card width on iOS/iPadOS: ~120 pt gives roughly 3 cards on an iPhone screen.
     private let cardWidth: CGFloat = 120
+    /// The shelf card grows with Dynamic Type, up to twice its width, so large titles still wrap into words.
+    @ScaledMetric(relativeTo: .footnote) private var scaledCardWidth: CGFloat = 120
+    private var shelfCardWidth: CGFloat { min(scaledCardWidth, cardWidth * 2) }
     #endif
 
     private static let verticalTVLimit = 9
@@ -53,7 +56,6 @@ struct ShortsRowSection: View {
                     onSelect(video)
                 } label: {
                     ShortsCardView(video: video, onTap: { onSelect(video) })
-                        .aspectRatio(9 / 16, contentMode: .fit)
                         .containerRelativeFrame(.horizontal) { width, _ in
                             min(
                                 cardWidth,
@@ -82,11 +84,11 @@ struct ShortsRowSection: View {
             HStack(alignment: .top, spacing: videoGridRowSpacing) {
                 ForEach(videos) { video in
                     ShortsCardView(video: video, onTap: { onSelect(video) })
-                        .frame(width: cardWidth, height: cardWidth * 16 / 9)
+                        .frame(width: shelfCardWidth)
                         .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, videoGridMargin)
             .padding(.top, 4)
             // Bottom padding gives the scroll indicator room to render without
             // being clipped by fixedSize(vertical: true) below.
@@ -131,7 +133,6 @@ struct ShortsRowSection: View {
                 } label: {
                     ShortsCardView(video: video, onTap: { onSelect(video) })
                         .frame(maxWidth: .infinity)
-                        .aspectRatio(9 / 16, contentMode: .fit)
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
@@ -147,11 +148,10 @@ struct ShortsRowSection: View {
                 ForEach(videos) { video in
                     ShortsCardView(video: video, onTap: { onSelect(video) })
                         .frame(maxWidth: .infinity)
-                        .aspectRatio(9 / 16, contentMode: .fit)
                         .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, videoGridMargin)
             .padding(.vertical, 4)
         }
         .accessibilityIdentifier(accessibilityID)

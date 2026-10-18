@@ -16,10 +16,21 @@ extension Notification.Name {
     // hideVideoFromFeed and hideChannelFromFeed are defined in SmartTubeIOSCore/FeedFeedbackNotifications.swift
 }
 
+extension VerticalAlignment {
+    private enum CardTextTop: AlignmentID {
+        static func defaultValue(in context: ViewDimensions) -> CGFloat { context[.top] }
+    }
+
+    /// Top of a card's text block, where its More button lines up.
+    fileprivate static let cardTextTop = VerticalAlignment(CardTextTop.self)
+}
+
 // MARK: - VideoCardView
 //
-// A card showing a video thumbnail, title, channel and metadata.
-// Adapts its layout for list (compact) and grid (default) modes.
+// VF/VideoCard: a 16:9 cover with duration, Live or Upcoming tag, watch progress and the Watch Later mark, then title,
+// channel and metadata. Grid (default) or compact row. The card is one accessibility element that reads everything
+// once and carries the menu as actions; the menu also opens from the context menu, from a More button on iPhone and
+// iPad (on hover on the Mac) and from Play/Pause on tvOS.
 
 public struct VideoCardView: View {
     public let video: Video
@@ -28,31 +39,34 @@ public struct VideoCardView: View {
     /// Pass `"WL"` when inside the Watch Later playlist so the context menu shows
     /// "Remove from Watch Later" instead of "Save to Watch Later".
     public var currentPlaylistId: String? = nil
-    /// Called when the user taps/selects the card on tvOS (via `.onTapGesture`).
-    /// iOS call sites continue using their own tap handlers; this is only invoked
-    /// from the `#else` (tvOS) modifier block below.
+    /// Opens the video. tvOS calls it on Select; elsewhere it is the VoiceOver default action and callers keep their
+    /// own tap gesture (cards on the Channel and Playlist screens pass none and keep VoiceOver's plain activation).
     public var onSelect: (() -> Void)? = nil
 
-    @Environment(AuthService.self) private var authService
-    @Environment(SettingsStore.self) private var store
-    @Environment(\.innerTubeAPI) private var api
+    // Not private where VideoCardView+Menu.swift needs them.
+    @Environment(AuthService.self) var authService
+    @Environment(SettingsStore.self) var store
+    @Environment(\.innerTubeAPI) var api
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     #if os(iOS)
-    @Environment(PlayerRouter.self) private var playerRouter
+    @Environment(PlayerRouter.self) var playerRouter
     #endif
     @State private var localProgress: Double?
     @State private var isVisibleForPrefetch = false
-    @State private var watchLaterAlert: DownloadAlertItem?
-    @State private var showsOfflineDownload = false
-    @State private var playlistPickerMode: PlaylistPickerSheet.Mode?
+    @State var watchLaterAlert: DownloadAlertItem?
+    @State var showsOfflineDownload = false
+    @State var playlistPickerMode: PlaylistPickerSheet.Mode?
     /// Index into `video.thumbnailFallbackURLs`. -1 = use primary `thumbnailURL`.
     @State private var thumbnailFallbackIndex: Int = -1
-    #if !os(tvOS)
-    #if ENABLE_DOWNLOADS
-    @Environment(VideoDownloadService.self) private var downloadService
-    #endif
+    #if !os(tvOS) && ENABLE_DOWNLOADS
+    @Environment(VideoDownloadService.self) var downloadService
     #endif
     #if os(tvOS)
     @FocusState private var isFocused: Bool
+    @State private var showsActions = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    #elseif os(macOS)
+    @State private var isHovering = false
     #endif
 
     private var effectiveProgress: Double? {
@@ -63,9 +77,11 @@ public struct VideoCardView: View {
     /// `currentPlaylistId` (e.g. the "Watch Later" home tab, which renders through the
     /// generic BrowseView grid that has no per-card playlist context of its own) — lets
     /// Remove/Move-to-Playlist actions work there too, not just from PlaylistView.
-    private var effectivePlaylistId: String? {
+    var effectivePlaylistId: String? {
         currentPlaylistId ?? video.playlistId
     }
+
+    private var isLargeText: Bool { dynamicTypeSize.isAccessibilitySize }
 
     public init(video: Video, compact: Bool = false, currentPlaylistId: String? = nil, onSelect: (() -> Void)? = nil) {
         self.video = video
@@ -74,26 +90,35 @@ public struct VideoCardView: View {
         self.onSelect = onSelect
     }
 
-    // MARK: - Shared card content (tasks + context menu)
-    // Extracted so the tvOS body can wrap it in a Button (which handles the
-    // Select button press natively) while iOS continues using the bare view.
+    // MARK: - Shared card content (tasks + menus)
 
-    private var cardLayout: some View {
-        Group {
-            if compact {
-                compactLayout
-            } else {
-                gridLayout
-            }
+    @ViewBuilder private var layout: some View {
+        if compact {
+            compactLayout
+        } else {
+            gridLayout
         }
+    }
+
+    /// The card as one accessibility element: what it shows, read once, with the menu commands as actions.
+    private var summary: some View {
+        layout
+            // #153: without an explicit content shape, the gaps between cover and text are untappable — very
+            // noticeable with a precise pointer on macOS. Callers attach their tap gesture to the whole card.
+            .contentShape(Rectangle())
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilitySummary)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityActions { menuItems }
+            .modifier(DefaultAccessibilityAction(action: onSelect))
     }
 
     private var cardContent: some View {
         Group {
             if #available(iOS 18, macOS 15, tvOS 18, *) {
-                cardLayout.onScrollVisibilityChange { isVisibleForPrefetch = $0 }
+                summary.onScrollVisibilityChange { isVisibleForPrefetch = $0 }
             } else {
-                cardLayout
+                summary
                     .onAppear { isVisibleForPrefetch = true }
                     .onDisappear { isVisibleForPrefetch = false }
             }
@@ -111,198 +136,21 @@ public struct VideoCardView: View {
             )
         }
         .contextMenu {
-            #if !os(tvOS)
-            if let shareURL = video.shareURL {
-                ShareLink(item: shareURL) {
-                    Label("Share", systemImage: AppSymbol.share)
-                }
-            }
-            #endif
-            if let channelId = video.channelId, !channelId.isEmpty {
-                Button {
-                    NotificationCenter.default.post(
-                        name: .openChannel,
-                        object: nil,
-                        userInfo: ["channelId": channelId, "channelTitle": video.channelTitle]
-                    )
-                } label: {
-                    Label("Open Channel", systemImage: AppSymbol.personRectangle)
-                }
-            }
-            if authService.isSignedIn {
-                if effectivePlaylistId == "WL" {
-                    Button(role: .destructive) {
-                        // Removal is keyed by setVideoId (the playlist-entry token), not the
-                        // video ID — see InnerTubeAPI+Social.swift's removeFromWatchLater (#122).
-                        // It's only populated when this card came from browsing the WL playlist
-                        // itself, which is the only place this button is shown.
-                        // A video saved this session may be listed before YouTube indexed it,
-                        // without its own token; use the one returned when it was saved.
-                        guard
-                            let setVideoId = video.setVideoId
-                                ?? WatchLaterMembershipStore.shared.setVideoId(for: video.id)
-                        else {
-                            watchLaterAlert = DownloadAlertItem(
-                                title: String(localized: "Could Not Remove", bundle: .module),
-                                message: String(
-                                    localized: "Missing playlist entry information for \"\(video.title)\".",
-                                    bundle: .module)
-                            )
-                            return
-                        }
-                        Task {
-                            do {
-                                try await api.removeFromWatchLater(setVideoId: setVideoId)
-                                WatchLaterMembershipStore.shared.markRemoved(video.id)
-                                watchLaterAlert = DownloadAlertItem(
-                                    title: String(localized: "Removed from Watch Later", bundle: .module),
-                                    message: String(
-                                        localized: "\"\(video.title)\" was removed from your Watch Later playlist.",
-                                        bundle: .module)
-                                )
-                            } catch {
-                                watchLaterAlert = DownloadAlertItem(
-                                    title: String(localized: "Could Not Remove", bundle: .module),
-                                    message: error.localizedDescription
-                                )
-                            }
-                        }
-                    } label: {
-                        Label("Remove from Watch Later", systemImage: AppSymbol.watchLater)
-                    }
-                } else {
-                    Button {
-                        Task {
-                            do {
-                                let setVideoId = try await api.addToWatchLater(videoId: video.id)
-                                WatchLaterMembershipStore.shared.markSaved(video, setVideoId: setVideoId)
-                                watchLaterAlert = DownloadAlertItem(
-                                    title: String(localized: "Saved to Watch Later", bundle: .module),
-                                    message: String(
-                                        localized: "\"\(video.title)\" was added to your Watch Later playlist.",
-                                        bundle: .module)
-                                )
-                            } catch {
-                                watchLaterAlert = DownloadAlertItem(
-                                    title: String(localized: "Could Not Save", bundle: .module),
-                                    message: error.localizedDescription
-                                )
-                            }
-                        }
-                    } label: {
-                        Label("Save to Watch Later", systemImage: AppSymbol.watchLater)
-                    }
-                }
-                Button {
-                    playlistPickerMode = .copy
-                } label: {
-                    Label("Copy to Playlist", systemImage: "rectangle.stack.badge.plus")
-                }
-                if effectivePlaylistId != nil {
-                    Button {
-                        playlistPickerMode = .move
-                    } label: {
-                        Label("Move to Playlist", systemImage: "arrow.right.circle")
-                    }
-                }
-            }
-            Button {
-                Task { await CurrentQueueStore.shared.append(video) }
-            } label: {
-                Label("Add to Queue", systemImage: "text.badge.plus")
-            }
-            Button {
-                Task {
-                    let count = await CurrentQueueStore.shared.videos.count
-                    await CurrentQueueStore.shared.insertNext(video, afterIndex: count - 1)
-                }
-            } label: {
-                Label("Play Next", systemImage: "text.insert")
-            }
-            #if os(iOS)
-            Button {
-                playerRouter.open(video: video, api: api, incognito: true)
-            } label: {
-                Label("Play Incognito", systemImage: "eyeglasses")
-            }
-            #endif
-            if authService.isSignedIn {
-                Button(role: .destructive) {
-                    Task {
-                        if let token = video.notInterestedToken {
-                            try? await api.sendFeedback(token: token)
-                        } else {
-                            try? await api.sendFeedbackForVideo(videoId: video.id, iconType: "NOT_INTERESTED")
-                        }
-                        NotificationCenter.default.post(
-                            name: .hideVideoFromFeed,
-                            object: nil,
-                            userInfo: ["videoId": video.id]
-                        )
-                    }
-                } label: {
-                    Label("Not Interested", systemImage: "hand.raised")
-                }
-                if let channelId = video.channelId, !channelId.isEmpty {
-                    Button(role: .destructive) {
-                        Task {
-                            if let token = video.hideChannelToken {
-                                try? await api.sendFeedback(token: token)
-                            } else {
-                                try? await api.sendFeedbackForVideo(videoId: video.id, iconType: "BLOCK_CHANNEL")
-                            }
-                            store.settings.blockedChannels[channelId] = video.channelTitle
-                            NotificationCenter.default.post(
-                                name: .hideChannelFromFeed,
-                                object: nil,
-                                userInfo: ["channelId": channelId]
-                            )
-                        }
-                    } label: {
-                        Label("Don't Recommend Channel", systemImage: "person.slash")
-                    }
-                }
-            }
-            OfflineWatchButton(video: video) { showsOfflineDownload = true }
-            #if !os(tvOS) && ENABLE_DOWNLOADS
-            Button {
-                downloadService.download(video: video)
-            } label: {
-                if downloadService.state.isActive {
-                    Label("Downloading…", systemImage: AppSymbol.download)
-                } else {
-                    Label("Download to Gallery", systemImage: AppSymbol.download)
-                }
-            }
-            .disabled(downloadService.state.isActive)
-            #endif
+            menuItems
         } preview: {
-            Group {
-                if compact {
-                    compactLayout
-                } else {
-                    gridLayout
-                }
-            }
-            .padding(12)
-            .frame(width: 300)
-            .background(.background)
+            layout
+                .padding(VFSpace.s12)
+                .frame(width: 300)
+                .background(.background)
         }
-        #if !os(tvOS)
-        // Download state is observed at app-root level (RootView) so the alert
-        // survives context menu dismiss animations that would otherwise reset
-        // the card-level @State. Only the button label/disabled state is read here.
-        .padding(0)  // zero-effect modifier to keep the view chain well-typed
-        #endif
     }
-
 }
 
 extension VideoCardView {
 
     // MARK: - Body
 
-    public var body: some View {
+    @ViewBuilder public var body: some View {
         #if os(tvOS)
         // Modifier order is critical on tvOS:
         //
@@ -321,10 +169,15 @@ extension VideoCardView {
         //   without also playing the video.
         // • .focusable() between contextMenu and onTapGesture keeps the view in the
         //   focus engine so D-pad UP/DOWN can reach it.
+        // Play/Pause opens the same commands as a dialog and never starts the video.
         cardContent
             .focusable()
             .onTapGesture { onSelect?() }
             .focused($isFocused)
+            .onPlayPauseCommand { showsActions = true }
+            .confirmationDialog(Text(displayTitle), isPresented: $showsActions, titleVisibility: .visible) {
+                menuItems
+            }
             .onAppear { feedLog.info("[feed] id=\(self.video.id) title=\(self.video.title)") }
             .onChange(of: isFocused) { _, newValue in
                 focusLog.info("[VideoCard] isFocused=\(newValue) id=\(self.video.id)")
@@ -337,10 +190,11 @@ extension VideoCardView {
                 }
                 #endif
             }
+            // Lift and glow; Reduce Motion keeps the glow and drops the scale.
             .shadow(color: isFocused ? .white.opacity(0.9) : .clear, radius: 18, x: 0, y: 0)
-            .scaleEffect(isFocused ? 1.08 : 1.0)
+            .scaleEffect(isFocused && !reduceMotion ? 1.08 : 1.0)
             .zIndex(isFocused ? 1 : 0)
-            .animation(.easeInOut(duration: 0.15), value: isFocused)
+            .vfAnimation(VFMotion.fast, value: isFocused)
             .sheet(isPresented: $showsOfflineDownload) { OfflineDownloadSheet(video: video) }
             .feedbackAlert(item: $watchLaterAlert)
             .sheet(item: $playlistPickerMode) { mode in
@@ -350,7 +204,9 @@ extension VideoCardView {
                 )
             }
         #else
-        cardContent
+        let card =
+            cardContent
+            .overlay(alignment: Alignment(horizontal: .trailing, vertical: .cardTextTop)) { moreButton }
             .onAppear { feedLog.info("[feed] id=\(self.video.id) title=\(self.video.title)") }
             .sheet(isPresented: $showsOfflineDownload) { OfflineDownloadSheet(video: video) }
             .feedbackAlert(item: $watchLaterAlert)
@@ -360,139 +216,224 @@ extension VideoCardView {
                     onFinished: handlePlaylistPickerResult
                 )
             }
+        #if os(macOS)
+        card.onHover { isHovering = $0 }
+        #else
+        // A container, so the caller's `video.card.<id>` identifier and value land on the card once instead of
+        // overriding the More button's own identifier. The Mac shows More only on hover, hidden from accessibility.
+        card.accessibilityElement(children: .contain)
+        #endif
         #endif
     }
 
-    private func handlePlaylistPickerResult(_ result: Result<PlaylistInfo, Error>) {
-        switch result {
-        case .success(let playlist):
-            watchLaterAlert = DownloadAlertItem(
-                title: String(localized: "Added to Playlist", bundle: .module),
-                message: String(
-                    localized: "\"\(video.title)\" was added to \"\(playlist.title)\".", bundle: .module)
-            )
-        case .failure(let error):
-            watchLaterAlert = DownloadAlertItem(
-                title: String(localized: "Could Not Update Playlist", bundle: .module),
-                message: error.localizedDescription
-            )
+    // MARK: More button
+
+    #if !os(tvOS)
+    /// Touch target on iPhone and iPad, pointer target on the Mac; the text keeps clear of it.
+    private var moreTarget: CGFloat {
+        #if os(macOS)
+        return VFTarget.pointer
+        #else
+        return VFTarget.touch
+        #endif
+    }
+
+    /// A separate control (and VoiceOver element) next to the title, outside the card's tap area.
+    /// The Mac shows it while the pointer is over the card, next to the context menu.
+    private var moreButton: some View {
+        Menu {
+            menuItems
+        } label: {
+            // The glyph stops growing at the largest standard size so it keeps clear of the title; the large
+            // content viewer shows it enlarged on a long press.
+            Image(systemName: AppSymbol.more)
+                .font(.body.weight(.semibold))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .foregroundStyle(.secondary)
+                .frame(width: moreTarget, height: moreTarget)
+                .contentShape(Rectangle())
         }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .accessibilityShowsLargeContentViewer()
+        .accessibilityLabel(Text("More: \(displayTitle)", bundle: .module))
+        .accessibilityIdentifier(AccessibilityID.videoCardMenu(video.id))
+        // Centre the glyph on the first line of the title rather than the top of the text.
+        .alignmentGuide(.cardTextTop) { $0[.top] + ($0.height - VFTarget.pointer) / 2 }
+        .opacity(moreButtonVisible ? 1 : 0)
+        .accessibilityHidden(!moreButtonVisible)
+    }
+
+    private var moreButtonVisible: Bool {
+        #if os(macOS)
+        return isHovering
+        #else
+        return true
+        #endif
+    }
+    #endif
+
+    /// Space the text leaves for the More button.
+    private var moreButtonInset: CGFloat {
+        #if os(tvOS)
+        return 0
+        #else
+        return moreTarget
+        #endif
     }
 
     // MARK: Grid layout (default)
 
     private var gridLayout: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Color.clear
-                .aspectRatio(16 / 9, contentMode: .fit)
-                .overlay(thumbnailView.clipped())
-                .overlay(alignment: .bottom) {
-                    if let progress = effectiveProgress, progress > 0 {
-                        watchProgressBar(progress)
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(alignment: .bottomTrailing) {
-                    let dur = video.formattedDuration
-                    if !dur.isEmpty { durationBadge(dur) }
-                }
-                .overlay(alignment: .bottomLeading) {
-                    if let label = uploadDateLabel { durationBadge(label) }
-                }
-                .overlay(alignment: .topLeading) {
-                    if video.isLive { liveBadge }
-                }
-                .overlay(alignment: .topTrailing) {
-                    if WatchLaterMembershipStore.shared.contains(video.id) { watchLaterSavedBadge }
-                }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(displayTitle)
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(2, reservesSpace: true)
-                    .accessibilityIdentifier("video.card.title")
-                Text(video.channelTitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .onTapGesture {
-                        guard let channelId = video.channelId, !channelId.isEmpty else { return }
-                        NotificationCenter.default.post(
-                            name: .openChannel,
-                            object: nil,
-                            userInfo: ["channelId": channelId, "channelTitle": video.channelTitle]
-                        )
-                    }
-                    .accessibilityIdentifier("video.card.channelName")
-                HStack(spacing: 4) {
-                    let vc = video.formattedViewCount
-                    if !vc.isEmpty { Text(vc) }
-                }
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-            }
-            .padding(.horizontal, 2)
+        VStack(alignment: .leading, spacing: VFSpace.s8) {
+            cover(cornerRadius: VFRadius.card)
+            textBlock(reservesTitleSpace: true)
+                .padding(.trailing, moreButtonInset)
         }
-        // #153: without an explicit content shape, SwiftUI's default hit-test area for this
-        // compound view can leave gaps (the VStack spacing, padding) untappable — invisible on
-        // iOS/tvOS where touches are more forgiving, but very noticeable with a precise mouse
-        // pointer on macOS. The caller (VideoGridSection) attaches its whole-card tap gesture
-        // externally, so it needs this view's own hit-test region to cover its full frame.
-        .contentShape(Rectangle())
     }
 
     // MARK: Compact (list) layout
 
+    #if os(tvOS)
+    private static let compactCoverWidth: CGFloat = 296
+    #else
+    private static let compactCoverWidth: CGFloat = 148
+    #endif
+
+    /// Cover beside the text; at accessibility text sizes the cover goes above it at full width.
     private var compactLayout: some View {
-        HStack(alignment: .top, spacing: 10) {
-            thumbnailView
-                .frame(width: 120, height: 68)
-                .overlay(alignment: .bottom) {
-                    if let progress = effectiveProgress, progress > 0 {
-                        watchProgressBar(progress)
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(alignment: .bottomTrailing) {
-                    let dur = video.formattedDuration
-                    if !dur.isEmpty { durationBadge(dur) }
-                }
-                .overlay(alignment: .bottomLeading) {
-                    if let label = uploadDateLabel { durationBadge(label) }
-                }
-                .overlay(alignment: .topTrailing) {
-                    if WatchLaterMembershipStore.shared.contains(video.id) { watchLaterSavedBadge }
-                }
-            VStack(alignment: .leading, spacing: 3) {
-                Text(displayTitle)
-                    .font(.subheadline)
-                    .lineLimit(2)
-                    .accessibilityIdentifier("video.card.title")
-                Text(video.channelTitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .onTapGesture {
-                        guard let channelId = video.channelId, !channelId.isEmpty else { return }
-                        NotificationCenter.default.post(
-                            name: .openChannel,
-                            object: nil,
-                            userInfo: ["channelId": channelId, "channelTitle": video.channelTitle]
-                        )
-                    }
-                    .accessibilityIdentifier("video.card.channelName")
-                let vc = video.formattedViewCount
-                if !vc.isEmpty {
-                    Text(vc)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            Spacer(minLength: 0)
+        let stack =
+            isLargeText
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: VFSpace.s8))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: VFSpace.s12))
+        return stack {
+            cover(cornerRadius: VFRadius.small)
+                .frame(width: isLargeText ? nil : Self.compactCoverWidth)
+            textBlock(reservesTitleSpace: false)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.trailing, moreButtonInset)
         }
-        .contentShape(Rectangle())  // #153: see gridLayout's doc comment
     }
 
-    // MARK: Shared
+    // MARK: Text
+
+    /// Title, channel and metadata in semantic styles. At accessibility sizes every line wraps instead of truncating.
+    private func textBlock(reservesTitleSpace: Bool) -> some View {
+        VStack(alignment: .leading, spacing: VFSpace.s4 / 2) {
+            let title = Text(displayTitle)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+                // UI tests compare the exact title, apart from the spoken summary.
+                .accessibilityIdentifier(AccessibilityID.videoCardTitle)
+            if isLargeText {
+                title.fixedSize(horizontal: false, vertical: true)
+            } else {
+                title.lineLimit(2, reservesSpace: reservesTitleSpace)
+            }
+            Text(video.channelTitle)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .lineLimit(isLargeText ? nil : 1)
+                .onTapGesture(perform: openChannel)
+            if let metadata = metadataText {
+                metadata
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(isLargeText ? nil : 1)
+            }
+        }
+        .alignmentGuide(.cardTextTop) { $0[.top] }
+    }
+
+    /// Views and age; the scheduled start for an upcoming video; "DeArrow" when it replaced the title or cover.
+    /// At accessibility sizes it starts with the cover badge's text, since the badge stops growing at xxxLarge.
+    private var metadataText: Text? {
+        var parts: [String] = []
+        if isLargeText, let badge = coverBadgeText { parts.append(badge) }
+        if video.isUpcoming {
+            if let start = video.publishedAt { parts.append(start.formatted(Self.scheduleFormat)) }
+        } else {
+            parts.append(video.formattedViewCount)
+            if !video.isLive, let age = video.publishedAgeLabel() { parts.append(age) }
+        }
+        let line = parts.filter { !$0.isEmpty }.joined(separator: " · ")
+        guard isDeArrowed else { return line.isEmpty ? nil : Text(line) }
+        let marker = Text("DeArrow", bundle: .module).fontWeight(.semibold).foregroundStyle(.tint)
+        return line.isEmpty ? marker : Text(verbatim: "\(line) · ") + marker  // verbatim: data plus separator
+    }
+
+    private static let scheduleFormat = Date.FormatStyle.dateTime.month(.abbreviated).day().hour().minute()
+
+    /// What the cover badge says: LIVE, Upcoming or the duration.
+    private var coverBadgeText: String? {
+        if video.isLive { return String(localized: "LIVE", bundle: .module) }
+        if video.isUpcoming { return String(localized: "Upcoming", bundle: .module) }
+        let duration = video.formattedDuration
+        return duration.isEmpty ? nil : duration
+    }
+
+    /// What VoiceOver reads for the card: duration once, then views, age, Watch Later and progress.
+    /// The title always leads (UI tests read it as the label's prefix); empty details are left out.
+    private var accessibilitySummary: Text {
+        var parts = [video.channelTitle]
+        if video.isLive {
+            parts.append(String(localized: "LIVE", bundle: .module))
+        } else if video.isUpcoming {
+            parts.append(String(localized: "Upcoming", bundle: .module))
+            if let start = video.publishedAt { parts.append(start.formatted(Self.scheduleFormat)) }
+        } else if let duration = video.accessibilityDuration {
+            parts.append(duration)
+        }
+        parts.append(video.formattedViewCount)
+        if !video.isLive, !video.isUpcoming, let age = video.publishedAgeLabel() { parts.append(age) }
+        if WatchLaterMembershipStore.shared.contains(video.id) {
+            parts.append(String(localized: "Saved to Watch Later", bundle: .module))
+        }
+        if let progress = effectiveProgress, progress > 0 {
+            let percent = progress.formatted(.percent.precision(.fractionLength(0)))
+            parts.append(String(localized: "\(percent) watched", bundle: .module))
+        }
+        return Text(([displayTitle] + parts.filter { !$0.isEmpty }).joined(separator: ", "))
+    }
+
+    // MARK: Cover
+
+    private func cover(cornerRadius: CGFloat) -> some View {
+        Color.clear
+            .aspectRatio(16 / 9, contentMode: .fit)
+            .overlay(thumbnailView.clipped())
+            .overlay(alignment: .bottom) {
+                if let progress = effectiveProgress, progress > 0 {
+                    watchProgressBar(progress)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay(alignment: .bottomTrailing) {
+                let duration = video.formattedDuration
+                if !video.isLive, !video.isUpcoming, !duration.isEmpty {
+                    MediaBadge { Text(duration) }
+                }
+            }
+            .overlay(alignment: .bottomLeading) {
+                if video.isLive {
+                    MediaBadge {
+                        HStack(spacing: VFSpace.s4) {
+                            Image(systemName: AppSymbol.liveDot)
+                                .imageScale(.small)
+                                .foregroundStyle(.red)
+                            Text("LIVE", bundle: .module)
+                        }
+                    }
+                } else if video.isUpcoming {
+                    MediaBadge { Text("Upcoming", bundle: .module).textCase(.uppercase) }
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if WatchLaterMembershipStore.shared.contains(video.id) { watchLaterSavedMark }
+            }
+    }
 
     /// Returns the DeArrow thumbnail URL if the feature is enabled and a timestamp is available.
     private var deArrowThumbnailURL: URL? {
@@ -506,6 +447,10 @@ extension VideoCardView {
     private var displayTitle: String {
         if store.settings.deArrowEnabled, let t = video.deArrowTitle { return t }
         return video.title
+    }
+
+    private var isDeArrowed: Bool {
+        store.settings.deArrowEnabled && (video.deArrowTitle != nil || video.deArrowThumbnailTimestamp != nil)
     }
 
     @ViewBuilder
@@ -541,10 +486,15 @@ extension VideoCardView {
                         placeholderThumbnail
                             .onAppear { thumbnailFallbackIndex = nextIndex }
                     } else {
-                        placeholderThumbnail
+                        missingCover
                     }
                 default:
-                    placeholderThumbnail.overlay(ProgressView())
+                    // Loading draws the empty surface, like the design's skeleton.
+                    if url == nil {
+                        missingCover
+                    } else {
+                        placeholderThumbnail
+                    }
                 }
             }
             .task(id: video.id) {
@@ -566,92 +516,94 @@ extension VideoCardView {
     }
 
     private var systemPlaylistThumbnail: some View {
-        let icon = video.id == "WL" ? "clock.fill" : "hand.thumbsup.fill"
+        let icon = video.id == "WL" ? AppSymbol.watchLaterPlaylist : AppSymbol.likedPlaylist
         return ZStack {
-            Rectangle().fill(Color.secondary.opacity(0.15))
+            VFColor.surface
             Image(systemName: icon)
-                .font(.system(size: 36, weight: .light))
-                .foregroundStyle(Color.secondary)
+                .font(.largeTitle.weight(.light))
+                .foregroundStyle(.secondary)
         }
     }
 
     private var placeholderThumbnail: some View {
-        Rectangle().fill(Color.secondary.opacity(0.2))
+        VFColor.surface
     }
 
+    /// No cover at all: the surface with a play symbol, so the card does not look like it is still loading.
+    private var missingCover: some View {
+        VFColor.surface.overlay {
+            Image(systemName: AppSymbol.noCover)
+                .font(.title2)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// The fill runs on an opaque track in the page background, so it keeps its contrast over any frame: every accent
+    /// reaches 4.5:1 on `background` in both themes (DesignTokenTests.accentPairsAreReadable).
     private func watchProgressBar(_ fraction: Double) -> some View {
         GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Rectangle()
-                    .fill(Color.black.opacity(0.3))
-                Rectangle()
-                    .fill(Color.red)
-                    .frame(width: geo.size.width * fraction)
-            }
+            Rectangle()
+                .fill(.tint)
+                .frame(width: geo.size.width * min(max(fraction, 0), 1))
         }
-        .frame(height: 3)
-    }
-
-    private func durationBadge(_ text: String) -> some View {
-        Text(text)
-            .font(.caption2)
-            .fontWeight(.semibold)
-            .padding(.horizontal, 4)
-            .padding(.vertical, 2)
-            .background(.black.opacity(0.75))
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 3))
-            .padding(4)
-    }
-
-    private var uploadDateLabel: String? {
-        guard !video.isLive else { return nil }
-        // Upcoming/scheduled: show when the stream starts instead of an upload date.
-        if video.isUpcoming {
-            guard let date = video.publishedAt else { return nil }
-            let cal = Calendar.current
-            let timeFmt = DateFormatter()
-            timeFmt.locale = .autoupdatingCurrent
-            timeFmt.timeStyle = .short
-            if cal.isDateInToday(date) {
-                return "Scheduled: Today, \(timeFmt.string(from: date))"
-            }
-            if cal.isDateInTomorrow(date) {
-                return "Scheduled: Tomorrow, \(timeFmt.string(from: date))"
-            }
-            let dateFmt = DateFormatter()
-            dateFmt.locale = .autoupdatingCurrent
-            dateFmt.dateStyle = .medium
-            dateFmt.timeStyle = .short
-            return "Scheduled: \(dateFmt.string(from: date))"
-        }
-        return video.publishedAgeLabel()
-    }
-
-    private var liveBadge: some View {
-        Text("LIVE")
-            .font(.caption2)
-            .fontWeight(.bold)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
-            .background(.red)
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 3))
-            .padding(4)
+        .frame(height: VFSpace.s4)
+        .background(.background)
     }
 
     /// #39: shown when this video was saved to Watch Later via this app. See
     /// WatchLaterMembershipStore's doc comment for why this can't reflect Watch
     /// Later state from other clients.
-    private var watchLaterSavedBadge: some View {
-        Image(systemName: "bookmark.fill")
-            .font(.caption2)
-            .padding(5)
-            .background(.black.opacity(0.75))
-            .foregroundStyle(.white)
-            .clipShape(Circle())
-            .padding(4)
-            .accessibilityLabel(Text("Saved to Watch Later", bundle: .module))
+    private var watchLaterSavedMark: some View {
+        Image(systemName: AppSymbol.savedToWatchLater)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(VFColor.onMedia)
+            .padding(VFSpace.s8)
+            .background(VFColor.scrim, in: Circle())
+            .padding(VFSpace.s8)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+}
+
+// MARK: - MediaBadge
+
+/// Duration, Live and Upcoming labels on a cover: white on the 72 % scrim, whatever the frame behind it.
+/// Capped at the largest standard text size so it never hides the cover; at accessibility sizes the cards repeat
+/// its text under the title, and VoiceOver reads the card's label.
+struct MediaBadge<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        content
+            .font(.caption.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(VFColor.onMedia)
+            .lineLimit(1)
+            .padding(.horizontal, VFSpace.s8)
+            .padding(.vertical, VFSpace.s4 / 2)
+            .background(VFColor.scrim, in: RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous))
+            .padding(VFSpace.s8)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+}
+
+extension Video {
+    /// Duration as words ("12 minutes, 4 seconds") for VoiceOver; `nil` without a duration.
+    var accessibilityDuration: String? {
+        guard let duration, duration > 0 else { return nil }
+        return Duration.seconds(duration).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .wide))
+    }
+}
+
+/// VoiceOver activation opens the video through `action` when the caller passes one; otherwise it taps the card.
+private struct DefaultAccessibilityAction: ViewModifier {
+    let action: (() -> Void)?
+
+    func body(content: Content) -> some View {
+        if let action {
+            content.accessibilityAction(.default, action)
+        } else {
+            content
+        }
     }
 }
 

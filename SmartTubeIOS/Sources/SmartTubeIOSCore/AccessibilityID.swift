@@ -127,6 +127,14 @@ public enum AccessibilityID {
         "video.card.\(videoId)"
     }
 
+    /// The card's More button; outside the `video.card.` prefix so card queries never match it.
+    public static func videoCardMenu(_ videoId: String) -> String {
+        "videoCardMenu.\(videoId)"
+    }
+
+    /// The card's title text, exactly as shown; outside the `video.card.` prefix like `videoCardMenu`.
+    public static var videoCardTitle: String { "videoCardTitle" }
+
     public static func shortsCard(_ videoId: String) -> String {
         "shorts.card.\(videoId)"
     }

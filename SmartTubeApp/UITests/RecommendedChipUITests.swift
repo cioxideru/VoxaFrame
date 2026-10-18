@@ -337,8 +337,9 @@ final class RecommendedChipUITests: XCTestCase {
         for i in 0..<checkCount {
             let card = cards3.element(boundBy: i)
             guard card.exists else { continue }
-            let titleLabel = card.staticTexts.matching(identifier: "video.card.title").firstMatch
-            if titleLabel.exists && titleLabel.label.trimmingCharacters(in: .whitespaces).isEmpty {
+            // The card's summary starts with the title, so an empty title starts it with ",".
+            let label = UITestHelpers.cardSummary(card).trimmingCharacters(in: .whitespaces)
+            if label.isEmpty || label.hasPrefix(",") {
                 emptyTitleCards.append(card.identifier)
             }
         }

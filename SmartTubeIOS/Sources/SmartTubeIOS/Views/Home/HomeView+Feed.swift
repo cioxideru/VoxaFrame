@@ -150,16 +150,21 @@ extension HomeView {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                        // A refresh or next page failed; the videos already loaded stay below.
+                        if sectionVM.error != nil, !sectionVM.isLoading {
+                            HomeErrorBanner { sectionVM.retryAfterError() }
+                        }
                         if selectedSection.type == .playlists, queueVideosCount > 0 {
                             currentQueueRow
                         }
                         ForEach(rowGroups.filter { !$0.videos.isEmpty }) { group in
                             if let title = group.title, !title.isEmpty {
                                 Text(title)
-                                    .font(.headline)
-                                    .padding(.horizontal)
-                                    .padding(.top, 16)
-                                    .padding(.bottom, 4)
+                                    .font(.title3.weight(.semibold))
+                                    .accessibilityAddTraits(.isHeader)
+                                    .padding(.horizontal, videoGridMargin)
+                                    .padding(.top, VFSpace.s16)
+                                    .padding(.bottom, VFSpace.s4)
                             }
                             VideoRowSection(videos: group.videos, onSelect: { selectVideo($0, from: group.videos) })
                         }
@@ -180,8 +185,11 @@ extension HomeView {
                             let paginationTrigger
                         {
                             Button("More") { sectionVM.loadMoreIfNeeded(lastVideo: paginationTrigger) }
+                                .buttonStyle(.bordered)
                                 .disabled(sectionVM.isLoading || sectionVM.isLoadingMore)
                                 .accessibilityIdentifier(AccessibilityID.homeFilteredLoadMoreButton)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, VFSpace.s12)
                         }
                         if sectionVM.isLoading {
                             ProgressView().frame(maxWidth: .infinity).padding()

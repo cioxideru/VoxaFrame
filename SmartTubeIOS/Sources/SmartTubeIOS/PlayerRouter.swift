@@ -28,5 +28,11 @@ public final class PlayerRouter {
         #endif
         playerState.play(video: video, settings: settingsStore.settings, incognito: incognito)
     }
+
+    /// Current Queue position of the video the app player is playing; `nil` when it plays nothing from the queue.
+    /// Card menus pass it to `CurrentQueueStore.playNext(_:playingIndex:)`.
+    var playingQueueIndex: Int? {
+        CurrentQueueStore.queueIndex(of: playerState.currentVideo)
+    }
 }
 #endif  // os(iOS)

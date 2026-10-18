@@ -127,7 +127,9 @@ final class WKHLSReplayRegressionUITests: XCTestCase {
         let _ = XCTWaiter().wait(for: [preWarmExpectation], timeout: 90)
 
         // The title is on a sibling element under the same card.
-        let expectedTitle = titleText(for: firstCard)
+        let expectedTitle = try XCTUnwrap(
+            titleText(for: firstCard), "The card exposes no videoCardTitle")
+        XCTAssertFalse(expectedTitle.isEmpty, "The card's title is empty")
 
         var replayTimings: [(cycle: Int, elapsed: Double)] = []
 
@@ -196,14 +198,12 @@ final class WKHLSReplayRegressionUITests: XCTestCase {
             )
 
             // 4. Assert the title matches what we expect (no wrong video).
-            if let expected = expectedTitle, !expected.isEmpty {
-                let actualTitle = titleLabel.label
-                XCTAssertEqual(
-                    actualTitle, expected,
-                    "Cycle \(cycle): player title '\(actualTitle)' ≠ expected '\(expected)' — "
-                        + "stale wkHLS session served a different video's content before 403"
-                )
-            }
+            let actualTitle = titleLabel.label
+            XCTAssertEqual(
+                actualTitle, expectedTitle,
+                "Cycle \(cycle): player title '\(actualTitle)' ≠ expected '\(expectedTitle)' — "
+                    + "stale wkHLS session served a different video's content before 403"
+            )
 
             // 5. Let it play for 3 s (enough to confirm buffering started).
             Thread.sleep(forTimeInterval: 3)
@@ -302,13 +302,10 @@ final class WKHLSReplayRegressionUITests: XCTestCase {
         return cards.firstMatch
     }
 
-    /// Returns the text of the `video.card.title` element inside the given card.
+    /// The card's exact title text (`videoCardTitle`), not its spoken summary.
     private func titleText(for card: XCUIElement) -> String? {
-        let titleEl = card.staticTexts["video.card.title"].firstMatch
-        if titleEl.exists { return titleEl.label }
-        // SwiftUI propagates identifiers to leaf nodes; look in siblings.
-        let allTitles = app.staticTexts.matching(identifier: "video.card.title")
-        return allTitles.count > 0 ? allTitles.firstMatch.label : nil
+        let title = card.staticTexts[AccessibilityID.videoCardTitle].firstMatch
+        return title.exists ? title.label : nil
     }
 }
 

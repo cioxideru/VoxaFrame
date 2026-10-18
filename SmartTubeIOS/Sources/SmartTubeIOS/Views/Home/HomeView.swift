@@ -20,9 +20,9 @@ public struct HomeView: View {
     @Environment(AuthService.self) private var auth
     @Environment(SettingsStore.self) var store
     @Environment(\.innerTubeAPI) private var api
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isLandscapeLayout) private var isLandscapeLayout
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -43,6 +43,8 @@ public struct HomeView: View {
     @State private var homeLayout = HomeFeedLayout()
     @State private var sectionLayout = HomeFeedLayout()
     @State private var homeFeedHeight: CGFloat = 0
+    /// Width of the content area; the video grids drop columns rather than go below `VFMargin.cardMinWidth`.
+    @State private var feedWidth: CGFloat = 0
     @State var queueVideosCount: Int = 0
     // Auto-retry tracking: record the type-specific video count at the moment a
     // scroll trigger fires so onChange can detect whether the next page helped.
@@ -52,6 +54,7 @@ public struct HomeView: View {
     @State var nonShortsCountAtTrigger = 0
     #if os(tvOS)
     @FocusState private var focusedSection: BrowseSection?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     #endif
     private var visibleSections: [BrowseSection] {
         let types = store.settings.enabledSections
@@ -76,6 +79,12 @@ public struct HomeView: View {
         _sectionVM = State(initialValue: BrowseViewModel(api: api))
     }
 
+    /// Columns of every video grid on this screen; the Shorts rows are placed by the same count.
+    var feedColumns: Int {
+        videoGridColumnCount(
+            store.settings, landscape: isLandscapeLayout, width: feedWidth, dynamicTypeSize: dynamicTypeSize)
+    }
+
     #if os(iOS)
     private var navigationBarVisibility: Visibility {
         #if !targetEnvironment(macCatalyst)
@@ -94,10 +103,12 @@ public struct HomeView: View {
     public var body: some View {
         VStack(spacing: 0) {
             chipBar
-            #if !os(tvOS)
-            Divider()
-            #endif
             contentArea
+                .onGeometryChange(for: CGFloat.self) {
+                    $0.size.width
+                } action: {
+                    feedWidth = $0
+                }
                 .onChange(of: store.settings.hideWatchedVideos ? store.settings.hideWatchedThreshold : nil) {
                     homeLayout = HomeFeedLayout()
                     sectionLayout = HomeFeedLayout()
@@ -209,14 +220,12 @@ extension HomeView {
 
     private var chipBar: some View {
         #if os(tvOS)
-        HStack(spacing: 8) {
+        HStack(spacing: VFSpace.s12) {
             ForEach(visibleSections) { section in
                 chipButton(section: section)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(.ultraThinMaterial)
+        .padding(.vertical, VFSpace.s12)
         .focusSection()
         .defaultFocus($focusedSection, selectedSection)
         .accessibilityElement(children: .contain)
@@ -224,13 +233,13 @@ extension HomeView {
         #else
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
+                HStack(spacing: VFSpace.s8) {
                     ForEach(visibleSections) { section in
                         chipButton(section: section).id(section.id)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .padding(.horizontal, videoGridMargin)
+                .padding(.vertical, VFSpace.s4)
             }
             // Keep the selected chip in view when the section changes by swipe (#159) or
             // App Intent, not by tapping the chip.
@@ -256,51 +265,37 @@ extension HomeView {
             }
         }
         #if os(tvOS)
+        // The chip draws focus itself: filled while focused or selected, and only focus adds the ring and the lift
+        // (Reduce Motion keeps the ring and drops the lift), so focused and selected stay distinguishable.
         let isFocused = focusedSection == section
+        let isFilled = isSelected || isFocused
         return Button(action: action) {
+            // The label style is set on the text only and the fill is a concrete colour: a hierarchical `.primary` fill
+            // would resolve against the label style and match the text.
             Text(section.title)
                 .font(.headline)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(
-                    (isSelected || isFocused) ? Color.primary : Color.secondary.opacity(0.15),
-                    in: Capsule()
-                )
-                .foregroundStyle(
-                    (isSelected || isFocused)
-                        ? Color(white: colorScheme == .dark ? 0 : 1)
-                        : Color.primary
-                )
+                .foregroundStyle(isFilled ? AnyShapeStyle(.background) : AnyShapeStyle(.primary))
+                .padding(.horizontal, VFSpace.s24)
+                .padding(.vertical, VFSpace.s12)
+                .background(isFilled ? Color.primary : VFColor.surface, in: Capsule())
+                .overlay {
+                    if isFocused {
+                        Capsule().strokeBorder(Color.primary, lineWidth: 3).padding(-VFSpace.s4 - 3)
+                    }
+                }
                 .focusEffectDisabled()
         }
         .buttonStyle(.borderless)
-        .scaleEffect(isFocused ? 1.12 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: focusedSection)
-        .animation(.easeInOut(duration: 0.15), value: selectedSection)
+        .scaleEffect(isFocused && !reduceMotion ? 1.12 : 1.0)
+        .vfAnimation(VFMotion.fast, value: focusedSection)
+        .vfAnimation(VFMotion.fast, value: selectedSection)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         .accessibilityLabel(section.title)
         .accessibilityIdentifier(AccessibilityID.homeSectionChip(section.title))
         .focused($focusedSection, equals: section)
         #else
-        return Button(action: action) {
-            Text(section.title)
-                .font(.subheadline.weight(.medium))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(
-                    isSelected ? Color.primary : Color.secondary.opacity(0.15),
-                    in: Capsule()
-                )
-                .foregroundStyle(
-                    isSelected
-                        ? Color(white: colorScheme == .dark ? 0 : 1)
-                        : Color.primary
-                )
-        }
-        .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.15), value: selectedSection)
-        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-        .accessibilityIdentifier(AccessibilityID.homeSectionChip(section.title))
+        return SectionChip(title: section.title, isSelected: isSelected, action: action)
+            .accessibilityIdentifier(AccessibilityID.homeSectionChip(section.title))
         #endif
     }
 
@@ -378,20 +373,41 @@ extension HomeView {
     }
 
     private var homeSignedOutPrompt: some View {
-        VStack(spacing: 16) {
-            Image(systemName: AppSymbol.personCircleQuestion)
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary)
-            Text("Sign in to see your feed")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            Button("Sign In") { showSignIn = true }
+        fullArea(
+            ContentUnavailableView {
+                Label {
+                    Text("Sign in to see your feed", bundle: .module)
+                } icon: {
+                    Image(systemName: AppSymbol.personCircleQuestion)
+                }
+            } description: {
+                Text(
+                    "Sign in with a code from your phone or computer. You don't enter your password in VoxaFrame.",
+                    bundle: .module)
+            } actions: {
+                Button {
+                    showSignIn = true
+                } label: {
+                    Text("Sign In", bundle: .module)
+                }
                 .buttonStyle(.vfProminent)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(Rectangle())
+                // The guest path stays one step away.
+                Button {
+                    NotificationCenter.default.post(name: .navigateToSearch, object: nil)
+                } label: {
+                    Text("Open search", bundle: .module)
+                }
+            })
+    }
+
+    /// A state that fills the content area; on iPhone and iPad a sideways swipe over it still changes the section.
+    @ViewBuilder
+    private func fullArea(_ content: some View) -> some View {
+        let area = content.frame(maxWidth: .infinity, maxHeight: .infinity).contentShape(Rectangle())
         #if os(iOS)
-        .modifier(sectionSwipe)
+        area.modifier(sectionSwipe)
+        #else
+        area
         #endif
     }
 
@@ -402,8 +418,23 @@ extension HomeView {
     private var homeShelves: some View {
         Group {
             if homeVM.isLoadingAny && homeVM.mergedVideos.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                HomeLoadingView(columns: feedColumns)
+            } else if homeVM.mergedVideos.isEmpty && homeVM.homeShortsVideos.isEmpty {
+                fullArea(
+                    ContentUnavailableView {
+                        Label {
+                            Text("Nothing here yet", bundle: .module)
+                        } icon: {
+                            Image(systemName: AppSymbol.tvPlay)
+                        }
+                    } actions: {
+                        Button {
+                            Task { await homeVM.refresh() }
+                        } label: {
+                            Text("Refresh", bundle: .module)
+                        }
+                        .buttonStyle(.vfProminent)
+                    })
             } else {
                 let shortsVideos =
                     store.settings.hideShorts
@@ -414,19 +445,18 @@ extension HomeView {
                 let regularVideos = homeVM.homeRegularVideos.filter {
                     !store.settings.shouldHideWatched($0, in: .home)
                 }
-                let segments = homeLayout.segments(
-                    shorts: shortsVideos,
-                    videos: regularVideos,
-                    columns: videoGridColumnCount(store.settings, landscape: isLandscapeLayout)
-                )
+                let segments = homeLayout.segments(shorts: shortsVideos, videos: regularVideos, columns: feedColumns)
                 let stack = LazyVStack(alignment: .leading, spacing: 0) {
                     ForEach(segments) {
                         homeFeedSegment($0, in: segments, shorts: shortsVideos, videos: regularVideos)
                     }
                     if store.settings.hideWatchedVideos, homeVM.sections.contains(where: { $0.nextPageToken != nil }) {
                         Button("More") { homeVM.loadMoreMerged() }
+                            .buttonStyle(.bordered)
                             .disabled(homeVM.sections.contains { $0.isLoading || $0.isLoadingMore })
                             .accessibilityIdentifier(AccessibilityID.homeFilteredLoadMoreButton)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, VFSpace.s12)
                     }
                     if homeVM.sections.contains(where: \.isLoadingMore) {
                         ProgressView().frame(maxWidth: .infinity).padding()
@@ -467,21 +497,24 @@ extension HomeView {
     ) -> some View {
         switch segment.kind {
         case .shorts:
-            ShortsRowSection(
-                videos: segment.items,
-                onSelect: { selectVideo($0, from: shorts) },
-                accessibilityID: AccessibilityID.homeShortsRow(segment.index)
-            )
+            VStack(alignment: .leading, spacing: 0) {
+                ShortsShelfHeader()
+                ShortsRowSection(
+                    videos: segment.items,
+                    onSelect: { selectVideo($0, from: shorts) },
+                    accessibilityID: AccessibilityID.homeShortsRow(segment.index)
+                )
+            }
         case .videos:
             let isLastBlock = segment.id == segments.last { $0.kind == .videos }?.id
             let block = VideoGridSection(
                 videos: segment.items,
                 onSelect: { selectVideo($0, from: videos) },
                 loadMore: isLastBlock ? { homeVM.loadMoreMerged() } : nil,
-                eager: true
+                eager: true,
+                columns: feedColumns
             )
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier(AccessibilityID.feedVideoBlock(.home, segment.index))
+            .feedBlockGroup(AccessibilityID.feedVideoBlock(.home, segment.index), cards: segment.items.count)
             .contentShape(Rectangle())
             .onAppear {
                 homeLayout.markLaidOut(block: segment.index, in: segments)
@@ -507,28 +540,31 @@ extension HomeView {
     // MARK: - Section feed  (non-Home chips)
 
     func interleavedSectionFeed(shorts: [Video], videos: [Video], loadMore: @escaping () -> Void) -> some View {
-        let segments = sectionLayout.segments(
-            shorts: shorts, videos: videos,
-            columns: videoGridColumnCount(store.settings, landscape: isLandscapeLayout))
+        let segments = sectionLayout.segments(shorts: shorts, videos: videos, columns: feedColumns)
         return LazyVStack(alignment: .leading, spacing: 0) {
             ForEach(segments) { segment in
                 switch segment.kind {
                 case .shorts:
-                    ShortsRowSection(
-                        videos: segment.items,
-                        onSelect: { selectVideo($0, from: shorts) },
-                        accessibilityID: AccessibilityID.sectionShortsRow(selectedSection.type, segment.index),
-                        loadMore: videos.isEmpty ? loadMore : nil)
+                    VStack(alignment: .leading, spacing: 0) {
+                        ShortsShelfHeader()
+                        ShortsRowSection(
+                            videos: segment.items,
+                            onSelect: { selectVideo($0, from: shorts) },
+                            accessibilityID: AccessibilityID.sectionShortsRow(selectedSection.type, segment.index),
+                            loadMore: videos.isEmpty ? loadMore : nil)
+                    }
                 case .videos:
                     VideoGridSection(
                         videos: segment.items,
                         onSelect: { selectVideo($0, from: videos) },
                         loadMore: segment.index == segments.last(where: { $0.kind == .videos })?.index
                             ? loadMore : nil,
-                        eager: true
+                        eager: true,
+                        columns: feedColumns
                     )
-                    .accessibilityElement(children: .contain)
-                    .accessibilityIdentifier(AccessibilityID.feedVideoBlock(selectedSection.type, segment.index))
+                    .feedBlockGroup(
+                        AccessibilityID.feedVideoBlock(selectedSection.type, segment.index), cards: segment.items.count
+                    )
                     .onAppear { sectionLayout.markLaidOut(block: segment.index, in: segments) }
                     #if os(iOS)
                     .modifier(sectionSwipe)
@@ -541,8 +577,7 @@ extension HomeView {
     @ViewBuilder
     var sectionFeed: some View {
         if sectionVM.isLoading && sectionVM.videoGroups.allSatisfy({ $0.videos.isEmpty }) {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            HomeLoadingView(columns: feedColumns)
         } else if sectionVM.videoGroups.allSatisfy({ $0.videos.isEmpty }) && !sectionVM.isLoading {
             feedEmptyState
         } else {
@@ -550,58 +585,92 @@ extension HomeView {
         }
     }
 
+    /// Why a section is empty, with the one action that helps. The reasons are today's (A9 is not implemented);
+    /// a load error now shows its own state with a retry instead of "Nothing here yet".
+    @ViewBuilder
     private var feedEmptyState: some View {
-        VStack(spacing: 16) {
-            if sectionVM.isAuthRequired && !auth.isSignedIn {
-                Image(systemName: AppSymbol.personCircleWarning)
-                    .font(.system(size: 60))
-                    .foregroundStyle(.secondary)
-                Text("Sign in to see this section")
-                    .font(.title3)
-                Text("Your Google account is required.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                Button("Sign In") { showSignIn = true }
+        if sectionVM.isAuthRequired && !auth.isSignedIn {
+            fullArea(
+                ContentUnavailableView {
+                    Label {
+                        Text("Sign in to see this section", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.personCircleWarning)
+                    }
+                } description: {
+                    Text("Your Google account is required.", bundle: .module)
+                } actions: {
+                    Button {
+                        showSignIn = true
+                    } label: {
+                        Text("Sign In", bundle: .module)
+                    }
                     .buttonStyle(.vfProminent)
-            } else if !auth.isSignedIn && (selectedSection.type == .subscriptions || selectedSection.type == .channels)
-            {
-                Image(systemName: "person.badge.plus")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.secondary)
-                Text("Follow channels to see their latest videos here")
-                    .font(.title3)
-                    .multilineTextAlignment(.center)
-                Text("Search for a channel and tap Subscribe.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Button("Search") {
-                    NotificationCenter.default.post(name: .navigateToSearch, object: nil)
-                }
-                .buttonStyle(.vfProminent)
-            } else {
-                Image(systemName: AppSymbol.tvPlay)
-                    .font(.system(size: 60))
-                    .foregroundStyle(.secondary)
-                Text("Nothing here yet")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-                if sectionVM.hasMoreShorts {
-                    Button("More") { sectionVM.loadMoreShorts() }
+                })
+        } else if !auth.isSignedIn && (selectedSection.type == .subscriptions || selectedSection.type == .channels) {
+            fullArea(
+                ContentUnavailableView {
+                    Label {
+                        Text("Follow channels to see their latest videos here", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.followChannels)
+                    }
+                } description: {
+                    Text("Search for a channel and tap Subscribe.", bundle: .module)
+                } actions: {
+                    Button {
+                        NotificationCenter.default.post(name: .navigateToSearch, object: nil)
+                    } label: {
+                        Text("Search", bundle: .module)
+                    }
+                    .buttonStyle(.vfProminent)
+                })
+        } else if let error = sectionVM.error {
+            fullArea(
+                ContentUnavailableView {
+                    Label {
+                        Text("Couldn't load this section", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.warning)
+                    }
+                } description: {
+                    Text(error.localizedDescription)
+                } actions: {
+                    Button {
+                        sectionVM.loadContent(refresh: true)
+                    } label: {
+                        Text("Try Again", bundle: .module)
+                    }
+                    .buttonStyle(.vfProminent)
+                })
+        } else {
+            fullArea(
+                ContentUnavailableView {
+                    Label {
+                        Text("Nothing here yet", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.tvPlay)
+                    }
+                } actions: {
+                    if sectionVM.hasMoreShorts {
+                        Button {
+                            sectionVM.loadMoreShorts()
+                        } label: {
+                            Text("More", bundle: .module)
+                        }
                         .buttonStyle(.vfProminent)
                         .disabled(sectionVM.isLoadingMore)
                         .accessibilityIdentifier(AccessibilityID.shortsLoadMoreButton)
-                } else {
-                    Button("Refresh") { sectionVM.loadContent(refresh: true) }
+                    } else {
+                        Button {
+                            sectionVM.loadContent(refresh: true)
+                        } label: {
+                            Text("Refresh", bundle: .module)
+                        }
                         .buttonStyle(.vfProminent)
-                }
-            }
+                    }
+                })
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(Rectangle())
-        #if os(iOS)
-        .modifier(sectionSwipe)
-        #endif
     }
 
     // MARK: - Video selection

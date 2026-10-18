@@ -107,7 +107,8 @@ struct SubscriptionsSortTests {
         let vm = BrowseViewModel(api: mock, initialSection: section)
         await vm.updateAuthToken("fake-token")
         vm.loadContent(for: section, refresh: true, source: "test")
-        await waitForSubsTasks { vm.videoGroups.first?.videos.count == 2 }
+        // Paging waits for the refresh above, which replaces the feed the sign-in load already showed.
+        await waitForSubsTasks { vm.videoGroups.first?.videos.count == 2 && !vm.isLoading }
 
         let page1 = try #require(vm.videoGroups.first, "page 1 should load")
         #expect(page1.videos.count == 2, "page 1 should load 2 videos")

@@ -56,6 +56,8 @@ public final class BrowseViewModel {
     internal let localHistory: LocalWatchHistoryStore
     internal let watchLaterMembership: WatchLaterMembershipStore
     private var fetchTask: Task<Void, Never>?
+    /// The last error came from the next page; `retryAfterError()` fetches that page again.
+    @ObservationIgnored private var nextPageFailed = false
     internal var enrichTask: Task<Void, Never>?
     /// When `false`, the History section returns empty content rather than fetching from YouTube.
     private var historyEnabled: Bool = true
@@ -216,6 +218,7 @@ public final class BrowseViewModel {
 
     public func loadContent(for section: BrowseSection? = nil, refresh: Bool = false, source: String = "unknown") {
         error = nil
+        nextPageFailed = false
         let target = section ?? currentSection
         let chCount = subscribedChannels.count
         let vCount = videoGroups.flatMap(\.videos).count
@@ -278,7 +281,8 @@ public final class BrowseViewModel {
         guard let lastGroup = videoGroups.last,
             lastGroup.videos.contains(where: { $0.id == lastVideo.id }),
             lastGroup.nextPageToken != nil,
-            !isLoadingMore
+            // Not during a reload: the cards it keeps on screen would page the old feed into the new one.
+            !isLoading, !isLoadingMore
         else {
             let hasToken = videoGroups.last?.nextPageToken != nil
             let lastVideoInGroup = videoGroups.last?.videos.contains(where: { $0.id == lastVideo.id }) == true
@@ -290,6 +294,19 @@ public final class BrowseViewModel {
         browseLog.notice(
             "loadMore triggered: section=\(currentSection.title) currentCount=\(videoGroups.first?.videos.count ?? 0)")
         isLoadingMore = true  // synchronous guard — prevents duplicate pagination tasks before the Task body runs
+        fetchTask = Task { await fetchNextPage(for: currentSection) }
+    }
+
+    /// Try Again after an error over a loaded feed: fetches the failed next page again, or reloads the section.
+    /// Either way the loaded videos stay on screen until new ones arrive.
+    public func retryAfterError() {
+        guard !isLoading, !isLoadingMore else { return }
+        guard nextPageFailed, videoGroups.last?.nextPageToken != nil else {
+            loadContent(source: "retryAfterError")
+            return
+        }
+        error = nil
+        isLoadingMore = true
         fetchTask = Task { await fetchNextPage(for: currentSection) }
     }
 
@@ -458,6 +475,9 @@ extension BrowseViewModel {
     private func fetchNextPage(for section: BrowseSection, autoChainDepth: Int = 0) async {
         guard let token = videoGroups.last?.nextPageToken else { return }
         isLoadingMore = true
+        // Any new attempt at the page (Try Again or scrolling) replaces the error of the one that failed.
+        if nextPageFailed { error = nil }
+        nextPageFailed = false
         defer { isLoadingMore = false }
         do {
             if section.type == .home {
@@ -480,6 +500,7 @@ extension BrowseViewModel {
             if !Task.isCancelled {
                 browseLog.error("fetchNextPage \(section.title): \(ViewModelLogger.errorSummary(error))")
                 self.error = error
+                nextPageFailed = true
             }
         }
     }

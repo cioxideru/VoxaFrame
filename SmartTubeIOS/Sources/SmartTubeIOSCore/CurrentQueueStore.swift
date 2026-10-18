@@ -58,9 +58,20 @@ public actor CurrentQueueStore: UserDefaultsBackedStore {
     public func insertNext(_ video: Video, afterIndex: Int) {
         guard videos.count < Self.maxCount else { return }
         guard !videos.contains(where: { $0.id == video.id }) else { return }
-        let insertAt = min(afterIndex + 1, videos.count)
+        let insertAt = min(max(afterIndex + 1, 0), videos.count)
         videos.insert(video, at: insertAt)
         persist()
+    }
+
+    /// Play Next: right after the queue item at `playingIndex`, or first when nothing from the queue plays
+    /// (`nil`). A stale index past the end appends. Same duplicate and capacity rules as `insertNext`.
+    public func playNext(_ video: Video, playingIndex: Int?) {
+        insertNext(video, afterIndex: playingIndex ?? -1)
+    }
+
+    /// Queue position of `video` when it was started from the queue (`videoAt(index:)`); `nil` otherwise.
+    nonisolated public static func queueIndex(of video: Video?) -> Int? {
+        video?.playlistId == playlistID ? video?.playlistIndex : nil
     }
 
     /// Removes the video at `index`. Safe to call with an out-of-range index.

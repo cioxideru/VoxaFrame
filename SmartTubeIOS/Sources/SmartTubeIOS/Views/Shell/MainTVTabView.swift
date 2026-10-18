@@ -23,6 +23,9 @@ struct MainTVTabView: View {
             }
         }
         .environment(searchVM)
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToSearch)) { _ in
+            selectedTab = .search
+        }
     }
 }
 #endif

@@ -493,3 +493,122 @@ struct BrowseViewModelTests {
         #expect(!mock.calls.contains { $0.method == "fetchPlaylistVideos" })
     }
 }
+
+// MARK: - Try Again over a loaded feed
+
+@Suite("BrowseViewModel retry")
+@MainActor
+struct BrowseViewModelRetryTests {
+    @Test("Try Again after a failed next page fetches that page again and keeps the loaded videos")
+    func retryFailedPageKeepsFeed() async {
+        struct PageError: Error {}
+        let mock = MockInnerTubeAPI()
+        mock.subscriptionsHandler = { token in
+            VideoGroup(
+                title: "Subs", videos: [makeVideo(token == nil ? "first" : "second")],
+                nextPageToken: token == nil ? "page-2" : nil)
+        }
+        let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: .subscriptions))
+        await vm.updateAuthToken("token")
+        await waitForTasks { vm.loadedAt != nil && !vm.isLoading }
+        mock.errorToThrow = PageError()
+        vm.loadMoreIfNeeded(lastVideo: makeVideo("first"))
+        await waitForTasks { vm.error != nil && !vm.isLoadingMore }
+        mock.errorToThrow = nil
+
+        vm.retryAfterError()
+
+        #expect(vm.error == nil)
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["first"])
+        await waitForTasks { !vm.isLoadingMore }
+        #expect(vm.error == nil)
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["first", "second"])
+    }
+
+    @Test("Try Again after a failed reload keeps the loaded videos until the reload succeeds")
+    func retryFailedReloadKeepsFeed() async {
+        struct ReloadError: Error {}
+        let mock = MockInnerTubeAPI()
+        mock.subscriptionsResult = VideoGroup(title: "Subs", videos: [makeVideo("first")])
+        let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: .subscriptions))
+        await vm.updateAuthToken("token")
+        await waitForTasks { vm.loadedAt != nil && !vm.isLoading }
+        mock.errorToThrow = ReloadError()
+        vm.loadContent(source: "test")
+        await waitForTasks { vm.error != nil && !vm.isLoading }
+        mock.errorToThrow = nil
+        mock.subscriptionsResult = VideoGroup(title: "Subs", videos: [makeVideo("fresh")])
+
+        vm.retryAfterError()
+
+        #expect(vm.isLoading)
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["first"])
+        await waitForTasks { !vm.isLoading }
+        #expect(vm.error == nil)
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["fresh"])
+    }
+
+    @Test("A reload in flight blocks paging the kept cards, and a section change still drops that reload")
+    func reloadBlocksPagination() async throws {
+        struct ReloadError: Error {}
+        let mock = MockInnerTubeAPI()
+        mock.subscriptionsResult = VideoGroup(title: "Subs", videos: [makeVideo("first")], nextPageToken: "page-2")
+        let local = LocalWatchHistoryStore(
+            defaults: try #require(UserDefaults(suiteName: "retry-history-\(UUID().uuidString)")))
+        let vm = BrowseViewModel(
+            api: mock, initialSection: BrowseSection(type: .subscriptions), localHistory: local)
+        await vm.updateAuthToken("token")
+        await waitForTasks { vm.loadedAt != nil && !vm.isLoading }
+        mock.errorToThrow = ReloadError()
+        vm.loadContent(source: "test")
+        await waitForTasks { vm.error != nil && !vm.isLoading }
+        mock.errorToThrow = nil
+        var heldReload: CheckedContinuation<VideoGroup, Never>?
+        var pageRequests = 0
+        var reloadReturned = false
+        mock.subscriptionsHandler = { token in
+            if token != nil { pageRequests += 1 }
+            let group = await withCheckedContinuation { heldReload = $0 }
+            reloadReturned = true
+            return group
+        }
+
+        vm.retryAfterError()
+        await waitForTasks { heldReload != nil }
+        vm.loadMoreIfNeeded(lastVideo: makeVideo("first"))
+        #expect(!vm.isLoadingMore)
+        mock.historyResult = VideoGroup(title: "History", videos: [makeVideo("history")])
+        vm.select(section: BrowseSection(type: .history))
+        await waitForTasks { vm.loadedAt != nil && !vm.isLoading }
+        heldReload?.resume(returning: VideoGroup(title: "Subs", videos: [makeVideo("late")]))
+        await waitForTasks { reloadReturned }
+        await Task.yield()  // let the abandoned reload finish its main-actor step
+
+        #expect(pageRequests == 0)
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["history"])
+    }
+
+    @Test("Scrolling after a failed next page loads it and clears the error")
+    func scrollingRecoversFailedPage() async {
+        struct PageError: Error {}
+        let mock = MockInnerTubeAPI()
+        mock.subscriptionsHandler = { token in
+            VideoGroup(
+                title: "Subs", videos: [makeVideo(token == nil ? "first" : "second")],
+                nextPageToken: token == nil ? "page-2" : nil)
+        }
+        let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: .subscriptions))
+        await vm.updateAuthToken("token")
+        await waitForTasks { vm.loadedAt != nil && !vm.isLoading }
+        mock.errorToThrow = PageError()
+        vm.loadMoreIfNeeded(lastVideo: makeVideo("first"))
+        await waitForTasks { vm.error != nil && !vm.isLoadingMore }
+        mock.errorToThrow = nil
+
+        vm.loadMoreIfNeeded(lastVideo: makeVideo("first"))
+        await waitForTasks { !vm.isLoadingMore && vm.videoGroups.flatMap(\.videos).count == 2 }
+
+        #expect(vm.error == nil)
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["first", "second"])
+    }
+}

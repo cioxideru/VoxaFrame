@@ -357,6 +357,25 @@ final class MixedFeedLayoutUITests: XCTestCase {
         option.tap()
     }
 
+    /// The More button is its own 44 pt control: it opens the card menu and does not start the video.
+    func testCardMoreButtonOpensMenuWithoutPlaying() throws {
+        let card = try XCTUnwrap(UITestHelpers.waitForVideoCards(in: app, timeout: 10), "Fixture feed has no cards")
+        let videoID = String(card.identifier.dropFirst("video.card.".count))
+        let more = app.buttons[AccessibilityID.videoCardMenu(videoID)].firstMatch
+        XCTAssertTrue(more.waitForExistence(timeout: 5), "Every video card needs a separate More button")
+        XCTAssertGreaterThanOrEqual(more.frame.width, 44, "More must be a 44 pt touch target")
+        XCTAssertGreaterThanOrEqual(more.frame.height, 44, "More must be a 44 pt touch target")
+        let title = card.staticTexts[AccessibilityID.videoCardTitle].firstMatch
+        XCTAssertTrue(title.exists, "The card exposes its exact title")
+        XCTAssertFalse(title.label.isEmpty)
+        XCTAssertTrue(more.label.hasSuffix(title.label), "More's VoiceOver label names its card")
+        more.tap()
+        XCTAssertTrue(
+            app.buttons["Add to Queue"].firstMatch.waitForExistence(timeout: 5), "More must open the card's menu")
+        XCTAssertFalse(
+            app.staticTexts[AccessibilityID.playerTitleLabel].exists, "Opening the menu must not start the video")
+    }
+
     func testHomeSpacing() { assertSpacing(section: "home", title: "Home") }
     func testSubscriptionsSpacing() { assertSpacing(section: "subscriptions", title: "Subscriptions") }
     func testRecommendedSpacing() { assertSpacing(section: "recommended", title: "Recommended") }

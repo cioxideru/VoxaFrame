@@ -44,6 +44,9 @@ struct MainSidebarView: View {
             }
         }
         .environment(searchVM)
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToSearch)) { _ in
+            selectedSection = .search
+        }
         .environment(\.isNarrowWindow, isNarrowWindow)
         .onGeometryChange(for: Bool.self) {
             $0.size.width < narrowWindowWidth

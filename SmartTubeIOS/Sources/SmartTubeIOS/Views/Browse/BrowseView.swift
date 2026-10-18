@@ -212,6 +212,9 @@ struct VideoGridSection: View {
     /// Lays the rows out eagerly. Mixed feeds use this for their six-row blocks inside an
     /// outer `LazyVStack`, where a nested lazy grid can collapse to zero height.
     var eager = false
+    /// Columns the caller laid its feed out with (`videoGridColumnCount(_:landscape:width:dynamicTypeSize:)`);
+    /// `nil` uses the Portrait/Landscape Columns setting.
+    var columns: Int?
 
     @Environment(SettingsStore.self) private var store
     @Environment(\.isLandscapeLayout) private var isLandscapeLayout
@@ -256,11 +259,14 @@ struct VideoGridSection: View {
             if eager {
                 // Half the row spacing above and below, so stacked blocks read as one grid.
                 VStack(alignment: .leading, spacing: videoGridRowSpacing) { gridRows }
-                    .padding(.horizontal)
+                    .padding(.horizontal, videoGridMargin)
                     .padding(.vertical, videoGridRowSpacing / 2)
             } else {
                 let grid = LazyVGrid(
-                    columns: videoGridColumns(store.settings, landscape: isLandscapeLayout),
+                    columns: columns.map {
+                        Array(repeating: GridItem(.flexible(), spacing: videoGridRowSpacing), count: $0)
+                    }
+                        ?? videoGridColumns(store.settings, landscape: isLandscapeLayout),
                     spacing: videoGridRowSpacing
                 ) {
                     ForEach(videos) { gridCard($0) }
@@ -269,8 +275,8 @@ struct VideoGridSection: View {
                 // orientation notification, and also on iPad split-screen resizes), so reset the
                 // grid's identity on that too — a column change without an identity reset is the
                 // wrong-video-tapped-after-rotation bug (#82).
-                .id("\(orientationToken)-\(isLandscapeLayout)")
-                .padding(.horizontal)
+                .id("\(orientationToken)-\(isLandscapeLayout)-\(columns ?? 0)")
+                .padding(.horizontal, videoGridMargin)
                 .padding(.vertical, 8)
                 #if canImport(UIKit)
                 let rotations = NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)
@@ -294,9 +300,9 @@ struct VideoGridSection: View {
                     if video.id == videos.last?.id { loadMore?() }
                 }
             #else
-            VideoCardView(video: video, compact: true)
-                .padding(.horizontal)
-                .padding(.vertical, 6)
+            VideoCardView(video: video, compact: true, onSelect: { onSelect(video) })
+                .padding(.horizontal, videoGridMargin)
+                .padding(.vertical, VFSpace.s8)
                 .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
                 .accessibilityValue(video.isShort ? "short" : "")
                 .onTapGesture { onSelect(video) }
@@ -304,13 +310,13 @@ struct VideoGridSection: View {
                     if video.id == videos.last?.id { loadMore?() }
                 }
             #endif
-            Divider().padding(.horizontal)
+            Divider().padding(.horizontal, videoGridMargin)
         }
     }
 
     /// `HStack` rows of `videoGridColumnCount` cards; a short last row is padded with spacers.
     @ViewBuilder private var gridRows: some View {
-        let columnCount = videoGridColumnCount(store.settings, landscape: isLandscapeLayout)
+        let columnCount = columns ?? videoGridColumnCount(store.settings, landscape: isLandscapeLayout)
         ForEach(Array(stride(from: 0, to: videos.count, by: columnCount)), id: \.self) { startIdx in
             let rowVideos = videos[startIdx..<min(startIdx + columnCount, videos.count)]
             HStack(alignment: .top, spacing: videoGridRowSpacing) {
@@ -332,7 +338,7 @@ struct VideoGridSection: View {
                 if video.id == videos.last?.id { loadMore?() }
             }
         #else
-        VideoCardView(video: video, compact: false)
+        VideoCardView(video: video, compact: false, onSelect: { onSelect(video) })
             .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
             .accessibilityValue(video.isShort ? "short" : "")
             .onTapGesture { onSelect(video) }
@@ -359,14 +365,14 @@ struct VideoRowSection: View {
                         .frame(width: 360)
                         .accessibilityIdentifier("video.card.\(video.id)")
                     #else
-                    VideoCardView(video: video, compact: false)
+                    VideoCardView(video: video, compact: false, onSelect: { onSelect(video) })
                         .frame(width: 220)
                         .accessibilityIdentifier("video.card.\(video.id)")
                         .onTapGesture { onSelect(video) }
                     #endif
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, videoGridMargin)
             .padding(.vertical, 4)
         }
         #if os(tvOS)

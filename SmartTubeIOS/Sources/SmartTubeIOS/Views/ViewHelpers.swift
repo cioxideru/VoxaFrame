@@ -53,6 +53,40 @@ func videoGridColumnCount(_ settings: AppSettings, landscape: Bool) -> Int {
     #endif
 }
 
+/// `videoGridColumnCount` for a feed `width` points wide: one column at accessibility text sizes and, on iPad and
+/// Mac, a column fewer rather than cards narrower than `VFMargin.cardMinWidth`. `width` 0 (not measured yet) keeps
+/// the setting.
+@MainActor
+func videoGridColumnCount(
+    _ settings: AppSettings, landscape: Bool, width: CGFloat, dynamicTypeSize: DynamicTypeSize
+) -> Int {
+    let preferred = videoGridColumnCount(settings, landscape: landscape)
+    #if os(tvOS)
+    return preferred
+    #else
+    if dynamicTypeSize.isAccessibilitySize { return 1 }
+    #if os(iOS)
+    guard UIDevice.current.userInterfaceIdiom == .pad else { return preferred }
+    #endif
+    guard width > 0 else { return preferred }
+    let usable = width - 2 * (videoGridMargin ?? 0) + videoGridRowSpacing
+    let fitting = Int(usable / (VFMargin.cardMinWidth + videoGridRowSpacing))
+    return min(preferred, max(1, fitting))
+    #endif
+}
+
+/// Side margin of card grids and shelves; `nil` (the system padding) on tvOS, whose safe area already insets content.
+@MainActor
+var videoGridMargin: CGFloat? {
+    #if os(tvOS)
+    return nil
+    #elseif os(iOS)
+    return UIDevice.current.userInterfaceIdiom == .pad ? VFMargin.ipad : VFMargin.iphone
+    #else
+    return VFMargin.mac
+    #endif
+}
+
 // MARK: - Layout orientation
 
 private struct IsLandscapeLayoutKey: EnvironmentKey {
@@ -169,6 +203,20 @@ extension View {
 enum AppSymbol {
     // MARK: - Feed, player menus and settings
     static let channelFilter = "line.3.horizontal.decrease.circle"
+    // Video and Shorts card menus, badges and cover placeholders.
+    static let more = "ellipsis"
+    static let playNext = "text.insert"
+    static let addToQueue = "text.badge.plus"
+    static let copyToPlaylist = "rectangle.stack.badge.plus"
+    static let moveToPlaylist = "arrow.right.circle"
+    static let incognito = "eyeglasses"
+    static let notInterested = "hand.raised"
+    static let dontRecommendChannel = "person.slash"
+    static let savedToWatchLater = "bookmark.fill"
+    static let liveDot = "circle.fill"
+    static let noCover = "play.rectangle"
+    static let watchLaterPlaylist = "clock.fill"
+    static let likedPlaylist = "hand.thumbsup.fill"
     static let queue = "list.number"
     static let chevronRight = "chevron.right"
     static let speedometer = "speedometer"
@@ -242,6 +290,7 @@ enum AppSymbol {
     static let personRectangle = "person.crop.rectangle"
     static let personCircleQuestion = "person.crop.circle.badge.questionmark"
     static let personCircleWarning = "person.crop.circle.badge.exclamationmark"
+    static let followChannels = "person.badge.plus"
 
     // MARK: - Content
     static let stackLayers = "square.stack"
