@@ -261,7 +261,8 @@ final class PlayerVideoScaleUITests: XCTestCase {
     private func pickQuality(_ label: String) {
         showControls()
         app.buttons[AccessibilityID.playerQuickQualityButton].tap()
-        let picker = app.scrollViews[AccessibilityID.playerQualityPicker]
+        let picker = app.descendants(matching: .any).matching(identifier: AccessibilityID.playerQualityPicker)
+            .firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 5))
         let row = picker.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", label)).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 5))

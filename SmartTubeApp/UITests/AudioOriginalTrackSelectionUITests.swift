@@ -83,7 +83,8 @@ final class AudioOriginalTrackSelectionUITests: XCTestCase {
         // Secondary assertion — open the picker and verify exactly one track has "Original".
         audioTrackRow.tap()
 
-        let picker = app.otherElements["player.audioTrackPicker"].firstMatch
+        let picker = app.descendants(matching: .any).matching(identifier: AccessibilityID.playerAudioTrackPicker)
+            .firstMatch
         guard picker.waitForExistence(timeout: 5) else {
             // Picker didn't open — the primary assertion above is sufficient.
             return

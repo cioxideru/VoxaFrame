@@ -13,7 +13,11 @@ import SwiftUI
 struct PlayerOptionPanel<Content: View>: View {
     let title: Text
     @Binding var isPresented: Bool
+    var cancelAccessibilityIdentifier: String = AccessibilityID.playerOptionPanelCancel
     @ViewBuilder var content: Content
+    #if os(iOS)
+    @State private var contentHeight: CGFloat?
+    #endif
 
     var body: some View {
         VStack(spacing: 0) {
@@ -30,9 +34,22 @@ struct PlayerOptionPanel<Content: View>: View {
                 Color.clear.frame(width: 70, height: VFTarget.touch)
             }
             Divider()
+            #if os(iOS)
             content
+                .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    geometry.contentSize.height + geometry.contentInsets.top + geometry.contentInsets.bottom
+                } action: { _, height in
+                    contentHeight = height > 0 ? height : nil
+                }
+                .frame(idealHeight: contentHeight, maxHeight: contentHeight)
+            #else
+            content
+            #endif
         }
         .modifier(OptionPanelChrome())
+        #if os(iOS)
+        .accessibilityElement(children: .contain)
+        #endif
     }
 
     @ViewBuilder private var cancelButton: some View {
@@ -41,6 +58,7 @@ struct PlayerOptionPanel<Content: View>: View {
         } label: {
             Text("Cancel", bundle: .module)
         }
+        .accessibilityIdentifier(cancelAccessibilityIdentifier)
         #if os(tvOS)
         button.buttonStyle(PickerHeaderButtonStyle())
         #else
@@ -143,7 +161,12 @@ private struct OptionPanelChrome: ViewModifier {
 /// iOS and macOS: the system sheet or popover is the container; this only sizes a popover.
 private struct OptionPanelChrome: ViewModifier {
     func body(content: Content) -> some View {
+        #if os(iOS)
+        // The measured scroll content supplies the height; the system can still shrink its viewport.
+        content.frame(minWidth: 320, idealWidth: 360, alignment: .top)
+        #else
         content.frame(minWidth: 320, idealWidth: 360, maxHeight: .infinity, alignment: .top)
+        #endif
     }
 }
 
@@ -174,14 +197,16 @@ extension View {
         anchorPreference(key: PlayerOptionPanelTriggers.self, value: .bounds) { [trigger: $0] }
     }
 
-    /// Presents an option panel over the player, pointing at `trigger` when it is on screen. `arrowEdge` is
-    /// the trigger's side the popover opens from: the top for the bottom controls, the leading side for a rail.
+    /// Presents an option panel pointing at `trigger`. iOS chooses an arrow edge that fits the window;
+    /// `arrowEdge` preserves the existing macOS placement.
     func playerOptionPanel<Panel: View>(
         isPresented: Binding<Bool>, trigger: PlayerOptionPanelTrigger?, arrowEdge: Edge = .top,
+        onDismiss: (() -> Void)? = nil,
         @ViewBuilder panel: @escaping () -> Panel
     ) -> some View {
         modifier(
-            OptionPanelPresentation(isPresented: isPresented, trigger: trigger, arrowEdge: arrowEdge, panel: panel))
+            OptionPanelPresentation(
+                isPresented: isPresented, trigger: trigger, arrowEdge: arrowEdge, onDismiss: onDismiss, panel: panel))
     }
 }
 
@@ -193,20 +218,57 @@ private struct OptionPanelPresentation<Panel: View>: ViewModifier {
     @Binding var isPresented: Bool
     let trigger: PlayerOptionPanelTrigger?
     let arrowEdge: Edge
+    let onDismiss: (() -> Void)?
     let panel: () -> Panel
     @Environment(SettingsStore.self) private var store
     #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @State private var sourceRect: CGRect?
     #endif
 
     func body(content: Content) -> some View {
+        #if os(iOS)
+        content
+            .backgroundPreferenceValue(PlayerOptionPanelTriggers.self) { triggers in
+                let source = trigger.flatMap { triggers[$0] } ?? triggers[.more]
+                Color.clear
+                    .onGeometryChange(for: CGRect?.self) { proxy in
+                        return source.map { proxy[$0] }.flatMap { $0.isEmpty ? nil : $0 }
+                    } action: {
+                        sourceRect = $0
+                    }
+                    .allowsHitTesting(false)
+            }
+            // Keep presentation on the player, not on a background created during anchor resolution.
+            // A missing/rebuilt control uses the player centre without interrupting presentation.
+            .popover(
+                isPresented: $isPresented,
+                attachmentAnchor: sourceRect.map { .rect(.rect($0)) } ?? .point(optionPanelFallbackAnchor),
+                arrowEdge: nil
+            ) {
+                panel()
+                    .background {
+                        if let onDismiss {
+                            OptionPanelDismissalObserver {
+                                if !isPresented { onDismiss() }
+                            }
+                            .allowsHitTesting(false)
+                        }
+                    }
+                    .tint(store.settings.accentColor.color)
+                    .presentationCompactAdaptation(compactAdaptation)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+            }
+        #else
         content.backgroundPreferenceValue(PlayerOptionPanelTriggers.self) { triggers in
             GeometryReader { proxy in
                 let own = trigger.flatMap { triggers[$0] }
                 let source = own ?? triggers[.more]
                 let anchor: PopoverAttachmentAnchor =
                     source.map { .rect(.rect(proxy[$0])) } ?? .point(optionPanelFallbackAnchor)
-                // The More button is at the top, so a panel pointing at it opens below.
+                // Preserve the existing macOS arrow preference.
                 let edge = own == nil && source != nil ? Edge.bottom : arrowEdge
                 Color.clear.popover(isPresented: $isPresented, attachmentAnchor: anchor, arrowEdge: edge) {
                     panel()
@@ -218,11 +280,12 @@ private struct OptionPanelPresentation<Panel: View>: ViewModifier {
                 }
             }
         }
+        #endif
     }
 
     private var compactAdaptation: PresentationAdaptation {
         #if os(iOS)
-        verticalSizeClass == .compact ? .popover : .sheet
+        horizontalSizeClass == .regular || verticalSizeClass == .compact ? .popover : .sheet
         #else
         .automatic
         #endif

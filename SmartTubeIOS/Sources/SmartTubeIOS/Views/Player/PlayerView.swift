@@ -62,6 +62,7 @@ public struct PlayerView: View {
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     #endif
     #if os(iOS)
+    @State var moreMenuDestination: PlayerMoreMenuDestination?
     @State var isLandscapeLocked = false
     var playerLayer: AVPlayerLayer { playerState.playerHostView.playerLayer }
     @Environment(\.horizontalSizeClass) var horizontalSizeClass

@@ -30,7 +30,7 @@ extension PlayerView {
         playerContentBase
         #else
         let panels =
-            playerContentBase
+            playerContentWithMoreMenu
             .playerOptionPanel(isPresented: $showSpeedPicker, trigger: .speed) { speedPickerOverlay }
             .playerOptionPanel(isPresented: $showQualityPicker, trigger: .quality) { qualityPickerOverlay }
             .playerOptionPanel(isPresented: $showCaptionPicker, trigger: nil) { captionPickerOverlay }
@@ -61,13 +61,32 @@ extension PlayerView {
     }
 
     #if !os(tvOS)
+    @ViewBuilder private var playerContentWithMoreMenu: some View {
+        #if os(iOS)
+        playerContentBase
+            .playerOptionPanel(isPresented: $showMoreMenu, trigger: .more, onDismiss: moreMenuDidDismiss) {
+                moreMenuPanel
+            }
+        #else
+        playerContentBase
+        #endif
+    }
+
     private var isOptionPanelOpen: Bool {
-        showSpeedPicker || showQualityPicker || showCaptionPicker || showAudioTrackPicker || showSleepTimerPicker
+        let pickerOpen =
+            showSpeedPicker || showQualityPicker || showCaptionPicker || showAudioTrackPicker || showSleepTimerPicker
+        #if os(iOS)
+        return pickerOpen || showMoreMenu || moreMenuDestination != nil
+        #else
+        return pickerOpen
+        #endif
     }
     #endif
 
     #if os(iOS)
     private func closeOptionPanels() {
+        moreMenuDestination = nil
+        showMoreMenu = false
         showSpeedPicker = false
         showQualityPicker = false
         showCaptionPicker = false
@@ -118,6 +137,7 @@ extension PlayerView {
                     showQualityPicker = false
                     qualityToastMessage = "Auto quality"
                 }
+                .accessibilityIdentifier(AccessibilityID.playerQualityPickerAuto)
                 #if os(tvOS)
                 auto.prefersDefaultFocus(in: qualityPickerNamespace)
                 #else
@@ -270,6 +290,7 @@ extension PlayerView {
         let wasPlaying = vm.isPlaying
         vm.suspend()
         let vc = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        vc.view.accessibilityIdentifier = AccessibilityID.playerShareSheet
         vc.completionWithItemsHandler = { _, _, _, _ in
             if wasPlaying { vm.resume() }
         }

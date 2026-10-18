@@ -68,6 +68,10 @@ final class PlayerMoreMenuDuplicationUITests: XCTestCase {
     /// When controls are hidden (`controlsVisible == false`) the Quality row
     /// must appear in the overflow menu so the user can still access quality settings.
     func testQualityRowPresentInMoreMenuWhenControlsHidden() throws {
+        #if !os(tvOS)
+        // iPhone and iPad keep the controls (and the quality pill) on screen while More is open; only tvOS lists Quality.
+        throw XCTSkip("The More menu lists Quality only on tvOS")
+        #endif
         let app = launchApp(showControls: false)
         defer { app.terminate() }
 

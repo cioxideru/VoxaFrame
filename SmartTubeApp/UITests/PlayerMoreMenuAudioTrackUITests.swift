@@ -169,7 +169,8 @@ final class PlayerMoreMenuAudioTrackUITests: XCTestCase {
 
         audioRow.tap()
 
-        let picker = app.otherElements["player.audioTrackPicker"].firstMatch
+        let picker = app.descendants(matching: .any).matching(identifier: AccessibilityID.playerAudioTrackPicker)
+            .firstMatch
         XCTAssertTrue(
             picker.waitForExistence(timeout: 5),
             "player.audioTrackPicker must appear after tapping the audio track row in the overflow menu"

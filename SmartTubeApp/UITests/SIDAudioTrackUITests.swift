@@ -249,7 +249,8 @@ final class SIDAudioTrackUITests: XCTestCase {
         }
         audioRow.tap()
 
-        let picker = app.otherElements["player.audioTrackPicker"].firstMatch
+        let picker = app.descendants(matching: .any).matching(identifier: AccessibilityID.playerAudioTrackPicker)
+            .firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 5), "Audio track picker must open")
 
         // Give SwiftUI time to render all rows before querying the accessibility tree.
@@ -289,7 +290,8 @@ final class SIDAudioTrackUITests: XCTestCase {
         }
         audioRow.tap()
 
-        let picker = app.otherElements["player.audioTrackPicker"].firstMatch
+        let picker = app.descendants(matching: .any).matching(identifier: AccessibilityID.playerAudioTrackPicker)
+            .firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 5), "Audio track picker must open")
 
         let originalLabels = picker.staticTexts.matching(
@@ -327,7 +329,8 @@ final class SIDAudioTrackUITests: XCTestCase {
         }
         audioRow.tap()
 
-        let picker = app.otherElements["player.audioTrackPicker"].firstMatch
+        let picker = app.descendants(matching: .any).matching(identifier: AccessibilityID.playerAudioTrackPicker)
+            .firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 5), "Audio track picker must open")
 
         // SwiftUI combines the child Text elements of a Button into its accessibility label.
@@ -392,7 +395,8 @@ final class SIDAudioTrackUITests: XCTestCase {
 
         // Tapping the pill must open the audio track picker.
         pill.tap()
-        let picker = app.otherElements["player.audioTrackPicker"].firstMatch
+        let picker = app.descendants(matching: .any).matching(identifier: AccessibilityID.playerAudioTrackPicker)
+            .firstMatch
         XCTAssertTrue(
             picker.waitForExistence(timeout: 5),
             "Tapping player.quickAccess.audioTrack must open player.audioTrackPicker"

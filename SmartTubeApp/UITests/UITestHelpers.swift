@@ -6,6 +6,23 @@ enum AccessibilityID {
     static var playerHoldSpeedBadge: String { "player.holdSpeedBadge" }
     static var playerMoreMenuCancelButton: String { "player.moreMenu.cancel" }
     static var playerMoreMenuDescriptionRow: String { "player.moreMenu.descriptionRow" }
+    static var playerMoreMenu: String { "player.moreMenu" }
+    static var playerOptionPanelCancel: String { "player.optionPanel.cancel" }
+    static var playerMoreMenuScrollView: String { "player.moreMenu.scrollView" }
+    static var playerMoreMenuLikeRow: String { "player.moreMenu.likeRow" }
+    static var playerMoreMenuDislikeRow: String { "player.moreMenu.dislikeRow" }
+    static var playerMoreMenuShareRow: String { "player.moreMenu.shareRow" }
+    static var playerShareSheet: String { "player.shareSheet" }
+    static var playerMoreMenuSpeedRow: String { "player.moreMenu.speedRow" }
+    static var playerMoreMenuQualityRow: String { "player.moreMenu.qualityRow" }
+    static var playerMoreMenuSleepTimerRow: String { "player.moreMenu.sleepTimerRow" }
+    static var playerMoreMenuAudioOnlyRow: String { "player.moreMenu.audioOnlyRow" }
+    static var playerMoreMenuQueueShuffleRow: String { "player.moreMenu.queueShuffleRow" }
+    static var playerMoreMenuDownloadButton: String { "player.moreMenu.downloadButton" }
+    static var playerMoreMenuCaptionsRow: String { "player.moreMenu.captionsRow" }
+    static var playerMoreMenuAudioTrackRow: String { "player.moreMenu.audioTrackRow" }
+    static var playerMoreMenuCommentsRow: String { "player.moreMenu.commentsRow" }
+    static var playerMoreMenuStatsForNerds: String { "player.moreMenu.statsForNerds" }
     static var playerMoreButton: String { "player.moreButton" }
     static var miniPlayerBar: String { "miniPlayer.bar" }
     static var miniPlayerTitle: String { "miniPlayer.titleLabel" }
@@ -213,6 +230,7 @@ enum AccessibilityID {
     static var playerQuickAudioButton: String { "player.quickAccess.audioTrack" }
     static var playerQuickQualityButton: String { "player.quickAccess.quality" }
     static var playerQualityPicker: String { "player.qualityPicker" }
+    static var playerQualityPickerAuto: String { "player.qualityPicker.auto" }
     static var playerSleepTimerPicker: String { "player.sleepTimerPicker" }
     static var playerCaptionPicker: String { "player.captionPicker" }
     static var playerCaptionPickerOff: String { "player.captionPicker.off" }

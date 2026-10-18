@@ -87,26 +87,17 @@ struct OfflineDownloadSheet: View {
                         #endif
                     }
                 }
-                Section {
-                    Button {
-                        guard let tracks, !isLocked else { return }
-                        OfflineCoordinator.shared.enqueue(video: video, tracks: tracks)
-                        dismiss()
-                    } label: {
-                        Label {
-                            Text("Download", bundle: .module)
-                        } icon: {
-                            Image(systemName: AppSymbol.download)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.vfProminent)
-                    .disabled(loading || tracks == nil || isLocked)
-                    .accessibilityIdentifier(AccessibilityID.offlineSelectionDownload)
-                }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
+                #if !os(iOS)
+                Section { downloadButton }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                #endif
             }
+            #if os(iOS)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                downloadButton.padding(VFSpace.s16).background(.regularMaterial)
+            }
+            #endif
             .navigationTitle(Text("Offline watch", bundle: .module))
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
@@ -142,6 +133,24 @@ struct OfflineDownloadSheet: View {
         .onChange(of: videoID) { _, _ in
             if !audio.contains(where: { $0.id == audioID }) { audioID = preferredAudioID }
         }
+    }
+
+    private var downloadButton: some View {
+        Button {
+            guard let tracks, !isLocked else { return }
+            OfflineCoordinator.shared.enqueue(video: video, tracks: tracks)
+            dismiss()
+        } label: {
+            Label {
+                Text("Download", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.download)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.vfProminent)
+        .disabled(loading || tracks == nil || isLocked)
+        .accessibilityIdentifier(AccessibilityID.offlineSelectionDownload)
     }
 
     private var header: some View {

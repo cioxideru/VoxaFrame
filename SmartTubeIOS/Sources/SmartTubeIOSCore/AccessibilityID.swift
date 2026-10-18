@@ -6,6 +6,23 @@ public enum AccessibilityID {
     public static var playerHoldSpeedBadge: String { "player.holdSpeedBadge" }
     public static var playerMoreMenuCancelButton: String { "player.moreMenu.cancel" }
     public static var playerMoreMenuDescriptionRow: String { "player.moreMenu.descriptionRow" }
+    public static var playerMoreMenu: String { "player.moreMenu" }
+    public static var playerOptionPanelCancel: String { "player.optionPanel.cancel" }
+    public static var playerMoreMenuScrollView: String { "player.moreMenu.scrollView" }
+    public static var playerMoreMenuLikeRow: String { "player.moreMenu.likeRow" }
+    public static var playerMoreMenuDislikeRow: String { "player.moreMenu.dislikeRow" }
+    public static var playerMoreMenuShareRow: String { "player.moreMenu.shareRow" }
+    public static var playerShareSheet: String { "player.shareSheet" }
+    public static var playerMoreMenuSpeedRow: String { "player.moreMenu.speedRow" }
+    public static var playerMoreMenuQualityRow: String { "player.moreMenu.qualityRow" }
+    public static var playerMoreMenuSleepTimerRow: String { "player.moreMenu.sleepTimerRow" }
+    public static var playerMoreMenuAudioOnlyRow: String { "player.moreMenu.audioOnlyRow" }
+    public static var playerMoreMenuQueueShuffleRow: String { "player.moreMenu.queueShuffleRow" }
+    public static var playerMoreMenuDownloadButton: String { "player.moreMenu.downloadButton" }
+    public static var playerMoreMenuCaptionsRow: String { "player.moreMenu.captionsRow" }
+    public static var playerMoreMenuAudioTrackRow: String { "player.moreMenu.audioTrackRow" }
+    public static var playerMoreMenuCommentsRow: String { "player.moreMenu.commentsRow" }
+    public static var playerMoreMenuStatsForNerds: String { "player.moreMenu.statsForNerds" }
     public static var playerMoreButton: String { "player.moreButton" }
     public static var miniPlayerBar: String { "miniPlayer.bar" }
     public static var miniPlayerTitle: String { "miniPlayer.titleLabel" }
@@ -216,6 +233,7 @@ public enum AccessibilityID {
     public static var playerQuickAudioButton: String { "player.quickAccess.audioTrack" }
     public static var playerQuickQualityButton: String { "player.quickAccess.quality" }
     public static var playerQualityPicker: String { "player.qualityPicker" }
+    public static var playerQualityPickerAuto: String { "player.qualityPicker.auto" }
     public static var playerSleepTimerPicker: String { "player.sleepTimerPicker" }
     public static var playerCaptionPicker: String { "player.captionPicker" }
     public static var playerCaptionPickerOff: String { "player.captionPicker.off" }

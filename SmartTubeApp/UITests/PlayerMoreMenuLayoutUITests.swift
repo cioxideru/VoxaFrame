@@ -1,8 +1,8 @@
 import XCTest
 
 /// Merged from `PlayerMoreMenuLayoutUITests` + `PlayerPickerOverlayLayoutUITests`.
-/// All 6 tests share **one** app launch via class-level setUp/tearDown,
-/// avoiding 5 redundant app starts. See docs/ui-tests-together-plan.md — Group 1.
+/// The menu layout tests share one app launch. First-open panel regressions live in
+/// `PlayerOptionPanelBoundsUITests` and use the local media fixture.
 final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
 
     // MARK: - Class-level shared state
@@ -27,7 +27,7 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
         sharedApp = a
         // Wait for the more menu to appear — the --uitesting-open-more-menu flag
         // opens it on top of the player, so player.view is inaccessible under the sheet.
-        skipAllTests = !a.scrollViews["player.moreMenu.scrollView"].firstMatch.waitForExistence(timeout: 20)
+        skipAllTests = !a.scrollViews[AccessibilityID.playerMoreMenuScrollView].firstMatch.waitForExistence(timeout: 20)
         if skipAllTests {
             skipScreenshot = a.screenshot()
         }
@@ -91,9 +91,9 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
     /// Ensures the more menu is visible; re-opens it if a previous test dismissed it.
     /// Uses two tap attempts in case controls auto-hid before the first tap registered.
     private func ensureMoreMenuVisible() {
-        let scrollView = app.scrollViews["player.moreMenu.scrollView"].firstMatch
+        let scrollView = app.scrollViews[AccessibilityID.playerMoreMenuScrollView].firstMatch
         if scrollView.waitForExistence(timeout: 5) { return }
-        let moreButton = app.buttons["player.moreButton"].firstMatch
+        let moreButton = app.buttons[AccessibilityID.playerMoreButton].firstMatch
         for _ in 0..<3 {
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
             if moreButton.waitForExistence(timeout: 4) {
@@ -106,17 +106,20 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
 
     /// Dismisses an open picker overlay so the more menu can be restored.
     private func dismissPickerIfOpen() {
-        let anyOpen = ["player.qualityPicker", "player.speedPicker", "player.sleepTimerPicker"]
-            .contains { app.otherElements[$0].firstMatch.exists }
+        let anyOpen = [
+            AccessibilityID.playerQualityPicker, AccessibilityID.playerSpeedPicker,
+            AccessibilityID.playerSleepTimerPicker,
+        ]
+        .contains { app.descendants(matching: .any).matching(identifier: $0).firstMatch.exists }
         if anyOpen {
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.1)).tap()
-            _ = app.scrollViews["player.moreMenu.scrollView"].firstMatch.waitForExistence(timeout: 2)
+            _ = app.scrollViews[AccessibilityID.playerMoreMenuScrollView].firstMatch.waitForExistence(timeout: 2)
         }
     }
 
     /// Dismisses the more menu via its cancel row to restore a clean player state.
     private func closeMoreMenuIfOpen() {
-        let cancel = app.buttons["player.moreMenu.cancel"].firstMatch
+        let cancel = app.buttons[AccessibilityID.playerMoreMenuCancelButton].firstMatch
         if cancel.waitForExistence(timeout: 5), cancel.isHittable { cancel.tap() }
     }
 
@@ -137,22 +140,21 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
         rotateToLandscapeAndWait()
         ensureMoreMenuVisible()
 
-        let scrollView = app.scrollViews["player.moreMenu.scrollView"].firstMatch
+        let scrollView = app.scrollViews[AccessibilityID.playerMoreMenuScrollView].firstMatch
         XCTAssertTrue(
             scrollView.waitForExistence(timeout: 10),
             "More menu scroll view must be accessible in landscape")
 
-        // In landscape compact height, Speed/Quality/Sleep rows are hidden.
-        // Verify the rows that ARE present: downloadButton and cancel.
-        let downloadButton = app.buttons["player.moreMenu.downloadButton"].firstMatch
+        let downloadButton = app.buttons[AccessibilityID.offlineWatch].firstMatch
         XCTAssertTrue(
             downloadButton.waitForExistence(timeout: 5),
             "Download button should be accessible in landscape more menu")
+        for _ in 0..<6 where !downloadButton.isHittable { scrollView.swipeUp() }
         XCTAssertTrue(
             downloadButton.isHittable,
             "Download button should be tappable in landscape")
 
-        let cancelButton = app.buttons["player.moreMenu.cancel"].firstMatch
+        let cancelButton = app.buttons[AccessibilityID.playerMoreMenuCancelButton].firstMatch
         let deadline = Date().addingTimeInterval(5)
         while Date() < deadline && !cancelButton.isHittable {
             scrollView.swipeUp()
@@ -171,11 +173,20 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
     func testMoreMenuWidthIsConstrainedInPortrait() throws {
         try XCTSkipIf(Self.skipAllTests, Self.skipReason)
 
-        let scrollView = app.scrollViews["player.moreMenu.scrollView"].firstMatch
+        let scrollView = app.scrollViews[AccessibilityID.playerMoreMenuScrollView].firstMatch
         XCTAssertTrue(
             scrollView.waitForExistence(timeout: 10),
             "More menu scroll view must appear in portrait")
 
+        #if os(iOS)
+        let panel = app.descendants(matching: .any).matching(identifier: AccessibilityID.playerMoreMenu).firstMatch
+        XCTAssertTrue(panel.waitForExistence(timeout: 5))
+        let contained = XCTNSPredicateExpectation(
+            predicate: NSPredicate { [self] _, _ in
+                !panel.frame.isEmpty && app.frame.contains(panel.frame)
+            }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [contained], timeout: 5), .completed)
+        #else
         let screenWidth = app.frame.size.width
         let menuWidth = scrollView.frame.size.width
         XCTAssertLessThanOrEqual(
@@ -185,10 +196,9 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
         XCTAssertGreaterThan(
             menuWidth, screenWidth * 0.5,
             "More menu width (\(menuWidth)pt) must be reasonable (> 50 % of screen)")
-        // Confirm that a named row is hittable.
-        // player.moreMenu.speedRow no longer appears in the more menu in the current app version;
-        // player.moreMenu.downloadButton is the first row with a stable accessibility ID.
-        let downloadButton = app.buttons["player.moreMenu.downloadButton"].firstMatch
+        #endif
+        let downloadButton = app.buttons[AccessibilityID.offlineWatch].firstMatch
+        for _ in 0..<6 where !downloadButton.isHittable { scrollView.swipeUp() }
         let hittable = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "hittable == true"), object: downloadButton)
         _ = XCTWaiter().wait(for: [hittable], timeout: 12)
@@ -197,19 +207,17 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
             "Download button must be tappable in portrait — confirms menu items are accessible")
     }
 
-    /// Regression for #94: the portrait more menu must fit all items without
-    /// requiring the user to scroll (moreMenuMaxHeight reduced from 520→380 pt).
-    func testMoreMenuDoesNotRequireScrollInPortrait() throws {
+    /// Cancel stays outside the scrolling actions in the native panel header.
+    func testMoreMenuCancelIsHittableWithoutScrollingInPortrait() throws {
         try XCTSkipIf(Self.skipAllTests, Self.skipReason)
 
-        let cancelButton = app.buttons["player.moreMenu.cancel"].firstMatch
+        let cancelButton = app.buttons[AccessibilityID.playerMoreMenuCancelButton].firstMatch
         XCTAssertTrue(
             cancelButton.waitForExistence(timeout: 10),
             "Cancel button must be accessible in the portrait more menu")
         XCTAssertTrue(
             cancelButton.isHittable,
-            "Cancel button must be hittable without scrolling in portrait — "
-                + "menu should fit entirely within portrait height (moreMenuMaxHeight = 380 pt)")
+            "Cancel button must be hittable without scrolling in portrait")
     }
 
 }
