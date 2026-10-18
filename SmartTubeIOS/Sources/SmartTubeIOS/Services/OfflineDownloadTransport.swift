@@ -92,7 +92,7 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         #else
         let allowed = source.url.scheme == "https"
         #endif
-        guard allowed else { throw OfflineLibraryError.unavailable }
+        guard allowed else { throw Self.unavailable("source URL is not HTTPS track=\(source.track.id)") }
         let task: URLSessionTask
         if source.track.kind == .hls {
             #if os(iOS)
@@ -101,7 +101,7 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
             completionLock.withLock { expectedHLS[attempt] = source }
             task = hls.makeAssetDownloadTask(downloadConfiguration: configuration)
             #else
-            throw OfflineLibraryError.unavailable
+            throw Self.unavailable("HLS downloads need iOS track=\(source.track.id)")
             #endif
         } else {
             var request = URLRequest(url: source.url)
@@ -130,28 +130,52 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         let legible = try await asset.loadMediaSelectionGroup(for: .legible)
         let preferred = try await asset.load(.preferredMediaSelection)
         try Task.checkCancellation()
+        let track = source.track.id
         let matches = variants.filter { matchesVariant($0, source: source) }
-        guard matches.count == 1, let variant = matches.first,
-            let peak = variant.peakBitRate, peak > 0,
-            let selection = preferred.mutableCopy() as? AVMutableMediaSelection
-        else { throw OfflineLibraryError.unavailable }
-        let predicate = NSPredicate(format: "peakBitRate == %@", NSNumber(value: peak))
-        guard variants.filter({ predicate.evaluate(with: $0) }).count == 1 else {
-            throw OfflineLibraryError.unavailable
+        guard matches.count == 1, let variant = matches.first else {
+            throw unavailable("HLS variant matches=\(matches.count) of \(variants.count) track=\(track)")
+        }
+        guard let selection = preferred.mutableCopy() as? AVMutableMediaSelection else {
+            throw unavailable("HLS media selection is not mutable track=\(track)")
         }
         if let name = source.track.hlsAudioName {
-            guard let audible else { throw OfflineLibraryError.missingAudio }
-            let named = audible.options.filter { $0.displayName == name }
-            let localized = audible.options.filter { $0.extendedLanguageTag == source.track.language }
-            let candidates = named.isEmpty ? localized : named
-            guard candidates.count == 1, let audio = candidates.first else { throw OfflineLibraryError.unavailable }
+            guard let audible else {
+                offlineTransportLog.error(
+                    "Offline unavailable: HLS has no audible group track=\(track, privacy: .public)")
+                throw OfflineLibraryError.missingAudio
+            }
+            // Prefer options this variant's audio group carries; equivalent renditions repeat per group.
+            let carried = audible.options.filter {
+                variant.audioAttributes?.renditionSpecificAttributes(for: $0) != nil
+            }
+            let options = carried.isEmpty ? audible.options : carried
+            guard
+                let audio = hlsAudioOption(
+                    options, name: name, language: source.track.language, displayName: \.displayName,
+                    languageTag: \.extendedLanguageTag)
+            else {
+                let offered = audible.options.map { "\($0.displayName)|\($0.extendedLanguageTag ?? "-")" }
+                throw unavailable(
+                    "HLS audio \(name)|\(source.track.language ?? "-") not unique among \(offered) carried=\(carried.count) track=\(track)"
+                )
+            }
             selection.select(audio, in: audible)
         }
         if let legible, legible.allowsEmptySelection { selection.select(nil, in: legible) }
         let configuration = AVAssetDownloadConfiguration(asset: asset, title: source.track.label)
         configuration.auxiliaryContentConfigurations = []
         // Match one rendition; willDownloadVariants also rejects the system's automatic fallback.
-        configuration.primaryContentConfiguration.variantQualifiers = [AVAssetVariantQualifier(predicate: predicate)]
+        // A unique peak keeps the proven predicate qualifier; dubbed variants sharing it need the variant itself.
+        let qualifier: AVAssetVariantQualifier
+        if let peak = variant.peakBitRate, peak > 0, variants.filter({ $0.peakBitRate == peak }).count == 1 {
+            qualifier = AVAssetVariantQualifier(
+                predicate: NSPredicate(format: "peakBitRate == %@", NSNumber(value: peak)))
+        } else {
+            offlineTransportLog.notice(
+                "HLS peak bit rate is shared; qualifying the variant track=\(track, privacy: .public)")
+            qualifier = AVAssetVariantQualifier(variant: variant)
+        }
+        configuration.primaryContentConfiguration.variantQualifiers = [qualifier]
         configuration.primaryContentConfiguration.mediaSelections = [selection]
         return configuration
     }
@@ -182,6 +206,29 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         return true
     }
     #endif
+
+    /// Logs why a variant cannot be saved; reasons carry track IDs and counts, never URLs.
+    static func unavailable(_ reason: String) -> OfflineLibraryError {
+        offlineTransportLog.error("Offline unavailable: \(reason, privacy: .public)")
+        return .unavailable
+    }
+
+    /// The one audio option named like the catalog choice, else the one in its language.
+    /// Several equally named options are the same rendition repeated across audio groups.
+    static func hlsAudioOption<Option>(
+        _ options: [Option], name: String, language: String?,
+        displayName: (Option) -> String, languageTag: (Option) -> String?
+    ) -> Option? {
+        let named = options.filter { displayName($0) == name }
+        let localized = options.filter { option in
+            guard let language, let tag = languageTag(option) else { return false }
+            return tag.caseInsensitiveCompare(language) == .orderedSame
+        }
+        let candidates = named.isEmpty ? localized : named
+        let renditions = Set(candidates.map { "\(displayName($0))|\(languageTag($0)?.lowercased() ?? "")" })
+        guard renditions.count == 1 else { return nil }
+        return candidates.first
+    }
 
     func setForeground(_ foreground: Bool) {
         #if os(iOS)
@@ -385,6 +432,9 @@ extension OfflineDownloadTransport: AVAssetDownloadDelegate {
         if let expected = completionLock.withLock({ expectedHLS[id] }),
             variants.count != 1 || !variants.allSatisfy({ Self.matchesVariant($0, source: expected) })
         {
+            offlineTransportLog.error(
+                "Offline unavailable: system chose \(variants.count) HLS variants not matching track=\(expected.track.id, privacy: .public)"
+            )
             stagingErrors[id] = OfflineLibraryError.unavailable.localizedDescription
             assetDownloadTask.cancel()
             return

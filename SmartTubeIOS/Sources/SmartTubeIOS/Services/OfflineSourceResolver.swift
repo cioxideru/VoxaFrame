@@ -52,7 +52,8 @@ actor OfflineSourceResolver: OfflineResolving {
                 guard (response as? HTTPURLResponse)?.statusCode == 200,
                     let manifest = String(data: data, encoding: .utf8), manifest.contains("#EXTM3U")
                 else {
-                    throw OfflineLibraryError.unavailable
+                    throw OfflineDownloadTransport.unavailable(
+                        "HLS master status=\((response as? HTTPURLResponse)?.statusCode ?? 0) videoId=\(video.id)")
                 }
                 sources += offlineHLSVariants(manifest, baseURL: playlistURL, duration: info.video.duration).map {
                     OfflineSource(track: $0.0, url: playlistURL, userAgent: agent, hlsVariantURL: $0.1)
@@ -62,6 +63,10 @@ actor OfflineSourceResolver: OfflineResolving {
         } catch {
             try Task.checkCancellation()
             if error is CancellationError || (error as? URLError)?.code == .cancelled { throw error }
+            let failure = error as NSError
+            offlineSourceLog.error(
+                "VisionOS catalog failed videoId=\(video.id, privacy: .public) domain=\(failure.domain, privacy: .public) code=\(failure.code)"
+            )
         }
         do {
             let direct = try await api.fetchPlayerInfoAndroid(videoId: video.id)
@@ -73,7 +78,7 @@ actor OfflineSourceResolver: OfflineResolving {
                 throw error
             }
         }
-        guard !sources.isEmpty else { throw OfflineLibraryError.unavailable }
+        guard !sources.isEmpty else { throw OfflineDownloadTransport.unavailable("empty catalog videoId=\(video.id)") }
         return sources
     }
 
@@ -97,11 +102,15 @@ actor OfflineSourceResolver: OfflineResolving {
             guard
                 let source = sources.first(where: { $0.track.hasAudio })
                     ?? sources.first(where: { $0.track.kind == .video })
-            else { throw OfflineLibraryError.unavailable }
+            else {
+                throw OfflineDownloadTransport.unavailable(
+                    "no automatic source among \(sources.count) videoId=\(video.id)")
+            }
             return source
         }
         guard let source = sources.first(where: { $0.track.id == track.id }) else {
-            throw OfflineLibraryError.unavailable
+            let offered = sources.filter { $0.track.kind == track.kind }.map(\.track.id)
+            throw OfflineDownloadTransport.unavailable("track=\(track.id) is not in the refreshed catalog \(offered)")
         }
         return source
     }
@@ -109,7 +118,7 @@ actor OfflineSourceResolver: OfflineResolving {
     private func translation(video: Video, track: OfflineTrack, attempt: UUID) async throws -> OfflineSource {
         try Task.checkCancellation()
         guard let language = track.language, YandexVOTClient.targetLanguages.contains(language) else {
-            throw OfflineLibraryError.unavailable
+            throw OfflineDownloadTransport.unavailable("translation language=\(track.language ?? "-") is not supported")
         }
         let duration: TimeInterval
         if let known = video.duration, known > 0 {
@@ -117,7 +126,10 @@ actor OfflineSourceResolver: OfflineResolving {
         } else {
             duration = try await api.fetchPlayerInfoVisionOS(videoId: video.id).video.duration ?? 0
         }
-        guard duration > 0, duration <= YandexVOTClient.maximumDuration else { throw OfflineLibraryError.unavailable }
+        guard duration > 0, duration <= YandexVOTClient.maximumDuration else {
+            throw OfflineDownloadTransport.unavailable(
+                "translation duration=\(Int(duration))s is out of range videoId=\(video.id)")
+        }
         let result = try await vot.translate(
             videoId: video.id, duration: duration, sourceLanguage: "auto",
             targetLanguage: language, livelyVoiceToken: nil)
@@ -125,10 +137,13 @@ actor OfflineSourceResolver: OfflineResolving {
         switch result.status {
         case .finished:
             uploadedTranslations[attempt] = nil
-            guard let url = result.audioURL, url.scheme == "https" else { throw OfflineLibraryError.unavailable }
+            guard let url = result.audioURL, url.scheme == "https" else {
+                throw OfflineDownloadTransport.unavailable(
+                    "translation finished without an HTTPS audio URL videoId=\(video.id)")
+            }
             return OfflineSource(track: track, url: url, userAgent: InnerTubeClients.iOS.userAgent)
         case .failed, .sessionRequired:
-            throw OfflineLibraryError.unavailable
+            throw OfflineDownloadTransport.unavailable("translation status=\(result.status) videoId=\(video.id)")
         case .audioRequested:
             guard !result.translationId.isEmpty else { throw YandexVOTClient.VOTError.malformedResponse }
             var upload = uploadedTranslations[attempt] ?? AudioUpload(translationID: result.translationId)

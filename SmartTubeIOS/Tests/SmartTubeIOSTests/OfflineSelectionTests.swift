@@ -94,6 +94,55 @@ struct OfflineSelectionTests {
             ])
     }
 
+    @Test func dubbedHLSChoicesKeepDistinctIdentityAcrossFetches() throws {
+        // YouTube repeats a video per audio group and gives dubbed muxed variants the original's peak.
+        let manifest = """
+            #EXTM3U
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="233",LANGUAGE="ru",NAME="Русский - dubbed-auto",URI="ru-low.m3u8",YT-EXT-AUDIO-CONTENT-ID="ru.3"
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="234",LANGUAGE="ru",NAME="Русский - dubbed-auto",URI="ru.m3u8",YT-EXT-AUDIO-CONTENT-ID="ru.3"
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="234",LANGUAGE="en-US",NAME="English - original",URI="en.m3u8",DEFAULT=YES,YT-EXT-AUDIO-CONTENT-ID="en-US.4"
+            #EXT-X-STREAM-INF:BANDWIDTH=900000,RESOLUTION=1280x720,FRAME-RATE=24,CODECS="avc1.4d401f,mp4a.40.5",AUDIO="233"
+            video.m3u8
+            #EXT-X-STREAM-INF:BANDWIDTH=1000000,RESOLUTION=1280x720,FRAME-RATE=24,CODECS="avc1.4d401f,mp4a.40.2",AUDIO="234"
+            video.m3u8
+            #EXT-X-STREAM-INF:BANDWIDTH=500000,RESOLUTION=854x480,FRAME-RATE=24,CODECS="avc1.4d401f,mp4a.40.2"
+            muxed-original.m3u8
+            #EXT-X-STREAM-INF:BANDWIDTH=500000,RESOLUTION=854x480,FRAME-RATE=24,CODECS="avc1.4d401f,mp4a.40.2",YT-EXT-AUDIO-CONTENT-ID="ru.3"
+            muxed-ru.m3u8
+            """
+        let base = try #require(URL(string: "https://example.invalid/master.m3u8"))
+        let first = offlineHLSVariants(manifest, baseURL: base)
+        #expect(first.map(\.0.id) == offlineHLSVariants(manifest, baseURL: base).map(\.0.id))
+        #expect(Set(first.map(\.0.id)).count == first.count)
+        let external = first.filter { $0.0.hlsAudioName == "Русский - dubbed-auto" }
+        #expect(external.map(\.0.hlsPeakBitRate) == [900_000, 1_000_000])
+        #expect(external.allSatisfy { $0.0.language == "ru" && $0.0.isOriginalAudio == false })
+        let muxed = first.filter { $0.0.videoSize?.height == 480 }
+        // Equal peaks: only the variant URL tells these apart, so the transport qualifies the variant itself.
+        #expect(muxed.map(\.1.lastPathComponent) == ["muxed-original.m3u8", "muxed-ru.m3u8"])
+        #expect(muxed.map(\.0.hlsPeakBitRate) == [500_000, 500_000])
+        #expect(muxed.map(\.0.isOriginalAudio) == [true, false])
+    }
+
+    @Test func hlsAudioOptionPicksTheNamedOrSingleLanguageRendition() {
+        typealias Option = (name: String, tag: String?)
+        func pick(_ options: [Option], name: String, language: String?) -> Option? {
+            OfflineDownloadTransport.hlsAudioOption(
+                options, name: name, language: language, displayName: \.name, languageTag: \.tag)
+        }
+        let dubbed: Option = ("Русский - dubbed-auto", "ru")
+        let original: Option = ("English - original", "en-US")
+        #expect(pick([original, dubbed], name: dubbed.name, language: "ru")?.name == dubbed.name)
+        // The same rendition repeated across audio groups is not ambiguous.
+        #expect(pick([dubbed, original, dubbed], name: dubbed.name, language: "ru")?.name == dubbed.name)
+        // AVFoundation may localize the NAME; fall back to the one option in the language, case-insensitively.
+        #expect(pick([("Russian", "RU"), original], name: dubbed.name, language: "ru")?.name == "Russian")
+        #expect(pick([("Russian", "ru"), ("Russian original", "ru")], name: dubbed.name, language: "ru") == nil)
+        #expect(pick([original], name: dubbed.name, language: nil) == nil)
+        // One name in two dialects is two renditions, not a repeat.
+        #expect(pick([("English", "en-US"), ("English", "en-GB")], name: "English", language: nil) == nil)
+    }
+
     @Test func estimateRejectsInvalidOrOverflowingMetadata() {
         #expect(OfflineTrack.estimatedSize(bitrate: 8_000_000, duration: 120) == 120_000_000)
         var first = picture
