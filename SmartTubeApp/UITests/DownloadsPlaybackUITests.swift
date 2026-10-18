@@ -118,9 +118,9 @@ final class DownloadsPlaybackUITests: XCTestCase {
         let pages = app.segmentedControls[AccessibilityID.offlinePagePicker]
         XCTAssertTrue(pages.waitForExistence(timeout: 5))
         pages.buttons["Downloads"].tap()
+        // Jobs sit under their video's title; each job row carries that title as its accessibility label.
         let job = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier BEGINSWITH %@", "offline.job."))
-            .containing(.staticText, identifier: id)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "offline.job.", id))
             .containing(.staticText, identifier: "en · Original").firstMatch
         reveal(job)
         XCTAssertTrue(job.waitForExistence(timeout: 8))

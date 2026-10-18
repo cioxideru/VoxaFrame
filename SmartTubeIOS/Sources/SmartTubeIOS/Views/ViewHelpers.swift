@@ -218,12 +218,15 @@ enum AppSymbol {
     static let copyDoc = "doc.on.doc"
     static let trash = "trash"
     static let download = "arrow.down.to.line"
+    static let retry = "arrow.clockwise"
     static let watchLater = "clock.badge"
     static let audioOnly = "waveform.circle"
 
     // MARK: - Status / info
     static let warning = "exclamationmark.triangle.fill"
+    static let checkmarkCircle = "checkmark.circle.fill"
     static let clock = "clock"
+    static let hourglass = "hourglass"
     static let questionCircle = "questionmark.circle"
     static let qrcode = "qrcode"
     static let colorSwatch = "circle.fill"
@@ -236,6 +239,8 @@ enum AppSymbol {
 
     // MARK: - Content
     static let stackLayers = "square.stack"
+    static let film = "film"
+    static let translation = "character.bubble"
     static let tvMediabox = "tv.and.mediabox"
     static let tvPlay = "play.tv"
 }

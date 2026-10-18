@@ -24,47 +24,106 @@ struct OfflineDownloadSheet: View {
         return try? OfflineSelection.tracks(
             video: selectedVideo, audio: selectedAudio, translation: translates ? language : nil, catalog: catalog)
     }
+    /// The library refuses new tasks while a removal is pending and ignores them while storage is blocked.
+    private var isLocked: Bool {
+        OfflinePresentation.isLocked(
+            storageError: OfflineCoordinator.shared.error,
+            persistenceBlocked: OfflineCoordinator.shared.persistenceBlocked,
+            pendingRemovals: OfflineCoordinator.shared.snapshot.pendingRemovals)
+    }
+    @Environment(SettingsStore.self) private var store
+
     var body: some View {
-        VStack {
-            HStack {
-                Text("Offline watch").font(.headline)
-                Spacer()
-                Button("Cancel") { dismiss() }
-            }.padding()
+        NavigationStack {
             Form {
+                // Read in the body so a storage failure re-renders the sheet and disables Download.
+                if let storageError = OfflineCoordinator.shared.error {
+                    OfflineStorageNotice(message: storageError)
+                }
                 Section {
-                    Text(video.title)
+                    header
+                }
+                Section {
                     if loading {
-                        ProgressView("Loading available streams…")
+                        ProgressView { Text("Loading available streams…", bundle: .module) }
                     } else if let error {
-                        Text(error).foregroundStyle(.red)
-                        Button("Retry") { reload += 1 }
+                        Label {
+                            Text(error)
+                        } icon: {
+                            Image(systemName: AppSymbol.warning)
+                        }
+                        .foregroundStyle(VFColor.danger)
+                        Button {
+                            reload += 1
+                        } label: {
+                            Text("Retry", bundle: .module)
+                        }
                     } else {
                         selections
                         if let tracks {
                             if let size = OfflineSelection.estimatedBytes(for: tracks) {
-                                Text("Estimated media size: \(size.formatted(.byteCount(style: .file)))").font(.caption)
+                                Text(
+                                    "Estimated media size: \(size.formatted(.byteCount(style: .file)))",
+                                    bundle: .module
+                                )
+                                .font(.caption)
                             }
                             if translates {
-                                Text("Translation size will be known after it is prepared.").font(.caption)
+                                Text("Translation size will be known after it is prepared.", bundle: .module)
+                                    .font(.caption)
                             }
                         }
                     }
                 } footer: {
-                    Text("Downloads only the selected video and audio. You can add other tracks later in Library.")
+                    VStack(alignment: .leading, spacing: VFSpace.s4) {
+                        Text(
+                            "Downloads only the selected video and audio. You can add other tracks later in Library.",
+                            bundle: .module)
+                        #if !os(iOS)
+                        // OfflineSourceResolver offers HLS packages on iPhone and iPad only.
+                        Text(
+                            "On this device videos are saved as direct files. HLS packages are saved on iPhone and iPad.",
+                            bundle: .module)
+                        #endif
+                    }
                 }
-                Button("Download") {
-                    guard let tracks else { return }
-                    OfflineCoordinator.shared.enqueue(video: video, tracks: tracks)
-                    dismiss()
+                Section {
+                    Button {
+                        guard let tracks, !isLocked else { return }
+                        OfflineCoordinator.shared.enqueue(video: video, tracks: tracks)
+                        dismiss()
+                    } label: {
+                        Label {
+                            Text("Download", bundle: .module)
+                        } icon: {
+                            Image(systemName: AppSymbol.download)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.vfProminent)
+                    .disabled(loading || tracks == nil || isLocked)
+                    .accessibilityIdentifier(AccessibilityID.offlineSelectionDownload)
                 }
-                .disabled(loading || tracks == nil)
-                .accessibilityIdentifier(AccessibilityID.offlineSelectionDownload)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+            }
+            .navigationTitle(Text("Offline watch", bundle: .module))
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Cancel", bundle: .module)
+                    }
+                }
             }
             #if !os(tvOS)
             .pickerStyle(.menu)
             #endif
         }
+        // Presented from the player's UIKit-hosted cover too, which does not pass the root `.tint` on.
+        .tint(store.settings.accentColor.color)
         .task(id: reload) {
             loading = true
             do {
@@ -84,27 +143,54 @@ struct OfflineDownloadSheet: View {
             if !audio.contains(where: { $0.id == audioID }) { audioID = preferredAudioID }
         }
     }
+
+    private var header: some View {
+        HStack(spacing: VFSpace.s12) {
+            OfflineCover(url: video.thumbnailURL, width: 80)
+            VStack(alignment: .leading, spacing: VFSpace.s4) {
+                Text(video.title).font(.headline)
+                if !video.channelTitle.isEmpty {
+                    Text(video.channelTitle).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
     private var selections: some View {
         Group {
-            Picker("Video stream", selection: $videoID) {
+            Picker(selection: $videoID) {
                 ForEach(videos) { track in
-                    Text(track.videoChoiceLabel + (track.kind == .hls ? " · HLS" : " · MP4")).tag(Optional(track.id))
+                    Text(track.videoChoiceLabel + (track.kind == .hls ? " · HLS" : " · MP4"))
+                        .tag(Optional(track.id))
                 }
-            }.accessibilityIdentifier(AccessibilityID.offlineSelectionVideo)
-            Picker("Audio track", selection: $audioID) {
+            } label: {
+                Text("Video stream", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.offlineSelectionVideo)
+            Picker(selection: $audioID) {
                 ForEach(audio) { track in
                     Text(track.audioLabel ?? track.label).tag(Optional(track.id))
                 }
-            }.accessibilityIdentifier(AccessibilityID.offlineSelectionAudio)
-            if audio.isEmpty { Text("No compatible audio track is available for this video stream.") }
-            Toggle("Yandex translation", isOn: $translates)
-                .accessibilityIdentifier(AccessibilityID.offlineSelectionTranslate)
+            } label: {
+                Text("Audio track", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.offlineSelectionAudio)
+            if audio.isEmpty {
+                Text("No compatible audio track is available for this video stream.", bundle: .module)
+            }
+            Toggle(isOn: $translates) {
+                Text("Yandex translation", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.offlineSelectionTranslate)
             if translates {
-                Picker("Translation language", selection: $language) {
+                Picker(selection: $language) {
                     ForEach(YandexVOTClient.targetLanguages.sorted(), id: \.self) { language in
-                        Text(Locale.current.localizedString(forLanguageCode: language) ?? language).tag(language)
+                        Text(OfflinePresentation.languageName(language)).tag(language)
                     }
-                }.accessibilityIdentifier(AccessibilityID.offlineSelectionLanguage)
+                } label: {
+                    Text("Translation language", bundle: .module)
+                }
+                .accessibilityIdentifier(AccessibilityID.offlineSelectionLanguage)
             }
         }
     }
