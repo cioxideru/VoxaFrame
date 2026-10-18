@@ -88,7 +88,12 @@ public struct ChannelView: View {
             Button("Cancel", role: .cancel) {}
                 .accessibilityIdentifier(AccessibilityID.subscriptionCancel)
         } message: {
-            Text(vm.channel?.title ?? "")
+            let title = vm.channel?.title ?? ""
+            if auth.isSignedIn {
+                Text("\(title) will leave Subscriptions in your Google account.", bundle: .module)
+            } else {
+                Text("\(title) will be removed from the subscriptions on this device.", bundle: .module)
+            }
         }
     }
 
@@ -103,7 +108,7 @@ public struct ChannelView: View {
                 // All / Shorts filter
                 Picker("Filter", selection: $filter) {
                     ForEach(ChannelFilter.allCases, id: \.self) { tab in
-                        Text(tab.rawValue).tag(tab)
+                        Text(LocalizedStringKey(tab.rawValue), bundle: .module).tag(tab)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -235,53 +240,90 @@ public struct ChannelView: View {
     }
 
     private func channelHeader(_ channel: Channel) -> some View {
-        HStack(spacing: 16) {
+        VStack(spacing: VFSpace.s8) {
             AsyncImage(url: channel.thumbnailURL) { img in
                 img.resizable().scaledToFill()
             } placeholder: {
-                Circle().fill(Color.secondary.opacity(0.3))
+                Circle().fill(VFColor.surface)
             }
-            .frame(width: 72, height: 72)
+            .frame(width: 84, height: 84)
             .clipShape(Circle())
+            .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(channel.title)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .accessibilityIdentifier("channel.title")
-                if let subs = channel.subscriberCount {
-                    Text(subs)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                if let desc = channel.description, !desc.isEmpty {
-                    Text(desc)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                }
+            Text(verbatim: channel.title)  // verbatim: channel name
+                .font(.title2.weight(.bold))
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier(AccessibilityID.channelTitle)
+            if let subs = channel.subscriberCount {
+                Text(verbatim: subs)  // verbatim: subscriber count from YouTube
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
-            Spacer()
-            Button {
-                if channel.isSubscribed {
-                    confirmUnsubscribe = true
-                } else {
-                    Task { await vm.setSubscribed(true) }
-                }
-            } label: {
-                Label(
-                    channel.isSubscribed ? "Unsubscribe" : "Subscribe",
-                    systemImage: channel.isSubscribed ? AppSymbol.personCircleMinus : AppSymbol.addCircle
-                )
+            if let desc = channel.description, !desc.isEmpty {
+                Text(verbatim: desc)  // verbatim: channel description
+                    .font(.subheadline)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
             }
-            .buttonStyle(.bordered)
-            .disabled(!vm.isSubscriptionLoaded || vm.isChangingSubscription || vm.isLoading)
-            .accessibilityIdentifier(AccessibilityID.channelSubscriptionButton)
+            subscriptionButton(channel)
+                .padding(.top, VFSpace.s4)
+            if let note = subscriptionNote(channel) {
+                note
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
         }
-        .padding()
-        .background(.background)
+        .frame(maxWidth: .infinity)
+        .padding(VFSpace.s16)
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("channel.header")
+        .accessibilityIdentifier(AccessibilityID.channelHeader)
+    }
+
+    /// Subscribe is the screen's primary action; once subscribed it steps back to a bordered Unsubscribe
+    /// that asks first. Disabled until the current state is known and while a change is in flight.
+    @ViewBuilder
+    private func subscriptionButton(_ channel: Channel) -> some View {
+        let label = HStack(spacing: VFSpace.s8) {
+            if vm.isChangingSubscription {
+                ProgressView().controlSize(.small)
+            }
+            Label {
+                Text(channel.isSubscribed ? LocalizedStringKey("Unsubscribe") : "Subscribe", bundle: .module)
+            } icon: {
+                Image(systemName: channel.isSubscribed ? AppSymbol.personCircleMinus : AppSymbol.addCircle)
+            }
+        }
+        Group {
+            if channel.isSubscribed {
+                Button {
+                    confirmUnsubscribe = true
+                } label: {
+                    label
+                }
+                .buttonStyle(.bordered)
+            } else {
+                Button {
+                    Task { await vm.setSubscribed(true) }
+                } label: {
+                    label
+                }
+                .buttonStyle(.vfProminent)
+            }
+        }
+        .disabled(!vm.isSubscriptionLoaded || vm.isChangingSubscription || vm.isLoading)
+        .accessibilityIdentifier(AccessibilityID.channelSubscriptionButton)
+    }
+
+    /// Where the subscription lives: a guest's stays on this device and is not moved to Google later.
+    private func subscriptionNote(_ channel: Channel) -> Text? {
+        switch (channel.isSubscribed, auth.isSignedIn) {
+        case (true, true): Text("Subscribed with your Google account", bundle: .module)
+        case (true, false): Text("Subscribed on this device", bundle: .module)
+        case (false, false): Text("Without signing in, the subscription is saved on this device", bundle: .module)
+        case (false, true): nil
+        }
     }
 
 }

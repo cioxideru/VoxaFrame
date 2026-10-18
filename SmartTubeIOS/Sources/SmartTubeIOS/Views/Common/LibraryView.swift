@@ -3,23 +3,24 @@ import SwiftUI
 
 // MARK: - LibraryView
 //
-// Shows subscriptions, playlists, watch history and liked videos for the
-// signed-in account.  Mirrors the Android launcher activities for
-// Subscriptions, Playlists, History and Channels.
+// Subscriptions, watch history, playlists, the play queue and RSS feeds. A guest sees subscriptions on this
+// device, on-device history (A4) and the queue (A1); only account playlists ask to sign in.
+// Mirrors the Android launcher activities for Subscriptions, Playlists, History and Channels.
 
 public struct LibraryView: View {
     @Environment(AuthService.self) private var auth
     @Environment(BrowseViewModel.self) private var browseVM
     @Environment(\.innerTubeAPI) private var api
     @Environment(SettingsStore.self) private var store
+    @Environment(\.libraryQueueRequest) private var queueRequest
     @State private var selectedSection: LibrarySection = .subscriptions
     @State private var selectedVideo: Video?
     @State private var selectedPlaylist: Video?
     @State private var channelDestination: ChannelDestination?
+    @State private var showsSignIn = false
     @State private var scrollStore = ScrollOffsetStore()
     @State private var savedScrollOffset: CGFloat? = nil
     @State private var restoreOffset: CGFloat? = nil
-    @State private var queueVideosCount: Int = 0
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
     #endif
@@ -28,9 +29,11 @@ public struct LibraryView: View {
     #endif
 
     enum LibrarySection: String, CaseIterable, Identifiable {
+        // Raw values are the UI-test identifiers (`library.picker.<raw>`, `library.chip.<raw>`); `title` is shown.
         case subscriptions = "Subs"
         case history = "History"
         case playlists = "Playlists"
+        case queue = "Queue"
         case rss = "RSS Feeds"
         case downloads = "Downloads"
 
@@ -38,20 +41,38 @@ public struct LibraryView: View {
         // Downloads saves to Photos library — not supported on tvOS, and compiled out of
         // App Store builds (guideline 5.2.3). Exclude the chip by hiding it from allCases.
         static var allCases: [LibrarySection] {
-            [.subscriptions, .history, .playlists, .rss]
+            [.subscriptions, .history, .playlists, .queue, .rss]
         }
         #endif
 
         var id: String { rawValue }
-        var browseSectionType: BrowseSection.SectionType {
+
+        var title: LocalizedStringKey {
             switch self {
-            case .subscriptions: return .subscriptions
-            case .history: return .history
-            case .playlists: return .playlists
-            case .rss: return .history  // not used — RSS renders its own view
-            case .downloads: return .history  // not used — DownloadsView renders its own content
+            case .subscriptions: "Subs"
+            case .history: "History"
+            case .playlists: "Playlists"
+            case .queue: "Queue"
+            case .rss: "RSS"
+            case .downloads: "Downloads"
             }
         }
+
+        /// The browse feed behind the segment; `nil` for segments with their own source. The queue reads
+        /// `CurrentQueueStore` directly, so it never waits for, or fails with, the playlists request (A1).
+        var browseSection: BrowseSection? {
+            let type: BrowseSection.SectionType
+            switch self {
+            case .subscriptions: type = .subscriptions
+            case .history: type = .history
+            case .playlists: type = .playlists
+            case .queue, .rss, .downloads: return nil
+            }
+            return BrowseSection(id: id, title: rawValue, type: type)
+        }
+
+        /// Only account playlists need Google. History shows on-device history to a guest (A4).
+        var requiresSignIn: Bool { self == .playlists }
     }
 
     public init() {}
@@ -60,8 +81,10 @@ public struct LibraryView: View {
         Group {
             libraryContent
         }
-        #if os(iOS) || os(tvOS)
+        #if os(tvOS)
         .toolbar(.hidden, for: .navigationBar)
+        #else
+        .navigationTitle(Text("Library", bundle: .module))
         #endif
         #if !os(iOS)
         .navigationDestination(item: $selectedVideo) { video in
@@ -78,139 +101,41 @@ public struct LibraryView: View {
             guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
             channelDestination = ChannelDestination(channelId: channelId)
         }
+        // A sheet, not a push: SignInView owns a NavigationStack and must not nest in this one.
+        .sheet(isPresented: $showsSignIn) {
+            SignInView()
+        }
     }
 
     private var libraryContent: some View {
         VStack(spacing: 0) {
-            #if os(tvOS)
-            HStack(spacing: 8) {
-                ForEach(LibrarySection.allCases) { sec in
-                    let isSelected = selectedSection == sec
-                    Button {
-                        guard selectedSection != sec else { return }
-                        selectedSection = sec
-                    } label: {
-                        Text(sec.rawValue)
-                            .font(.headline)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                            .background(
-                                (isSelected || focusedSection == sec) ? Color.primary : Color.secondary.opacity(0.15),
-                                in: Capsule()
-                            )
-                            .foregroundStyle(
-                                (isSelected || focusedSection == sec) ? Color(white: 0) : Color.primary
-                            )
-                    }
-                    .buttonStyle(.borderless)
-                    .scaleEffect(focusedSection == sec ? 1.12 : 1.0)
-                    .animation(.easeInOut(duration: 0.15), value: focusedSection)
-                    .animation(.easeInOut(duration: 0.15), value: selectedSection)
-                    .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-                    .accessibilityIdentifier("library.chip.\(sec.rawValue.lowercased())")
-                    .focused($focusedSection, equals: sec)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(.ultraThinMaterial)
-            .focusSection()
-            .defaultFocus($focusedSection, selectedSection)
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("library.chipBar")
-            #else
-            Picker("Library Section", selection: $selectedSection) {
-                ForEach(LibrarySection.allCases) { sec in
-                    Text(sec.rawValue).tag(sec)
-                        .accessibilityIdentifier("library.picker.\(sec.rawValue.lowercased())")
-                }
-            }
-            .pickerStyle(.segmented)
-            .accessibilityIdentifier("library.sectionPicker")
-            .padding()
-            #endif
+            sectionPicker
 
             Group {
-                if selectedSection == .rss {
+                switch selectedSection {
+                case .rss:
                     RSSFeedsView()
-                } else if selectedSection == .downloads {
+                case .downloads:
                     downloadsContent
-                } else if !auth.isSignedIn && selectedSection != .subscriptions {
-                    segmentSignInPrompt
-                } else if browseVM.isLoading && browseVM.videoGroups.flatMap({ $0.videos }).isEmpty {
-                    ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if browseVM.videoGroups.flatMap({ $0.videos }).isEmpty && !browseVM.isLoading {
-                    emptyLibraryView
-                } else {
-                    let applyHideShorts = store.settings.hideShorts && selectedSection != .history
-                    let videos = browseVM.videoGroups.flatMap { $0.videos }
-                        .filter { !applyHideShorts || !$0.isShort }
-                    ScrollView {
-                        // KVO reader — always present; writes to ScrollOffsetStore
-                        // without triggering SwiftUI re-renders on every scroll tick.
-                        #if os(iOS) || os(tvOS)
-                        ScrollOffsetReader(store: scrollStore)
-                            .frame(width: 0, height: 0)
-                        #endif
-
-                        if browseVM.isLoading && videos.isEmpty {
-                            ProgressView().frame(maxWidth: .infinity).padding()
-                        }
-                        if selectedSection == .playlists, queueVideosCount > 0 {
-                            currentQueueRow
-                        }
-                        VideoGridSection(
-                            videos: videos,
-                            onSelect: { video in
-                                if video.playlistId == video.id {
-                                    selectedPlaylist = video
-                                } else {
-                                    #if os(iOS)
-                                    playerRouter.open(video: video, api: api)
-                                    #else
-                                    selectedVideo = video
-                                    #endif
-                                }
-                            },
-                            loadMore: {
-                                if let last = videos.last {
-                                    browseVM.loadMoreIfNeeded(lastVideo: last)
-                                }
-                            }
-                        )
-                        // Offset restorer — always present; no-op when restoreOffset is nil.
-                        #if os(iOS) || os(tvOS)
-                        ScrollOffsetRestorer(targetOffset: restoreOffset) {
-                            restoreOffset = nil
-                        }
-                        .frame(width: 0, height: 0)
-                        #endif
-
-                        if browseVM.isLoading && !videos.isEmpty {
-                            ProgressView().frame(maxWidth: .infinity).padding()
-                        }
-                    }
-                    .refreshable {
-                        browseVM.loadContent(
-                            for: BrowseSection(
-                                id: selectedSection.id,
-                                title: selectedSection.rawValue,
-                                type: selectedSection.browseSectionType
-                            ),
-                            refresh: true
-                        )
-                    }
+                case .queue:
+                    QueueView(api: api)
+                default:
+                    feedContent
                 }
             }
         }
         .onChange(of: selectedSection) { _, section in
-            guard section != .rss && section != .downloads else { return }
-            browseVM.select(
-                section: BrowseSection(
-                    id: section.id,
-                    title: section.rawValue,
-                    type: section.browseSectionType
-                ))
+            if let feed = section.browseSection { browseVM.select(section: feed) }
+        }
+        // `initial`: the shell may ask before this tab was ever built. The request is consumed here, so a
+        // rebuilt Library does not replay it; screens pushed above Library go, so the queue is what shows.
+        .onChange(of: queueRequest.wrappedValue, initial: true) { _, pending in
+            guard pending else { return }
+            queueRequest.wrappedValue = false
+            selectedPlaylist = nil
+            channelDestination = nil
+            selectedVideo = nil
+            selectedSection = .queue
         }
         #if os(tvOS)
         // tvOS: player is opened via navigationDestination(item: $selectedVideo).
@@ -235,13 +160,8 @@ public struct LibraryView: View {
             #endif
         }
         .onAppear {
-            guard selectedSection != .rss && selectedSection != .downloads else { return }
-            browseVM.select(
-                section: BrowseSection(
-                    id: selectedSection.id,
-                    title: selectedSection.rawValue,
-                    type: selectedSection.browseSectionType
-                ))
+            guard let feed = selectedSection.browseSection else { return }
+            browseVM.select(section: feed)
             // Restore scroll position when returning from the player, another tab,
             // or any navigation that caused onDisappear to fire.
             #if os(iOS) || os(tvOS)
@@ -251,90 +171,215 @@ public struct LibraryView: View {
             }
             #endif
         }
-        .task(id: selectedSection) {
-            guard selectedSection == .playlists else { return }
-            queueVideosCount = await CurrentQueueStore.shared.videos.count
-        }
     }
 
-    @ViewBuilder private var currentQueueRow: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "list.number")
-                .font(.title2)
-                .frame(width: 44, height: 44)
-                .foregroundStyle(Color.accentColor)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Current Queue")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.primary)
-                Text("\(queueVideosCount) video\(queueVideosCount == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+    // MARK: - Section picker
+
+    @ViewBuilder
+    private var sectionPicker: some View {
+        #if os(tvOS)
+        HStack(spacing: VFSpace.s8) {
+            ForEach(LibrarySection.allCases) { sec in
+                let isSelected = selectedSection == sec
+                Button {
+                    guard selectedSection != sec else { return }
+                    selectedSection = sec
+                } label: {
+                    // Selection is the action pair (contrast-checked in both appearances); focus is the
+                    // system's lift and highlight on the borderless button, not drawn here.
+                    Text(sec.title, bundle: .module)
+                        .font(.headline)
+                        .padding(.horizontal, VFSpace.s24)
+                        .padding(.vertical, VFSpace.s12)
+                        .background(isSelected ? VFColor.action : VFColor.surface, in: Capsule())
+                        .foregroundStyle(isSelected ? VFColor.onAction : Color.primary)
+                }
+                .buttonStyle(.borderless)
+                .vfAnimation(VFMotion.fast, value: selectedSection)
+                .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+                .accessibilityIdentifier(AccessibilityID.libraryChip(sec.rawValue))
+                .focused($focusedSection, equals: sec)
             }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 10)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            selectedPlaylist = Video(
-                id: CurrentQueueStore.playlistID,
-                title: "Current Queue",
-                channelTitle: ""
-            )
+        .padding(.horizontal, VFMargin.tvHorizontal)
+        .padding(.vertical, VFSpace.s12)
+        .focusSection()
+        .defaultFocus($focusedSection, selectedSection)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.libraryChipBar)
+        #else
+        Picker(selection: $selectedSection) {
+            ForEach(LibrarySection.allCases) { sec in
+                Text(sec.title, bundle: .module).tag(sec)
+                    .accessibilityIdentifier(AccessibilityID.libraryPicker(sec.rawValue))
+            }
+        } label: {
+            Text("Library Section", bundle: .module)
         }
-        .accessibilityIdentifier("library.currentQueueRow")
-        Divider().padding(.horizontal)
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .accessibilityIdentifier(AccessibilityID.librarySectionPicker)
+        .padding(.horizontal, VFSpace.s16)
+        .padding(.vertical, VFSpace.s8)
+        #endif
+    }
+
+    // MARK: - Browse feed segments
+
+    @ViewBuilder
+    private var feedContent: some View {
+        let allVideos = browseVM.videoGroups.flatMap(\.videos)
+        if !auth.isSignedIn && selectedSection.requiresSignIn {
+            segmentSignInPrompt
+        } else if browseVM.isLoading && allVideos.isEmpty {
+            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if allVideos.isEmpty {
+            emptyLibraryView
+        } else {
+            // Hide Shorts never applies to History.
+            let applyHideShorts = store.settings.hideShorts && selectedSection != .history
+            let videos = allVideos.filter { !applyHideShorts || !$0.isShort }
+            ScrollView {
+                // KVO reader — always present; writes to ScrollOffsetStore
+                // without triggering SwiftUI re-renders on every scroll tick.
+                #if os(iOS) || os(tvOS)
+                ScrollOffsetReader(store: scrollStore)
+                    .frame(width: 0, height: 0)
+                #endif
+
+                if selectedSection == .history, !auth.isSignedIn {
+                    Text("On this device. Sign in to add your YouTube history.", bundle: .module)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, VFSpace.s16)
+                        .padding(.bottom, VFSpace.s8)
+                        .accessibilityIdentifier(AccessibilityID.libraryGuestHistoryNote)
+                }
+                VideoGridSection(
+                    videos: videos,
+                    onSelect: { video in
+                        if video.playlistId == video.id {
+                            selectedPlaylist = video
+                        } else {
+                            #if os(iOS)
+                            playerRouter.open(video: video, api: api)
+                            #else
+                            selectedVideo = video
+                            #endif
+                        }
+                    },
+                    loadMore: {
+                        if let last = videos.last {
+                            browseVM.loadMoreIfNeeded(lastVideo: last)
+                        }
+                    }
+                )
+                // Offset restorer — always present; no-op when restoreOffset is nil.
+                #if os(iOS) || os(tvOS)
+                ScrollOffsetRestorer(targetOffset: restoreOffset) {
+                    restoreOffset = nil
+                }
+                .frame(width: 0, height: 0)
+                #endif
+
+                if browseVM.isLoading {
+                    ProgressView().frame(maxWidth: .infinity).padding(VFSpace.s16)
+                }
+            }
+            .refreshable {
+                if let feed = selectedSection.browseSection {
+                    browseVM.loadContent(for: feed, refresh: true)
+                }
+            }
+        }
     }
 
     @ViewBuilder private var emptyLibraryView: some View {
-        if !auth.isSignedIn && selectedSection == .subscriptions {
-            VStack(spacing: 16) {
-                Image(systemName: "person.badge.plus")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.secondary)
-                Text("Follow channels to see their latest videos here")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                Button("Search") {
+        switch selectedSection {
+        case .subscriptions where !auth.isSignedIn:
+            ContentUnavailableView {
+                Label {
+                    Text("No Subscriptions Yet", bundle: .module)
+                } icon: {
+                    Image(systemName: AppSymbol.followChannels)
+                }
+            } description: {
+                Text("Follow channels to see their latest videos here", bundle: .module)
+            } actions: {
+                Button {
                     NotificationCenter.default.post(name: .navigateToSearch, object: nil)
+                } label: {
+                    Text("Search", bundle: .module)
                 }
                 .buttonStyle(.vfProminent)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
-            VStack(spacing: 16) {
-                Image(systemName: AppSymbol.stackLayers)
-                    .font(.system(size: 60))
-                    .foregroundStyle(.secondary)
-                Text("Nothing here yet")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
+        case .history where store.settings.historyState != .enabled:
+            ContentUnavailableView {
+                Label {
+                    Text("History Is Off", bundle: .module)
+                } icon: {
+                    Image(systemName: AppSymbol.clock)
+                }
+            } description: {
+                Text("Turn on Watch History in Settings to list the videos you play.", bundle: .module)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .history:
+            ContentUnavailableView {
+                Label {
+                    Text("No History Yet", bundle: .module)
+                } icon: {
+                    Image(systemName: AppSymbol.clock)
+                }
+            } description: {
+                if auth.isSignedIn {
+                    Text("Videos you play appear here.", bundle: .module)
+                } else {
+                    Text(
+                        "Videos you play on this device appear here. Sign in to add your YouTube history.",
+                        bundle: .module)
+                }
+            }
+        default:
+            ContentUnavailableView {
+                Label {
+                    Text("Nothing here yet", bundle: .module)
+                } icon: {
+                    Image(systemName: AppSymbol.stackLayers)
+                }
+            }
         }
     }
 
     private var segmentSignInPrompt: some View {
-        VStack(spacing: 16) {
-            Image(systemName: AppSymbol.personCircleQuestion)
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary)
-            Text("Sign in to see your \(selectedSection.rawValue.lowercased())")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            NavigationLink("Sign In") {
-                SignInView()
+        ContentUnavailableView {
+            Label {
+                Text(
+                    "Sign in to see your \(String(localized: "Playlists", bundle: .module).lowercased())",
+                    bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.personCircleQuestion)
+            }
+        } description: {
+            Text(
+                "Your YouTube playlists and Watch Later. History and the queue work without signing in.",
+                bundle: .module)
+        } actions: {
+            Button {
+                showsSignIn = true
+            } label: {
+                Text("Sign In", bundle: .module)
             }
             .buttonStyle(.vfProminent)
+            .accessibilityIdentifier(AccessibilityID.librarySignInButton)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+}
+
+extension EnvironmentValues {
+    /// Set by the iPad shell when its sidebar Queue item goes away (compact width); Library shows its Queue
+    /// and clears it.
+    @Entry var libraryQueueRequest: Binding<Bool> = .constant(false)
 }
 
 extension LibraryView {

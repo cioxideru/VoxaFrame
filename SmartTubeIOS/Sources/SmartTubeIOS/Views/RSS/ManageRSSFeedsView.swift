@@ -19,15 +19,21 @@ struct ManageRSSFeedsView: View {
                 } else if feeds.isEmpty {
                     ContentUnavailableView(
                         "No RSS Feeds",
-                        systemImage: "dot.radiowaves.left.and.right",
+                        systemImage: AppSymbol.rssFeed,
                         description: Text("Add a feed from the RSS Feeds screen.")
                     )
                 } else {
                     List {
-                        ForEach(feeds) { feed in
-                            feedRow(feed)
+                        Section {
+                            ForEach(feeds) { feed in
+                                feedRow(feed)
+                            }
+                            .onDelete(perform: deleteFeeds)
+                        } footer: {
+                            Text(
+                                "Turning a feed off keeps it in this list. Deleting removes it from this device.",
+                                bundle: .module)
                         }
-                        .onDelete(perform: deleteFeeds)
                     }
                 }
             }
@@ -47,33 +53,35 @@ struct ManageRSSFeedsView: View {
     }
 
     private func feedRow(_ feed: RSSFeedInfo) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(feed.title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Text(feed.feedURL.absoluteString)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-            Spacer()
-            Toggle(
-                "",
-                isOn: Binding(
-                    get: { feed.isActive },
-                    set: { newValue in
-                        Task {
-                            await RSSFeedStore.shared.setActive(feed.id, newValue)
-                            await reloadFeeds()
-                        }
+        // The feed name is the toggle's label, so VoiceOver reads which feed it switches.
+        Toggle(
+            isOn: Binding(
+                get: { feed.isActive },
+                set: { newValue in
+                    Task {
+                        await RSSFeedStore.shared.setActive(feed.id, newValue)
+                        await reloadFeeds()
                     }
-                )
+                }
             )
-            .labelsHidden()
+        ) {
+            VStack(alignment: .leading, spacing: VFSpace.s4 / 2) {
+                Text(verbatim: feed.title)  // verbatim: feed name
+                    .font(.body)
+                Group {
+                    if feed.isActive {
+                        Text(verbatim: feed.feedURL.absoluteString)  // verbatim: feed address
+                    } else {
+                        Text("Off · stays in this list", bundle: .module)
+                    }
+                }
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, VFSpace.s4 / 2)
     }
 
     private func deleteFeeds(at offsets: IndexSet) {

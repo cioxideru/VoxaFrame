@@ -51,7 +51,7 @@ final class IPadPerformanceUITests: XCTestCase {
             UITestHelpers.tapTab(named: "Settings", in: app)
             XCTAssertTrue(app.collectionViews.firstMatch.waitForExistence(timeout: 5))
             UITestHelpers.tapTab(named: "Search", in: app)
-            XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 5))
+            XCTAssertTrue(UITestHelpers.searchField(in: app).waitForExistence(timeout: 5))
             UITestHelpers.tapTab(named: "Library", in: app)
             XCTAssertTrue(app.segmentedControls.firstMatch.waitForExistence(timeout: 5))
             UITestHelpers.tapTab(named: "Home", in: app)
@@ -119,11 +119,11 @@ final class HomeInteractionsUITests: XCTestCase {
     // MARK: - Search helpers
 
     private func openSearch() {
-        UITestHelpers.tapTab(named: "Search", in: app)
+        UITestHelpers.openSearch(in: app)
     }
 
     private var searchBar: XCUIElement {
-        app.textFields["search.bar"]
+        UITestHelpers.searchField(in: app)
     }
 
     /// Navigates to Search, clears any previous query, types `query`, and submits.
@@ -133,13 +133,10 @@ final class HomeInteractionsUITests: XCTestCase {
         XCTAssertTrue(bar.waitForExistence(timeout: 5), "search.bar must exist")
         bar.tap()
         // Clear any text left from a prior test in the shared-launch session.
-        let clearButton = app.buttons["search.clearButton"].firstMatch
-        if clearButton.waitForExistence(timeout: 1) {
-            clearButton.tap()
-        }
+        UITestHelpers.clearSearchField(in: app)
         bar.tap()
-        bar.typeText(query)
-        app.keyboards.buttons["search"].firstMatch.tap()
+        // A typed Return submits with any keyboard language (the key's identifier is localized).
+        bar.typeText(query + "\n")
     }
 
     // MARK: - WatchLater helpers
@@ -187,22 +184,17 @@ final class HomeInteractionsUITests: XCTestCase {
             return
         }
         bar.tap()
-        let clearButton = app.buttons["search.clearButton"].firstMatch
-        if clearButton.waitForExistence(timeout: 1) { clearButton.tap() }
+        UITestHelpers.clearSearchField(in: app)
         bar.tap()
         bar.typeText("swift")
 
-        // Use a type-agnostic predicate: SwiftUI List renders as UICollectionView on iOS 16+,
-        // so app.tables[...] will not find it — search all element types by identifier instead.
-        let suggestionsPredicate = NSPredicate(format: "identifier == 'search.suggestionsContainer'")
-        let suggestions = app.descendants(matching: .any).matching(suggestionsPredicate).firstMatch
-        guard suggestions.waitForExistence(timeout: 20) else {
-            try captureAndSkip(
-                "search.suggestionsContainer did not appear within 20 s — network may be unavailable", in: app)
+        // Suggestions sit in the system list under the search field; each row carries its own identifier.
+        let suggestionsPredicate = NSPredicate(
+            format: "identifier BEGINSWITH %@", AccessibilityID.searchSuggestion(""))
+        let suggestion = app.descendants(matching: .any).matching(suggestionsPredicate).firstMatch
+        guard suggestion.waitForExistence(timeout: 20) else {
+            try captureAndSkip("No search suggestion appeared within 20 s — network may be unavailable", in: app)
         }
-        XCTAssertGreaterThan(
-            suggestions.cells.count, 0,
-            "At least one suggestion should appear after typing 'swift'")
     }
 
     func testClearButtonEmptiesQuery() throws {
@@ -213,18 +205,17 @@ final class HomeInteractionsUITests: XCTestCase {
             return
         }
         bar.tap()
-        let existingClear = app.buttons["search.clearButton"].firstMatch
-        if existingClear.waitForExistence(timeout: 1) { existingClear.tap() }
+        UITestHelpers.clearSearchField(in: app)
         bar.tap()
         bar.typeText("swift")
         XCTAssertEqual(
             bar.value as? String, "swift",
             "Search bar should contain the typed query before clearing")
 
-        let clearButton = app.buttons["search.clearButton"]
+        let clearButton = UITestHelpers.searchClearButton(in: app)
         XCTAssertTrue(
             clearButton.waitForExistence(timeout: 3),
-            "search.clearButton should appear when query is non-empty")
+            "The search field's clear button should appear when query is non-empty")
         clearButton.tap()
         Thread.sleep(forTimeInterval: 0.3)
         XCTAssertNotEqual(
@@ -234,7 +225,7 @@ final class HomeInteractionsUITests: XCTestCase {
 
     func testSearchReturnsVideoCards() throws {
         search(for: "swift programming")
-        let results = app.scrollViews["search.results"]
+        let results = app.scrollViews[AccessibilityID.searchResults]
         guard results.waitForExistence(timeout: 5) else {
             XCTFail("search.results container did not appear — network may be unavailable")
             return
@@ -255,14 +246,14 @@ final class HomeInteractionsUITests: XCTestCase {
         search(for: "swift")
         _ = UITestHelpers.waitForVideoCards(in: app, timeout: 20)
 
-        let filterButton = app.buttons["search.filterButton"]
+        let filterButton = app.buttons[AccessibilityID.searchFilterButton]
         guard filterButton.waitForExistence(timeout: 5) else {
             XCTFail("search.filterButton not found")
             return
         }
         filterButton.tap()
 
-        let sheet = app.otherElements["search.filterSheet"]
+        let sheet = app.otherElements[AccessibilityID.searchFilterSheet]
         XCTAssertTrue(
             sheet.waitForExistence(timeout: 5),
             "search.filterSheet should appear after tapping the filter button")
@@ -280,14 +271,14 @@ final class HomeInteractionsUITests: XCTestCase {
         search(for: "swift")
         _ = UITestHelpers.waitForVideoCards(in: app, timeout: 20)
 
-        let filterButton = app.buttons["search.filterButton"]
+        let filterButton = app.buttons[AccessibilityID.searchFilterButton]
         guard filterButton.waitForExistence(timeout: 5) else {
             XCTFail("search.filterButton not found")
             return
         }
         filterButton.tap()
 
-        let sheet = app.otherElements["search.filterSheet"]
+        let sheet = app.otherElements[AccessibilityID.searchFilterSheet]
         guard sheet.waitForExistence(timeout: 5) else {
             XCTFail("search.filterSheet did not appear")
             return
@@ -333,9 +324,9 @@ final class HomeInteractionsUITests: XCTestCase {
             return
         }
         bar.tap()
-        app.buttons["search.clearButton"].firstMatch.tap()
+        UITestHelpers.clearSearchField(in: app)
 
-        let historyRow = app.buttons["search.history.history test query"]
+        let historyRow = app.buttons[AccessibilityID.searchHistory("history test query")]
         XCTAssertTrue(
             historyRow.waitForExistence(timeout: 5),
             "Submitted query should appear as a history row")
@@ -350,16 +341,16 @@ final class HomeInteractionsUITests: XCTestCase {
             return
         }
         bar.tap()
-        app.buttons["search.clearButton"].firstMatch.tap()
+        UITestHelpers.clearSearchField(in: app)
 
-        let historyRow = app.buttons["search.history.history tap test"]
+        let historyRow = app.buttons[AccessibilityID.searchHistory("history tap test")]
         guard historyRow.waitForExistence(timeout: 5) else {
             XCTFail("History row not found — previous search may not have persisted")
             return
         }
         historyRow.tap()
 
-        let results = app.scrollViews["search.results"]
+        let results = app.scrollViews[AccessibilityID.searchResults]
         XCTAssertTrue(
             results.waitForExistence(timeout: 10),
             "Tapping a history row should trigger the search and show results")
@@ -374,7 +365,7 @@ final class HomeInteractionsUITests: XCTestCase {
             return
         }
         bar.tap()
-        app.buttons["search.clearButton"].firstMatch.tap()
+        UITestHelpers.clearSearchField(in: app)
 
         let deleteButton = app.buttons["Remove entry to delete from history"]
         guard deleteButton.waitForExistence(timeout: 5) else {
@@ -385,7 +376,7 @@ final class HomeInteractionsUITests: XCTestCase {
 
         Thread.sleep(forTimeInterval: 0.3)
         XCTAssertFalse(
-            app.buttons["search.history.entry to delete"].exists,
+            app.buttons[AccessibilityID.searchHistory("entry to delete")].exists,
             "History entry should be removed after tapping its delete button")
     }
 
@@ -399,9 +390,9 @@ final class HomeInteractionsUITests: XCTestCase {
             return
         }
         bar.tap()
-        app.buttons["search.clearButton"].firstMatch.tap()
+        UITestHelpers.clearSearchField(in: app)
 
-        let clearAll = app.buttons["search.history.clearAll"]
+        let clearAll = app.buttons[AccessibilityID.searchHistoryClearAll]
         guard clearAll.waitForExistence(timeout: 5) else {
             XCTFail("Clear History button not found")
             return
@@ -410,10 +401,10 @@ final class HomeInteractionsUITests: XCTestCase {
 
         Thread.sleep(forTimeInterval: 0.3)
         XCTAssertFalse(
-            app.buttons["search.history.clear all test a"].exists,
+            app.buttons[AccessibilityID.searchHistory("clear all test a")].exists,
             "All history entries should be removed after Clear History")
         XCTAssertFalse(
-            app.buttons["search.history.clear all test b"].exists,
+            app.buttons[AccessibilityID.searchHistory("clear all test b")].exists,
             "All history entries should be removed after Clear History")
     }
 

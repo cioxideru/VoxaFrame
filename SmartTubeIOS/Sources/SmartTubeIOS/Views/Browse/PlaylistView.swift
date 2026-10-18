@@ -13,7 +13,6 @@ public struct PlaylistView: View {
     @Environment(AuthService.self) private var auth
     @Environment(SettingsStore.self) private var store
     @Environment(\.innerTubeAPI) private var api
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.isLandscapeLayout) private var isLandscapeLayout
     @State private var vm: PlaylistViewModel
     @State private var selectedVideo: Video?
@@ -30,7 +29,10 @@ public struct PlaylistView: View {
 
     public var body: some View {
         Group {
-            if vm.isLoading && vm.videos.isEmpty {
+            if isQueue {
+                // The queue has its own screen (A1): read from the store, Clear Queue with confirmation (B3).
+                QueueView(api: api)
+            } else if vm.isLoading && vm.videos.isEmpty {
                 ProgressView("Loading…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if vm.videos.isEmpty {
@@ -40,37 +42,12 @@ public struct PlaylistView: View {
             }
         }
         .navigationTitle(playlistTitle)
-        .toolbar {
-            if playlistId == CurrentQueueStore.playlistID {
-                #if os(iOS) || os(tvOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(role: .destructive) {
-                        Task {
-                            await CurrentQueueStore.shared.clear()
-                            dismiss()
-                        }
-                    } label: {
-                        Label("Clear Queue", systemImage: "trash")
-                    }
-                }
-                #else
-                ToolbarItem {
-                    Button(role: .destructive) {
-                        Task {
-                            await CurrentQueueStore.shared.clear()
-                            dismiss()
-                        }
-                    } label: {
-                        Label("Clear Queue", systemImage: "trash")
-                    }
-                }
-                #endif
-            }
-        }
         .onAppear {
+            guard !isQueue else { return }
             vm.load(playlistId: playlistId)
         }
-        #if os(tvOS)
+        #if !os(iOS)
+        // tvOS and macOS push the player in this stack, like a card click elsewhere.
         .navigationDestination(item: $selectedVideo) { video in
             PlayerView(video: video, api: api)
         }
@@ -223,6 +200,8 @@ public struct PlaylistView: View {
         .accessibilityIdentifier("playlistView.feed")
         .refreshable { vm.load(playlistId: playlistId, refresh: true) }
     }
+
+    private var isQueue: Bool { playlistId == CurrentQueueStore.playlistID }
 
     private var displayVideos: [Video] {
         vm.videos.filter { !store.settings.hideShorts || !$0.isShort }

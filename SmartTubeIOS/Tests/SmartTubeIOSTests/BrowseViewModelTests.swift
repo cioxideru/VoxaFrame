@@ -169,6 +169,7 @@ struct BrowseViewModelTests {
         let local = LocalWatchHistoryStore(
             defaults: try #require(UserDefaults(suiteName: "history-\(UUID().uuidString)")))
         let vm = BrowseViewModel(api: mock, initialSection: BrowseSection(type: .history), localHistory: local)
+        await vm.updateAuthToken("token", reloadOnSignIn: false)  // account history is fetched only when signed in
         let first = makeVideo("first")
         if pagination {
             mock.historyResult = VideoGroup(title: "History", videos: [first], nextPageToken: "next")
@@ -204,6 +205,7 @@ struct BrowseViewModelTests {
         let emptyLocal = LocalWatchHistoryStore(
             defaults: try #require(UserDefaults(suiteName: "hist-\(UUID().uuidString)")))
         let vm = BrowseViewModel(api: mock, initialSection: section, localHistory: emptyLocal)
+        await vm.updateAuthToken("token", reloadOnSignIn: false)
         vm.loadContent(for: section, refresh: true, source: "test")
         await waitForTasks(until: { vm.videoGroups.first?.videos.first != nil })
 
@@ -222,6 +224,7 @@ struct BrowseViewModelTests {
 
         let section = BrowseSection(id: "history", title: "History", type: .history)
         let vm = BrowseViewModel(api: mock, initialSection: section, localHistory: local)
+        await vm.updateAuthToken("token", reloadOnSignIn: false)
         vm.loadContent(for: section, refresh: true, source: "test")
         await waitForTasks(until: { vm.videoGroups.first?.videos.count == 3 })
 
@@ -610,5 +613,60 @@ struct BrowseViewModelRetryTests {
 
         #expect(vm.error == nil)
         #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["first", "second"])
+    }
+}
+
+// MARK: - Sign-out (an extension: the suite's body is at the type length limit)
+
+extension BrowseViewModelTests {
+    @Test("Signing out drops the account's History; a guest gets on-device records only (PLAN-0027 A4)")
+    func signOutDropsAccountHistory() async throws {
+        let mock = MockInnerTubeAPI()
+        mock.historyResult = VideoGroup(title: "History", videos: [makeVideo("account-only")])
+        let local = LocalWatchHistoryStore(defaults: try #require(UserDefaults(suiteName: "hist-\(UUID().uuidString)")))
+        local.record(makeVideo("on-device"))
+        let history = BrowseSection(type: .history)
+        let vm = BrowseViewModel(api: mock, localHistory: local)
+
+        await vm.updateAuthToken("token", reloadOnSignIn: false)
+        vm.select(section: history)
+        await waitForTasks { !vm.isLoading && !vm.videoGroups.isEmpty }
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["on-device", "account-only"])
+
+        // An account page still in flight when the user signs out must not land afterwards.
+        var lateResponse: CheckedContinuation<VideoGroup, Never>?
+        var lateReturned = false
+        mock.historyHandler = { _ in
+            let result = await withCheckedContinuation { lateResponse = $0 }
+            lateReturned = true
+            return result
+        }
+        vm.loadContent(refresh: true)
+        await waitForTasks { lateResponse != nil }
+
+        await vm.updateAuthToken(nil)
+        await waitForTasks { !vm.isLoading }
+        lateResponse?.resume(returning: VideoGroup(title: "History", videos: [makeVideo("late-account")]))
+        await waitForTasks { lateReturned && !vm.isLoading }
+        // Returning to History (same section, so no reload) shows only this device's records.
+        vm.select(section: history)
+        #expect(vm.videoGroups.flatMap(\.videos).map(\.id) == ["on-device"])
+        #expect(mock.calls.filter { $0.method == "fetchHistory" }.count == 2)
+    }
+
+    @Test("Signing out on Playlists clears them without an account request")
+    func signOutClearsPlaylistsLocally() async {
+        let mock = MockInnerTubeAPI()
+        mock.playlistsResult = [PlaylistInfo(id: "PL1", title: "Mine")]
+        let vm = BrowseViewModel(api: mock)
+        await vm.updateAuthToken("token", reloadOnSignIn: false)
+        vm.select(section: BrowseSection(type: .playlists))
+        await waitForTasks { !vm.isLoading && !vm.videoGroups.isEmpty }
+        #expect(mock.calls.filter { $0.method == "fetchUserPlaylists" }.count == 1)
+
+        await vm.updateAuthToken(nil)
+        await waitForTasks { !vm.isLoading }
+        #expect(vm.videoGroups.isEmpty)
+        #expect(mock.calls.filter { $0.method == "fetchUserPlaylists" }.count == 1)
     }
 }

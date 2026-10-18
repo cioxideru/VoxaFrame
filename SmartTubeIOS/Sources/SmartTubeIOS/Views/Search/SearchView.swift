@@ -3,8 +3,9 @@ import SwiftUI
 
 // MARK: - SearchView
 //
-// Search interface with live suggestions and paginated results.
-// Mirrors the Android `SearchTagsActivity`.
+// The system search field (`.searchable`) with live suggestions on iPhone, iPad and Mac; tvOS keeps its
+// text field. Idle shows recent searches and topics; loading, results, "no results" and the search error
+// (A5) are separate states of `SearchViewModel.phase`. Mirrors the Android `SearchTagsActivity`.
 
 public struct SearchView: View {
     @Environment(SearchViewModel.self) private var vm
@@ -12,50 +13,44 @@ public struct SearchView: View {
     @Environment(SettingsStore.self) private var store
     @State private var selectedVideo: Video?
     @State private var channelDestination: ChannelDestination?
-    @State private var showFilterSheet = false
+    @State private var showFilters = false
     @FocusState private var isSearchFocused: Bool
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
 
     public init() {}
 
     public var body: some View {
         VStack(spacing: 0) {
-            searchBar
-            Divider()
-            if !vm.query.isEmpty {
-                filterChipsRow
-            }
-            Group {
-                #if os(tvOS)
-                if vm.isLoading || !vm.results.isEmpty {
-                    resultsView
-                } else if vm.query.isEmpty {
-                    suggestionsListView
-                } else {
-                    noResultsView
-                }
-                #else
-                if isSearchFocused {
-                    suggestionsListView
-                } else if vm.isLoading || !vm.results.isEmpty {
-                    resultsView
-                } else if !vm.query.isEmpty {
-                    noResultsView
-                } else {
-                    suggestionsListView
-                }
-                #endif
+            #if os(tvOS)
+            tvSearchBar
+            #endif
+            activeFilters
+            switch vm.phase {
+            case .idle: idleList
+            case .loading: loadingView
+            case .results: resultsView
+            case .noResults: noResultsView
+            case .failed: failedView
             }
         }
+        .navigationTitle(Text("Search", bundle: .module))
         #if os(tvOS)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showFilters) { filterSheet }
+        #else
+        .modifier(SearchField(isFocused: $isSearchFocused) { suggestionRows })
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) { filterButton }
+        }
+        #endif
+        #if !os(iOS)
+        // tvOS and macOS push the player in this stack, like a card click; iOS presents it through PlayerRouter.
         .navigationDestination(item: $selectedVideo) { video in
             PlayerView(video: video, api: api)
         }
-        #elseif os(iOS)
-        .toolbar(.hidden, for: .navigationBar)
         #endif
         .navigationDestination(item: $channelDestination) { dest in
             ChannelView(channelId: dest.channelId, api: api)
@@ -64,108 +59,261 @@ public struct SearchView: View {
             guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
             channelDestination = ChannelDestination(channelId: channelId)
         }
-        .sheet(isPresented: $showFilterSheet) {
-            SearchFilterSheet(current: vm.filter) { newFilter in
-                vm.applyFilter(newFilter)
-            }
-        }
         .task(id: vm.query) { await vm.updateSuggestions(for: vm.query) }
-        .onChange(of: isSearchFocused) { _, focused in
-            if focused { Task { await vm.updateSuggestions(for: vm.query) } }
+        // Clearing the field (its clear button, Cancel, or the search tab's close) returns to recent searches.
+        .onChange(of: vm.query) { _, query in
+            if query.isEmpty { vm.clearResults() }
         }
     }
 
-    // MARK: - Search bar
+    private func run(_ query: String) {
+        vm.query = query
+        vm.search()
+        isSearchFocused = false
+    }
 
-    private var searchBar: some View {
-        @Bindable var vm = vm
-        return HStack(spacing: 8) {
-            Image(systemName: AppSymbol.search)
-                .foregroundStyle(.secondary)
-            TextField("Search YouTube", text: $vm.query)
-                .focused($isSearchFocused)
-                .submitLabel(.search)
-                .autocorrectionDisabled()
-                .accessibilityIdentifier("search.bar")
-                #if os(iOS)
-            .textInputAutocapitalization(.never)
-                #endif
-                .onSubmit {
-                    vm.search()
-                    isSearchFocused = false
-                }
-            if !vm.query.isEmpty {
-                Button {
-                    vm.query = ""
-                } label: {
-                    Image(systemName: AppSymbol.xmarkCircle)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("search.clearButton")
+    // MARK: - Filters
+
+    #if !os(tvOS)
+    private var filterButton: some View {
+        Button {
+            showFilters = true
+        } label: {
+            Label {
+                Text("Search filters", bundle: .module)
+            } icon: {
+                Image(systemName: vm.filter.isDefault ? AppSymbol.channelFilter : AppSymbol.channelFilterActive)
             }
+        }
+        .accessibilityIdentifier(AccessibilityID.searchFilterButton)
+        // A sheet in a compact width (iPhone), a popover anchored to the button on iPad and Mac.
+        .popover(isPresented: $showFilters) { filterSheet }
+    }
+    #endif
+
+    private var filterSheet: some View {
+        SearchFilterSheet(current: vm.filter) { newFilter in
+            vm.applyFilter(newFilter)
+        }
+        #if os(macOS)
+        .frame(minWidth: 340, minHeight: 520)
+        #elseif os(iOS)
+        .frame(
+            minWidth: horizontalSizeClass == .regular ? 340 : nil,
+            minHeight: horizontalSizeClass == .regular ? 560 : nil)
+        #endif
+    }
+
+    /// Removable chips for the filters that are on, above every state but idle.
+    @ViewBuilder
+    private var activeFilters: some View {
+        let filter = vm.filter
+        if !filter.isDefault, vm.phase != .idle {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: VFSpace.s8) {
+                    if filter.sortOrder != .relevance {
+                        FilterChip(label: LocalizedStringKey(filter.sortOrder.label)) {
+                            var updated = filter
+                            updated.sortOrder = .relevance
+                            vm.applyFilter(updated)
+                        }
+                    }
+                    if filter.uploadDate != .anytime {
+                        FilterChip(label: LocalizedStringKey(filter.uploadDate.label)) {
+                            var updated = filter
+                            updated.uploadDate = .anytime
+                            vm.applyFilter(updated)
+                        }
+                    }
+                    if filter.type != .any {
+                        FilterChip(label: LocalizedStringKey(filter.type.label)) {
+                            var updated = filter
+                            updated.type = .any
+                            vm.applyFilter(updated)
+                        }
+                    }
+                    if filter.duration != .any {
+                        FilterChip(label: LocalizedStringKey(filter.duration.label)) {
+                            var updated = filter
+                            updated.duration = .any
+                            vm.applyFilter(updated)
+                        }
+                    }
+                }
+                .padding(.horizontal, VFSpace.s16)
+                .padding(.vertical, VFSpace.s8)
+            }
+        }
+    }
+
+    // MARK: - Idle: recent searches and topics
+
+    private var idleList: some View {
+        List {
+            if !vm.history.isEmpty {
+                Section {
+                    ForEach(vm.history) { entry in
+                        historyRow(entry.query)
+                    }
+                } header: {
+                    HStack {
+                        Text("Recent", bundle: .module)
+                        Spacer()
+                        Button(role: .destructive) {
+                            vm.clearHistory()
+                        } label: {
+                            Text("Clear History", bundle: .module)
+                        }
+                        .font(.subheadline)
+                        .accessibilityIdentifier(AccessibilityID.searchHistoryClearAll)
+                    }
+                } footer: {
+                    Text(
+                        "Search history stays on this device, up to 50 searches. Clearing it does not change your watch history.",
+                        bundle: .module)
+                }
+            }
+            Section {
+                ForEach(vm.suggestions, id: \.self) { topic in
+                    HStack(spacing: VFSpace.s12) {
+                        Button {
+                            run(topic)
+                        } label: {
+                            rowLabel(topic, symbol: AppSymbol.search)
+                        }
+                        .buttonStyle(.plain)
+                        #if !os(tvOS)
+                        fillInButton(topic)
+                        #endif
+                    }
+                }
+            } header: {
+                Text("Recommended", bundle: .module)
+            }
+        }
+        #if os(iOS)
+        .listStyle(.plain)
+        .headerProminence(.increased)
+        .scrollDismissesKeyboard(.immediately)
+        #endif
+        .accessibilityIdentifier(AccessibilityID.searchSuggestionsContainer)
+    }
+
+    private func historyRow(_ query: String) -> some View {
+        HStack(spacing: VFSpace.s12) {
             Button {
-                showFilterSheet = true
+                run(query)
             } label: {
-                Image(
-                    systemName: vm.filter.isDefault
-                        ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
-                )
-                .foregroundStyle(vm.filter.isDefault ? .secondary : Color.accentColor)
+                rowLabel(query, symbol: AppSymbol.clock)
             }
             .buttonStyle(.plain)
-            .accessibilityIdentifier("search.filterButton")
+            .accessibilityIdentifier(AccessibilityID.searchHistory(query))
+            #if !os(tvOS)
+            fillInButton(query)
+            Button {
+                vm.removeHistoryEntry(query)
+            } label: {
+                Image(systemName: AppSymbol.xmark)
+                    .frame(minWidth: Self.rowButtonSize, minHeight: Self.rowButtonSize)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(.secondary)
+            .accessibilityLabel(Text("Remove \(query) from history", bundle: .module))
+            #endif
         }
-        .padding(10)
-        .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
-        .padding(.horizontal)
-        .padding(.vertical, 8)
     }
 
-    // MARK: - Active filter chips
+    private func rowLabel(_ text: String, symbol: String) -> some View {
+        Label {
+            Text(verbatim: text)  // verbatim: a search query or suggestion
+                .foregroundStyle(.primary)
+        } icon: {
+            Image(systemName: symbol)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, minHeight: Self.rowButtonSize, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+
+    #if !os(tvOS)
+    /// Puts the text in the field without searching, so it can be refined.
+    private func fillInButton(_ text: String) -> some View {
+        Button {
+            vm.query = text
+        } label: {
+            Image(systemName: AppSymbol.searchCompletion)
+                .frame(minWidth: Self.rowButtonSize, minHeight: Self.rowButtonSize)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .foregroundStyle(.secondary)
+        .accessibilityLabel(Text("Put \(text) in the search field", bundle: .module))
+    }
+    #endif
+
+    /// The platform's minimum hit area: touch on iPhone and iPad, pointer on the Mac, focus on Apple TV.
+    static var rowButtonSize: CGFloat {
+        #if os(macOS)
+        VFTarget.pointer
+        #elseif os(tvOS)
+        VFTarget.tv
+        #else
+        VFTarget.touch
+        #endif
+    }
+
+    // MARK: - Suggestions while typing
+
+    /// Matching recent searches first, then live suggestions; nothing once the text is the submitted query.
+    @ViewBuilder
+    private var suggestionRows: some View {
+        let text = vm.query.trimmingCharacters(in: .whitespaces)
+        if !text.isEmpty, text != vm.submittedQuery {
+            let recent = vm.filteredHistory.map(\.query)
+            ForEach(recent, id: \.self) { query in
+                suggestionRow(query, symbol: AppSymbol.clock)
+            }
+            ForEach(vm.suggestions.filter { !recent.contains($0) }, id: \.self) { suggestion in
+                suggestionRow(suggestion, symbol: AppSymbol.search)
+            }
+        }
+    }
 
     @ViewBuilder
-    private var filterChipsRow: some View {
-        if !vm.filter.isDefault {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    if vm.filter.sortOrder != .relevance {
-                        FilterChip(label: LocalizedStringKey(vm.filter.sortOrder.label)) {
-                            var f = vm.filter
-                            f.sortOrder = .relevance
-                            vm.applyFilter(f)
-                        }
-                    }
-                    if vm.filter.uploadDate != .anytime {
-                        FilterChip(label: LocalizedStringKey(vm.filter.uploadDate.label)) {
-                            var f = vm.filter
-                            f.uploadDate = .anytime
-                            vm.applyFilter(f)
-                        }
-                    }
-                    if vm.filter.type != .any {
-                        FilterChip(label: LocalizedStringKey(vm.filter.type.label)) {
-                            var f = vm.filter
-                            f.type = .any
-                            vm.applyFilter(f)
-                        }
-                    }
-                    if vm.filter.duration != .any {
-                        FilterChip(label: LocalizedStringKey(vm.filter.duration.label)) {
-                            var f = vm.filter
-                            f.duration = .any
-                            vm.applyFilter(f)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 6)
+    private func suggestionRow(_ text: String, symbol: String) -> some View {
+        #if os(macOS)
+        // The Mac list is keyboard driven: arrows pick a row, Return searches it.
+        Label(text, systemImage: symbol)
+            .searchCompletion(text)
+            .accessibilityIdentifier(AccessibilityID.searchSuggestion(text))
+        #else
+        HStack(spacing: VFSpace.s12) {
+            Button {
+                run(text)
+            } label: {
+                rowLabel(text, symbol: symbol)
             }
-            Divider()
+            .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.searchSuggestion(text))
+            #if !os(tvOS)
+            fillInButton(text)
+            #endif
         }
+        #endif
     }
+}
 
-    // MARK: - Results
+// MARK: - Loading, results, no results, error
+
+extension SearchView {
+
+    private var loadingView: some View {
+        ProgressView {
+            Text("Searching for \"\(vm.submittedQuery ?? "")\"…", bundle: .module)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
 
     private var resultsView: some View {
         let hideShorts = store.settings.hideShorts
@@ -176,14 +324,12 @@ public struct SearchView: View {
             .filter { !hideLiveShorts || !($0.isLive && $0.isShort) }
             .filter { !hideVideoPremieres || !$0.isUpcoming }
         return ScrollView {
-            if vm.isLoading && vm.results.isEmpty {
-                ProgressView().frame(maxWidth: .infinity).padding()
-            }
             VideoGridSection(
                 videos: displayResults,
                 onSelect: { video in
                     let captured = displayResults
                     Task { @MainActor in
+                        // Playing a result makes the visible list the queue.
                         await CurrentQueueStore.shared.replaceAll(with: captured)
                         let startIdx = captured.firstIndex(where: { $0.id == video.id }) ?? 0
                         let toPlay = await CurrentQueueStore.shared.videoAt(index: startIdx) ?? video
@@ -196,138 +342,172 @@ public struct SearchView: View {
                 },
                 loadMore: vm.loadMore
             )
-            if vm.isLoading && !vm.results.isEmpty {
-                ProgressView().frame(maxWidth: .infinity).padding()
+            if vm.error != nil {
+                // A failed next page keeps the results above it.
+                VStack(spacing: VFSpace.s8) {
+                    Text("Couldn't load more results.", bundle: .module)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Button {
+                        vm.retry()
+                    } label: {
+                        Text("Try Again", bundle: .module)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier(AccessibilityID.searchRetryButton)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(VFSpace.s16)
+            } else if vm.isLoading {
+                ProgressView().frame(maxWidth: .infinity).padding(VFSpace.s16)
             }
         }
-        .accessibilityIdentifier("search.results")
+        .accessibilityIdentifier(AccessibilityID.searchResults)
         #if os(iOS)
         .scrollDismissesKeyboard(.immediately)
-        .contentShape(Rectangle())
-        .onTapGesture { isSearchFocused = false }
         #endif
     }
 
-    // MARK: - Suggestions list (history + recommended/live)
-
-    private var suggestionsListView: some View {
-        let suggestionsHeader = vm.query.isEmpty ? "Recommended" : "Suggestions"
-        return List {
-            // History section — only shown when there are matching entries
-            if !vm.filteredHistory.isEmpty {
-                Section(header: Text("Recent").font(.caption).foregroundStyle(.secondary)) {
-                    ForEach(vm.filteredHistory) { entry in
-                        Button {
-                            vm.query = entry.query
-                            vm.search()
-                            isSearchFocused = false
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "clock")
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: 20)
-                                Text(entry.query)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                #if os(iOS)
-                                Button {
-                                    vm.removeHistoryEntry(entry.query)
-                                } label: {
-                                    Image(systemName: AppSymbol.xmark)
-                                        .foregroundStyle(.secondary)
-                                        .font(.caption)
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Remove \(entry.query) from history")
-                                #endif
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("search.history.\(entry.query)")
-                    }
-                    Button(role: .destructive) {
-                        vm.clearHistory()
-                    } label: {
-                        Text("Clear History")
-                            .font(.subheadline)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .accessibilityIdentifier("search.history.clearAll")
-                }
-            }
-
-            // Suggestions / Recommended section (existing behaviour)
-            Section(header: Text(suggestionsHeader).font(.caption).foregroundStyle(.secondary)) {
-                ForEach(vm.suggestions, id: \.self) { suggestion in
-                    Button {
-                        vm.query = suggestion
-                        vm.search()
-                        isSearchFocused = false
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: AppSymbol.search)
-                                .foregroundStyle(.secondary)
-                                .frame(width: 20)
-                            Text(suggestion)
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Button {
-                                vm.query = suggestion
-                            } label: {
-                                Image(systemName: "arrow.up.left")
-                                    .foregroundStyle(.secondary)
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .listStyle(.plain)
-        .accessibilityIdentifier("search.suggestionsContainer")
-        // Tapping empty list space (outside a row) must dismiss the keyboard.
-        // Task #202: the resultsView and noResultsView already had this gesture
-        // but suggestionsListView (shown while keyboard is open) was missing it.
-        // .contentShape(Rectangle()) makes the transparent empty space tappable.
-        .contentShape(Rectangle())
-        .onTapGesture { isSearchFocused = false }
-    }
-
-    private var placeholderView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: AppSymbol.search)
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary)
-            Text("Search for videos, channels & playlists")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-    }
-
+    @ViewBuilder
     private var noResultsView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: AppSymbol.questionCircle)
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary)
-            Text("No results for \"\(vm.query)\"")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+        let query = vm.submittedQuery ?? ""
+        Group {
+            if vm.filter.isDefault {
+                ContentUnavailableView.search(text: query)
+            } else {
+                ContentUnavailableView {
+                    Label {
+                        Text("No results for \"\(query)\"", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.search)
+                    }
+                } description: {
+                    Text("Nothing matches with these filters. Try another query or clear the filters.", bundle: .module)
+                } actions: {
+                    Button {
+                        vm.applyFilter(.default)
+                    } label: {
+                        Text("Clear Filters", bundle: .module)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .accessibilityIdentifier(AccessibilityID.searchNoResults)
+    }
+
+    /// A5: the request failed, which is not the same as no matches. Query and filters stay as they were.
+    private var failedView: some View {
+        ContentUnavailableView {
+            Label {
+                Text("Couldn't Search", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.warning)
+            }
+        } description: {
+            VStack(spacing: VFSpace.s4) {
+                Text("The service didn't respond. Your query and filters are kept.", bundle: .module)
+                if let error = vm.error {
+                    Text(verbatim: error.localizedDescription)  // verbatim: system error text
+                        .font(.footnote)
+                }
+            }
+        } actions: {
+            Button {
+                vm.retry()
+            } label: {
+                Text("Try Again", bundle: .module)
+            }
+            .buttonStyle(.vfProminent)
+            .accessibilityIdentifier(AccessibilityID.searchRetryButton)
+        }
+        .accessibilityIdentifier(AccessibilityID.searchFailed)
+    }
+
+    // MARK: - tvOS field
+
+    #if os(tvOS)
+    private var tvSearchBar: some View {
+        @Bindable var vm = vm
+        return HStack(spacing: VFSpace.s16) {
+            Image(systemName: AppSymbol.search)
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            TextField(String(localized: "Search YouTube", bundle: .module), text: $vm.query)
+                .focused($isSearchFocused)
+                .submitLabel(.search)
+                .autocorrectionDisabled()
+                .accessibilityIdentifier(AccessibilityID.searchBar)
+                .onSubmit { run(vm.query) }
+            if !vm.query.isEmpty {
+                Button {
+                    vm.query = ""
+                } label: {
+                    Image(systemName: AppSymbol.xmarkCircle)
+                }
+                .accessibilityLabel(Text("Clear", bundle: .module))
+                .accessibilityIdentifier(AccessibilityID.searchClearButton)
+            }
+            Button {
+                showFilters = true
+            } label: {
+                Image(systemName: vm.filter.isDefault ? AppSymbol.channelFilter : AppSymbol.channelFilterActive)
+            }
+            .accessibilityLabel(Text("Search filters", bundle: .module))
+            .accessibilityIdentifier(AccessibilityID.searchFilterButton)
+        }
+        .padding(.horizontal, VFMargin.tvHorizontal)
+        .padding(.vertical, VFSpace.s16)
+    }
+    #endif
+}
+
+// MARK: - SearchField
+
+#if !os(tvOS)
+/// `.searchable` with the platform placement: always visible under the title on iOS 17 and 18, the system
+/// position on iOS 26 (bottom on iPhone, the search tab), the window toolbar on the Mac.
+private struct SearchField<Suggestions: View>: ViewModifier {
+    let isFocused: FocusState<Bool>.Binding
+    @ViewBuilder let suggestions: () -> Suggestions
+    @Environment(SearchViewModel.self) private var vm
+
+    func body(content: Content) -> some View {
+        @Bindable var vm = vm
+        content
+            .searchable(text: $vm.query, placement: placement, prompt: Text("Search YouTube", bundle: .module))
+            .searchSuggestions { suggestions() }
+            .onSubmit(of: .search) { vm.search() }
+            .modifier(SearchPresentation(isFocused: isFocused))
+    }
+
+    private var placement: SearchFieldPlacement {
         #if os(iOS)
-        .contentShape(Rectangle())
-        .onTapGesture { isSearchFocused = false }
+        if #available(iOS 26, *) { return .automatic }
+        return .navigationBarDrawer(displayMode: .always)
+        #else
+        return .toolbar
         #endif
     }
 }
+
+/// Keeps the title and the filter button while a search is active (iOS 17.1 / macOS 14.1; the system hides
+/// them otherwise, leaving the filters out of reach next to results), and lets a picked suggestion drop the
+/// keyboard (iOS 18 / macOS 15; older systems keep it until scrolling).
+private struct SearchPresentation: ViewModifier {
+    let isFocused: FocusState<Bool>.Binding
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18, macOS 15, *) {
+            content.searchFocused(isFocused).searchPresentationToolbarBehavior(.avoidHidingContent)
+        } else if #available(iOS 17.1, macOS 14.1, *) {
+            content.searchPresentationToolbarBehavior(.avoidHidingContent)
+        } else {
+            content
+        }
+    }
+}
+#endif
 
 // MARK: - FilterChip
 
@@ -339,17 +519,22 @@ struct FilterChip: View {
     let onRemove: () -> Void
 
     var body: some View {
-        HStack(spacing: 4) {
-            Text(label)
-                .font(.caption)
+        HStack(spacing: VFSpace.s4) {
+            Text(label, bundle: .module)
+                .font(.subheadline)
+            // The button itself is the platform minimum (padding the capsule would not grow it); on Apple TV
+            // the borderless style keeps the system focus effect.
             Button(action: onRemove) {
                 Image(systemName: AppSymbol.xmark)
-                    .font(.caption2)
+                    .font(.caption.weight(.semibold))
+                    .frame(minWidth: SearchView.rowButtonSize, minHeight: SearchView.rowButtonSize)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.borderless)
+            .foregroundStyle(.primary)
             .accessibilityLabel(Text("Remove filter", bundle: .module))
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
+        .padding(.leading, VFSpace.s12)
         .background(.tint.opacity(Self.fillOpacity), in: Capsule())
         .foregroundStyle(.primary)
     }
@@ -412,6 +597,13 @@ struct SearchFilterSheet: View {
                     .pickerStyle(.inline)
                     .labelsHidden()
                 }
+
+                #if !os(iOS)
+                Section {
+                    Button("Reset") { draft = .default }
+                        .disabled(draft.isDefault)
+                }
+                #endif
             }
             .navigationTitle("Search filters")
             #if os(iOS)
@@ -436,6 +628,6 @@ struct SearchFilterSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
-        .accessibilityIdentifier("search.filterSheet")
+        .accessibilityIdentifier(AccessibilityID.searchFilterSheet)
     }
 }

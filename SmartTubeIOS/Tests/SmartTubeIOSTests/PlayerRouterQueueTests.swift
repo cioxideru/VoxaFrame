@@ -145,6 +145,28 @@ struct PlayerRouterQueueTests {
         #expect(await queue.videos.map(\.id) == ["a", "b", "a", "new"])
     }
 
+    @Test("Selecting the playing video on the queue screen after hiding one before it keeps Next on the queue")
+    func queueScreenHandoffWhilePlaying() async throws {
+        let queue = await makeQueue(["hidden", "b", "c"])
+        let playing = try #require(await queue.videoAt(index: 1))
+        let loader = CurrentQueuePlaylistLoader(store: queue)
+        let stored = await loader.loadQueuedVideos(for: CurrentQueueStore.playlistID) ?? []
+        let visible = stored.filter { $0.id != "hidden" }  // Not Interested or Hide Shorts
+        let picked = await loader.play(visible[0], from: visible)
+        #expect(picked.playlistId == CurrentQueueStore.playlistID)
+        #expect(picked.playlistIndex == 0)
+        let (router, state) = try makeRouter(playing: playing, queue: queue)
+        let item = state.vm.player.currentItem
+        state.vm.hasNext = false
+
+        router.open(video: picked, api: api)
+
+        #expect(state.vm.player.currentItem === item)  // no reload
+        #expect(router.playingQueueIndex == 0)
+        await waitForTasks { state.vm.hasNext }
+        #expect(await queue.videoAt(index: 1)?.id == "c")
+    }
+
     @Test("Picking the playing video outside the queue leaves nothing from the queue playing")
     func sameSourceOutsideQueue() async throws {
         let playing = try #require(await makeQueue(["a", "b"]).videoAt(index: 1))

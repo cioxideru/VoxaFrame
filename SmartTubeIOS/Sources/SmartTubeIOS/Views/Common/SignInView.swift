@@ -113,10 +113,6 @@ public struct SignInView: View {
             // Left column: instructions + code + countdown
             VStack(alignment: .leading, spacing: 32) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Image(systemName: AppSymbol.tvMediabox)
-                        .font(.system(size: 56))
-                        .foregroundStyle(.red)
-
                     Text("Sign in to VoxaFrame")
                         .font(.largeTitle).fontWeight(.bold)
 
@@ -129,18 +125,18 @@ public struct SignInView: View {
                     Text("Go to:")
                         .font(.callout)
                         .foregroundStyle(.secondary)
-                    Text(info.verificationURL.absoluteString)
+                    Text(verbatim: displayAddress(info.verificationURL))  // verbatim: web address
                         .font(.title3).fontWeight(.semibold)
-                        .foregroundStyle(.blue)
                 }
 
-                Text(info.userCode)
-                    .font(.system(size: 56, weight: .bold, design: .monospaced))
+                Text(verbatim: info.userCode)  // verbatim: activation code
+                    // The title style (57 pt on Apple TV) scales with the text size, and the padded plate grows.
+                    .font(.system(.title, design: .monospaced, weight: .bold))
                     .tracking(10)
-                    .padding(.vertical, 20)
-                    .padding(.horizontal, 32)
-                    .background(Color.secondary.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .speechSpellsOutCharacters()
+                    .padding(.vertical, VFSpace.s20)
+                    .padding(.horizontal, VFSpace.s32)
+                    .background(VFColor.surface, in: RoundedRectangle(cornerRadius: VFRadius.card, style: .continuous))
 
                 CountdownView(expiresAt: info.expiresAt) {
                     Task { await auth.beginSignIn() }
@@ -215,111 +211,117 @@ public struct SignInView: View {
     }
     #endif
 
+    /// Code first, then the two ways to use it (this device, or the QR from another one), then the wait.
     private func activationView(info: AuthService.ActivationInfo) -> some View {
         ScrollView {
-            VStack(spacing: 28) {
-                Spacer(minLength: 20)
+            VStack(spacing: VFSpace.s24) {
+                VStack(spacing: VFSpace.s8) {
+                    Text("Sign in to VoxaFrame", bundle: .module)
+                        .font(.title2.weight(.bold))
+                        .accessibilityAddTraits(.isHeader)
+                    Text("On any device, open the link below and enter the code.", bundle: .module)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(verbatim: displayAddress(info.verificationURL))  // verbatim: web address
+                        .font(.headline)
+                }
+                .multilineTextAlignment(.center)
 
-                Image(systemName: AppSymbol.tvMediabox)
-                    .font(.system(size: 64))
-                    .foregroundStyle(.red)
+                Text(verbatim: info.userCode)  // verbatim: activation code
+                    .font(.system(.largeTitle, design: .monospaced, weight: .bold))
+                    .tracking(VFSpace.s4)
+                    .speechSpellsOutCharacters()
+                    .padding(.vertical, VFSpace.s16)
+                    .padding(.horizontal, VFSpace.s24)
+                    .background(VFColor.surface, in: RoundedRectangle(cornerRadius: VFRadius.card, style: .continuous))
 
-                VStack(spacing: 6) {
-                    Text("Activate VoxaFrame")
-                        .font(.title2).fontWeight(.bold)
-                    Text(
-                        "On this device, tap the button below — the sign-in page opens with your code already filled in."
-                    )
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                ViewThatFits {
+                    HStack(spacing: VFSpace.s12) { codeActions(info: info) }
+                    VStack(spacing: VFSpace.s12) { codeActions(info: info) }
                 }
 
-                // Primary CTA: opens the activation URL with user_code pre-filled.
-                // On macOS use ASWebAuthenticationSession so the page opens in an
-                // in-app browser sheet rather than the external default browser.
-                Button {
-                    #if os(macOS)
-                    openActivationPageMac(info: info)
-                    #else
-                    openURL(URL(string: activationQRURL(info: info)) ?? info.verificationURL)
-                    #endif
-                } label: {
-                    Label("Open Activation Page", systemImage: "arrow.up.right")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.vfProminent)
-                .controlSize(.large)
-
-                // ── Or: scan from another device ────────────────────────────
-                HStack(spacing: 8) {
-                    Rectangle().fill(Color.secondary.opacity(0.3)).frame(height: 1)
-                    Text("Or scan from another device")
+                VStack(spacing: VFSpace.s8) {
+                    // Scanned from another device; opens the page with the code filled in.
+                    QRCodeView(content: activationQRURL(info: info))
+                        .frame(width: 180, height: 180)
+                        .padding(VFSpace.s8)
+                        .background(.white, in: RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous))
+                        .accessibilityLabel(Text("Scan to open activation page", bundle: .module))
+                    Text("Scan to open activation page", bundle: .module)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .fixedSize()
-                    Rectangle().fill(Color.secondary.opacity(0.3)).frame(height: 1)
+                        .accessibilityHidden(true)
                 }
 
-                // QR code — scan to open the activation URL with code pre-filled
-                QRCodeView(content: activationQRURL(info: info))
-                    .frame(width: 180, height: 180)
-                    .padding(8)
-                    .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(color: .black.opacity(0.08), radius: 8, y: 2)
-
-                Text("Scan to open activation page")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                // User code box
-                Text(info.userCode)
-                    .font(.system(size: 42, weight: .bold, design: .monospaced))
-                    .tracking(6)
-                    .padding(.vertical, 20)
-                    .padding(.horizontal, 32)
-                    .background(Color.secondary.opacity(0.12))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-
-                Button {
-                    #if os(iOS)
-                    UIPasteboard.general.string = info.userCode
-                    #elseif os(macOS)
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(info.userCode, forType: .string)
-                    #endif
-                } label: {
-                    Label("Copy Code", systemImage: AppSymbol.copyDoc)
+                VStack(spacing: VFSpace.s8) {
+                    HStack(spacing: VFSpace.s8) {
+                        ProgressView()
+                        Text("Waiting for authorisation…", bundle: .module)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    CountdownView(expiresAt: info.expiresAt) {
+                        // Code expired: a new one replaces it.
+                        Task { await auth.beginSignIn() }
+                    }
                 }
-                .buttonStyle(.bordered)
-
-                // Countdown
-                CountdownView(expiresAt: info.expiresAt) {
-                    // Code expired — restart
-                    Task { await auth.beginSignIn() }
-                }
-
-                VStack(spacing: 8) {
-                    ProgressView()
-                    Text("Waiting for authorisation…")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.top, 8)
+                .accessibilityElement(children: .combine)
 
                 Button(role: .cancel) {
                     auth.cancelSignIn()
                 } label: {
-                    Text("Use a different account")
+                    Text("Use a different account", bundle: .module)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
                 }
-
-                Spacer(minLength: 20)
+                .buttonStyle(.borderless)
             }
-            .padding()
+            .frame(maxWidth: 480)
+            .frame(maxWidth: .infinity)
+            .padding(VFSpace.s16)
         }
+    }
+
+    @ViewBuilder
+    private func codeActions(info: AuthService.ActivationInfo) -> some View {
+        Button {
+            #if os(iOS)
+            UIPasteboard.general.string = info.userCode
+            #elseif os(macOS)
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(info.userCode, forType: .string)
+            #endif
+        } label: {
+            Label {
+                Text("Copy Code", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.copyDoc)
+            }
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+
+        // Opens the activation page with the code already filled in.
+        Button {
+            #if os(macOS)
+            openActivationPageMac(info: info)
+            #else
+            openURL(URL(string: activationQRURL(info: info)) ?? info.verificationURL)
+            #endif
+        } label: {
+            Label {
+                Text("Open Activation Page", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.openExternal)
+            }
+        }
+        .buttonStyle(.vfProminent)
+        .controlSize(.large)
+    }
+
+    /// `google.com/device` rather than the full https URL.
+    private func displayAddress(_ url: URL) -> String {
+        let host = (url.host ?? url.absoluteString).replacingOccurrences(of: "www.", with: "")
+        return host + url.path
     }
 }
 
@@ -385,9 +387,13 @@ private struct CountdownView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                Text("Code expired")
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                Label {
+                    Text("Code expired", bundle: .module)
+                } icon: {
+                    Image(systemName: AppSymbol.warning)
+                }
+                .font(.caption)
+                .foregroundStyle(VFColor.danger)
             }
         }
         .task {

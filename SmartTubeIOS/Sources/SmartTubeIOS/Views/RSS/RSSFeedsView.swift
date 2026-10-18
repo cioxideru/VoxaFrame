@@ -22,29 +22,30 @@ struct RSSFeedsView: View {
     var body: some View {
         VStack(spacing: 0) {
             #if os(iOS)
-            // Inline header — shown because LibraryView hides the navigation bar globally.
-            HStack {
-                Text("RSS Feeds")
+            // Inline header: the segment's own actions, under the Library segmented control.
+            HStack(spacing: VFSpace.s4) {
+                Text("RSS Feeds", bundle: .module)
                     .font(.headline)
-                Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
                     showManageFeeds = true
                 } label: {
-                    Image(systemName: "list.bullet.indent")
+                    Image(systemName: AppSymbol.rssManage)
+                        .frame(minWidth: VFTarget.touch, minHeight: VFTarget.touch)
                 }
-                .accessibilityLabel("Manage RSS Feeds")
+                .accessibilityLabel(Text("Manage RSS Feeds", bundle: .module))
                 .accessibilityIdentifier("rss.manageFeedsButton")
                 Button {
                     showAddFeed = true
                 } label: {
-                    Image(systemName: "plus")
+                    Image(systemName: AppSymbol.add)
+                        .frame(minWidth: VFTarget.touch, minHeight: VFTarget.touch)
                 }
-                .accessibilityLabel("Add RSS Feed")
+                .accessibilityLabel(Text("Add RSS Feed", bundle: .module))
                 .accessibilityIdentifier("rss.addFeedButton")
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            Divider()
+            .padding(.leading, VFSpace.s16)
+            .padding(.trailing, VFSpace.s8)
             #endif
 
             Group {
@@ -64,7 +65,8 @@ struct RSSFeedsView: View {
         .sheet(isPresented: $showManageFeeds, onDismiss: { vm.load() }) {
             ManageRSSFeedsView()
         }
-        #if os(tvOS)
+        #if !os(iOS)
+        // tvOS and macOS push the player in the Library stack, like a card click elsewhere.
         .navigationDestination(item: $selectedVideo) { video in
             PlayerView(video: video, api: api)
         }
@@ -80,27 +82,27 @@ struct RSSFeedsView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "dot.radiowaves.left.and.right")
-                .font(.system(size: 56))
-                .foregroundStyle(.secondary)
-            Text("No RSS Feeds")
-                .font(.title3)
-                .fontWeight(.semibold)
-            Text("Add a YouTube channel RSS feed to see videos here.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+        ContentUnavailableView {
+            Label {
+                Text("No RSS Feeds", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.rssFeed)
+            }
+        } description: {
+            Text("Add a YouTube channel RSS feed to see videos here.", bundle: .module)
+        } actions: {
             Button {
                 showAddFeed = true
             } label: {
-                Label("Add RSS Feed", systemImage: "plus")
+                Label {
+                    Text("Add RSS Feed", bundle: .module)
+                } icon: {
+                    Image(systemName: AppSymbol.add)
+                }
             }
             .buttonStyle(.vfProminent)
             .accessibilityIdentifier("rss.emptyAddFeedButton")
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Video List

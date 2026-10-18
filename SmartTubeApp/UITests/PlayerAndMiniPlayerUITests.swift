@@ -157,7 +157,7 @@ final class PlayerAndMiniPlayerUITests: XCTestCase {
         XCTAssertTrue(
             miniPlayerBar.waitForExistence(timeout: 5),
             "Mini player must persist across tab switch")
-        let onSearchTab = app.textFields["search.bar"].waitForExistence(timeout: 5)
+        let onSearchTab = UITestHelpers.searchField(in: app).waitForExistence(timeout: 5)
         XCTAssertTrue(
             onSearchTab, "Tapping Search tab must navigate there (tab bar must be accessible under mini player)")
     }

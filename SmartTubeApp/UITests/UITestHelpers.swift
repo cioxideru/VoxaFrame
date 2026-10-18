@@ -54,6 +54,8 @@ enum AccessibilityID {
     static var homeChipBar: String { "home.chipBar" }
     static func homeSectionChip(_ title: String) -> String { "chip.\(title)" }
     static var channelSubscriptionButton: String { "channel.followButton" }
+    static var channelHeader: String { "channel.header" }
+    static var channelTitle: String { "channel.title" }
     static var subscriptionConfirm: String { "subscription.confirm" }
     static var subscriptionCancel: String { "subscription.cancel" }
     static var subscriptionRetry: String { "subscription.retry" }
@@ -61,6 +63,18 @@ enum AccessibilityID {
     static func subscriptionRow(_ id: String) -> String { "subscription.row.\(id)" }
     static func subscriptionRemove(_ id: String) -> String { "subscription.remove.\(id)" }
     static var homeSubscriptionsChannelFilter: String { "home.subscriptionsChannelFilter" }
+    static var searchBar: String { "search.bar" }
+    static var searchClearButton: String { "search.clearButton" }
+    static var searchFilterButton: String { "search.filterButton" }
+    static var searchFilterSheet: String { "search.filterSheet" }
+    static var searchResults: String { "search.results" }
+    static var searchSuggestionsContainer: String { "search.suggestionsContainer" }
+    static var searchHistoryClearAll: String { "search.history.clearAll" }
+    static func searchHistory(_ query: String) -> String { "search.history.\(query)" }
+    static func searchSuggestion(_ text: String) -> String { "search.suggestion.\(text)" }
+    static var searchNoResults: String { "search.noResults" }
+    static var searchFailed: String { "search.failed" }
+    static var searchRetryButton: String { "search.retryButton" }
     static var parentalControlsConfirmNew: String { "parentalControls.confirmNew" }
     static var parentalControlsEnterNew: String { "parentalControls.enterNew" }
     static var parentalControlsVerifyCurrent: String { "parentalControls.verifyCurrent" }
@@ -116,6 +130,15 @@ enum AccessibilityID {
     static var settingsPINLock: String { "settingsPINLock" }
 
     static var homeCurrentQueueRow: String { "home.currentQueueRow" }
+    static var librarySectionPicker: String { "library.sectionPicker" }
+    static func libraryPicker(_ section: String) -> String { "library.picker.\(section.lowercased())" }
+    static var libraryChipBar: String { "library.chipBar" }
+    static func libraryChip(_ section: String) -> String { "library.chip.\(section.lowercased())" }
+    static var librarySignInButton: String { "library.signInButton" }
+    static var libraryGuestHistoryNote: String { "library.guestHistoryNote" }
+    static var queueView: String { "queue.view" }
+    static var queueClearButton: String { "queue.clearButton" }
+    static var queueClearConfirm: String { "queue.clearConfirm" }
 
     static func homeShortsRow(_ index: Int) -> String {
         index == 0 ? "home.shortsRow" : "home.shortsRow.\(index)"
@@ -200,6 +223,35 @@ enum AccessibilityID {
 
 #if !os(tvOS)
 enum UITestHelpers {
+
+    // MARK: - Search
+
+    /// The Search screen's field: the system search field (`.searchable`) on iPhone and iPad. SwiftUI gives
+    /// that field no identifier (`search.bar` is the Apple TV field), so it is found by type: the app has one.
+    static func searchField(in app: XCUIApplication) -> XCUIElement {
+        app.searchFields.firstMatch
+    }
+
+    /// The field's system clear button, found by type: its label is localized and it has no identifier.
+    static func searchClearButton(in app: XCUIApplication) -> XCUIElement {
+        searchField(in: app).buttons.firstMatch
+    }
+
+    /// Opens the Search tab. While a search is active, iOS 26 turns the search-role tab into the field itself
+    /// and minimizes the tab bar: there is no Search tab to tap, and the field is already on screen.
+    static func openSearch(in app: XCUIApplication) {
+        if searchField(in: app).exists, !app.tabBars.buttons["Search"].exists { return }
+        tapTab(named: "Search", in: app)
+    }
+
+    /// Empties the search field with its system clear button, when it has text.
+    static func clearSearchField(in app: XCUIApplication) {
+        let field = searchField(in: app)
+        // Empty shows the placeholder as the value; then the only button may be dictation, not clear.
+        guard let text = field.value as? String, !text.isEmpty, text != field.placeholderValue else { return }
+        let clear = searchClearButton(in: app)
+        if clear.waitForExistence(timeout: 1) { clear.tap() }
+    }
 
     // MARK: - Tab navigation
 

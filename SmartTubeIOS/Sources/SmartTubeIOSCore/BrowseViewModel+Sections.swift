@@ -143,9 +143,9 @@ extension BrowseViewModel {
     func fetchHistorySection() async throws {
         // #150: YouTube doesn't reliably credit watches to the account for device-code
         // sign-in, so the app keeps its own on-device history and shows it first, followed by whatever the account
-        // history returns (best-effort — signed-out/failed fetches just yield local).
+        // history returns (best-effort — failed fetches just yield local). A guest gets on-device records only.
         let local = localHistory.videos
-        let remote: VideoGroup? = try? await api.fetchHistory()
+        let remote: VideoGroup? = hasAuthToken ? (try? await api.fetchHistory()) : nil
         if !Task.isCancelled {
             let localIds = Set(local.map(\.id))
             var group = remote ?? VideoGroup(title: "History", videos: [])
@@ -156,6 +156,14 @@ extension BrowseViewModel {
     }
 
     func fetchPlaylistsSection() async throws {
+        // Account playlists only: a guest gets none, without a request (as Watch Later).
+        guard hasAuthToken else {
+            if !Task.isCancelled {
+                isAuthRequired = true
+                videoGroups = []
+            }
+            return
+        }
         let playlists = try await api.fetchUserPlaylists()
         if !Task.isCancelled {
             isAuthRequired = playlists.isEmpty

@@ -17,16 +17,35 @@ public protocol QueuedPlaylistLoader: Sendable {
 }
 
 public struct CurrentQueuePlaylistLoader: QueuedPlaylistLoader {
-    public init() {}
+    private let store: CurrentQueueStore
+
+    public init() { store = .shared }
+    /// Tests pass an isolated store.
+    init(store: CurrentQueueStore) { self.store = store }
+
     public func loadQueuedVideos(for playlistId: String) async -> [Video]? {
         guard playlistId == CurrentQueueStore.playlistID else { return nil }
-        let videos = await CurrentQueueStore.shared.videos
+        let videos = await store.videos
         return videos.enumerated().map { index, v in
             var copy = v
             copy.playlistId = CurrentQueueStore.playlistID
             copy.playlistIndex = index
             return copy
         }
+    }
+
+    /// Plays `video` from the queue screen: the stored queue becomes the `visible` list, so videos hidden there
+    /// (Hide Shorts, Not Interested) drop out and Next never reaches them, and `video` comes back tagged with its
+    /// position in that list.
+    public func play(_ video: Video, from visible: [Video]) async -> Video {
+        await store.replaceAll(with: visible)
+        let position = visible.firstIndex { $0.id == video.id && $0.playlistIndex == video.playlistIndex } ?? 0
+        return await store.videoAt(index: position) ?? video
+    }
+
+    /// How many videos are stored, hidden ones included.
+    public func storedCount() async -> Int {
+        await store.videos.count
     }
 }
 
@@ -81,6 +100,12 @@ public final class PlaylistViewModel {
             }
             await self.fetch()
         }
+    }
+
+    /// Reloads and returns when the videos are in, e.g. for `.task` and `.refreshable`.
+    public func refresh(playlistId: String) async {
+        load(playlistId: playlistId, refresh: true)
+        await fetchTask?.value
     }
 
     public func loadMoreIfNeeded(lastVideo: Video) {

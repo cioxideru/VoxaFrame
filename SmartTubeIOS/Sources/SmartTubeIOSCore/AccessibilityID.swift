@@ -44,6 +44,8 @@ public enum AccessibilityID {
     public static var homeChipBar: String { "home.chipBar" }
     public static func homeSectionChip(_ title: String) -> String { "chip.\(title)" }
     public static var channelSubscriptionButton: String { "channel.followButton" }
+    public static var channelHeader: String { "channel.header" }
+    public static var channelTitle: String { "channel.title" }
     public static var subscriptionConfirm: String { "subscription.confirm" }
     public static var subscriptionCancel: String { "subscription.cancel" }
     public static var subscriptionRetry: String { "subscription.retry" }
@@ -51,6 +53,21 @@ public enum AccessibilityID {
     public static func subscriptionRow(_ id: String) -> String { "subscription.row.\(id)" }
     public static func subscriptionRemove(_ id: String) -> String { "subscription.remove.\(id)" }
     public static var homeSubscriptionsChannelFilter: String { "home.subscriptionsChannelFilter" }
+    /// tvOS text field; iPhone, iPad and Mac use the system search field.
+    public static var searchBar: String { "search.bar" }
+    public static var searchClearButton: String { "search.clearButton" }
+    public static var searchFilterButton: String { "search.filterButton" }
+    public static var searchFilterSheet: String { "search.filterSheet" }
+    public static var searchResults: String { "search.results" }
+    /// The idle list: recent searches and topics.
+    public static var searchSuggestionsContainer: String { "search.suggestionsContainer" }
+    public static var searchHistoryClearAll: String { "search.history.clearAll" }
+    public static func searchHistory(_ query: String) -> String { "search.history.\(query)" }
+    /// A live suggestion or matching recent search under the search field.
+    public static func searchSuggestion(_ text: String) -> String { "search.suggestion.\(text)" }
+    public static var searchNoResults: String { "search.noResults" }
+    public static var searchFailed: String { "search.failed" }
+    public static var searchRetryButton: String { "search.retryButton" }
     public static var parentalControlsConfirmNew: String { "parentalControls.confirmNew" }
     public static var parentalControlsEnterNew: String { "parentalControls.enterNew" }
     public static var parentalControlsVerifyCurrent: String { "parentalControls.verifyCurrent" }
@@ -108,6 +125,20 @@ public enum AccessibilityID {
     public static var settingsPINLock: String { "settingsPINLock" }
 
     public static var homeCurrentQueueRow: String { "home.currentQueueRow" }
+    public static var librarySectionPicker: String { "library.sectionPicker" }
+    /// A Library segment; `section` is its raw value (`LibraryView.LibrarySection`).
+    public static func libraryPicker(_ section: String) -> String { "library.picker.\(section.lowercased())" }
+    public static var libraryChipBar: String { "library.chipBar" }
+    /// A tvOS Library chip; `section` is its raw value.
+    public static func libraryChip(_ section: String) -> String { "library.chip.\(section.lowercased())" }
+    /// Sign In on the Playlists segment for a guest.
+    public static var librarySignInButton: String { "library.signInButton" }
+    /// The note above a guest's on-device History.
+    public static var libraryGuestHistoryNote: String { "library.guestHistoryNote" }
+    /// The Queue screen: Library › Queue, the iPad and Mac sidebar Queue item, Home's Current Queue row.
+    public static var queueView: String { "queue.view" }
+    public static var queueClearButton: String { "queue.clearButton" }
+    public static var queueClearConfirm: String { "queue.clearConfirm" }
 
     /// Home feed Shorts rows: the first keeps the long-standing `home.shortsRow`.
     public static func homeShortsRow(_ index: Int) -> String {

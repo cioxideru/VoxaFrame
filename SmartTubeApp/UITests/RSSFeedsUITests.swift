@@ -40,12 +40,12 @@ final class RSSFeedsUITests: XCTestCase {
     private func openRSSFeedsTab() throws {
         UITestHelpers.tapTab(named: "Library", in: app)
 
-        let picker = app.segmentedControls["library.sectionPicker"].firstMatch
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker].firstMatch
         guard picker.waitForExistence(timeout: 5) else {
             try captureAndSkip("library.sectionPicker not found — Library tab may not have loaded", in: app)
         }
 
-        let rssSegment = app.buttons["library.picker.rss feeds"].firstMatch
+        let rssSegment = app.buttons[AccessibilityID.libraryPicker("RSS Feeds")].firstMatch
         guard rssSegment.waitForExistence(timeout: 3) else {
             try captureAndSkip("RSS Feeds segment not found in Library picker", in: app)
         }
@@ -65,7 +65,7 @@ final class RSSFeedsUITests: XCTestCase {
     /// Verifies the RSS Feeds segment exists in the Library section picker.
     func testRSSFeedsSegmentExists() throws {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let rssSegment = app.buttons["library.picker.rss feeds"].firstMatch
+        let rssSegment = app.buttons[AccessibilityID.libraryPicker("RSS Feeds")].firstMatch
         guard rssSegment.waitForExistence(timeout: 5) else {
             try captureAndSkip("RSS Feeds segment not found — Library picker may not have loaded", in: app)
         }

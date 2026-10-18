@@ -434,6 +434,42 @@
         }
       }
     },
+    "%@ will be removed from the subscriptions on this device." : {
+      "comment" : "Channel page: message of the Unsubscribe confirmation for a guest. %@ = channel name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will be removed from the subscriptions on this device."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Канал «%@» будет удалён из подписок на этом устройстве."
+          }
+        }
+      }
+    },
+    "%@ will leave Subscriptions in your Google account." : {
+      "comment" : "Channel page: message of the Unsubscribe confirmation when signed in. %@ = channel name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will leave Subscriptions in your Google account."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Канал «%@» будет удалён из подписок вашего аккаунта Google."
+          }
+        }
+      }
+    },
     "%@ of %@" : {
       "comment" : "Player timeline VoiceOver value: elapsed of total time",
       "extractionState" : "manual",
@@ -1053,6 +1089,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld video%2$@"
+          }
+        }
+      }
+    },
+    "%lld videos · on this device" : {
+      "comment" : "Queue screen header: number of queued videos; the queue is stored on this device",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld video · on this device"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld videos · on this device"
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld видео · на этом устройстве"
           }
         }
       }
@@ -4924,6 +4990,42 @@
         }
       }
     },
+    "Clear" : {
+      "comment" : "VoiceOver label of the button that empties the search field (Apple TV)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить"
+          }
+        }
+      }
+    },
+    "Clear Filters" : {
+      "comment" : "Search: button on the no-results screen that turns all search filters off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Filters"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Снять фильтры"
+          }
+        }
+      }
+    },
     "Clear History" : {
       "localizations" : {
         "ar" : {
@@ -5126,6 +5228,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "清空队列"
+          }
+        }
+      }
+    },
+    "Clear the queue?" : {
+      "comment" : "Title of the confirmation before Clear Queue",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear the queue?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить очередь?"
           }
         }
       }
@@ -6056,6 +6176,42 @@
     },
     "Could Not Update Playlist" : {
 
+    },
+    "Couldn't load more results." : {
+      "comment" : "Search: the next page of results failed; the results above stay",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load more results."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить ещё результаты."
+          }
+        }
+      }
+    },
+    "Couldn't Search" : {
+      "comment" : "Search error screen title: the request failed (not the same as no results)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't Search"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось выполнить поиск"
+          }
+        }
+      }
     },
     "Current Queue" : {
       "localizations" : {
@@ -8710,6 +8866,24 @@
         }
       }
     },
+    "Every video in the queue is hidden by Hide Shorts or Not Interested." : {
+      "comment" : "Queue screen: the queue has videos, but all of them are hidden",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every video in the queue is hidden by Hide Shorts or Not Interested."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все видео в очереди скрыты: «Скрывать Shorts» или «Не интересует»."
+          }
+        }
+      }
+    },
     "Exclude from SponsorBlock" : {
       "comment" : "Channel toolbar button — adds channel to SponsorBlock exclusion list",
       "extractionState" : "manual",
@@ -10959,6 +11133,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "历史记录"
+          }
+        }
+      }
+    },
+    "History Is Off" : {
+      "comment" : "Library › History empty state when Watch History is turned off in Settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History Is Off"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История выключена"
           }
         }
       }
@@ -13394,6 +13586,24 @@
       "comment" : "The accessibility label for the unmute button.",
       "isCommentAutoGenerated" : true
     },
+    "Needs an address that starts with http:// or https://" : {
+      "comment" : "Add RSS Feed: shown under the address field while it is not a web address",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs an address that starts with http:// or https://"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужен адрес, начинающийся с http:// или https://"
+          }
+        }
+      }
+    },
     "Next Chapter" : {
       "comment" : "Player button: jump to the next chapter",
       "extractionState" : "manual",
@@ -13860,6 +14070,24 @@
         }
       }
     },
+    "No History Yet" : {
+      "comment" : "Library › History empty state title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No History Yet"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Истории пока нет"
+          }
+        }
+      }
+    },
     "No offline videos" : {
       "comment" : "Empty offline library title",
       "extractionState" : "manual",
@@ -14067,6 +14295,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "无 RSS 订阅"
+          }
+        }
+      }
+    },
+    "No Subscriptions Yet" : {
+      "comment" : "Library › Subscriptions empty state for a guest",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Subscriptions Yet"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подписок пока нет"
           }
         }
       }
@@ -14661,6 +14907,24 @@
         }
       }
     },
+    "Nothing matches with these filters. Try another query or clear the filters." : {
+      "comment" : "Search no-results screen when filters are on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing matches with these filters. Try another query or clear the filters."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "С этими фильтрами ничего не найдено. Измените запрос или снимите фильтры."
+          }
+        }
+      }
+    },
     "Nothing up next." : {
       "comment" : "Mac player inspector: empty Up next list",
       "extractionState" : "manual",
@@ -14775,6 +15039,24 @@
         }
       }
     },
+    "Off · stays in this list" : {
+      "comment" : "Manage RSS Feeds: subtitle of a feed that is turned off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off · stays in this list"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выключена · остаётся в списке"
+          }
+        }
+      }
+    },
     "Offline library is unavailable" : {
       "comment" : "Offline videos when the library cannot be read or saved",
       "extractionState" : "manual",
@@ -14819,6 +15101,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Офлайн-видео"
+          }
+        }
+      }
+    },
+    "Offline videos and playlists stay as they are." : {
+      "comment" : "Message of the confirmation before Clear Queue",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline videos and playlists stay as they are."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Офлайн-видео и плейлисты не изменятся."
           }
         }
       }
@@ -15167,6 +15467,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在此设备上，点击下面的按鈕 — 登录页面将以预填您的代码的方式打开。"
+          }
+        }
+      }
+    },
+    "On this device. Sign in to add your YouTube history." : {
+      "comment" : "Library › History note for a guest above on-device history",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On this device. Sign in to add your YouTube history."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На этом устройстве. Войдите, чтобы добавить историю YouTube."
           }
         }
       }
@@ -16939,6 +17257,24 @@
         }
       }
     },
+    "Playing a list makes it the queue. Add single videos with Add to Queue in a video's menu." : {
+      "comment" : "Queue screen empty state",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playing a list makes it the queue. Add single videos with Add to Queue in a video's menu."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запуск списка делает его очередью. Отдельные видео добавляйте через «Добавить в очередь» в меню видео."
+          }
+        }
+      }
+    },
     "Playing: classic voice" : {
       "comment" : "Text describing the voice-over playback mode.",
       "isCommentAutoGenerated" : true
@@ -17612,6 +17948,24 @@
       "comment" : "Display name for the `.purple` accent color choice.",
       "isCommentAutoGenerated" : true
     },
+    "Put %@ in the search field" : {
+      "comment" : "VoiceOver label of the arrow next to a suggestion: copies %@ into the search field without searching",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Put %@ in the search field"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подставить «%@» в строку поиска"
+          }
+        }
+      }
+    },
     "Quality" : {
       "comment" : "Player more-menu label and quality-picker header",
       "extractionState" : "manual",
@@ -17704,6 +18058,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "画质"
+          }
+        }
+      }
+    },
+    "Queue" : {
+      "comment" : "Library segment, iPad and Mac sidebar item and screen title: the play queue",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queue"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очередь"
+          }
+        }
+      }
+    },
+    "Queue Is Empty" : {
+      "comment" : "Queue screen empty state title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queue Is Empty"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очередь пуста"
           }
         }
       }
@@ -19067,6 +19457,24 @@
       "comment" : "A button that retries loading the library storage.",
       "isCommentAutoGenerated" : true
     },
+    "RSS" : {
+      "comment" : "Library segment: RSS feeds (short, the segmented control is narrow)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RSS"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RSS"
+          }
+        }
+      }
+    },
     "RSS Feed URL" : {
       "localizations" : {
         "ar" : {
@@ -20255,6 +20663,24 @@
         }
       }
     },
+    "Search history stays on this device, up to 50 searches. Clearing it does not change your watch history." : {
+      "comment" : "Search: footer under recent searches",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search history stays on this device, up to 50 searches. Clearing it does not change your watch history."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История поиска хранится на этом устройстве, до 50 запросов. Её очистка не затрагивает историю просмотров."
+          }
+        }
+      }
+    },
     "Search YouTube" : {
       "comment" : "Search bar placeholder text",
       "extractionState" : "manual",
@@ -20449,6 +20875,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "类型"
+          }
+        }
+      }
+    },
+    "Searching for \"%@\"…" : {
+      "comment" : "Search: first page of results is loading. %@ = query",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching for \"%@\"…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ищем «%@»…"
           }
         }
       }
@@ -24010,6 +24454,24 @@
         }
       }
     },
+    "Subs" : {
+      "comment" : "Library segment: subscriptions (short, the segmented control is narrow)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subs"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подписки"
+          }
+        }
+      }
+    },
     "Subscribe" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -24017,6 +24479,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Подписаться"
+          }
+        }
+      }
+    },
+    "Subscribed on this device" : {
+      "comment" : "Channel page: a guest's subscription, kept on this device only",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscribed on this device"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы подписаны на этом устройстве"
+          }
+        }
+      }
+    },
+    "Subscribed with your Google account" : {
+      "comment" : "Channel page: subscription stored in the Google account",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscribed with your Google account"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы подписаны в аккаунте Google"
           }
         }
       }
@@ -24806,6 +25304,24 @@
     "Teal" : {
       "comment" : "Display name for the teal accent color.",
       "isCommentAutoGenerated" : true
+    },
+    "The service didn't respond. Your query and filters are kept." : {
+      "comment" : "Search error screen explanation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The service didn't respond. Your query and filters are kept."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервис не ответил. Запрос и фильтры сохранены."
+          }
+        }
+      }
     },
     "The Settings PIN is removed." : {
       "comment" : "Reset All Settings confirmation, shown when a PIN is set",
@@ -25667,6 +26183,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重试"
+          }
+        }
+      }
+    },
+    "Turn on Watch History in Settings to list the videos you play." : {
+      "comment" : "Library › History empty state when Watch History is off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on Watch History in Settings to list the videos you play."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включите «Историю просмотров» в настройках, чтобы здесь появлялись просмотренные видео."
+          }
+        }
+      }
+    },
+    "Turning a feed off keeps it in this list. Deleting removes it from this device." : {
+      "comment" : "Manage RSS Feeds: footer under the list",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turning a feed off keeps it in this list. Deleting removes it from this device."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выключенная лента остаётся в списке. Удаление убирает её с этого устройства."
           }
         }
       }
@@ -27145,6 +27697,42 @@
         }
       }
     },
+    "Videos you play appear here." : {
+      "comment" : "Library › History empty state when signed in",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Videos you play appear here."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Здесь появятся видео, которые вы смотрите."
+          }
+        }
+      }
+    },
+    "Videos you play on this device appear here. Sign in to add your YouTube history." : {
+      "comment" : "Library › History empty state for a guest",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Videos you play on this device appear here. Sign in to add your YouTube history."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Здесь появятся видео, просмотренные на этом устройстве. Войдите, чтобы добавить историю YouTube."
+          }
+        }
+      }
+    },
     "View count" : {
       "comment" : "Search sort order option",
       "extractionState" : "manual",
@@ -27876,6 +28464,24 @@
     "When a PIN is set, it must be entered every time this Settings screen is opened." : {
 
     },
+    "Without signing in, the subscription is saved on this device" : {
+      "comment" : "Channel page: note under Subscribe for a guest",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Without signing in, the subscription is saved on this device"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без входа подписка сохранится на этом устройстве"
+          }
+        }
+      }
+    },
     "Without translation" : {
       "comment" : "A label for a picker that lets the user choose whether to include a translation.",
       "isCommentAutoGenerated" : true,
@@ -28145,6 +28751,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "首页、订阅和历史记录\n需要 Google 账户。"
+          }
+        }
+      }
+    },
+    "Your YouTube playlists and Watch Later. History and the queue work without signing in." : {
+      "comment" : "Library › Playlists sign-in prompt",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your YouTube playlists and Watch Later. History and the queue work without signing in."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваши плейлисты YouTube и «Смотреть позже». История и очередь работают без входа."
           }
         }
       }

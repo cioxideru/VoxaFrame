@@ -34,7 +34,7 @@ final class TVLibraryUITests: XCTestCase {
 
     private var chipBar: XCUIElement {
         app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'library.chipBar'"))
+            .matching(NSPredicate(format: "identifier == %@", AccessibilityID.libraryChipBar))
             .firstMatch
     }
 
@@ -93,7 +93,7 @@ final class TVLibraryUITests: XCTestCase {
     /// The History chip must be reachable via one right-press in the chip bar.
     func testHistorySegmentFocusable() throws {
         let historyChip = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'library.chip.history'"))
+            .matching(NSPredicate(format: "identifier == %@", AccessibilityID.libraryChip("history")))
             .firstMatch
         guard historyChip.waitForExistence(timeout: 5) else {
             try captureAndSkip("library.chip.history not found in accessibility tree", in: app)
@@ -118,7 +118,7 @@ final class TVLibraryUITests: XCTestCase {
     /// The Subscriptions chip must be the default chip and focusable without right presses.
     func testSubscriptionsSegmentFocusable() throws {
         let subsChip = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'library.chip.subscriptions'"))
+            .matching(NSPredicate(format: "identifier == %@", AccessibilityID.libraryChip("subscriptions")))
             .firstMatch
         guard subsChip.waitForExistence(timeout: 5) else {
             try captureAndSkip("library.chip.subscriptions not found in accessibility tree", in: app)
@@ -148,7 +148,7 @@ final class TVLibraryUITests: XCTestCase {
     /// The Playlists chip must be reachable via two right-presses in the chip bar.
     func testPlaylistsSegmentFocusable() throws {
         let playlistsChip = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'library.chip.playlists'"))
+            .matching(NSPredicate(format: "identifier == %@", AccessibilityID.libraryChip("playlists")))
             .firstMatch
         guard playlistsChip.waitForExistence(timeout: 5) else {
             try captureAndSkip("library.chip.playlists not found in accessibility tree", in: app)
@@ -160,7 +160,7 @@ final class TVLibraryUITests: XCTestCase {
     /// The Downloads chip must be reachable via four right-presses in the chip bar.
     func testDownloadsSegmentFocusable() throws {
         let downloadsChip = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'library.chip.downloads'"))
+            .matching(NSPredicate(format: "identifier == %@", AccessibilityID.libraryChip("downloads")))
             .firstMatch
         guard downloadsChip.waitForExistence(timeout: 5) else {
             try captureAndSkip("library.chip.downloads not found in accessibility tree", in: app)

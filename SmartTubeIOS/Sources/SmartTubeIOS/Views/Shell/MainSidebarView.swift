@@ -4,9 +4,10 @@ import SwiftUI
 
 // MARK: - MainSidebarView  (macOS)
 //
-// Native window shell: source-list sidebar with the five sections, and the section content.
+// Native window shell: source-list sidebar with the five sections and the Queue (A1, under Library),
+// and the selected item's content.
 // The player is pushed into the content stack and owns its inspector (PlayerView+Inspector.swift).
-// Three separate states: the selected section (`selectedSection`), the selected item (each section's
+// Three separate states: the selected section (`selection`), the selected item (each section's
 // own navigation state) and the active video (a pushed `PlayerView`, e.g. `browseVM.deepLinkedVideo`).
 
 /// Below this window width the player inspector moves under the video and the sidebar collapses.
@@ -17,16 +18,18 @@ struct MainSidebarView: View {
     @Environment(BrowseViewModel.self) private var browseVM
     @Environment(\.innerTubeAPI) private var api
     @State private var searchVM = SearchViewModel()
-    @State private var selectedSection: AppSection? = .home
+    @State private var selection: ShellItem? = .section(.home)
     @State private var columnVisibility = NavigationSplitViewVisibility.automatic
     @State private var isNarrowWindow = false
 
     var body: some View {
         @Bindable var browseVM = browseVM
         NavigationSplitView(columnVisibility: $columnVisibility) {
-            List(AppSection.allCases, selection: $selectedSection) { section in
-                Label(section.rawValue, systemImage: section.icon)
-                    .tag(section)
+            List(selection: $selection) {
+                ForEach(AppSection.allCases) { section in
+                    sidebarRow(.section(section))
+                    if section == .library { sidebarRow(.queue) }
+                }
             }
             .navigationTitle("VoxaFrame")
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -34,7 +37,7 @@ struct MainSidebarView: View {
             }
         } detail: {
             NavigationStack {
-                (selectedSection ?? .home).destination(api: api)
+                (selection ?? .section(.home)).destination(api: api)
                     // smarttube:// links and the UI-test queue open the player in the content area, like a
                     // card click. Back pops it; it never closes the window. A new link while one is open
                     // replaces that player (`.id`), so its own view model loads the new video.
@@ -45,7 +48,7 @@ struct MainSidebarView: View {
         }
         .environment(searchVM)
         .onReceive(NotificationCenter.default.publisher(for: .navigateToSearch)) { _ in
-            selectedSection = .search
+            selection = .section(.search)
         }
         .environment(\.isNarrowWindow, isNarrowWindow)
         .onGeometryChange(for: Bool.self) {
@@ -57,6 +60,15 @@ struct MainSidebarView: View {
         .onChange(of: isNarrowWindow) { _, narrow in
             columnVisibility = narrow ? .detailOnly : .automatic
         }
+    }
+
+    private func sidebarRow(_ item: ShellItem) -> some View {
+        Label {
+            item.title
+        } icon: {
+            Image(systemName: item.icon)
+        }
+        .tag(item)
     }
 
     private var accountRow: some View {

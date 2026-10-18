@@ -9,13 +9,12 @@ struct AddRSSFeedView: View {
     @State private var feedURL: String = ""
     @State private var feedTitle: String = ""
     @State private var isAdding = false
-    @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Feed Details") {
+                Section {
                     TextField("Feed Title (e.g. Tech Reviews)", text: $feedTitle)
                         .accessibilityIdentifier("rss.addFeed.titleField")
                     TextField("RSS Feed URL", text: $feedURL)
@@ -26,6 +25,18 @@ struct AddRSSFeedView: View {
                     .textInputAutocapitalization(.never)
                         #endif
                         .accessibilityIdentifier("rss.addFeed.urlField")
+                } header: {
+                    Text("Feed Details")
+                } footer: {
+                    // Said while typing, not only after Add.
+                    if !feedURL.isEmpty, validURL == nil {
+                        Label {
+                            Text("Needs an address that starts with http:// or https://", bundle: .module)
+                        } icon: {
+                            Image(systemName: AppSymbol.warning)
+                        }
+                        .foregroundStyle(VFColor.danger)
+                    }
                 }
 
                 Section {
@@ -43,15 +54,8 @@ struct AddRSSFeedView: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
                         }
                     }
-                    .disabled(feedURL.isEmpty || feedTitle.isEmpty || isAdding)
+                    .disabled(validURL == nil || feedTitle.isEmpty || isAdding)
                     .accessibilityIdentifier("rss.addFeed.confirmButton")
-                }
-
-                if let errorMessage {
-                    Section {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
-                    }
                 }
 
                 Section {
@@ -74,19 +78,19 @@ struct AddRSSFeedView: View {
         }
     }
 
-    private func addFeed() {
-        let trimmedURL = feedURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedTitle = feedTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+    /// The typed address when it is an http(s) URL.
+    private var validURL: URL? {
+        let trimmed = feedURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: trimmed), url.scheme == "https" || url.scheme == "http", url.host != nil
+        else { return nil }
+        return url
+    }
 
-        guard let url = URL(string: trimmedURL),
-            url.scheme == "https" || url.scheme == "http"
-        else {
-            errorMessage = "Please enter a valid https URL."
-            return
-        }
+    private func addFeed() {
+        let trimmedTitle = feedTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = validURL else { return }
 
         isAdding = true
-        errorMessage = nil
 
         Task {
             let feed = RSSFeedInfo(title: trimmedTitle, feedURL: url)

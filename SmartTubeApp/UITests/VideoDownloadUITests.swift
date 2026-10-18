@@ -241,15 +241,13 @@ final class VideoDownloadUITests: XCTestCase {
 
         // Use Search tab: does not require auth, loads public video results.
         UITestHelpers.tapTab(named: "Search", in: app)
-        let searchField = app.textFields["search.bar"].firstMatch
+        let searchField = UITestHelpers.searchField(in: app)
         guard searchField.waitForExistence(timeout: 10) else {
             try captureAndSkip("Search field not found — tab navigation may have failed", in: app)
         }
         searchField.tap()
-        searchField.typeText("MKBHD")
-
-        // Dismiss keyboard and wait for results.
-        app.keyboards.buttons["search"].firstMatch.tap()
+        // Return submits with any keyboard language; then wait for results.
+        searchField.typeText("MKBHD\n")
 
         guard let card = UITestHelpers.waitForVideoCards(in: app, timeout: 30) else {
             try captureAndSkip("No search results — network unavailable", in: app)

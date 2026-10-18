@@ -217,7 +217,14 @@ enum AppSymbol {
     static let noCover = "play.rectangle"
     static let watchLaterPlaylist = "clock.fill"
     static let likedPlaylist = "hand.thumbsup.fill"
+    /// `channelFilter` while at least one search filter is on.
+    static let channelFilterActive = "line.3.horizontal.decrease.circle.fill"
+    /// Copies a suggestion into the search field without searching.
+    static let searchCompletion = "arrow.up.left"
     static let queue = "list.number"
+    static let rssFeed = "dot.radiowaves.left.and.right"
+    static let rssManage = "list.bullet.indent"
+    static let add = "plus"
     static let chevronRight = "chevron.right"
     static let speedometer = "speedometer"
     static let videoQuality = "film.stack"
@@ -267,6 +274,7 @@ enum AppSymbol {
     static let xmark = "xmark"
     static let xmarkCircle = "xmark.circle.fill"
     static let share = "square.and.arrow.up"
+    static let openExternal = "arrow.up.right"
     static let copyDoc = "doc.on.doc"
     static let trash = "trash"
     static let deleteBackward = "delete.left"
@@ -291,6 +299,7 @@ enum AppSymbol {
     static let personCircleQuestion = "person.crop.circle.badge.questionmark"
     static let personCircleWarning = "person.crop.circle.badge.exclamationmark"
     static let followChannels = "person.badge.plus"
+    static let subscribed = "checkmark.circle"
 
     // MARK: - Content
     static let stackLayers = "square.stack"

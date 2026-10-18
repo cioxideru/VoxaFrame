@@ -353,8 +353,11 @@ public final class BrowseViewModel {
         if token != nil && !wasAuthenticated && reloadOnSignIn {
             loadContent(refresh: true, source: "updateAuthToken")
         } else if token == nil && wasAuthenticated {
-            // Signed out — reload auth-gated sections to show local content instead
-            let authSections: Set<BrowseSection.SectionType> = [.subscriptions, .channels, .shorts, .recommended]
+            // Signed out — reload account sections to show local content instead. This also cancels their
+            // account requests and drops the account's records (History, playlists) before a guest sees them.
+            let authSections: Set<BrowseSection.SectionType> = [
+                .subscriptions, .channels, .shorts, .recommended, .history, .playlists, .watchLater,
+            ]
             if authSections.contains(currentSection.type) {
                 loadContent(refresh: true, source: "updateAuthToken.signOut")
             }

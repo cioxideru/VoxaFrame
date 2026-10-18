@@ -12,18 +12,46 @@ private let searchLog = Logger(subsystem: appSubsystem, category: "Search")
 @Observable
 public final class SearchViewModel {
 
+    /// What the results area shows; "no results" and "failed" are separate screens (A5).
+    public enum Phase: Equatable, Sendable {
+        /// Nothing submitted yet, or the query was cleared: recent searches and topics.
+        case idle
+        /// The first page of the submitted query is loading.
+        case loading
+        /// At least one result; a failed next page keeps them on screen.
+        case results
+        /// The request succeeded with no matches.
+        case noResults
+        /// The first page failed; `retry()` repeats it.
+        case failed
+    }
+
     public var query: String = ""
     public var filter: SearchFilter = .default
     public private(set) var results: [Video] = []
     public private(set) var suggestions: [String] = []
     public private(set) var history: [SearchHistoryEntry] = []
     public private(set) var isLoading: Bool = false
-    public var error: Error?
+    /// The last request's failure; cleared when a request starts.
+    public private(set) var error: Error?
+    /// The query of the last submitted search. The field text may change after it.
+    public private(set) var submittedQuery: String?
+    /// The filters of the last submitted search, repeated by `retry()`.
+    private var submittedFilter: SearchFilter = .default
+
+    public var phase: Phase {
+        if !results.isEmpty { return .results }
+        if isLoading { return .loading }
+        if error != nil { return .failed }
+        return submittedQuery == nil ? .idle : .noResults
+    }
 
     private let api: any InnerTubeAPIProtocol
     private let historyStore: SearchHistoryStore
     private var nextPageToken: String?
     private var searchTask: Task<Void, Never>?
+    /// Owner of the search state: bumped by every first page, next page and clear.
+    private var requestGeneration = 0
     private var suggestTask: Task<Void, Never>?
     private var hideObserverTasks: [Task<Void, Never>] = []
 
@@ -68,11 +96,48 @@ public final class SearchViewModel {
     public func search() {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
+        start(query: trimmed, filter: filter)
+        Task { await recordSearch(trimmed) }
+    }
+
+    /// Repeats the failed request with the same query and filters: the next page while results are
+    /// on screen, otherwise the first page.
+    public func retry() {
+        guard error != nil, let submittedQuery else { return }
+        if results.isEmpty {
+            start(query: submittedQuery, filter: submittedFilter)
+        } else {
+            loadMore()
+        }
+    }
+
+    /// Back to the idle screen, e.g. when the search field is cleared.
+    public func clearResults() {
+        invalidateRequest()
         results = []
         nextPageToken = nil
+        error = nil
+        isLoading = false
+        submittedQuery = nil
+    }
+
+    private func start(query: String, filter: SearchFilter) {
+        let request = invalidateRequest()
+        submittedQuery = query
+        submittedFilter = filter
+        results = []
+        nextPageToken = nil
+        error = nil
+        isLoading = true
+        searchTask = Task { await performSearch(request, query: query, continuationToken: nil, filter: filter) }
+    }
+
+    /// Cancels the request in flight and returns the number that owns the state from now on.
+    @discardableResult
+    private func invalidateRequest() -> Int {
         searchTask?.cancel()
-        searchTask = Task { await performSearch(query: trimmed, filter: filter) }
-        Task { await recordSearch(trimmed) }
+        requestGeneration += 1
+        return requestGeneration
     }
 
     // MARK: - History management
@@ -104,28 +169,35 @@ public final class SearchViewModel {
         }
     }
 
-    /// Apply a new filter and re-run the current search immediately.
+    /// Apply a new filter and re-run the submitted search (or the field text) immediately.
     public func applyFilter(_ newFilter: SearchFilter) {
         filter = newFilter
-        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        results = []
-        nextPageToken = nil
-        searchTask?.cancel()
-        searchTask = Task { await performSearch(query: query, filter: filter) }
+        let target = submittedQuery ?? query.trimmingCharacters(in: .whitespaces)
+        guard !target.isEmpty else { return }
+        start(query: target, filter: newFilter)
     }
 
     public func loadMore() {
-        guard let token = nextPageToken, !isLoading else { return }
-        searchTask = Task { await performSearch(query: query, continuationToken: token, filter: filter) }
+        guard let token = nextPageToken, let submittedQuery, !isLoading else { return }
+        let request = invalidateRequest()
+        error = nil  // a new page request replaces the previous page's failure
+        isLoading = true
+        let filter = submittedFilter
+        searchTask = Task {
+            await performSearch(request, query: submittedQuery, continuationToken: token, filter: filter)
+        }
     }
 
-    private func performSearch(query: String, continuationToken: String? = nil, filter: SearchFilter = .default) async {
-        isLoading = true
-        defer { isLoading = false }
+    /// Writes state only while `request` is still the current one: a search or page started, or the
+    /// results cleared, after it was sent makes its response (or failure) obsolete.
+    private func performSearch(
+        _ request: Int, query: String, continuationToken: String?, filter: SearchFilter
+    ) async {
         do {
             let group = try await retryWithBackoff(label: "SearchVM") {
                 try await api.search(query: query, continuationToken: continuationToken, filter: filter)
             }
+            guard request == requestGeneration else { return }
             if continuationToken == nil {
                 results = group.videos
             } else {
@@ -133,8 +205,11 @@ public final class SearchViewModel {
             }
             nextPageToken = group.nextPageToken
         } catch {
-            if !Task.isCancelled { self.error = error }
+            guard request == requestGeneration else { return }
+            searchLog.error("search failed: \(ViewModelLogger.errorSummary(error))")
+            self.error = error
         }
+        isLoading = false
     }
 
     private func fetchSuggestions(for query: String) {

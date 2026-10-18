@@ -39,13 +39,15 @@ struct MainTabView: View {
     private static let tabOrder: [AppSection] = [.home, .library, .offline, .settings, .search]
 
     @State private var searchVM = SearchViewModel()
-    @State private var selectedTab: AppSection = .home
+    @State private var selectedTab: ShellItem = .section(.home)
+    @State private var libraryQueueRequested = false
     @State private var tabContentFrame = TabContentFrame()
     @State private var shellFrame: CGRect = .zero
     /// Global frame of the sidebar header while the iPad sidebar is on screen (docked or floating).
     @State private var sidebarHeaderFrame: CGRect?
     @State private var miniPlayerHeight: CGFloat = 0
     @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.innerTubeAPI) private var api
     @Environment(SettingsStore.self) private var store
     @Environment(PlayerStateStore.self) private var playerState
@@ -84,19 +86,26 @@ struct MainTabView: View {
             }
             .background(TabBarLiquidGlassConfigurator(disableLiquidGlass: store.settings.disableLiquidGlass))
             .environment(searchVM)
+            // A compact width has no Queue tab: keep the user on the queue, as Library › Queue.
+            .onChange(of: horizontalSizeClass) { _, sizeClass in
+                guard sizeClass != .regular, selectedTab == .queue else { return }
+                libraryQueueRequested = true
+                selectedTab = .section(.library)
+            }
+            .environment(\.libraryQueueRequest, $libraryQueueRequested)
             .onReceive(NotificationCenter.default.publisher(for: .navigateToSearch)) { _ in
-                selectedTab = .search
+                selectedTab = .section(.search)
             }
             // App Intents / Spotlight (see AppEntry.handleOpenURL).
             .onReceive(NotificationCenter.default.publisher(for: .smartTubeOpenSearch)) { note in
                 guard let query = note.userInfo?["query"] as? String else { return }
-                selectedTab = .search
+                selectedTab = .section(.search)
                 searchVM.query = query
                 searchVM.search()
             }
             // HomeView picks the section itself (it owns the chip selection).
             .onReceive(NotificationCenter.default.publisher(for: .smartTubeOpenSection)) { _ in
-                selectedTab = .home
+                selectedTab = .section(.home)
             }
             // Render the single visible MiniPlayerView above the tab bar, beside the iPad sidebar rather
             // than over it. The transparent passthrough spacer below it is the tab-bar height + home
@@ -169,10 +178,23 @@ struct MainTabView: View {
     private var tabs: some View {
         if #available(iOS 18, *) {
             TabView(selection: $selectedTab) {
-                ForEach(Self.tabOrder) { section in
-                    Tab(section.rawValue, systemImage: section.icon, value: section, role: section.tabRole) {
-                        tabContent(section)
+                ForEach(Self.tabOrder.prefix(2)) { section in
+                    sectionTab(section)
+                }
+                // A1: the Queue under Library in the sidebar of a regular-width window only. A compact width
+                // shows `.sidebarOnly` tabs in the tab bar too (a sixth tab pushes Search into More), so there
+                // the queue stays in Library › Queue.
+                if horizontalSizeClass == .regular {
+                    Tab(
+                        String(localized: "Queue", bundle: .module), systemImage: ShellItem.queue.icon,
+                        value: ShellItem.queue
+                    ) {
+                        tabContent(.queue)
                     }
+                    .tabPlacement(.sidebarOnly)
+                }
+                ForEach(Self.tabOrder.dropFirst(2)) { section in
+                    sectionTab(section)
                 }
             }
             .tabViewStyle(.sidebarAdaptable)
@@ -191,17 +213,24 @@ struct MainTabView: View {
         } else {
             TabView(selection: $selectedTab) {
                 ForEach(Self.tabOrder) { section in
-                    tabContent(section)
+                    tabContent(.section(section))
                         .tabItem { Label(section.rawValue, systemImage: section.icon) }
-                        .tag(section)
+                        .tag(ShellItem.section(section))
                 }
             }
         }
     }
 
+    @available(iOS 18, *)
+    private func sectionTab(_ section: AppSection) -> some TabContent<ShellItem> {
+        Tab(section.rawValue, systemImage: section.icon, value: ShellItem.section(section), role: section.tabRole) {
+            tabContent(.section(section))
+        }
+    }
+
     /// One NavigationStack per tab; the tab container never adds another.
-    private func tabContent(_ section: AppSection) -> some View {
-        NavigationStack { section.destination(api: api) }
+    private func tabContent(_ item: ShellItem) -> some View {
+        NavigationStack { item.destination(api: api) }
             .background {
                 // Reserve the mini player's measured height (it grows with Dynamic Type) at the bottom
                 // of the root and every pushed screen, without a second MiniPlayerView and so without
@@ -213,14 +242,14 @@ struct MainTabView: View {
                     let isLaidOut = geo.safeAreaInsets != EdgeInsets()
                     Color.clear.preference(
                         key: TabContentFrameKey.self,
-                        value: section == selectedTab && isLaidOut
+                        value: item == selectedTab && isLaidOut
                             ? TabContentFrame(
                                 bottomInset: geo.safeAreaInsets.bottom, minX: frame.minX, maxX: frame.maxX)
                             : nil
                     )
                 }
             }
-            .accessibilityIdentifier(AccessibilityID.tab(section.rawValue))
+            .accessibilityIdentifier(AccessibilityID.tab(item.id))
     }
 }
 

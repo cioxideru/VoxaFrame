@@ -53,6 +53,10 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
     )
     var channelVideosResult: VideoGroup = VideoGroup(title: "ChVideos", videos: [])
     var searchResult: VideoGroup = VideoGroup(title: "Search", videos: [])
+    /// The filter of each `search` call, in call order.
+    var searchFilters: [SearchFilter] = []
+    /// When set, answers `search(query:continuationToken:)` instead of `searchResult` (lets a test hold a response).
+    var searchHandler: (@MainActor (String, String?) async throws -> VideoGroup)?
     var suggestionsResult: [String] = []
     var playlistVideosResult: VideoGroup = VideoGroup(title: "Playlist", videos: [])
     var errorToThrow: Error? = nil
@@ -178,6 +182,8 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
 
     func search(query: String, continuationToken: String?, filter: SearchFilter) async throws -> VideoGroup {
         calls.append(Call(method: "search", args: [query, continuationToken ?? "nil"]))
+        searchFilters.append(filter)
+        if let searchHandler { return try await searchHandler(query, continuationToken) }
         if let error = errorToThrow { throw error }
         return searchResult
     }

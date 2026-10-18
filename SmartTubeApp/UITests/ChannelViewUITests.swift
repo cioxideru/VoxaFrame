@@ -71,9 +71,9 @@ final class ChannelViewUITests: XCTestCase {
         let channelNavBar = app.navigationBars
             .matching(NSPredicate(format: "identifier CONTAINS 'Channel'")).firstMatch
         let channelTitleEl = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'channel.title'")).firstMatch
+            .matching(NSPredicate(format: "identifier == %@", AccessibilityID.channelTitle)).firstMatch
         let headerEl = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'channel.header'")).firstMatch
+            .matching(NSPredicate(format: "identifier == %@", AccessibilityID.channelHeader)).firstMatch
 
         guard
             channelNavBar.waitForExistence(timeout: 30)
@@ -91,14 +91,13 @@ final class ChannelViewUITests: XCTestCase {
 
     /// Navigates to Search, types a query, submits, and waits for video cards.
     private func searchAndWaitForCards(query: String) throws {
-        UITestHelpers.tapTab(named: "Search", in: app)
-        let bar = app.textFields["search.bar"]
+        UITestHelpers.openSearch(in: app)
+        let bar = UITestHelpers.searchField(in: app)
         guard bar.waitForExistence(timeout: 5) else {
             try captureAndSkip("search.bar did not appear — Search tab may not have loaded", in: app)
         }
         bar.tap()
-        bar.typeText(query)
-        app.keyboards.buttons["search"].firstMatch.tap()
+        bar.typeText(query + "\n")  // Return submits with any keyboard language
     }
 
     /// Opens the player from the first search result, then navigates back to get the
@@ -135,7 +134,7 @@ final class ChannelViewUITests: XCTestCase {
             // OR wait for the loaded channel.title static text.
             let channelNavBar = app.navigationBars
                 .matching(NSPredicate(format: "identifier CONTAINS 'Channel'")).firstMatch
-            let channelTitleEl = app.staticTexts["channel.title"].firstMatch
+            let channelTitleEl = app.staticTexts[AccessibilityID.channelTitle].firstMatch
             return channelNavBar.waitForExistence(timeout: 15)
                 || channelTitleEl.waitForExistence(timeout: 5)
         }
@@ -148,7 +147,7 @@ final class ChannelViewUITests: XCTestCase {
         // Previously navigated via Search → Player → channel name tap.
         // Replaced with deeplink to avoid iOS 26 NavigationStack timing flakiness.
         try openChannelViaDeeplink()
-        let headerPred = NSPredicate(format: "identifier == 'channel.header'")
+        let headerPred = NSPredicate(format: "identifier == %@", AccessibilityID.channelHeader)
         let header = app.descendants(matching: .any).matching(headerPred).firstMatch
         guard header.waitForExistence(timeout: 10) else {
             try captureAndSkip("channel.header did not appear — network unavailable or channel slow to load", in: app)
@@ -159,7 +158,7 @@ final class ChannelViewUITests: XCTestCase {
         try openChannelViaDeeplink()
         // Use a type-agnostic predicate — SwiftUI may expose the HStack as
         // .other, .group, or another type depending on the iOS version.
-        let headerPred = NSPredicate(format: "identifier == 'channel.header'")
+        let headerPred = NSPredicate(format: "identifier == %@", AccessibilityID.channelHeader)
         let header = app.descendants(matching: .any).matching(headerPred).firstMatch
         guard header.waitForExistence(timeout: 10) else {
             try captureAndSkip("channel.header did not appear — network unavailable or channel slow to load", in: app)

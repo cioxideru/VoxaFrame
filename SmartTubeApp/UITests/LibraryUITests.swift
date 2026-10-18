@@ -61,7 +61,7 @@ final class LibraryUITests: XCTestCase {
 
     private func openHistorySegment() throws {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         guard picker.waitForExistence(timeout: 5) else {
             try captureAndSkip("library.sectionPicker did not appear — Library tab may not have loaded", in: app)
         }
@@ -74,7 +74,7 @@ final class LibraryUITests: XCTestCase {
 
     private func openSubscriptionsSegment() throws {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         guard picker.waitForExistence(timeout: 5) else {
             try captureAndSkip("library.sectionPicker did not appear — Library tab may not have loaded", in: app)
         }
@@ -87,7 +87,7 @@ final class LibraryUITests: XCTestCase {
 
     private func openPlaylistsSegment() throws {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         guard picker.waitForExistence(timeout: 5) else {
             try captureAndSkip("library.sectionPicker did not appear — Library tab may not have loaded", in: app)
         }
@@ -102,7 +102,7 @@ final class LibraryUITests: XCTestCase {
 
     func testHistorySegmentVisible() throws {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         XCTAssertTrue(
             picker.waitForExistence(timeout: 5),
             "library.sectionPicker should appear")
@@ -135,8 +135,8 @@ final class LibraryUITests: XCTestCase {
 
     func testHistoryScrollLoadsMore() throws {
         try openHistorySegment()
-        guard UITestHelpers.waitForVideoCards(in: app, timeout: 20) != nil else {
-            try captureAndSkip("No video cards in History feed — signed-in account with history required", in: app)
+        guard UITestHelpers.waitForVideoCards(in: app, timeout: 20) != nil, !showsGuestHistory else {
+            try captureAndSkip("No account pages in History feed — signed-in account with history required", in: app)
         }
 
         let countBefore = app.descendants(matching: .any)
@@ -206,7 +206,7 @@ final class LibraryUITests: XCTestCase {
         }
         backButton.tap()
 
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         guard picker.waitForExistence(timeout: 5) else {
             try captureAndSkip("Library picker did not reappear after back navigation", in: app)
         }
@@ -224,7 +224,7 @@ final class LibraryUITests: XCTestCase {
 
     func testSubscriptionsSegmentVisible() throws {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         XCTAssertTrue(
             picker.waitForExistence(timeout: 5),
             "library.sectionPicker should appear")
@@ -328,7 +328,7 @@ final class LibraryUITests: XCTestCase {
         }
         backButton.tap()
 
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         guard picker.waitForExistence(timeout: 5) else {
             try captureAndSkip("Library picker did not reappear after back navigation", in: app)
         }
@@ -346,7 +346,7 @@ final class LibraryUITests: XCTestCase {
 
     func testLibraryTabOpens() {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         XCTAssertTrue(
             picker.waitForExistence(timeout: 5),
             "library.sectionPicker should appear after opening Library")
@@ -361,7 +361,7 @@ final class LibraryUITests: XCTestCase {
         let contentOrEmpty =
             app.scrollViews.firstMatch.waitForExistence(timeout: 5)
             || app.staticTexts["Nothing here yet"].waitForExistence(timeout: 5)
-            || app.staticTexts["Sign in to see your library"].waitForExistence(timeout: 5)
+            || app.buttons[AccessibilityID.librarySignInButton].waitForExistence(timeout: 5)
         XCTAssertTrue(
             contentOrEmpty,
             "Playlists screen should show content, an empty state, or a sign-in prompt")
@@ -546,13 +546,13 @@ final class LibraryUITests: XCTestCase {
 
     func testNavigateToLibraryTab() {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         XCTAssertTrue(picker.waitForExistence(timeout: 5), "Library section picker should be visible")
     }
 
     func testPlaylistsNavigationSegmentIsReachable() {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         XCTAssertTrue(picker.waitForExistence(timeout: 5), "Section picker should appear")
 
         let playlistsButton = picker.buttons["Playlists"]
@@ -567,20 +567,20 @@ final class LibraryUITests: XCTestCase {
 
     func testPlaylistsScreenShowsContentOrEmptyState() {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         XCTAssertTrue(picker.waitForExistence(timeout: 5))
         picker.buttons["Playlists"].tap()
 
         let contentOrEmpty =
             app.scrollViews.firstMatch.waitForExistence(timeout: 5)
             || app.staticTexts["Nothing here yet"].waitForExistence(timeout: 5)
-            || app.staticTexts["Sign in to see your library"].waitForExistence(timeout: 5)
+            || app.buttons[AccessibilityID.librarySignInButton].waitForExistence(timeout: 5)
         XCTAssertTrue(contentOrEmpty, "Playlists screen should show content, an empty state, or a sign-in prompt")
     }
 
     func testPlaylistsNavigationDoesNotCrash() {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         guard picker.waitForExistence(timeout: 5) else {
             XCTFail("Section picker not found")
             return
@@ -594,7 +594,7 @@ final class LibraryUITests: XCTestCase {
 
     private func openDownloadsSegment() throws {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         guard picker.waitForExistence(timeout: 5) else {
             try captureAndSkip("library.sectionPicker did not appear — Library tab may not have loaded", in: app)
         }
@@ -607,7 +607,7 @@ final class LibraryUITests: XCTestCase {
 
     func testDownloadsSegmentExistsInLibrary() throws {
         UITestHelpers.tapTab(named: "Library", in: app)
-        let picker = app.segmentedControls["library.sectionPicker"]
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
         XCTAssertTrue(picker.waitForExistence(timeout: 5), "library.sectionPicker should appear")
         XCTAssertTrue(
             picker.buttons["Downloads"].exists,
@@ -639,5 +639,56 @@ final class LibraryUITests: XCTestCase {
             eitherExists,
             "Downloads section must show either an empty state or a video list"
         )
+    }
+}
+
+// MARK: - Queue (PLAN-0027 A1, B3)
+
+extension LibraryUITests {
+    /// A guest's History is on-device records only: one page, no account pages to load (A4).
+    fileprivate var showsGuestHistory: Bool {
+        app.staticTexts[AccessibilityID.libraryGuestHistoryNote].exists
+    }
+
+    /// The Queue segment needs no sign-in, and Clear Queue clears nothing until it is confirmed.
+    func testClearQueueAsksBeforeClearing() throws {
+        // Its own launch with a two-video queue; the shared app is relaunched for the tests after it.
+        let queued = XCUIApplication()
+        queued.launchArguments += ["--uitesting", "--uitesting-inject-queue-video-ids=jNQXAC9IVRw,dQw4w9WgXcQ"]
+        queued.launch()
+        defer { LibraryUITests.sharedApp.launch() }
+
+        // The injected queue opens its first video; close the player and the mini player.
+        let back = queued.buttons[AccessibilityID.playerBackButton].firstMatch
+        if back.waitForExistence(timeout: 10) { back.tap() }
+        let closeMini = queued.buttons[AccessibilityID.miniPlayerClose].firstMatch
+        if closeMini.waitForExistence(timeout: 5) { closeMini.tap() }
+
+        UITestHelpers.tapTab(named: "Library", in: queued)
+        let queueSegment = queued.buttons[AccessibilityID.libraryPicker("Queue")].firstMatch
+        XCTAssertTrue(queueSegment.waitForExistence(timeout: 5), "Library must have a Queue segment")
+        queueSegment.tap()
+
+        let clear = queued.buttons[AccessibilityID.queueClearButton].firstMatch
+        XCTAssertTrue(clear.waitForExistence(timeout: 5), "A non-empty queue offers Clear Queue")
+        clear.tap()
+        let confirm = queued.buttons[AccessibilityID.queueClearConfirm].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Clear Queue must ask first")
+        // An action sheet on iPhone; a popover without a Cancel button on iPad.
+        let cancel = queued.buttons["Cancel"].firstMatch
+        if cancel.exists {
+            cancel.tap()
+        } else {
+            queued.otherElements[AccessibilityID.popoverDismissRegion].firstMatch.tap()
+        }
+        XCTAssertFalse(confirm.waitForExistence(timeout: 2), "Cancel closes the question")
+        XCTAssertTrue(clear.exists, "Cancel keeps the queue")
+
+        clear.tap()
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(
+            queued.staticTexts["Queue Is Empty"].waitForExistence(timeout: 5),
+            "A confirmed Clear Queue empties the queue")
     }
 }
