@@ -138,7 +138,9 @@ struct OfflineSelectionTests {
         // AVFoundation may localize the NAME; fall back to the one option in the language, case-insensitively.
         #expect(pick([("Russian", "RU"), original], name: dubbed.name, language: "ru")?.name == "Russian")
         #expect(pick([("Russian", "ru"), ("Russian original", "ru")], name: dubbed.name, language: "ru") == nil)
-        #expect(pick([original], name: dubbed.name, language: nil) == nil)
+        #expect(pick([original], name: dubbed.name, language: nil)?.name == original.name)
+        #expect(pick([original, dubbed], name: "Default", language: nil) == nil)
+        #expect(pick([original], name: dubbed.name, language: "ru") == nil)
         // One name in two dialects is two renditions, not a repeat.
         #expect(pick([("English", "en-US"), ("English", "en-GB")], name: "English", language: nil) == nil)
     }

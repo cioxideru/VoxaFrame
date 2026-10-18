@@ -251,7 +251,9 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
             guard let language, let tag = languageTag(option) else { return false }
             return tag.caseInsensitiveCompare(language) == .orderedSame
         }
-        let candidates = named.isEmpty ? localized : named
+        var candidates = named.isEmpty ? localized : named
+        // A languageless choice may surface as "Unknown"; one rendition on offer is then the only answer.
+        if candidates.isEmpty, language == nil { candidates = options }
         let renditions = Set(candidates.map { "\(displayName($0))|\(languageTag($0)?.lowercased() ?? "")" })
         guard renditions.count == 1 else { return nil }
         return candidates.first
