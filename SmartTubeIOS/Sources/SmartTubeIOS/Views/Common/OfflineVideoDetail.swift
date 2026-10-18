@@ -1,18 +1,27 @@
 import SmartTubeIOSCore
 import SwiftUI
+import VideoToolbox
 import os
 
 private let offlineDetailLog = Logger(subsystem: appSubsystem, category: "OfflinePlayback")
+private let offlineHardwareCodecs: Set<VideoCodec> = {
+    #if targetEnvironment(simulator)
+    return []
+    #else
+    var codecs = Set<VideoCodec>()
+    if VTIsHardwareDecodeSupported(kCMVideoCodecType_AV1) { codecs.insert(.av1) }
+    if HLSPlaybackPolicy.isVP9DecodingAvailable { codecs.insert(.vp9) }
+    return codecs
+    #endif
+}()
 
-/// Saved-video page: pick saved audio and translation, play a saved file, add variants online.
+/// Play saved files first; adding media online is a separate, secondary action.
 struct OfflineVideoDetail: View {
     let videoID: String
     var isEmbedded = false
     @State private var coordinator = OfflineCoordinator.shared
     @State private var available: [OfflineTrack] = []
-    @State private var audioID: String?
-    /// Not remembered: every visit starts without translation.
-    @State private var translationID: String?
+    @State private var selection = OfflineDetailPresentation.Selection()
     @State private var error: String?
     @State private var refreshing = false
     @Environment(\.innerTubeAPI) private var api
@@ -28,6 +37,7 @@ struct OfflineVideoDetail: View {
             storageError: coordinator.error, persistenceBlocked: coordinator.persistenceBlocked,
             pendingRemovals: coordinator.snapshot.pendingRemovals)
     }
+
     var body: some View {
         Group {
             if isEmbedded {
@@ -36,7 +46,18 @@ struct OfflineVideoDetail: View {
                 detailList
                     .navigationTitle(entry.map { Text($0.video.title) } ?? Text("Offline video", bundle: .module))
                     .toolbarTitleDisplayMode(.inline)
+                    #if os(iOS)
+                .toolbar {
+                    // Retain the navigation title for the back stack; the visible title is in the header.
+                    ToolbarItem(placement: .principal) {
+                        Color.clear.frame(width: 1, height: 1).accessibilityHidden(true)
+                    }
+                }
+                    #endif
             }
+        }
+        .onChange(of: entry.map { [$0.id] + $0.assets.map(\.id) }, initial: true) {
+            if let entry { selection.update(entry: entry) }
         }
         #if os(macOS)
         // Use the main window's player surface so system full screen is available for saved videos too.
@@ -50,126 +71,24 @@ struct OfflineVideoDetail: View {
         List {
             if let storageError = coordinator.error { OfflineStorageNotice(message: storageError) }
             if let entry {
-                let videos = entry.assets.filter { [.video, .hls].contains($0.track.kind) }
-                Section {
-                    VStack(alignment: .leading, spacing: VFSpace.s4) {
-                        Text(OfflinePresentation.title(of: entry.id, in: [entry]))
-                            .font(.title3.weight(.semibold))
-                        if !entry.video.channelTitle.isEmpty {
-                            Text(entry.video.channelTitle).font(.footnote).foregroundStyle(.secondary)
-                        }
-                    }
-                    if videos.isEmpty {
-                        Label {
-                            Text("Video is not downloaded yet. Open Downloads to see progress.", bundle: .module)
-                        } icon: {
-                            Image(systemName: AppSymbol.clock)
-                        }
-                    }
-                }
-                Section {
-                    Picker(selection: $audioID) {
-                        Text("Included audio", bundle: .module).tag(nil as String?)
-                        ForEach(entry.assets.filter { $0.track.kind == .audio }) { asset in
-                            Text(asset.track.label).tag(Optional(asset.id))
-                        }
-                    } label: {
-                        Text("Original or dubbed audio", bundle: .module)
-                    }
-                    .accessibilityIdentifier(AccessibilityID.offlineAudioPicker)
-                    Picker(selection: $translationID) {
-                        Text("Without translation", bundle: .module).tag(nil as String?)
-                        ForEach(entry.assets.filter { $0.track.kind == .translation }) { asset in
-                            Text(asset.track.label).tag(Optional(asset.id))
-                        }
-                    } label: {
-                        Text("Yandex translation", bundle: .module)
-                    }
-                    .accessibilityIdentifier(AccessibilityID.offlineTranslationPicker)
-                } header: {
-                    Text("Saved audio", bundle: .module)
-                } footer: {
-                    Text(
-                        "Included audio is the sound inside the video file, or the first saved audio track when the file has none.",
-                        bundle: .module)
-                }
-                if !videos.isEmpty {
+                #if DEBUG
+                if OfflineUITestFixture.baseURL != nil {
+                    // Real rows at the top stay observable without opening pickers or changing selections.
                     Section {
-                        ForEach(videos) { asset in
-                            Button {
-                                play(entry, asset: asset)
-                            } label: {
-                                Label(savedLabel(asset), systemImage: AppSymbol.play)
-                            }
-                            .disabled(asset.track.kind == .hls && audioID != nil)
-                            .accessibilityIdentifier(AccessibilityID.offlinePlay(asset.id))
-                        }
-                    } header: {
-                        Text("Play saved video", bundle: .module)
-                    } footer: {
-                        if audioID != nil, videos.contains(where: { $0.track.kind == .hls }) {
+                        ForEach(entry.assets) { asset in
                             Text(
-                                "Choose Included audio to play an HLS package. Separate audio tracks apply to direct video files.",
-                                bundle: .module)
+                                [.video, .hls].contains(asset.track.kind)
+                                    ? OfflineDetailPresentation.savedVideoLabel(asset) : asset.track.label
+                            )
+                            .font(.caption)
+                            .accessibilityIdentifier(AccessibilityID.offlineSaved(asset.id))
                         }
                     }
                 }
-                Section {
-                    Button {
-                        refreshing = true
-                        Task {
-                            defer { refreshing = false }
-                            do {
-                                available = try await coordinator.catalog(video: entry.video)
-                                error = nil
-                            } catch { self.error = error.localizedDescription }
-                        }
-                    } label: {
-                        if refreshing {
-                            HStack(spacing: VFSpace.s8) {
-                                Text("Loading available variants…", bundle: .module)
-                                ProgressView()
-                            }
-                        } else {
-                            Text("Find available variants (online)", bundle: .module)
-                        }
-                    }
-                    .disabled(refreshing)
-                    .accessibilityIdentifier(AccessibilityID.offlineFindVariants)
-                    ForEach(available) { track in
-                        let saved = entry.assets.contains { $0.id == track.id }
-                        let loading = isLoading(track)
-                        Button {
-                            enqueue(track, of: entry)
-                        } label: {
-                            variantRow(track.label, track: track, saved: saved)
-                        }
-                        .disabled(saved || loading || isLocked)
-                        .accessibilityIdentifier(
-                            saved ? AccessibilityID.offlineSaved(track.id) : AccessibilityID.offlineDownload(track.id))
-                    }
-                } header: {
-                    Text("Add video quality or audio", bundle: .module)
-                }
-                Section {
-                    ForEach(YandexVOTClient.targetLanguages.sorted(), id: \.self) { language in
-                        let track = OfflineTrack.translation(language)
-                        let saved = entry.assets.contains { $0.id == track.id }
-                        Button {
-                            enqueue(track, of: entry)
-                        } label: {
-                            variantRow(
-                                OfflinePresentation.languageName(language), track: track, saved: saved)
-                        }
-                        .disabled(saved || isLoading(track) || isLocked)
-                        .accessibilityIdentifier(
-                            saved
-                                ? AccessibilityID.offlineSaved(track.id)
-                                : AccessibilityID.offlineDownloadTranslation(language))
-                    }
-                } header: {
-                    Text("Add Yandex translation (online)", bundle: .module)
-                }
+                #endif
+                header(entry)
+                watchWith(entry)
+                downloadMore(entry)
             }
             if let error {
                 Label {
@@ -181,6 +100,244 @@ struct OfflineVideoDetail: View {
             }
         }
         .accessibilityIdentifier(AccessibilityID.offlineDetailList)
+    }
+
+    private func header(_ entry: OfflineEntry) -> some View {
+        Section {
+            VStack(alignment: .leading, spacing: VFSpace.s8) {
+                Text(OfflinePresentation.title(of: entry.id, in: [entry]))
+                    .font(.title3.weight(.semibold))
+                    .accessibilityAddTraits(.isHeader)
+                if !entry.video.channelTitle.isEmpty {
+                    Text(entry.video.channelTitle).font(.footnote).foregroundStyle(.secondary)
+                }
+                if let video = selection.video(in: entry.assets) {
+                    if entry.assets.filter({ [.video, .hls].contains($0.track.kind) }).count == 1 {
+                        Text(OfflineDetailPresentation.savedVideoLabel(video))
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if let bytes = video.track.estimatedBytes, bytes > 0 {
+                        Text("Approx. \(bytes.formatted(.byteCount(style: .file)))", bundle: .module)
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                    Button {
+                        play(entry, asset: video)
+                    } label: {
+                        Label {
+                            Text("Play", bundle: .module)
+                        } icon: {
+                            Image(systemName: AppSymbol.play)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .accessibilityIdentifier(AccessibilityID.offlinePlay(video.id))
+                    Text(
+                        OfflineDetailPresentation.summary(video: video, selection: selection, assets: entry.assets).text
+                    )
+                    .font(.subheadline)
+                    .accessibilityIdentifier(AccessibilityID.offlinePlaySummary)
+                } else {
+                    Label {
+                        Text("Video is not downloaded yet. Open Downloads to see progress.", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.clock)
+                    }
+                }
+            }
+            .padding(.vertical, VFSpace.s8)
+        }
+    }
+
+    @ViewBuilder private func watchWith(_ entry: OfflineEntry) -> some View {
+        let videos = entry.assets.filter { [.video, .hls].contains($0.track.kind) }
+        let audio = entry.assets.filter { $0.track.kind == .audio }.map(\.track)
+        let translations = entry.assets.filter { $0.track.kind == .translation }
+        let video = selection.video(in: entry.assets)
+        let includesAudio = video?.track.hasAudio == true || video?.track.kind == .hls
+        let showsAudio = video != nil && !audio.isEmpty && (includesAudio || audio.count > 1)
+        if videos.count > 1 || showsAudio || !translations.isEmpty {
+            Section {
+                if videos.count > 1 {
+                    Picker(selection: $selection.videoID) {
+                        ForEach(videos) { asset in
+                            Text(OfflineDetailPresentation.savedVideoLabel(asset)).tag(Optional(asset.id))
+                        }
+                    } label: {
+                        Text("Video", bundle: .module)
+                    }
+                    .accessibilityIdentifier(AccessibilityID.offlineVideoPicker)
+                    .accessibilityValue(video.map(OfflineDetailPresentation.savedVideoLabel) ?? "")
+                }
+                if showsAudio, let video {
+                    Picker(
+                        selection: Binding(
+                            get: { selection.audio(for: video, in: entry.assets)?.id },
+                            set: { selection.audioID = $0 }
+                        )
+                    ) {
+                        ForEach(OfflineDetailPresentation.audioOptions(for: video.track, saved: audio)) { option in
+                            Text(option.label).tag(option.id)
+                        }
+                    } label: {
+                        Text("Audio", bundle: .module)
+                    }
+                    .disabled(video.track.kind == .hls)
+                    .accessibilityIdentifier(AccessibilityID.offlineAudioPicker)
+                    if video.track.kind == .hls {
+                        Text("HLS uses the audio saved inside the video.", bundle: .module)
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                if !translations.isEmpty {
+                    Picker(
+                        selection: Binding(get: { selection.translationID }, set: { selection.chooseTranslation($0) })
+                    ) {
+                        Text("Off", bundle: .module).tag(nil as String?)
+                        ForEach(translations) { asset in
+                            Text(OfflineDetailPresentation.languageName(asset.track.language)).tag(Optional(asset.id))
+                        }
+                    } label: {
+                        Text("Voice-over (Yandex)", bundle: .module)
+                    }
+                    .accessibilityIdentifier(AccessibilityID.offlineTranslationPicker)
+                    .accessibilityValue(
+                        selection.translation(in: entry.assets).map {
+                            OfflineDetailPresentation.languageName($0.track.language)
+                        } ?? String(localized: "Off", bundle: .module))
+                }
+            } header: {
+                Text("Watch with", bundle: .module)
+            }
+        }
+    }
+
+}
+
+extension OfflineVideoDetail {
+    @ViewBuilder private func downloadMore(_ entry: OfflineEntry) -> some View {
+        let catalog = OfflineDetailPresentation.catalog(
+            available, saved: entry.assets, targetLanguages: YandexVOTClient.targetLanguages.sorted(),
+            hardwareCodecs: offlineHardwareCodecs)
+        Section {
+            findVariants(entry)
+        } header: {
+            VStack(alignment: .leading, spacing: VFSpace.s4) {
+                Text("Download more", bundle: .module)
+                Text("Internet required", bundle: .module).font(.caption).textCase(nil)
+            }
+        }
+        #if os(tvOS)
+        ForEach(catalog.videoGroups) { group in
+            Section {
+                ForEach(group.tracks) { track in
+                    videoDownloadButton(track, group: group, entry: entry, showsQuality: false)
+                }
+            } header: {
+                Text(String(localized: "Video", bundle: .module) + " · " + group.title)
+            }
+            .accessibilityIdentifier(AccessibilityID.offlineQualityGroup(group.height))
+        }
+        #else
+        if !catalog.videoGroups.isEmpty {
+            Section {
+                ForEach(catalog.videoGroups) { group in
+                    if group.tracks.count == 1, let track = group.tracks.first {
+                        videoDownloadButton(track, group: group, entry: entry, showsQuality: true)
+                    } else {
+                        DisclosureGroup {
+                            ForEach(group.tracks) { track in
+                                videoDownloadButton(track, group: group, entry: entry, showsQuality: false)
+                            }
+                        } label: {
+                            Text(group.title)
+                        }
+                        .disclosureGroupStyle(OfflineQualityDisclosureStyle(height: group.height))
+                    }
+                }
+            } header: {
+                Text("Video", bundle: .module)
+            }
+        }
+        #endif
+        if !catalog.audio.isEmpty {
+            Section {
+                ForEach(catalog.audio) { track in
+                    downloadButton(
+                        track, of: entry, name: OfflineDetailPresentation.audioLabel(track),
+                        detail: OfflineDetailPresentation.audioDetail(track))
+                }
+            } header: {
+                Text("Audio tracks", bundle: .module)
+            }
+        }
+        if !catalog.translationLanguages.isEmpty {
+            Section {
+                ForEach(catalog.translationLanguages, id: \.self) { language in
+                    downloadButton(
+                        .translation(language), of: entry, name: OfflineDetailPresentation.languageName(language))
+                }
+            } header: {
+                Text("Voice-over in another language", bundle: .module)
+            }
+        }
+    }
+
+    private func videoDownloadButton(
+        _ track: OfflineTrack, group: OfflineDetailPresentation.VideoGroup, entry: OfflineEntry, showsQuality: Bool
+    ) -> some View {
+        let format = OfflineDetailPresentation.videoDetail(track)
+        var details = showsQuality ? [format] : []
+        if !OfflineDetailPresentation.isPlayable(track, hardwareCodecs: offlineHardwareCodecs) {
+            details.append(String(localized: "May not play on this device", bundle: .module))
+        } else if track.id == group.recommendedID {
+            details.append(String(localized: "Recommended", bundle: .module))
+        }
+        return downloadButton(
+            track, of: entry, name: showsQuality ? group.title : format,
+            detail: details.isEmpty ? nil : details.joined(separator: " · "))
+    }
+
+    private func findVariants(_ entry: OfflineEntry) -> some View {
+        Button {
+            refreshing = true
+            Task {
+                defer { refreshing = false }
+                do {
+                    available = try await coordinator.catalog(video: entry.video)
+                    error = nil
+                } catch { self.error = error.localizedDescription }
+            }
+        } label: {
+            if refreshing {
+                HStack(spacing: VFSpace.s8) {
+                    Text("Loading available variants…", bundle: .module)
+                    ProgressView()
+                }
+            } else {
+                Text("Other quality or audio…", bundle: .module)
+            }
+        }
+        .disabled(refreshing)
+        .accessibilityIdentifier(AccessibilityID.offlineFindVariants)
+    }
+
+    private func downloadButton(
+        _ track: OfflineTrack, of entry: OfflineEntry, name: String, detail: String? = nil
+    ) -> some View {
+        Button {
+            enqueue(track, of: entry)
+        } label: {
+            // A plain button only hit-tests drawn content; make the Spacer gap tappable too.
+            variantRow(name, detail: detail, track: track).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isLoading(track) || isLocked)
+        .accessibilityIdentifier(
+            track.kind == .translation
+                ? AccessibilityID.offlineDownloadTranslation(track.language ?? "")
+                : AccessibilityID.offlineDownload(track.id))
     }
 
     /// Checked again at tap time: a removal may have started in another window.
@@ -203,51 +360,58 @@ struct OfflineVideoDetail: View {
         }
     }
 
-    private func variantRow(_ name: String, track: OfflineTrack, saved: Bool) -> some View {
+    private func variantRow(_ name: String, detail: String?, track: OfflineTrack) -> some View {
         let job = job(for: track)
-        return HStack {
-            VStack(alignment: .leading, spacing: VFSpace.s4) {
-                Text(name).foregroundStyle(.primary)
-                if !saved, let job {
-                    OfflinePresentation.status(job).label
-                    if let reason = job.error {
-                        Text(OfflinePresentation.failureText(reason))
-                            .font(.footnote)
-                            .foregroundStyle(VFColor.danger)
-                    }
-                }
+        return ViewThatFits(in: .horizontal) {
+            HStack {
+                variantDescription(name, detail: detail, job: job)
+                Spacer(minLength: VFSpace.s8)
+                downloadState(track, job: job)
             }
-            Spacer(minLength: VFSpace.s8)
-            if saved {
-                Text("Saved", bundle: .module).foregroundStyle(.secondary)
-            } else if let job, OfflinePresentation.action(job) == .retry {
-                Text("Retry", bundle: .module)
-            } else if isLoading(track) {
-                ProgressView()
-                    .accessibilityHidden(true)
-            } else {
-                // Semantic colour and a symbol: the macOS and tvOS accent has no contrast-safe text variant.
-                HStack(spacing: VFSpace.s4) {
-                    Image(systemName: AppSymbol.download).accessibilityHidden(true)
-                    Text("Download", bundle: .module)
-                }
-                .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: VFSpace.s8) {
+                variantDescription(name, detail: detail, job: job)
+                downloadState(track, job: job)
             }
         }
     }
 
-    private func savedLabel(_ asset: OfflineAsset) -> String {
-        guard let sizes = asset.savedVideoSizes, !sizes.isEmpty else { return asset.track.label }
-        return asset.track.label + " · " + sizes.map { "\($0.width)×\($0.height)" }.joined(separator: ", ")
+    private func variantDescription(_ name: String, detail: String?, job: OfflineJob?) -> some View {
+        VStack(alignment: .leading, spacing: VFSpace.s4) {
+            Text(name).foregroundStyle(.primary)
+            if let detail { Text(detail).font(.footnote).foregroundStyle(.secondary) }
+            if let job {
+                OfflinePresentation.status(job).label
+                if let reason = job.error {
+                    Text(OfflinePresentation.failureText(reason)).font(.footnote).foregroundStyle(VFColor.danger)
+                }
+            }
+        }
     }
+
+    @ViewBuilder private func downloadState(_ track: OfflineTrack, job: OfflineJob?) -> some View {
+        if let job, OfflinePresentation.action(job) == .retry {
+            Text("Retry", bundle: .module)
+        } else if isLoading(track) {
+            HStack(spacing: VFSpace.s4) {
+                ProgressView().accessibilityHidden(true)
+                Text("Downloading…", bundle: .module)
+            }
+        } else {
+            Label {
+                Text("Download", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.download)
+            }
+            .foregroundStyle(.primary)
+        }
+    }
+
     private func play(_ entry: OfflineEntry, asset: OfflineAsset) {
         offlineDetailLog.notice("[offline-start] tap videoId=\(entry.id, privacy: .public)")
+        let audio = selection.audio(for: asset, in: entry.assets)
+        let translation = selection.translation(in: entry.assets)
         Task {
             do {
-                let audio =
-                    entry.assets.first { $0.id == audioID }
-                    ?? (asset.track.hasAudio ? nil : entry.assets.first { $0.track.kind == .audio })
-                let translation = entry.assets.first { $0.id == translationID }
                 let video = try await coordinator.playbackVideo(
                     entry: entry, videoAsset: asset, audio: audio, translation: translation)
                 #if os(iOS)
@@ -260,3 +424,28 @@ struct OfflineVideoDetail: View {
         }
     }
 }
+
+#if !os(tvOS)
+private struct OfflineQualityDisclosureStyle: DisclosureGroupStyle {
+    let height: Int
+
+    func makeBody(configuration: Configuration) -> some View {
+        Button {
+            configuration.isExpanded.toggle()
+        } label: {
+            HStack {
+                configuration.label
+                Spacer()
+                Image(systemName: configuration.isExpanded ? AppSymbol.chevronDown : AppSymbol.chevronRight)
+                    .accessibilityHidden(true)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityID.offlineQualityGroup(height))
+        .accessibilityValue(
+            configuration.isExpanded ? Text("Expanded", bundle: .module) : Text("Collapsed", bundle: .module))
+        if configuration.isExpanded { configuration.content }
+    }
+}
+#endif

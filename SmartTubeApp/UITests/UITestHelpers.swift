@@ -52,6 +52,9 @@ enum AccessibilityID {
     static var offlineDeleteAll: String { "offline.deleteAll" }
     static var offlineAudioPicker: String { "offline.audioPicker" }
     static var offlineTranslationPicker: String { "offline.translationPicker" }
+    static var offlineVideoPicker: String { "offline.videoPicker" }
+    static var offlinePlaySummary: String { "offline.playSummary" }
+    static func offlineQualityGroup(_ height: Int) -> String { "offline.quality.\(height)" }
     static var offlinePlaybackStatus: String { "offline.playbackStatus" }
     static var offlineFindVariants: String { "offline.findVariants" }
     static func offlineEntry(_ id: String) -> String { "offline.entry.\(id)" }

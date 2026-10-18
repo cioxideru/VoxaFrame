@@ -1,6 +1,397 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Sound in video file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound in video file"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звук в видеофайле"
+          }
+        }
+      }
+    },
+    "%@ · In video file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · In video file"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · В видеофайле"
+          }
+        }
+      }
+    },
+    "Expanded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expanded"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Развёрнуто"
+          }
+        }
+      }
+    },
+    "Collapsed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapsed"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свёрнуто"
+          }
+        }
+      }
+    },
+    "Original audio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original audio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Исходный звук"
+          }
+        }
+      }
+    },
+    "%@ audio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ audio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звук: %@"
+          }
+        }
+      }
+    },
+    "%@ voice-over" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ voice-over"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевод: %@"
+          }
+        }
+      }
+    },
+    "Audio not downloaded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio not downloaded"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звук не скачан"
+          }
+        }
+      }
+    },
+    "Other formats" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other formats"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другие видеоформаты"
+          }
+        }
+      }
+    },
+    "Unknown language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown language"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неизвестный язык"
+          }
+        }
+      }
+    },
+    "%@ · Original" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Original"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Оригинал"
+          }
+        }
+      }
+    },
+    "%@ · Dubbed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Dubbed"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Дубляж"
+          }
+        }
+      }
+    },
+    "%lld fps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld fps"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld кадр/с"
+          }
+        }
+      }
+    },
+    "Approx. %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approx. %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Около %@"
+          }
+        }
+      }
+    },
+    "HLS uses the audio saved inside the video." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HLS uses the audio saved inside the video."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HLS использует звук, сохранённый внутри видео."
+          }
+        }
+      }
+    },
+    "Voice-over (Yandex)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voice-over (Yandex)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закадровый перевод (Яндекс)"
+          }
+        }
+      }
+    },
+    "Watch with" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch with"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смотреть с"
+          }
+        }
+      }
+    },
+    "May not play on this device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "May not play on this device"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Может не воспроизводиться на этом устройстве"
+          }
+        }
+      }
+    },
+    "Audio tracks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio tracks"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудиодорожки"
+          }
+        }
+      }
+    },
+    "Voice-over in another language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voice-over in another language"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закадровый перевод на другой язык"
+          }
+        }
+      }
+    },
+    "Download more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download more"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скачать ещё"
+          }
+        }
+      }
+    },
+    "Internet required" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internet required"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужен интернет"
+          }
+        }
+      }
+    },
+    "Other quality or audio…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other quality or audio…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другое качество или звук…"
+          }
+        }
+      }
+    },
     "A new translation needs internet. Connect and retry, or choose a saved translation in Offline videos." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3030,30 +3421,6 @@
         }
       }
     },
-    "Add video quality or audio" : {
-      "comment" : "A section that allows users to download video variants.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавить качество видео или звук"
-          }
-        }
-      }
-    },
-    "Add Yandex translation (online)" : {
-      "comment" : "A section in the offline video details view for adding Yandex translation.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавить перевод Yandex (онлайн)"
-          }
-        }
-      }
-    },
     "Added to Playlist" : {
 
     },
@@ -5059,18 +5426,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Выберите видео в библиотеке, чтобы увидеть сохранённые файлы."
-          }
-        }
-      }
-    },
-    "Choose Included audio to play an HLS package. Separate audio tracks apply to direct video files." : {
-      "comment" : "A description of the available audio options for an offline video.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Чтобы воспроизвести HLS-пакет, выберите «Встроенный звук». Отдельные аудиодорожки подходят только для прямых видеофайлов."
           }
         }
       }
@@ -9852,18 +10207,6 @@
         }
       }
     },
-    "Find available variants (online)" : {
-      "comment" : "A button that finds and downloads available video variants.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Найти доступные варианты (онлайн)"
-          }
-        }
-      }
-    },
     "Fit (letterbox)" : {
       "comment" : "Video fit settings option — letterbox mode",
       "extractionState" : "manual",
@@ -11562,24 +11905,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Неверный PIN. Попробуйте ещё раз."
-          }
-        }
-      }
-    },
-    "Included audio is the sound inside the video file, or the first saved audio track when the file has none." : {
-      "comment" : "Saved offline video page: explains the Included audio choice",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Included audio is the sound inside the video file, or the first saved audio track when the file has none."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Встроенный звук — это звук внутри видеофайла или первая сохранённая аудиодорожка, если в файле звука нет."
           }
         }
       }
@@ -16274,18 +16599,6 @@
       "comment" : "A toggle that lets the user choose whether to keep the original audio in the background while using Yandex voice-over.",
       "isCommentAutoGenerated" : true
     },
-    "Original or dubbed audio" : {
-      "comment" : "A picker for choosing between the original and dubbed audio of a video.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оригинальный или дублированный звук"
-          }
-        }
-      }
-    },
     "Original Track Only" : {
       "localizations" : {
         "ar" : {
@@ -17018,18 +17331,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "下一个播放"
-          }
-        }
-      }
-    },
-    "Play saved video" : {
-      "comment" : "A section that allows users to play saved videos.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Воспроизвести сохранённое видео"
           }
         }
       }
@@ -19956,18 +20257,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сохранено"
-          }
-        }
-      }
-    },
-    "Saved audio" : {
-      "comment" : "A section that displays the user's saved audio for an offline video.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сохранённый звук"
           }
         }
       }
@@ -28723,18 +29012,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Без входа подписка сохранится на этом устройстве"
-          }
-        }
-      }
-    },
-    "Without translation" : {
-      "comment" : "A label for a picker that lets the user choose whether to include a translation.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Без перевода"
           }
         }
       }
