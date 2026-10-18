@@ -106,6 +106,7 @@ enum AccessibilityID {
     static var settingsSignInButton: String { "settings.signInButton" }
     static var settingsHideShortsToggle: String { "settings.hideShortsToggle" }
     static var settingsPreferredQualityPicker: String { "settings.preferredQualityPicker" }
+    static var settingsConcurrentDownloadsPicker: String { "settings.concurrentDownloadsPicker" }
     static var settingsSeekBackRow: String { "settings.seekBackRow" }
     static var settingsAccentColorPicker: String { "settings.accentColorPicker" }
     static var settingsChangePINButton: String { "settings.changePINButton" }

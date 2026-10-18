@@ -20,6 +20,38 @@ import Testing
 @Suite("AppSettings forward-compatible decoding (#181)")
 struct AppSettingsMigrationTests {
 
+    @Test("Older settings default to two simultaneous downloads and preserve other preferences")
+    func defaultConcurrentDownloads() throws {
+        let settings = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"playbackSpeed":1.5}"#.utf8))
+        #expect(settings.maximumConcurrentDownloads == AppSettings.defaultConcurrentDownloads)
+        #expect(settings.maximumConcurrentDownloads == 2)
+        #expect(settings.playbackSpeed == 1.5)
+    }
+
+    @Test("Simultaneous download limit survives saves", arguments: AppSettings.availableConcurrentDownloadCounts)
+    func concurrentDownloadsRoundTrip(limit: Int) throws {
+        var settings = AppSettings()
+        settings.maximumConcurrentDownloads = limit
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings))
+        #expect(decoded.maximumConcurrentDownloads == limit)
+    }
+
+    @Test("Invalid saved limits remain in the supported range", arguments: [0, -4, 5, Int.max])
+    func concurrentDownloadsClampsInvalidValues(limit: Int) throws {
+        let data = Data("{\"maximumConcurrentDownloads\":\(limit)}".utf8)
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        #expect(settings.maximumConcurrentDownloads == AppSettings.clampedConcurrentDownloads(limit))
+        #expect(AppSettings.availableConcurrentDownloadCounts.contains(settings.maximumConcurrentDownloads))
+    }
+
+    @Test("Null and mismatched limits use the default", arguments: ["null", "\"four\"", "true"])
+    func concurrentDownloadsIgnoresMismatchedValues(value: String) throws {
+        let data = Data("{\"maximumConcurrentDownloads\":\(value),\"playbackSpeed\":1.5}".utf8)
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        #expect(settings.maximumConcurrentDownloads == AppSettings.defaultConcurrentDownloads)
+        #expect(settings.playbackSpeed == 1.5)
+    }
+
     @Test("Legacy playback speed seeds Shorts once without resetting other preferences")
     func migrateShortsPlaybackSpeed() throws {
         let data = Data(#"{"playbackSpeed":1.5,"autoplayEnabled":false}"#.utf8)

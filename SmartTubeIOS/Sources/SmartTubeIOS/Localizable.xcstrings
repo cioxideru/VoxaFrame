@@ -8230,6 +8230,23 @@
         }
       }
     },
+    "Each video, audio or translation track counts as one download." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each video, audio or translation track counts as one download."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Каждая дорожка видео, аудио или перевода считается отдельной загрузкой."
+          }
+        }
+      }
+    },
     "Enable DeArrow" : {
       "comment" : "Settings toggle to enable DeArrow",
       "extractionState" : "manual",
@@ -23693,6 +23710,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "登录失败"
+          }
+        }
+      }
+    },
+    "Simultaneous downloads" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simultaneous downloads"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одновременные загрузки"
           }
         }
       }

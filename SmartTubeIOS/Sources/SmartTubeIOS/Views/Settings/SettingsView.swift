@@ -287,6 +287,24 @@ extension SettingsView {
         }
     }
 
+    var downloadsSection: some View {
+        @Bindable var store = store
+        return Section {
+            Picker(selection: $store.settings.maximumConcurrentDownloads) {
+                ForEach(AppSettings.availableConcurrentDownloadCounts, id: \.self) { count in
+                    Text(count, format: .number).tag(count)
+                }
+            } label: {
+                Text("Simultaneous downloads", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.settingsConcurrentDownloadsPicker)
+        } header: {
+            Text("Downloads", bundle: .module)
+        } footer: {
+            Text("Each video, audio or translation track counts as one download.", bundle: .module)
+        }
+    }
+
     var iCloudSection: some View {
         @Bindable var store = store
         return Section {

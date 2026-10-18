@@ -190,6 +190,7 @@ extension SettingsView {
             SettingsLanguageSections()
         case .thisDevice:
             generalSection
+            downloadsSection
             iCloudSection
         case .appearance:
             uiSection

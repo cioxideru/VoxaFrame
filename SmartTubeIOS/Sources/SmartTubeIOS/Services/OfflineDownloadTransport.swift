@@ -15,7 +15,7 @@ enum OfflineTransferEvent: Sendable {
 protocol OfflineTransporting: Sendable {
     var events: AsyncStream<OfflineTransferEvent> { get }
     func activeAttempts() async -> Set<UUID>
-    func start(_ source: OfflineSource, attempt: UUID, yielding: Bool) async throws
+    func start(_ source: OfflineSource, attempt: UUID) async throws
     func cancel(_ attempt: UUID) async
     func acknowledge(_ attempt: UUID)
     func setYielding(_ yielding: Bool) async
@@ -61,11 +61,12 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         let configuration = URLSessionConfiguration.background(withIdentifier: Self.fileSessionID)
         configuration.isDiscretionary = false
         configuration.waitsForConnectivity = true
-        configuration.httpMaximumConnectionsPerHost = 1
+        configuration.httpMaximumConnectionsPerHost = AppSettings.availableConcurrentDownloadCounts.upperBound
         files = URLSession(configuration: configuration, delegate: self, delegateQueue: queue)
         #if os(iOS)
         let assetConfiguration = URLSessionConfiguration.background(withIdentifier: Self.hlsSessionID)
         assetConfiguration.isDiscretionary = false
+        assetConfiguration.httpMaximumConnectionsPerHost = AppSettings.availableConcurrentDownloadCounts.upperBound
         hls = AVAssetDownloadURLSession(
             configuration: assetConfiguration, assetDownloadDelegate: self, delegateQueue: queue)
         #endif
@@ -84,7 +85,8 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         return active.union(completionLock.withLock { retainedAttempts })
     }
 
-    func start(_ source: OfflineSource, attempt: UUID, yielding: Bool) async throws {
+    func start(_ source: OfflineSource, attempt: UUID) async throws {
+        try Task.checkCancellation()
         #if DEBUG
         let allowed = source.url.scheme == "https" || OfflineUITestFixture.allows(source.url)
         #else
@@ -112,7 +114,11 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
             retainedAttempts.insert(attempt)
             task.taskDescription = attempt.uuidString
             task.priority = URLSessionTask.lowPriority
-            if cancelledAttempts.contains(attempt) { task.cancel() } else if !yielding { task.resume() }
+            if cancelledAttempts.contains(attempt) {
+                task.cancel()
+            } else if !pressureYielding {
+                task.resume()
+            }
         }
     }
 

@@ -194,12 +194,14 @@ public actor OfflineLibraryStore {
         guard let index = next.jobs.firstIndex(where: { $0.id == id }),
             [.cancelled, .failed].contains(next.jobs[index].state)
         else { return next }
-        next.jobs[index].attempt = UUID()
-        next.jobs[index].state = .queued
-        next.jobs[index].progress = 0
-        next.jobs[index].error = nil
-        next.jobs[index].nextResolutionAt = nil
-        next.jobs[index].resolutionAttempts = 0
+        var job = next.jobs.remove(at: index)
+        job.attempt = UUID()
+        job.state = .queued
+        job.progress = 0
+        job.error = nil
+        job.nextResolutionAt = nil
+        job.resolutionAttempts = 0
+        next.jobs.append(job)
         return try commit(next)
     }
     public func deferResolution(attempt: UUID, until date: Date) throws -> OfflineSnapshot {

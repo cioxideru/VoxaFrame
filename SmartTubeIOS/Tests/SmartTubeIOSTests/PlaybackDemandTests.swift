@@ -108,7 +108,8 @@ struct PlaybackDemandTests {
         let owner = UUID()
         demand.update(owner: owner, phase: .preparing)
         var changes = demand.changes().makeAsyncIterator()
-        #expect(await changes.next() == true)
+        let preparing = await changes.next()
+        #expect(preparing == true)
         #expect(budget.waits.isEmpty)
         demand.update(owner: owner, phase: .playing)
         try await eventually { recovery.waits.count == 1 }
@@ -120,7 +121,8 @@ struct PlaybackDemandTests {
         try await eventually { recovery.waits.count == 1 }
         recovery.fire()
         try await eventually { !demand.isYielding }
-        #expect(await changes.next() == false)
+        let recovered = await changes.next()
+        #expect(recovered == false)
         budget.drain()
     }
 

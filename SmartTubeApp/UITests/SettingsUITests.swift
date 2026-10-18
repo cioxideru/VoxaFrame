@@ -38,6 +38,7 @@ final class SettingsUITests: XCTestCase {
             ("playback", AccessibilityID.settingsH264Toggle),
             ("languages", AccessibilityID.settingsPreferredAudioLanguageRow),
             ("thisDevice", AccessibilityID.settingsHistoryPicker),
+            ("thisDevice", AccessibilityID.settingsConcurrentDownloadsPicker),
             ("appearance", AccessibilityID.settingsThumbnailStylePicker),
             ("sponsorBlock", AccessibilityID.settingsSponsorBlockToggle),
             ("parentalControls", AccessibilityID.settingsSetPINButton),

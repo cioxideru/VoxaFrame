@@ -99,6 +99,7 @@ public enum AccessibilityID {
     public static var settingsSignInButton: String { "settings.signInButton" }
     public static var settingsHideShortsToggle: String { "settings.hideShortsToggle" }
     public static var settingsPreferredQualityPicker: String { "settings.preferredQualityPicker" }
+    public static var settingsConcurrentDownloadsPicker: String { "settings.concurrentDownloadsPicker" }
     public static var settingsSeekBackRow: String { "settings.seekBackRow" }
     public static var settingsAccentColorPicker: String { "settings.accentColorPicker" }
     public static var settingsChangePINButton: String { "settings.changePINButton" }

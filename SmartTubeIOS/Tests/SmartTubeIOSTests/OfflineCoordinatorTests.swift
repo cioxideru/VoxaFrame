@@ -5,29 +5,42 @@ import Testing
 @testable import SmartTubeIOSCore
 
 /// All fake task state is protected by its lock; AsyncStream continuation is Sendable.
-private final class OfflineFakeTransport: OfflineTransporting, @unchecked Sendable {
+final class OfflineFakeTransport: OfflineTransporting, @unchecked Sendable {
     let events: AsyncStream<OfflineTransferEvent>
     let continuation: AsyncStream<OfflineTransferEvent>.Continuation
     private let lock = NSLock()
     private var started: [UUID] = []
     private var cancelled: Set<UUID> = []
     private var acknowledged: Set<UUID> = []
-    init() {
+    private var yielding = false
+    private var returnedStarts = 0
+    private let beforeStartReturns: @Sendable () async -> Void
+    var startOrder: [UUID] { lock.withLock { started } }
+    var startReturnCount: Int { lock.withLock { returnedStarts } }
+    var cancelledAttempts: Set<UUID> { lock.withLock { cancelled } }
+    var isYielding: Bool { lock.withLock { yielding } }
+    init(beforeStartReturns: @escaping @Sendable () async -> Void = {}) {
+        self.beforeStartReturns = beforeStartReturns
         let stream = AsyncStream<OfflineTransferEvent>.makeStream()
         events = stream.stream
         continuation = stream.continuation
     }
-    func activeAttempts() -> Set<UUID> { lock.withLock { Set(started).subtracting(cancelled) } }
-    func start(_ source: OfflineSource, attempt: UUID, yielding: Bool) throws {
+    func activeAttempts() -> Set<UUID> {
+        lock.withLock { Set(started).subtracting(cancelled).subtracting(acknowledged) }
+    }
+    @MainActor func start(_ source: OfflineSource, attempt: UUID) async throws {
+        try Task.checkCancellation()
         lock.withLock { started.append(attempt) }
+        await beforeStartReturns()
+        lock.withLock { returnedStarts += 1 }
     }
     func cancel(_ attempt: UUID) { lock.withLock { _ = cancelled.insert(attempt) } }
     func acknowledge(_ attempt: UUID) { lock.withLock { _ = acknowledged.insert(attempt) } }
     func isAcknowledged(_ attempt: UUID) -> Bool { lock.withLock { acknowledged.contains(attempt) } }
-    func setYielding(_ yielding: Bool) {}
+    func setYielding(_ yielding: Bool) { lock.withLock { self.yielding = yielding } }
     func setForeground(_ foreground: Bool) {}
 }
-private struct OfflineFakeResolver: OfflineResolving {
+struct OfflineFakeResolver: OfflineResolving {
     let track = OfflineTrack(id: "test-muxed", kind: .video, label: "360p H.264", hasAudio: true)
     func catalog(video: Video) throws -> [OfflineSource] { [try resolve(video: video, track: track, attempt: UUID())] }
     func resolve(video: Video, track: OfflineTrack, attempt: UUID) throws -> OfflineSource {
@@ -37,7 +50,7 @@ private struct OfflineFakeResolver: OfflineResolving {
             userAgent: "Test")
     }
 }
-private actor OfflineFakeNotifications: OfflineNotifying {
+actor OfflineFakeNotifications: OfflineNotifying {
     var completedIDs: [UUID] = []
     func requestPermission() {}
     func completed(id: UUID, title: String) { completedIDs.append(id) }
@@ -187,8 +200,8 @@ struct OfflineCoordinatorTests {
         #expect(await wait { coordinator.snapshot.jobs.count == 2 })
         let attempts = coordinator.snapshot.jobs.map(\.attempt)
         let orphan = UUID()
-        try transport.start(
-            resolver.resolve(video: first, track: .automatic, attempt: orphan), attempt: orphan, yielding: false)
+        try await transport.start(
+            resolver.resolve(video: first, track: .automatic, attempt: orphan), attempt: orphan)
         coordinator.remove(videoID: nil)
         #expect(await wait { coordinator.snapshot.jobs.isEmpty })
         #expect(coordinator.snapshot.entries.isEmpty)
@@ -213,6 +226,7 @@ struct OfflineCoordinatorTests {
             store: OfflineLibraryStore(directory: directory), transport: transport,
             resolver: OfflineFakeResolver(), notifications: OfflineFakeNotifications(),
             demand: PlaybackDemandCoordinator(waitForRecovery: {}, waitForBudget: {}), validate: { _, _, _ in })
+        coordinator.setDownloadLimit(1)
         coordinator.enqueue(video: Video(id: "one", title: "One", channelTitle: "Test"))
         #expect(await wait { coordinator.snapshot.jobs.first?.state == .downloading })
         coordinator.enqueue(video: Video(id: "two", title: "Two", channelTitle: "Test"))
@@ -332,7 +346,8 @@ struct OfflineCoordinatorTests {
                 !coordinator.persistenceBlocked && coordinator.snapshot.jobs.first?.state == .downloading
                     && coordinator.snapshot.jobs.first?.attempt != orphan.attempt
             })
-        #expect(transport.activeAttempts().contains(try #require(coordinator.snapshot.jobs.first).attempt))
+        let recovered = try #require(coordinator.snapshot.jobs.first)
+        #expect(await wait { transport.activeAttempts().contains(recovered.attempt) })
     }
 
     @Test func notificationMarkerFailureRetriesCompleteStartupAndReceivesEvents() async throws {
@@ -383,6 +398,8 @@ struct OfflineCoordinatorTests {
         #expect(await wait { coordinator.snapshot.jobs.first?.resolutionAttempts == 1 })
         coordinator.enqueue(video: Video(id: "next", title: "Next", channelTitle: "Test"))
         #expect(await wait { coordinator.snapshot.jobs.last?.state == .downloading })
+        coordinator.enqueue(video: Video(id: "another", title: "Another", channelTitle: "Test"))
+        #expect(await wait { coordinator.snapshot.jobs.filter { $0.state == .downloading }.count == 2 })
         #expect(coordinator.snapshot.jobs[0].state == .queued)
         #expect(coordinator.snapshot.jobs[0].nextResolutionAt == timer.now.addingTimeInterval(30))
         let next = try #require(coordinator.snapshot.jobs.last)
@@ -432,7 +449,7 @@ private final class OfflineTestClock: @unchecked Sendable {
 }
 
 /// The lock protects the injected failure switch; writes happen on the store actor.
-private final class OfflineManifestFailure: @unchecked Sendable {
+final class OfflineManifestFailure: @unchecked Sendable {
     private let lock = NSLock()
     private var marker = false
     private var all = false
@@ -471,7 +488,8 @@ private actor OfflineCatalogGate: OfflineResolving {
     }
     func resolve(video: Video, track: OfflineTrack, attempt: UUID) throws -> OfflineSource {
         OfflineSource(
-            track: OfflineTrack(id: "video", kind: .video, label: "Video"),
+            track: track.id == OfflineTrack.automatic.id
+                ? OfflineTrack(id: "video", kind: .video, label: "Video") : track,
             url: try #require(URL(string: "https://example.invalid/video")), userAgent: "Test")
     }
 }

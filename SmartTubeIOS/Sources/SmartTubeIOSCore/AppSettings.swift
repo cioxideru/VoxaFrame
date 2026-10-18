@@ -218,6 +218,16 @@ public struct AppSettings: Codable {
     /// synced to iCloud via `NSUbiquitousKeyValueStore`. Defaults to `false` (opt-in).
     public var iCloudSyncEnabled: Bool
 
+    // MARK: Offline downloads
+    /// A job is one video, audio or translation track, including source resolution.
+    public var maximumConcurrentDownloads: Int
+    public static let defaultConcurrentDownloads = 2
+    public static let availableConcurrentDownloadCounts = 1...4
+
+    public static func clampedConcurrentDownloads(_ value: Int) -> Int {
+        min(max(value, availableConcurrentDownloadCounts.lowerBound), availableConcurrentDownloadCounts.upperBound)
+    }
+
     // MARK: Schema version
     /// Persisted schema version. Starts at 1 for newly stored settings.
     /// Old JSON lacking this key decodes as 0, signalling a pre-migration store.
@@ -349,6 +359,7 @@ public struct AppSettings: Codable {
         audioOnlyMode = false
         preferH264 = false
         iCloudSyncEnabled = false
+        maximumConcurrentDownloads = Self.defaultConcurrentDownloads
         settingsVersion = 1
     }
 }
@@ -431,6 +442,7 @@ extension AppSettings {
         case audioOnlyMode
         case preferH264
         case iCloudSyncEnabled
+        case maximumConcurrentDownloads
     }
 
     public init(from decoder: Decoder) throws {
@@ -510,6 +522,8 @@ extension AppSettings {
         audioOnlyMode = c.safeDecode(Bool.self, forKey: .audioOnlyMode, default: d.audioOnlyMode)
         preferH264 = c.safeDecode(Bool.self, forKey: .preferH264, default: d.preferH264)
         iCloudSyncEnabled = c.safeDecode(Bool.self, forKey: .iCloudSyncEnabled, default: d.iCloudSyncEnabled)
+        maximumConcurrentDownloads = Self.clampedConcurrentDownloads(
+            c.safeDecode(Int.self, forKey: .maximumConcurrentDownloads, default: d.maximumConcurrentDownloads))
         decodeShortsTranslation(from: c)
     }
 

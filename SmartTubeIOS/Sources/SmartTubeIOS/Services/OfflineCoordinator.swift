@@ -51,8 +51,8 @@ public final class OfflineCoordinator {
     @ObservationIgnored private var startup: Task<Void, Never>?
     @ObservationIgnored private var eventTask: Task<Void, Never>?
     @ObservationIgnored private var demandTask: Task<Void, Never>?
-    @ObservationIgnored private var resolverTask: Task<Void, Never>?
-    @ObservationIgnored private var resolvingAttempt: UUID?
+    @ObservationIgnored private var resolverTasks: [UUID: Task<Void, Never>] = [:]
+    @ObservationIgnored private var maximumConcurrentDownloads = AppSettings.defaultConcurrentDownloads
     @ObservationIgnored private var backgroundHandlers: [String: () -> Void] = [:]
     @ObservationIgnored private var drainedSessions: Set<String> = []
 
@@ -87,7 +87,8 @@ public final class OfflineCoordinator {
         self.now = now
         self.waitUntil = waitUntil
     }
-    public func configure(api: InnerTubeAPI) {
+    public func configure(api: InnerTubeAPI, settings: SettingsStore) {
+        observeDownloadLimit(settings)
         guard startup == nil else { return }
         #if DEBUG
         resolver = OfflineUITestFixture.resolver() ?? OfflineSourceResolver(api: api)
@@ -95,6 +96,21 @@ public final class OfflineCoordinator {
         resolver = OfflineSourceResolver(api: api)
         #endif
         start()
+    }
+    private func observeDownloadLimit(_ settings: SettingsStore) {
+        let limit = withObservationTracking {
+            settings.settings.maximumConcurrentDownloads
+        } onChange: { [weak self, weak settings] in
+            Task { @MainActor [weak self, weak settings] in
+                guard let self, let settings else { return }
+                observeDownloadLimit(settings)
+            }
+        }
+        setDownloadLimit(limit)
+    }
+    func setDownloadLimit(_ limit: Int) {
+        maximumConcurrentDownloads = AppSettings.clampedConcurrentDownloads(limit)
+        pump()
     }
     public func setForeground(_ foreground: Bool) {
         transport.setForeground(foreground)
@@ -150,9 +166,8 @@ public final class OfflineCoordinator {
         )
         error = failure.localizedDescription
         persistenceBlocked = true
-        resolverTask?.cancel()
-        resolverTask = nil
-        resolvingAttempt = nil
+        for task in resolverTasks.values { task.cancel() }
+        resolverTasks.removeAll()
         wakeTask?.cancel()
         wakeTask = nil
         Task { await transport.setYielding(true) }
@@ -241,11 +256,7 @@ public final class OfflineCoordinator {
         Task {
             do {
                 apply(try await store.update(attempt: job.attempt, state: .cancelled))
-                if resolvingAttempt == job.attempt {
-                    resolverTask?.cancel()
-                    resolverTask = nil
-                    resolvingAttempt = nil
-                }
+                resolverTasks.removeValue(forKey: job.attempt)?.cancel()
                 await transport.cancel(job.attempt)
                 pump()
             } catch { blockPersistence(error) }
@@ -264,86 +275,93 @@ public final class OfflineCoordinator {
         try await resolver.catalog(video: video).map(\.track)
     }
     private func pump() {
-        guard ready, !persistenceBlocked, !isYielding, (snapshot.pendingRemovals ?? []).isEmpty, resolverTask == nil,
-            !snapshot.jobs.contains(where: { $0.state == .downloading })
+        guard ready, !persistenceBlocked, !isYielding, (snapshot.pendingRemovals ?? []).isEmpty
         else { return }
-        guard
-            let job = snapshot.jobs.first(where: {
-                $0.state == .queued && ($0.nextResolutionAt ?? .distantPast) <= now()
-            }),
-            let entry = snapshot.entries.first(where: { $0.id == job.videoID })
-        else {
-            scheduleWake()
-            return
-        }
         wakeTask?.cancel()
         wakeTask = nil
-        resolvingAttempt = job.attempt
-        resolverTask = Task {
-            defer {
-                if resolvingAttempt == job.attempt {
-                    resolverTask = nil
-                    resolvingAttempt = nil
-                }
-                pump()
+        // Reserve slots before any store/resolver suspension; concurrent pump calls cannot admit a job twice.
+        var active = activeIDs.union(resolverTasks.keys)
+        for job in snapshot.jobs where job.state == .queued && (job.nextResolutionAt ?? .distantPast) <= now() {
+            guard active.count < maximumConcurrentDownloads else { break }
+            guard !active.contains(job.attempt), let entry = snapshot.entries.first(where: { $0.id == job.videoID })
+            else { continue }
+            active.insert(job.attempt)
+            resolverTasks[job.attempt] = Task { await resolve(job, entry: entry) }
+        }
+        if active.count < maximumConcurrentDownloads { scheduleWake() }
+    }
+    private func resolve(_ job: OfflineJob, entry: OfflineEntry) async {
+        defer {
+            resolverTasks[job.attempt] = nil
+            pump()
+        }
+        do {
+            try Task.checkCancellation()
+            apply(try await store.update(attempt: job.attempt, state: .resolving))
+            try Task.checkCancellation()
+            guard !persistenceBlocked,
+                snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .resolving })
+            else { return }
+            if isYielding {
+                apply(try await store.update(attempt: job.attempt, state: .queued))
+                return
             }
-            do {
-                apply(try await store.update(attempt: job.attempt, state: .resolving))
-                let source = try await resolver.resolve(video: entry.video, track: job.track, attempt: job.attempt)
+            let source = try await resolver.resolve(video: entry.video, track: job.track, attempt: job.attempt)
+            try Task.checkCancellation()
+            guard snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .resolving }) else {
+                return
+            }
+            if job.track.id == OfflineTrack.automatic.id, source.track.kind == .video, !source.track.hasAudio,
+                !entry.assets.contains(where: { $0.track.kind == .audio }),
+                !snapshot.jobs.contains(where: {
+                    $0.videoID == job.videoID && $0.track.kind == .audio
+                        && [.queued, .resolving, .downloading, .completed].contains($0.state)
+                })
+            {
+                let catalog = try await resolver.catalog(video: entry.video)
                 try Task.checkCancellation()
-                guard snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .resolving }) else {
-                    return
-                }
-                if job.track.id == OfflineTrack.automatic.id, source.track.kind == .video, !source.track.hasAudio,
-                    !entry.assets.contains(where: { $0.track.kind == .audio }),
-                    !snapshot.jobs.contains(where: {
-                        $0.videoID == job.videoID && $0.track.kind == .audio
-                            && [.queued, .resolving, .downloading, .completed].contains($0.state)
-                    })
-                {
-                    let catalog = try await resolver.catalog(video: entry.video)
-                    try Task.checkCancellation()
-                    guard !persistenceBlocked,
-                        snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .resolving })
-                    else { return }
-                    guard let audio = catalog.first(where: { $0.track.kind == .audio }) else {
-                        throw OfflineLibraryError.missingAudio
-                    }
-                    apply(try await store.enqueue(video: entry.video, tracks: [audio.track], batch: job.batch))
-                    try Task.checkCancellation()
-                }
-                apply(try await store.update(attempt: job.attempt, state: .downloading, track: source.track))
                 guard !persistenceBlocked,
-                    snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .downloading })
+                    snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .resolving })
                 else { return }
-                try await transport.start(source, attempt: job.attempt, yielding: isYielding)
-                guard !Task.isCancelled,
-                    snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .downloading })
-                else {
-                    await transport.cancel(job.attempt)
-                    return
+                guard let audio = catalog.first(where: { $0.track.kind == .audio }) else {
+                    throw OfflineLibraryError.missingAudio
                 }
-                await transport.setYielding(isYielding)
-            } catch let deferred as OfflineResolutionDeferred {
+                apply(try await store.enqueue(video: entry.video, tracks: [audio.track], batch: job.batch))
+                try Task.checkCancellation()
+            }
+            apply(try await store.update(attempt: job.attempt, state: .downloading, track: source.track))
+            try Task.checkCancellation()
+            guard !persistenceBlocked,
+                snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .downloading })
+            else { return }
+            try await transport.start(source, attempt: job.attempt)
+            guard snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .downloading }) else {
+                await transport.cancel(job.attempt)
+                return
+            }
+        } catch let deferred as OfflineResolutionDeferred {
+            guard !Task.isCancelled else { return }
+            do {
+                apply(
+                    try await store.deferResolution(
+                        attempt: job.attempt, until: now().addingTimeInterval(deferred.delay)))
+            } catch { blockPersistence(error) }
+        } catch {
+            if !Task.isCancelled {
                 do {
                     apply(
-                        try await store.deferResolution(
-                            attempt: job.attempt, until: now().addingTimeInterval(deferred.delay)))
+                        try await store.update(
+                            attempt: job.attempt, state: .failed, error: error.localizedDescription))
                 } catch { blockPersistence(error) }
-            } catch {
-                if !Task.isCancelled {
-                    do {
-                        apply(
-                            try await store.update(
-                                attempt: job.attempt, state: .failed, error: error.localizedDescription))
-                    } catch { blockPersistence(error) }
-                }
             }
         }
     }
     private func scheduleWake() {
         wakeTask?.cancel()
-        guard let date = snapshot.jobs.filter({ $0.state == .queued }).compactMap(\.nextResolutionAt).min() else {
+        guard
+            let date = snapshot.jobs.filter({ $0.state == .queued && resolverTasks[$0.attempt] == nil })
+                .compactMap(\.nextResolutionAt).min()
+        else {
             return
         }
         wakeTask = Task { [weak self, waitUntil] in
@@ -457,14 +475,10 @@ extension OfflineCoordinator {
         var attempts = Set(snapshot.jobs.filter { ids.contains($0.id) }.map(\.attempt))
         if removals.contains(where: { $0.videoID == nil }) {
             attempts.formUnion(await transport.activeAttempts())
-            if let resolvingAttempt { attempts.insert(resolvingAttempt) }
+            attempts.formUnion(resolverTasks.keys)
         }
         for attempt in attempts {
-            if resolvingAttempt == attempt {
-                resolverTask?.cancel()
-                resolverTask = nil
-                resolvingAttempt = nil
-            }
+            resolverTasks.removeValue(forKey: attempt)?.cancel()
             await transport.cancel(attempt)
         }
         apply(try await store.completeRemovals())
