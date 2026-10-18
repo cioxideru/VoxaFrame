@@ -112,7 +112,7 @@ final class SettingsUITests: XCTestCase {
 }
 
 #if os(iOS)
-/// PLAN-0016: Home sections must avoid native tabs and iPad window controls after restoration.
+/// PLAN-0016 / PLAN-0029: Home sections must avoid adaptive navigation and iPad window controls.
 final class IPadMenuLayoutUITests: XCTestCase {
     private let app = XCUIApplication()
     private let systemSettings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
@@ -124,17 +124,20 @@ final class IPadMenuLayoutUITests: XCTestCase {
     }
 
     private var channels: XCUIElement {
-        app.scrollViews[AccessibilityID.homeChipBar].buttons["Channels"].firstMatch
+        app.scrollViews[AccessibilityID.homeChipBar].buttons[AccessibilityID.homeSectionChip("Channels")].firstMatch
     }
 
-    private var searchTab: XCUIElement {
-        let tab = app.tabBars.buttons["Search"].firstMatch
-        return tab.exists ? tab : app.buttons["Search"].firstMatch
+    private var sidebarItems: XCUIElementQuery {
+        UITestHelpers.sidebarItems(in: app)
+    }
+
+    private var searchTab: XCUIElement? {
+        UITestHelpers.tabItem(named: "Search", in: app)
     }
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Requires the iPad top tab bar")
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Requires iPad adaptive navigation")
         app.launchArguments = [
             "--uitesting", "--uitesting-subscriptions", "--uitesting-mixed-feed",
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
@@ -156,6 +159,68 @@ final class IPadMenuLayoutUITests: XCTestCase {
         app.terminate()
         XCUIDevice.shared.orientation = .portrait
         super.tearDown()
+    }
+
+    func testPortraitStartsWithTopTabBar() throws {
+        app.terminate()
+        XCUIDevice.shared.orientation = .portrait
+        app.launch()
+
+        let search = try XCTUnwrap(searchTab, "Search must be reachable in the floating tab bar")
+        waitForLayout("A portrait iPad window must start with the top tab bar") {
+            search.isHittable && search.frame.maxY < self.app.frame.midY
+        }
+        XCTAssertFalse(sidebarItems[AccessibilityID.tab("Queue")].firstMatch.isHittable)
+
+        for destination in ["Settings", "Offline videos", "Library"] {
+            UITestHelpers.tapTab(named: destination, in: app)
+            if destination == "Settings" {
+                // Settings deliberately hides its navigation bar; its first form section is the destination marker.
+                let account = app.collectionViews.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "Account"))
+                    .firstMatch
+                XCTAssertTrue(account.waitForExistence(timeout: 5))
+            } else {
+                XCTAssertTrue(app.navigationBars[destination].waitForExistence(timeout: 5))
+            }
+            UITestHelpers.tapTab(named: "Home", in: app)
+            XCTAssertTrue(app.scrollViews[AccessibilityID.homeChipBar].waitForExistence(timeout: 5))
+        }
+        selectChannels()
+        assertMenusDoNotOverlap(channels)
+    }
+
+    func testWideSidebarShowsShortLabelsAndStableIdentifiers() {
+        app.terminate()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        app.launch()
+
+        // Queue is sidebar-only: it must be visible on launch without opening an overflow menu.
+        let queue = sidebarItems[AccessibilityID.tab("Queue")].firstMatch
+        XCTAssertTrue(queue.waitForExistence(timeout: 5))
+        waitForLayout("A wide iPad window must start with the sidebar visible") { queue.isHittable }
+        for (rawName, title) in [
+            ("Home", "Home"), ("Library", "Library"), ("Offline videos", "Offline"),
+            ("Settings", "Settings"), ("Search", "Search"),
+        ] {
+            let item = sidebarItems[AccessibilityID.tab(rawName)].firstMatch
+            XCTAssertTrue(item.waitForExistence(timeout: 5), "Missing navigation item: \(rawName)")
+            XCTAssertTrue(item.isHittable, "\(rawName) must be reachable without overflow")
+            XCTAssertEqual(item.label, title)
+        }
+
+        UITestHelpers.tapTab(named: "Offline videos", in: app)
+        XCTAssertTrue(app.navigationBars["Offline videos"].waitForExistence(timeout: 5))
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        waitForLayout("Settings must open directly from the sidebar") {
+            self.sidebarItems[AccessibilityID.tab("Settings")].firstMatch.isSelected
+        }
+        selectChannels()
+        XCTAssertTrue(channels.isSelected)
+        assertMenusDoNotOverlap(channels)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "iPad sidebar and accent section chip"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
     }
 
     func testMenusAcrossSplitViewAndWindowResizing() throws {
@@ -269,12 +334,20 @@ final class IPadMenuLayoutUITests: XCTestCase {
     }
 
     private func exerciseNavigationRoundTrips(named name: String, tabsAtBottom: Bool? = nil) {
+        guard let searchTab else {
+            XCTFail("Search must be reachable after changing the window")
+            return
+        }
         let chipBar = app.scrollViews[AccessibilityID.homeChipBar].firstMatch
         XCTAssertTrue(chipBar.waitForExistence(timeout: 5))
         UITestHelpers.scrollChipIntoView(channels, in: chipBar, app: app)
         XCTAssertTrue(channels.isSelected, "Changing the window must preserve the selected section")
         if let tabsAtBottom {
-            XCTAssertEqual(searchTab.frame.midY > app.windows.firstMatch.frame.midY, tabsAtBottom)
+            if sidebarItems[AccessibilityID.tab("Queue")].firstMatch.isHittable {
+                XCTAssertFalse(tabsAtBottom, "Sidebar visible: tabs must not be at the bottom")
+            } else {
+                XCTAssertEqual(searchTab.frame.midY > app.frame.midY, tabsAtBottom)
+            }
         }
         for _ in 0..<2 {
             XCTAssertTrue(app.buttons[AccessibilityID.subscriptionRow("UCfixtureAlpha")].waitForExistence(timeout: 5))
@@ -286,7 +359,7 @@ final class IPadMenuLayoutUITests: XCTestCase {
             XCTAssertTrue(channels.waitForExistence(timeout: 5))
             assertMenusDoNotOverlap(channels)
 
-            for destination in ["Settings", "Search", "Library"] {
+            for destination in ["Settings", "Search", "Library", "Offline videos"] {
                 UITestHelpers.tapTab(named: destination, in: app)
                 if destination == "Settings" { openAndCloseVisibleSections() }
                 UITestHelpers.tapTab(named: "Home", in: app)
@@ -323,12 +396,14 @@ final class IPadMenuLayoutUITests: XCTestCase {
     private func assertMenusDoNotOverlap(
         _ sectionChip: XCUIElement, file: StaticString = #filePath, line: UInt = #line
     ) {
-        let tab = searchTab
-        XCTAssertTrue(tab.waitForExistence(timeout: 5), file: file, line: line)
+        guard let tab = searchTab else {
+            XCTFail("Search must be reachable beside the Home controls", file: file, line: line)
+            return
+        }
         let separated = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in
                 !sectionChip.frame.isEmpty && !tab.frame.isEmpty
-                    && (sectionChip.frame.minY >= tab.frame.maxY || sectionChip.frame.maxY <= tab.frame.minY)
+                    && !sectionChip.frame.intersects(tab.frame)
                     && (!self.windowControls.exists || sectionChip.frame.minY >= self.windowControls.frame.maxY)
             }, object: nil)
         XCTAssertEqual(

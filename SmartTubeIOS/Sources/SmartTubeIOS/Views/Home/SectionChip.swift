@@ -13,6 +13,9 @@ struct SectionChip: View {
     let action: () -> Void
 
     @Environment(\.colorSchemeContrast) private var contrast
+    #if os(iOS)
+    @Environment(SettingsStore.self) private var store
+    #endif
 
     /// Capsule height from the design; on touch screens the button adds margin up to the 44 pt target.
     private static let height: CGFloat = 40
@@ -25,14 +28,21 @@ struct SectionChip: View {
     }()
 
     var body: some View {
+        #if os(iOS)
+        let selectedFill = AnyShapeStyle(store.settings.accentColor.color ?? VFColor.action)
+        let selectedLabel = AnyShapeStyle(store.settings.accentColor.onColor)
+        #else
+        let selectedFill = AnyShapeStyle(.primary)
+        let selectedLabel = AnyShapeStyle(.background)
+        #endif
         Button(action: action) {
             Text(title)
                 .font(.subheadline.weight(.medium))
                 .lineLimit(1)
-                .foregroundStyle(isSelected ? AnyShapeStyle(.background) : AnyShapeStyle(.primary))
+                .foregroundStyle(isSelected ? selectedLabel : AnyShapeStyle(.primary))
                 .padding(.horizontal, VFSpace.s16)
                 .frame(minHeight: Self.height)
-                .background(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(VFColor.surface), in: Capsule())
+                .background(isSelected ? selectedFill : AnyShapeStyle(VFColor.surface), in: Capsule())
                 .overlay {
                     // Increase Contrast: unselected chips get an edge so they do not rely on a faint fill.
                     if contrast == .increased, !isSelected {

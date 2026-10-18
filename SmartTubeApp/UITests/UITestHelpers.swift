@@ -240,7 +240,7 @@ enum UITestHelpers {
     /// Opens the Search tab. While a search is active, iOS 26 turns the search-role tab into the field itself
     /// and minimizes the tab bar: there is no Search tab to tap, and the field is already on screen.
     static func openSearch(in app: XCUIApplication) {
-        if searchField(in: app).exists, !app.tabBars.buttons["Search"].exists { return }
+        if searchField(in: app).isHittable { return }
         tapTab(named: "Search", in: app)
     }
 
@@ -255,25 +255,62 @@ enum UITestHelpers {
 
     // MARK: - Tab navigation
 
-    /// Taps the named tab, supporting both the bottom tab bar (iPhone) and the
-    /// iPadOS 18 sidebar where tab items appear as standalone buttons.
-    static func tapTab(named label: String, in app: XCUIApplication, timeout: TimeInterval = 5) {
-        let tabBarButton = app.tabBars.buttons[label]
-        if tabBarButton.waitForExistence(timeout: min(timeout, 3)) {
-            let hittablePredicate = NSPredicate(format: "hittable == true")
-            let hittableExpectation = XCTNSPredicateExpectation(predicate: hittablePredicate, object: tabBarButton)
-            _ = XCTWaiter().wait(for: [hittableExpectation], timeout: timeout)
-            tabBarButton.tap()
+    private static func tabPredicate(named rawName: String) -> NSPredicate {
+        let displayName = rawName == "Offline videos" ? "Offline" : rawName
+        return NSPredicate(
+            format: "identifier == %@ OR label IN %@", AccessibilityID.tab(rawName), [rawName, displayName])
+    }
+
+    /// Both destinations identify the native sidebar without matching a tab's content stack.
+    static func sidebarItems(in app: XCUIApplication) -> XCUIElementQuery {
+        app.collectionViews
+            .containing(tabPredicate(named: "Home"))
+            .containing(tabPredicate(named: "Settings"))
+            .descendants(matching: .any)
+    }
+
+    /// iPad's floating tabs need not be buttons or descendants of a TabBar in the accessibility tree.
+    static func tabItem(named rawName: String, in app: XCUIApplication, timeout: TimeInterval = 5) -> XCUIElement? {
+        let predicate = tabPredicate(named: rawName)
+        let candidates = app.descendants(matching: .any).matching(predicate)
+        guard candidates.firstMatch.waitForExistence(timeout: timeout) else { return nil }
+
+        let tabBarItems = app.tabBars.descendants(matching: .any).matching(predicate)
+        let sidebarMatches = sidebarItems(in: app).matching(predicate)
+        let navigationTitles = app.navigationBars.descendants(matching: .any).matching(predicate)
+        var item: XCUIElement?
+        let hittable = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in
+                for query in [tabBarItems, sidebarMatches] {
+                    if let match = query.allElementsBoundByIndex.first(where: { $0.isHittable }) {
+                        item = match
+                        return true
+                    }
+                }
+
+                // Bound the unscoped fallback to top chrome: content stacks share the tab identifiers.
+                let window = app.frame
+                let topArea = CGRect(
+                    x: window.minX, y: window.minY, width: window.width, height: min(120, window.height / 4))
+                let titleFrames = navigationTitles.allElementsBoundByIndex.map(\.frame)
+                item = candidates.allElementsBoundByIndex.first { candidate in
+                    let frame = candidate.frame
+                    return !frame.isEmpty && topArea.contains(frame) && candidate.elementType != .navigationBar
+                        && !titleFrames.contains(frame) && candidate.isHittable
+                }
+                return item != nil
+            }, object: nil)
+        guard XCTWaiter().wait(for: [hittable], timeout: timeout) == .completed else { return nil }
+        return item
+    }
+
+    /// Raw names keep identifiers stable even when the displayed tab label is shorter.
+    static func tapTab(named rawName: String, in app: XCUIApplication, timeout: TimeInterval = 5) {
+        guard let item = tabItem(named: rawName, in: app, timeout: timeout) else {
+            XCTFail("'\(rawName)' hittable navigation item not found in tab bar, sidebar or top area")
             return
         }
-        let sidebarButton = app.buttons[label].firstMatch
-        XCTAssertTrue(
-            sidebarButton.waitForExistence(timeout: timeout),
-            "'\(label)' navigation item not found in tab bar or sidebar")
-        let hittablePredicate = NSPredicate(format: "hittable == true")
-        let hittableExpectation = XCTNSPredicateExpectation(predicate: hittablePredicate, object: sidebarButton)
-        _ = XCTWaiter().wait(for: [hittableExpectation], timeout: timeout)
-        sidebarButton.tap()
+        item.tap()
     }
 
     // MARK: - Chip bar scrolling

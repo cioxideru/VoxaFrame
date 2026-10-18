@@ -48,6 +48,7 @@ struct MainTabView: View {
     @State private var miniPlayerHeight: CGFloat = 0
     @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.isLandscapeLayout) private var isLandscapeLayout
     @Environment(\.innerTubeAPI) private var api
     @Environment(SettingsStore.self) private var store
     @Environment(PlayerStateStore.self) private var playerState
@@ -190,12 +191,15 @@ struct MainTabView: View {
                     tabContent(.queue)
                 }
                 .tabPlacement(.sidebarOnly)
+                .accessibilityIdentifier(AccessibilityID.tab(ShellItem.queue.id))
             }
             ForEach(Self.tabOrder.dropFirst(2)) { section in
                 sectionTab(section)
             }
         }
         .tabViewStyle(.sidebarAdaptable)
+        // Match the initial window shape; the user can still toggle between the sidebar and tabs.
+        .defaultAdaptableTabBarPlacement(isLandscapeLayout ? .sidebar : .tabBar)
         // An invisible header that reports where the sidebar is while it is on screen.
         .tabViewSidebarHeader {
             Color.clear
@@ -211,9 +215,10 @@ struct MainTabView: View {
     }
 
     private func sectionTab(_ section: AppSection) -> some TabContent<ShellItem> {
-        Tab(section.rawValue, systemImage: section.icon, value: ShellItem.section(section), role: section.tabRole) {
+        Tab(section.tabTitle, systemImage: section.icon, value: ShellItem.section(section), role: section.tabRole) {
             tabContent(.section(section))
         }
+        .accessibilityIdentifier(AccessibilityID.tab(section.rawValue))
     }
 
     /// One NavigationStack per tab; the tab container never adds another.
@@ -315,6 +320,17 @@ private struct NavigationBottomReserve: UIViewRepresentable {
 }
 
 extension AppSection {
+    /// Short, localized chrome labels; raw values remain the stable navigation and accessibility identity.
+    fileprivate var tabTitle: String {
+        switch self {
+        case .home: String(localized: "Home", bundle: .module)
+        case .library: String(localized: "Library", bundle: .module)
+        case .offline: String(localized: "Offline", bundle: .module)
+        case .settings: String(localized: "Settings", bundle: .module)
+        case .search: String(localized: "Search", bundle: .module)
+        }
+    }
+
     /// Search is the system search-role tab on iOS 26+; a regular tab before that.
     fileprivate var tabRole: TabRole? {
         guard self == .search else { return nil }

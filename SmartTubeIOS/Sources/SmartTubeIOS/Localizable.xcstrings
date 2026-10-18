@@ -15057,6 +15057,24 @@
         }
       }
     },
+    "Offline" : {
+      "comment" : "Short label for the offline library tab on iPhone and iPad; its accessibility identifier stays tab.offline videos",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Офлайн"
+          }
+        }
+      }
+    },
     "Offline library is unavailable" : {
       "comment" : "Offline videos when the library cannot be read or saved",
       "extractionState" : "manual",
