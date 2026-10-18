@@ -43,6 +43,24 @@ enum VFMargin {
     static let cardMinWidth: CGFloat = 240
 }
 
+/// Content columns inside the app shell; they never create another navigation container.
+enum VFColumn {
+    static let minimumContentWidth: CGFloat = 600
+    static let listMinimum: CGFloat = 280
+    static let listFraction: CGFloat = 0.4
+    static let offlineListMaximum: CGFloat = 380
+    static let settingsCategoriesMaximum: CGFloat = 320
+    static let settingsCategoriesTVMaximum: CGFloat = 620
+
+    static func supportsColumns(width: CGFloat, typeSize: DynamicTypeSize) -> Bool {
+        width >= minimumContentWidth && !typeSize.isAccessibilitySize
+    }
+
+    static func listWidth(in width: CGFloat, maximum: CGFloat) -> CGFloat {
+        max(listMinimum, min(width * listFraction, maximum))
+    }
+}
+
 // MARK: - Motion
 
 enum VFMotion {

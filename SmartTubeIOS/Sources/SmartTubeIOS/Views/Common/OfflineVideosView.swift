@@ -36,7 +36,12 @@ struct OfflineVideosView: View {
     @State private var showsProgress = false
     @State private var showsDeleteAll = false
     @State private var deletion: Deletion?
+    @State private var selectedVideoID: String?
+    @State private var contentWidth: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var typeSize
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
 
     /// One job or one video; the confirmation names the track or the video.
     private enum Deletion {
@@ -54,7 +59,126 @@ struct OfflineVideosView: View {
             pendingRemovals: snapshot.pendingRemovals)
     }
 
+    private var showsColumns: Bool {
+        #if os(macOS)
+        VFColumn.supportsColumns(width: contentWidth, typeSize: typeSize)
+        #elseif os(iOS)
+        UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
+            && VFColumn.supportsColumns(width: contentWidth, typeSize: typeSize)
+        #else
+        false
+        #endif
+    }
+
     var body: some View {
+        adaptiveContent
+            .navigationTitle(Text("Offline videos", bundle: .module))
+            .onGeometryChange(for: CGFloat.self, of: \.size.width) { contentWidth = $0 }
+            .onChange(of: snapshot.entries.map(\.id)) { _, _ in
+                selectedVideoID = OfflinePresentation.retainedSelection(selectedVideoID, entries: snapshot.entries)
+            }
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(role: .destructive) {
+                        showsDeleteAll = true
+                    } label: {
+                        Label {
+                            Text("Delete all offline videos", bundle: .module)
+                        } icon: {
+                            Image(systemName: AppSymbol.trash)
+                        }
+                    }
+                    .accessibilityIdentifier(AccessibilityID.offlineDeleteAll)
+                    .disabled(!coordinator.ready || isLocked)
+                    .confirmationDialog(
+                        Text("Delete all offline videos?", bundle: .module), isPresented: $showsDeleteAll,
+                        titleVisibility: .visible
+                    ) {
+                        Button(role: .destructive) {
+                            guard coordinator.ready, !isLocked else { return }
+                            coordinator.remove(videoID: nil)
+                        } label: {
+                            Text("Delete all", bundle: .module)
+                        }
+                        .disabled(!coordinator.ready || isLocked)
+                        Button(role: .cancel) {
+                        } label: {
+                            Text("Cancel", bundle: .module)
+                        }
+                    } message: {
+                        Text(
+                            "This cancels all offline downloads and deletes every saved video, audio track, translation and their cache. Watch history, your Google account and settings stay as they are. This cannot be undone.",
+                            bundle: .module)
+                    }
+                }
+            }
+            .task { coordinator.start() }
+            .confirmationDialog(
+                deletionTitle,
+                isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }),
+                titleVisibility: .visible, presenting: deletion
+            ) { item in
+                Button(role: .destructive) {
+                    defer { deletion = nil }
+                    guard !isLocked else { return }
+                    switch item {
+                    case .job(let job): coordinator.remove(videoID: job.videoID, jobID: job.id)
+                    case .video(let id, _): coordinator.remove(videoID: id)
+                    }
+                } label: {
+                    Text("Delete", bundle: .module)
+                }
+                .disabled(isLocked)
+                Button(role: .cancel) {
+                } label: {
+                    Text("Cancel", bundle: .module)
+                }
+            } message: { item in
+                switch item {
+                case .job:
+                    Text(
+                        "This removes the task and its downloaded files. Other saved tracks are kept.", bundle: .module)
+                case .video:
+                    Text(
+                        "This removes the video, all downloaded audio and translations, and its pending downloads.",
+                        bundle: .module)
+                }
+            }
+    }
+
+    @ViewBuilder private var adaptiveContent: some View {
+        if showsColumns {
+            GeometryReader { geometry in
+                HStack(spacing: 0) {
+                    libraryPane
+                        .frame(width: VFColumn.listWidth(in: geometry.size.width, maximum: VFColumn.offlineListMaximum))
+                    Divider()
+                    Group {
+                        if let videoID = OfflinePresentation.retainedSelection(
+                            selectedVideoID, entries: snapshot.entries)
+                        {
+                            OfflineVideoDetail(videoID: videoID, isEmbedded: true).id(videoID)
+                        } else {
+                            ContentUnavailableView {
+                                Label {
+                                    Text("Select an offline video", bundle: .module)
+                                } icon: {
+                                    Image(systemName: AppSymbol.download)
+                                }
+                            } description: {
+                                Text("Choose a video from the library to see its saved files.", bundle: .module)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+        } else {
+            libraryPane
+        }
+    }
+
+    private var libraryPane: some View {
         VStack(spacing: 0) {
             Picker(selection: $showsProgress) {
                 Text("Library", bundle: .module).tag(false)
@@ -79,73 +203,6 @@ struct OfflineVideosView: View {
                 if showsProgress { emptyDownloads } else { emptyLibrary }
             case .content:
                 if showsProgress { jobList } else { libraryList }
-            }
-        }
-        .navigationTitle(Text("Offline videos", bundle: .module))
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(role: .destructive) {
-                    showsDeleteAll = true
-                } label: {
-                    Label {
-                        Text("Delete all offline videos", bundle: .module)
-                    } icon: {
-                        Image(systemName: AppSymbol.trash)
-                    }
-                }
-                .accessibilityIdentifier(AccessibilityID.offlineDeleteAll)
-                .disabled(!coordinator.ready || isLocked)
-                .confirmationDialog(
-                    Text("Delete all offline videos?", bundle: .module), isPresented: $showsDeleteAll,
-                    titleVisibility: .visible
-                ) {
-                    Button(role: .destructive) {
-                        guard coordinator.ready, !isLocked else { return }
-                        coordinator.remove(videoID: nil)
-                    } label: {
-                        Text("Delete all", bundle: .module)
-                    }
-                    .disabled(!coordinator.ready || isLocked)
-                    Button(role: .cancel) {
-                    } label: {
-                        Text("Cancel", bundle: .module)
-                    }
-                } message: {
-                    Text(
-                        "This cancels all offline downloads and deletes every saved video, audio track, translation and their cache. Watch history, your Google account and settings stay as they are. This cannot be undone.",
-                        bundle: .module)
-                }
-            }
-        }
-        .task { coordinator.start() }
-        .confirmationDialog(
-            deletionTitle,
-            isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }),
-            titleVisibility: .visible, presenting: deletion
-        ) { item in
-            Button(role: .destructive) {
-                defer { deletion = nil }
-                guard !isLocked else { return }
-                switch item {
-                case .job(let job): coordinator.remove(videoID: job.videoID, jobID: job.id)
-                case .video(let id, _): coordinator.remove(videoID: id)
-                }
-            } label: {
-                Text("Delete", bundle: .module)
-            }
-            .disabled(isLocked)
-            Button(role: .cancel) {
-            } label: {
-                Text("Cancel", bundle: .module)
-            }
-        } message: { item in
-            switch item {
-            case .job:
-                Text("This removes the task and its downloaded files. Other saved tracks are kept.", bundle: .module)
-            case .video:
-                Text(
-                    "This removes the video, all downloaded audio and translations, and its pending downloads.",
-                    bundle: .module)
             }
         }
     }
@@ -179,32 +236,6 @@ struct OfflineVideosView: View {
         }
     }
 
-    private var emptyLibrary: some View {
-        ContentUnavailableView {
-            Label {
-                Text("No offline videos", bundle: .module)
-            } icon: {
-                Image(systemName: AppSymbol.download)
-            }
-        } description: {
-            Text(
-                "Choose Offline watch from a video's menu. Accepted downloads continue when you leave this page.",
-                bundle: .module)
-        }
-    }
-
-    private var emptyDownloads: some View {
-        ContentUnavailableView {
-            Label {
-                Text("No downloads", bundle: .module)
-            } icon: {
-                Image(systemName: AppSymbol.download)
-            }
-        } description: {
-            Text("Downloads you start with Offline watch appear here until you delete them.", bundle: .module)
-        }
-    }
-
     /// Storage failure above saved content, and the pending removal that holds every other change.
     @ViewBuilder private var notices: some View {
         if let error = coordinator.error { OfflineStorageNotice(message: error) }
@@ -221,19 +252,36 @@ struct OfflineVideosView: View {
     // MARK: Library
 
     private var libraryList: some View {
-        List {
+        List(selection: showsColumns ? $selectedVideoID : nil) {
             notices
             ForEach(snapshot.entries) { entry in
                 let title = OfflinePresentation.title(of: entry.id, in: snapshot.entries)
                 HStack(spacing: VFSpace.s8) {
-                    NavigationLink {
-                        OfflineVideoDetail(videoID: entry.id)
-                    } label: {
-                        OfflineEntryLabel(
-                            entry: entry, title: title,
-                            status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs))
+                    if showsColumns {
+                        Button {
+                            selectedVideoID = entry.id
+                        } label: {
+                            OfflineEntryLabel(
+                                entry: entry, title: title,
+                                status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs)
+                            )
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(.primary)
+                        .accessibilityAddTraits(selectedVideoID == entry.id ? [.isSelected] : [])
+                        .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
+                    } else {
+                        NavigationLink {
+                            OfflineVideoDetail(videoID: entry.id)
+                        } label: {
+                            OfflineEntryLabel(
+                                entry: entry, title: title,
+                                status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs))
+                        }
+                        .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
                     }
-                    .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
                     Button(role: .destructive) {
                         deletion = .video(id: entry.id, title: title)
                     } label: {
@@ -249,8 +297,18 @@ struct OfflineVideosView: View {
                     .disabled(isLocked)
                     .accessibilityIdentifier(AccessibilityID.offlineDeleteEntry(entry.id))
                 }
+                .tag(entry.id)
             }
         }
+        .accessibilityIdentifier(AccessibilityID.offlineLibraryList)
+        #if os(macOS)
+        .onDeleteCommand {
+            guard showsColumns, !isLocked,
+                let videoID = OfflinePresentation.retainedSelection(selectedVideoID, entries: snapshot.entries)
+            else { return }
+            deletion = .video(id: videoID, title: OfflinePresentation.title(of: videoID, in: snapshot.entries))
+        }
+        #endif
     }
 
     // MARK: Downloads
@@ -277,6 +335,7 @@ struct OfflineVideosView: View {
             }
         }
         .buttonStyle(.borderless)
+        .accessibilityIdentifier(AccessibilityID.offlineJobsList)
     }
 
     private var rowLayout: AnyLayout {
@@ -358,12 +417,51 @@ struct OfflineVideosView: View {
             .disabled(isLocked)
             .accessibilityIdentifier(AccessibilityID.offlineRetry(job.id))
         case .open:
-            NavigationLink {
-                OfflineVideoDetail(videoID: job.videoID)
-            } label: {
-                Text("Open", bundle: .module)
+            if showsColumns {
+                Button {
+                    selectedVideoID = job.videoID
+                } label: {
+                    Text("Open", bundle: .module)
+                }
+                .buttonStyle(.bordered)
+            } else {
+                NavigationLink {
+                    OfflineVideoDetail(videoID: job.videoID)
+                } label: {
+                    Text("Open", bundle: .module)
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.bordered)
+        }
+    }
+}
+
+// MARK: - Empty states
+
+extension OfflineVideosView {
+    fileprivate var emptyLibrary: some View {
+        ContentUnavailableView {
+            Label {
+                Text("No offline videos", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.download)
+            }
+        } description: {
+            Text(
+                "Choose Offline watch from a video's menu. Accepted downloads continue when you leave this page.",
+                bundle: .module)
+        }
+    }
+
+    fileprivate var emptyDownloads: some View {
+        ContentUnavailableView {
+            Label {
+                Text("No downloads", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.download)
+            }
+        } description: {
+            Text("Downloads you start with Offline watch appear here until you delete them.", bundle: .module)
         }
     }
 }

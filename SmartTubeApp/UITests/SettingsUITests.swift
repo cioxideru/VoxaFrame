@@ -24,15 +24,45 @@ final class SettingsUITests: XCTestCase {
         app = nil
     }
 
+    #if os(iOS)
+    func testRegularWidthCategoriesKeepTheirControlsBesideTheList() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Requires a regular-width iPad window")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        let categories = app.descendants(matching: .any).matching(identifier: AccessibilityID.settingsCategories)
+            .firstMatch
+        XCTAssertTrue(categories.waitForExistence(timeout: 5), "Run this layout test in a regular-width iPad window")
+        let form = UITestHelpers.settingsForm(in: app)
+        for (group, identifier) in [
+            ("playback", AccessibilityID.settingsH264Toggle),
+            ("languages", AccessibilityID.settingsPreferredAudioLanguageRow),
+            ("thisDevice", AccessibilityID.settingsHistoryPicker),
+            ("appearance", AccessibilityID.settingsThumbnailStylePicker),
+            ("sponsorBlock", AccessibilityID.settingsSponsorBlockToggle),
+            ("parentalControls", AccessibilityID.settingsSetPINButton),
+            ("about", AccessibilityID.settingsResetAllButton),
+        ] {
+            UITestHelpers.selectSettingsCategory(group, in: app)
+            let control = form.descendants(matching: .any).matching(identifier: identifier).firstMatch
+            UITestHelpers.scrollUntilVisible(control, in: form, maxSwipes: 16)
+            XCTAssertTrue(control.waitForExistence(timeout: 5), "\(identifier) must remain reachable")
+            XCTAssertTrue(control.isHittable)
+            XCTAssertTrue(categories.buttons[AccessibilityID.settingsCategory(group)].isSelected)
+            XCTAssertLessThanOrEqual(categories.frame.maxX, form.frame.minX, "The form must be beside the categories")
+        }
+    }
+    #endif
+
     func testSignInButtonVisibleWhenSignedOut() throws {
         app.terminate()
         app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--uitesting-reset-settings", "--uitesting-sign-out"]
         app.launch()
         UITestHelpers.tapTab(named: "Settings", in: app)
-        let signInPredicate = NSPredicate(
-            format: "identifier == 'settings.signInButton' OR label == 'Sign in with Google'")
-        let signInEl = app.descendants(matching: .any).matching(signInPredicate).firstMatch
+        UITestHelpers.selectSettingsCategory("account", in: app)
+        let signInEl = app.descendants(matching: .any).matching(identifier: AccessibilityID.settingsSignInButton)
+            .firstMatch
         XCTAssertTrue(
             signInEl.waitForExistence(timeout: 5),
             "'Sign in with Google' button must be visible when the session is cleared via --uitesting-sign-out")
@@ -40,9 +70,10 @@ final class SettingsUITests: XCTestCase {
 
     func testShortsTranslationDefaultsAreIndependentAndPersist() {
         UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("languages", in: app)
         let shortsToggle = app.switches[AccessibilityID.settingsShortsYandexVOTToggle]
         let regularToggle = app.switches[AccessibilityID.settingsYandexVOTToggle]
-        let form = app.collectionViews.firstMatch
+        let form = UITestHelpers.settingsForm(in: app)
         UITestHelpers.scrollUntilVisible(shortsToggle, in: form, maxSwipes: 14)
         XCTAssertTrue(shortsToggle.waitForExistence(timeout: 5))
         XCTAssertEqual(shortsToggle.value as? String, "0")
@@ -63,6 +94,7 @@ final class SettingsUITests: XCTestCase {
         app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
         app.launch()
         UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("languages", in: app)
         UITestHelpers.scrollUntilVisible(shortsToggle, in: form, maxSwipes: 14)
         XCTAssertEqual(shortsToggle.value as? String, "1")
         UITestHelpers.scrollUntilVisible(original, in: form)
@@ -88,7 +120,8 @@ final class SettingsUITests: XCTestCase {
         if back.waitForExistence(timeout: 10) { back.tap() }
 
         UITestHelpers.tapTab(named: "Settings", in: app)
-        let form = app.collectionViews.firstMatch
+        UITestHelpers.selectSettingsCategory("thisDevice", in: app)
+        let form = UITestHelpers.settingsForm(in: app)
         let clear = app.buttons[AccessibilityID.settingsClearLocalHistoryButton]
         UITestHelpers.scrollUntilVisible(clear, in: form, maxSwipes: 16)
         XCTAssertTrue(clear.waitForExistence(timeout: 5), "A watched card must enable the clear row")
@@ -381,9 +414,10 @@ final class IPadMenuLayoutUITests: XCTestCase {
     }
 
     private func openAndCloseVisibleSections() {
-        let form = app.collectionViews.firstMatch
+        UITestHelpers.selectSettingsCategory("appearance", in: app)
+        let form = UITestHelpers.settingsForm(in: app)
         XCTAssertTrue(form.waitForExistence(timeout: 5))
-        let visibleSections = form.cells.containing(.staticText, identifier: "Visible Sections").firstMatch
+        let visibleSections = form.buttons[AccessibilityID.settingsVisibleSectionsLink].firstMatch
         UITestHelpers.scrollUntilVisible(visibleSections, in: form)
         XCTAssertTrue(visibleSections.waitForExistence(timeout: 5))
         visibleSections.tap()
@@ -458,8 +492,9 @@ final class HideWatchedSettingsUITests: XCTestCase {
         stepper.buttons[AccessibilityID.settingsHideWatchedThresholdStepper + "-Increment"].tap()
         XCTAssertTrue(stepper.label.contains("100%"))
 
+        UITestHelpers.selectSettingsCategory("about", in: app)
         let link = app.descendants(matching: .any).matching(identifier: AccessibilityID.settingsGitHubLink).firstMatch
-        UITestHelpers.scrollUntilVisible(link, in: app.collectionViews.firstMatch, maxSwipes: 16)
+        UITestHelpers.scrollUntilVisible(link, in: UITestHelpers.settingsForm(in: app), maxSwipes: 16)
         XCTAssertTrue(link.waitForExistence(timeout: 5))
         XCTAssertEqual(link.value as? String, "https://github.com/cioxideru/VoxaFrame")
     }
@@ -516,8 +551,9 @@ final class HideWatchedSettingsUITests: XCTestCase {
 
     private func setHideWatched(_ enabled: Bool) {
         UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("appearance", in: app)
         let toggle = app.switches[AccessibilityID.settingsHideWatchedVideosToggle]
-        UITestHelpers.scrollUntilVisible(toggle, in: app.collectionViews.firstMatch, maxSwipes: 16)
+        UITestHelpers.scrollUntilVisible(toggle, in: UITestHelpers.settingsForm(in: app), maxSwipes: 16)
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
         if (toggle.value as? String == "1") != enabled {
             toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()

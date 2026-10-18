@@ -13,8 +13,15 @@ public struct SettingsView: View {
     @Environment(AuthService.self) private var auth
     @Environment(SettingsStore.self) private var store
     @State private var showSignIn = false
+    @State var selectedGroup: SettingsGroup = .account
+    #if os(iOS)
+    @State var contentWidth: CGFloat = 0
+    @Environment(\.dynamicTypeSize) var typeSize
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    #endif
     #if os(tvOS)
     @State private var showGithubQR = false
+    @FocusState var focusedGroup: SettingsGroup?
     #endif
     /// #126: whether the current visit to this screen has already passed the PIN
     /// check. Reset to `false` on `.onDisappear` (see body) so leaving and coming back
@@ -120,7 +127,7 @@ public struct SettingsView: View {
                 Button("Sign Out", role: .destructive) { auth.signOut() }
             } else {
                 Button("Sign in with Google") { showSignIn = true }
-                    .accessibilityIdentifier("settings.signInButton")
+                    .accessibilityIdentifier(AccessibilityID.settingsSignInButton)
                     .sheet(isPresented: $showSignIn) { SignInView() }
             }
         } header: {
@@ -163,7 +170,7 @@ public struct SettingsView: View {
                 Text("Default Quality")
                 Text("Changing it clears the quality you last picked in the player.", bundle: .module)
             }
-            .accessibilityIdentifier("settings.preferredQualityPicker")
+            .accessibilityIdentifier(AccessibilityID.settingsPreferredQualityPicker)
             #endif
 
             #if os(tvOS)
@@ -172,7 +179,7 @@ public struct SettingsView: View {
                     Text("\(s) s").tag(s)
                 }
             }
-            .accessibilityIdentifier("settings.seekBackRow")
+            .accessibilityIdentifier(AccessibilityID.settingsSeekBackRow)
             Picker("Seek Forward", selection: $store.settings.seekForwardSeconds) {
                 ForEach(AppSettings.availableSeekOptions, id: \.self) { s in
                     Text("\(s) s").tag(s)
@@ -186,7 +193,7 @@ public struct SettingsView: View {
                 in: 5...60,
                 step: 5
             )
-            .accessibilityIdentifier("settings.seekBackRow")
+            .accessibilityIdentifier(AccessibilityID.settingsSeekBackRow)
             Stepper(
                 "Seek Forward: \(store.settings.seekForwardSeconds) s",
                 value: $store.settings.seekForwardSeconds,
@@ -381,7 +388,7 @@ extension SettingsView {
         @Bindable var store = store
         return Section {
             Toggle("Hide Shorts", isOn: $store.settings.hideShorts)
-                .accessibilityIdentifier("settings.hideShortsToggle")
+                .accessibilityIdentifier(AccessibilityID.settingsHideShortsToggle)
             Toggle("Hide Live Shorts", isOn: $store.settings.hideLiveShorts)
                 .accessibilityIdentifier("settings.hideLiveShortsToggle")
             Toggle("Hide Video Premieres", isOn: $store.settings.hideVideoPremieres)

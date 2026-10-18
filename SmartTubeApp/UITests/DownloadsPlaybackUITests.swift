@@ -82,8 +82,8 @@ final class DownloadsPlaybackUITests: XCTestCase {
         translation.tap()
         waitUntilDisabled(translation)
         let before = try await requestCount(videoID: id)
-        app.swipeDown()
-        app.swipeDown()
+        offlineList(AccessibilityID.offlineDetailList).swipeDown()
+        offlineList(AccessibilityID.offlineDetailList).swipeDown()
         selectTranslation()
         play("fixture-hls", translated: true)
         app.terminate()
@@ -114,7 +114,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertGreaterThan(counts["/\(id)/voice.mp3"] ?? 0, 0)
         XCTAssertEqual(counts["/\(id)/video.mp4"] ?? 0, 0)
 
-        app.navigationBars.buttons.firstMatch.tap()
+        returnToLibrary()
         let pages = app.segmentedControls[AccessibilityID.offlinePagePicker]
         XCTAssertTrue(pages.waitForExistence(timeout: 5))
         pages.buttons["Downloads"].tap()
@@ -122,7 +122,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         let job = app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "offline.job.", id))
             .containing(.staticText, identifier: "en · Original").firstMatch
-        reveal(job)
+        reveal(job, in: AccessibilityID.offlineJobsList)
         XCTAssertTrue(job.waitForExistence(timeout: 8))
         let remove = job.buttons["Delete task and files"]
         XCTAssertTrue(remove.exists)
@@ -134,7 +134,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter().wait(for: [removed], timeout: 10), .completed)
         pages.buttons["Library"].tap()
         let deleteEntry = app.buttons[AccessibilityID.offlineDeleteEntry(id)]
-        reveal(deleteEntry)
+        reveal(deleteEntry, in: AccessibilityID.offlineLibraryList)
         XCTAssertTrue(deleteEntry.waitForExistence(timeout: 5))
         deleteEntry.tap()
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
@@ -177,7 +177,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         launch(videoID: nil)
         UITestHelpers.tapTab(named: "Offline videos", in: app)
         let remove = app.buttons[AccessibilityID.offlineDeleteEntry(id)]
-        reveal(remove)
+        reveal(remove, in: AccessibilityID.offlineLibraryList)
         XCTAssertTrue(remove.waitForExistence(timeout: 5))
         remove.tap()
         let confirm = app.buttons["Delete"].firstMatch
@@ -207,7 +207,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         reveal(translation)
         XCTAssertTrue(translation.waitForExistence(timeout: 5))
         waitUntilDisabled(translation)
-        app.navigationBars.buttons.firstMatch.tap()
+        returnToLibrary()
 
         let remove = app.buttons[AccessibilityID.offlineDeleteAll]
         XCTAssertTrue(remove.waitForExistence(timeout: 5))
@@ -308,15 +308,36 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertTrue(library.waitForExistence(timeout: 8))
         library.tap()
         let entry = app.buttons[AccessibilityID.offlineEntry(id)].firstMatch
-        reveal(entry)
+        reveal(entry, in: AccessibilityID.offlineLibraryList)
         XCTAssertTrue(entry.waitForExistence(timeout: 15))
         entry.tap()
+        XCTAssertTrue(offlineList(AccessibilityID.offlineDetailList).waitForExistence(timeout: 5))
+        if library.exists && library.isHittable {
+            XCTAssertTrue(entry.isSelected, "The adjacent library must retain the selected video")
+        }
     }
 
-    private func reveal(_ element: XCUIElement) {
+    private func offlineList(_ identifier: String) -> XCUIElement {
+        let table = app.tables[identifier].firstMatch
+        return table.exists ? table : app.collectionViews[identifier].firstMatch
+    }
+
+    private func returnToLibrary() {
+        let pages = app.segmentedControls[AccessibilityID.offlinePagePicker]
+        // In columns the picker remains beside the detail; the navigation bar has no detail Back button.
+        if pages.exists && pages.isHittable { return }
+        let back = app.navigationBars.buttons.firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: 5))
+        back.tap()
+        XCTAssertTrue(pages.waitForExistence(timeout: 5))
+    }
+
+    private func reveal(_ element: XCUIElement, in listID: String = AccessibilityID.offlineDetailList) {
+        let list = offlineList(listID)
+        XCTAssertTrue(list.waitForExistence(timeout: 5))
         for _ in 0..<24 {
             if element.exists && element.isHittable { return }
-            app.swipeUp()
+            list.swipeUp()
         }
     }
 
@@ -343,8 +364,8 @@ final class DownloadsPlaybackUITests: XCTestCase {
     }
 
     private func selectAudioAndTranslation() {
-        app.swipeDown()
-        app.swipeDown()
+        offlineList(AccessibilityID.offlineDetailList).swipeDown()
+        offlineList(AccessibilityID.offlineDetailList).swipeDown()
         let audio = app.buttons[AccessibilityID.offlineAudioPicker]
         XCTAssertTrue(audio.waitForExistence(timeout: 5))
         audio.tap()

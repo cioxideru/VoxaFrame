@@ -7,6 +7,26 @@ import Testing
 @Suite("Design tokens")
 struct DesignTokenTests {
 
+    @Test("Content columns collapse in narrow windows and at accessibility text sizes")
+    func columnsRequireReadableContentWidth() {
+        #expect(!VFColumn.supportsColumns(width: 0, typeSize: .large))
+        #expect(!VFColumn.supportsColumns(width: VFColumn.minimumContentWidth - 1, typeSize: .large))
+        #expect(VFColumn.supportsColumns(width: VFColumn.minimumContentWidth, typeSize: .xxxLarge))
+        #expect(!VFColumn.supportsColumns(width: 1200, typeSize: .accessibility1))
+        #expect(!VFColumn.supportsColumns(width: 1200, typeSize: .accessibility5))
+    }
+
+    @Test("List columns keep their minimum width and stop growing at their platform maximum")
+    func columnWidthsStayWithinBounds() {
+        for maximum in [
+            VFColumn.offlineListMaximum, VFColumn.settingsCategoriesMaximum, VFColumn.settingsCategoriesTVMaximum,
+        ] {
+            #expect(VFColumn.listWidth(in: VFColumn.minimumContentWidth, maximum: maximum) == VFColumn.listMinimum)
+            #expect(VFColumn.listWidth(in: 2400, maximum: maximum) == maximum)
+        }
+        #expect(VFColumn.listWidth(in: 800, maximum: VFColumn.offlineListMaximum) == 320)
+    }
+
     private struct Surface {
         let name: String
         let light: UInt32

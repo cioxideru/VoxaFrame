@@ -348,8 +348,9 @@ final class MixedFeedLayoutUITests: XCTestCase {
 
     private func setHistory(_ value: String) {
         UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("thisDevice", in: app)
         let picker = app.buttons[AccessibilityID.settingsHistoryPicker]
-        for _ in 0..<12 where !picker.isHittable { app.swipeUp() }
+        UITestHelpers.scrollUntilVisible(picker, in: UITestHelpers.settingsForm(in: app), maxSwipes: 12)
         XCTAssertTrue(picker.waitForExistence(timeout: 5))
         picker.tap()
         let option = app.buttons[value]

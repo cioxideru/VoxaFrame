@@ -2204,6 +2204,12 @@
             "value" : "Über"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2302,6 +2308,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Konto"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account"
           }
         },
         "es" : {
@@ -4962,6 +4974,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "中文（简体）"
+          }
+        }
+      }
+    },
+    "Choose a video from the library to see its saved files." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a video from the library to see its saved files."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите видео в библиотеке, чтобы увидеть сохранённые файлы."
           }
         }
       }
@@ -16423,7 +16452,20 @@
       }
     },
     "Parental Controls" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parental Controls"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Родительский контроль"
+          }
+        }
+      }
     },
     "Pause" : {
       "comment" : "A button that pauses playback.",
@@ -21505,6 +21547,23 @@
         }
       }
     },
+    "Select an offline video" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select an offline video"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите офлайн-видео"
+          }
+        }
+      }
+    },
     "Self-Promotion" : {
       "comment" : "SponsorBlock category display name",
       "extractionState" : "manual",
@@ -21618,6 +21677,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einstellungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
           }
         },
         "es" : {
@@ -24289,6 +24354,12 @@
           }
         },
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SponsorBlock"
+          }
+        },
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "SponsorBlock"

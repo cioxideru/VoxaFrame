@@ -32,6 +32,9 @@ public enum AccessibilityID {
     public static var offlineWatch: String { "offline.watch" }
     public static var offlinePage: String { "offline.page" }
     public static var offlinePagePicker: String { "offline.pagePicker" }
+    public static var offlineLibraryList: String { "offline.libraryList" }
+    public static var offlineJobsList: String { "offline.jobsList" }
+    public static var offlineDetailList: String { "offline.detailList" }
     public static var offlineDeleteAll: String { "offline.deleteAll" }
     public static var offlineAudioPicker: String { "offline.audioPicker" }
     public static var offlineTranslationPicker: String { "offline.translationPicker" }
@@ -89,6 +92,13 @@ public enum AccessibilityID {
     }
     public static var playerAudioTrackPickerVoiceOverToggle: String { "player.audioTrackPicker.voiceOverToggle" }
     public static var playerVoiceOverCancelButton: String { "player.voiceOver.cancelButton" }
+    public static var settingsCategories: String { "settings.categories" }
+    public static var settingsForm: String { "settings.form" }
+    public static func settingsCategory(_ group: String) -> String { "settings.category.\(group)" }
+    public static var settingsSignInButton: String { "settings.signInButton" }
+    public static var settingsHideShortsToggle: String { "settings.hideShortsToggle" }
+    public static var settingsPreferredQualityPicker: String { "settings.preferredQualityPicker" }
+    public static var settingsSeekBackRow: String { "settings.seekBackRow" }
     public static var settingsAccentColorPicker: String { "settings.accentColorPicker" }
     public static var settingsChangePINButton: String { "settings.changePINButton" }
     public static var settingsClearLocalHistoryButton: String { "settings.clearLocalHistoryButton" }

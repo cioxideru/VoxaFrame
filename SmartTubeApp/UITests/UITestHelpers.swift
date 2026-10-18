@@ -29,6 +29,9 @@ enum AccessibilityID {
     static var offlineWatch: String { "offline.watch" }
     static var offlinePage: String { "offline.page" }
     static var offlinePagePicker: String { "offline.pagePicker" }
+    static var offlineLibraryList: String { "offline.libraryList" }
+    static var offlineJobsList: String { "offline.jobsList" }
+    static var offlineDetailList: String { "offline.detailList" }
     static var offlineDeleteAll: String { "offline.deleteAll" }
     static var offlineAudioPicker: String { "offline.audioPicker" }
     static var offlineTranslationPicker: String { "offline.translationPicker" }
@@ -96,6 +99,13 @@ enum AccessibilityID {
     }
     static var playerAudioTrackPickerVoiceOverToggle: String { "player.audioTrackPicker.voiceOverToggle" }
     static var playerVoiceOverCancelButton: String { "player.voiceOver.cancelButton" }
+    static var settingsCategories: String { "settings.categories" }
+    static var settingsForm: String { "settings.form" }
+    static func settingsCategory(_ group: String) -> String { "settings.category.\(group)" }
+    static var settingsSignInButton: String { "settings.signInButton" }
+    static var settingsHideShortsToggle: String { "settings.hideShortsToggle" }
+    static var settingsPreferredQualityPicker: String { "settings.preferredQualityPicker" }
+    static var settingsSeekBackRow: String { "settings.seekBackRow" }
     static var settingsAccentColorPicker: String { "settings.accentColorPicker" }
     static var settingsChangePINButton: String { "settings.changePINButton" }
     static var settingsClearLocalHistoryButton: String { "settings.clearLocalHistoryButton" }
@@ -311,6 +321,29 @@ enum UITestHelpers {
             return
         }
         item.tap()
+    }
+
+    // MARK: - Settings navigation
+
+    /// The settings form, excluding the adjacent category list on regular-width iPad.
+    static func settingsForm(in app: XCUIApplication) -> XCUIElement {
+        let table = app.tables[AccessibilityID.settingsForm].firstMatch
+        return table.exists ? table : app.collectionViews[AccessibilityID.settingsForm].firstMatch
+    }
+
+    /// Compact windows keep the single form; a wide iPad first selects the control's category.
+    static func selectSettingsCategory(_ group: String, in app: XCUIApplication) {
+        XCTAssertTrue(
+            settingsForm(in: app).waitForExistence(timeout: 5), "Settings must load before choosing a category")
+        let table = app.tables[AccessibilityID.settingsCategories].firstMatch
+        let categories = table.exists ? table : app.collectionViews[AccessibilityID.settingsCategories].firstMatch
+        guard categories.exists else { return }
+        let category = categories.buttons[AccessibilityID.settingsCategory(group)]
+        for _ in 0..<8 where !(category.exists && category.isHittable) { categories.swipeDown() }
+        scrollUntilVisible(category, in: categories)
+        XCTAssertTrue(category.waitForExistence(timeout: 5), "Settings category \(group) must be reachable")
+        category.tap()
+        XCTAssertTrue(settingsForm(in: app).waitForExistence(timeout: 5))
     }
 
     // MARK: - Chip bar scrolling

@@ -4,6 +4,12 @@ import SmartTubeIOSCore
 /// How the offline screens describe `OfflineCoordinator` state. Mapping only: it adds no state or behaviour
 /// (PLAN-0027, "Stage 6 basis").
 enum OfflinePresentation {
+    /// Keep the chosen video through snapshot updates; deletion leaves the detail empty, without choosing a neighbour.
+    static func retainedSelection(_ videoID: String?, entries: [OfflineEntry]) -> String? {
+        guard let videoID, entries.contains(where: { $0.id == videoID }) else { return nil }
+        return videoID
+    }
+
     /// A job's visible status. Waiting for translation is a queued job whose resolution was deferred.
     enum JobStatus: Equatable {
         case queued, waitingForTranslation, resolving, downloading(Double), completed, failed, cancelled

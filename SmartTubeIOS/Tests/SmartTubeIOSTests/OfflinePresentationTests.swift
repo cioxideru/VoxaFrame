@@ -4,7 +4,7 @@ import Testing
 @testable import SmartTubeIOS
 @testable import SmartTubeIOSCore
 
-@Suite("Offline screens: status, actions, grouping and error text")
+@Suite("Offline screens: selection, status, actions, grouping and error text")
 struct OfflinePresentationTests {
     private let picture = OfflineTrack(id: "720", kind: .video, label: "720p · H.264")
     private let muxed = OfflineTrack(id: "360", kind: .video, label: "360p · H.264", hasAudio: true)
@@ -24,6 +24,18 @@ struct OfflinePresentationTests {
         OfflineEntry(
             video: Video(id: id, title: title, channelTitle: "Channel"),
             assets: tracks.map { OfflineAsset(track: $0, filename: "\($0.id).mp4", systemRelativePath: nil) })
+    }
+
+    @Test func selectionSurvivesReorderingAndChangesToSavedTracks() {
+        #expect(OfflinePresentation.retainedSelection("a", entries: [entry("b"), entry("a", [muxed])]) == "a")
+        #expect(OfflinePresentation.retainedSelection("a", entries: [entry("a", [muxed, sound])]) == "a")
+        #expect(OfflinePresentation.retainedSelection("a", entries: [entry("a")]) == "a")
+    }
+
+    @Test func selectionDoesNotChooseAnotherVideoWhenDeletedOrInitiallyEmpty() {
+        #expect(OfflinePresentation.retainedSelection(nil, entries: [entry("a")]) == nil)
+        #expect(OfflinePresentation.retainedSelection("a", entries: [entry("b")]) == nil)
+        #expect(OfflinePresentation.retainedSelection("a", entries: []) == nil)
     }
 
     @Test func sixStatesAndWaitingForTranslationMapToTheirActions() {

@@ -78,8 +78,9 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
 
     private var app: XCUIApplication { Self.sharedApp }
 
-    private func openSettings() {
+    private func openSettings(_ category: String = "account") {
         UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory(category, in: app)
     }
 
     /// Collects all currently visible `video.card.*` element identifiers.
@@ -106,14 +107,14 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
 
     func testSettingsTabOpens() {
         openSettings()
-        let form = app.collectionViews.firstMatch
+        let form = UITestHelpers.settingsForm(in: app)
         XCTAssertTrue(
             form.waitForExistence(timeout: 5),
             "Settings form should appear after tapping the Settings tab")
     }
 
     func testPlayerSectionVisible() {
-        openSettings()
+        openSettings("playback")
         let speedRow = app.cells.containing(.staticText, identifier: "Playback Speed").firstMatch
         XCTAssertTrue(
             speedRow.waitForExistence(timeout: 5),
@@ -121,9 +122,9 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
     }
 
     func testHideShortsToggleToggles() {
-        openSettings()
-        let form = app.collectionViews.firstMatch
-        let toggle = form.switches["settings.hideShortsToggle"]
+        openSettings("appearance")
+        let form = UITestHelpers.settingsForm(in: app)
+        let toggle = form.switches[AccessibilityID.settingsHideShortsToggle]
         UITestHelpers.scrollUntilVisible(toggle, in: form)
         XCTAssertTrue(
             toggle.waitForExistence(timeout: 5),
@@ -138,9 +139,9 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
     }
 
     func testVisibleSectionsNavigationLinkOpens() {
-        openSettings()
-        let form = app.collectionViews.firstMatch
-        let link = form.cells.containing(.staticText, identifier: "Visible Sections").firstMatch
+        openSettings("appearance")
+        let form = UITestHelpers.settingsForm(in: app)
+        let link = form.buttons[AccessibilityID.settingsVisibleSectionsLink].firstMatch
         UITestHelpers.scrollUntilVisible(link, in: form)
         XCTAssertTrue(
             link.waitForExistence(timeout: 5),
@@ -153,9 +154,9 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
     }
 
     func testSponsorBlockToggleEnablesSection() {
-        openSettings()
-        let form = app.collectionViews.firstMatch
-        let toggleQuery = app.switches["settings.sponsorBlockToggle"]
+        openSettings("sponsorBlock")
+        let form = UITestHelpers.settingsForm(in: app)
+        let toggleQuery = app.switches[AccessibilityID.settingsSponsorBlockToggle]
         UITestHelpers.scrollUntilVisible(toggleQuery, in: form)
         XCTAssertTrue(
             toggleQuery.waitForExistence(timeout: 5),
@@ -166,7 +167,7 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 1.5)
         }
 
-        let enableToggle = app.switches["settings.sponsorBlockToggle"].firstMatch
+        let enableToggle = app.switches[AccessibilityID.settingsSponsorBlockToggle].firstMatch
         XCTAssertTrue(
             enableToggle.waitForExistence(timeout: 5),
             "settings.sponsorBlockToggle must still be present after turning it off")
@@ -181,7 +182,7 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
             "SponsorBlock category pickers should appear when SponsorBlock is enabled")
 
         Thread.sleep(forTimeInterval: 0.5)
-        let restoreToggle = app.switches["settings.sponsorBlockToggle"].firstMatch
+        let restoreToggle = app.switches[AccessibilityID.settingsSponsorBlockToggle].firstMatch
         var scrollBack = 0
         while !restoreToggle.exists && scrollBack < 10 {
             form.swipeDown()
@@ -194,8 +195,8 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
     }
 
     func testAboutSectionResetButtonVisible() {
-        openSettings()
-        let form = app.collectionViews.firstMatch
+        openSettings("about")
+        let form = UITestHelpers.settingsForm(in: app)
         let resetButton = form.buttons[AccessibilityID.settingsResetAllButton]
         UITestHelpers.scrollUntilVisible(resetButton, in: form, maxSwipes: 16)
         XCTAssertTrue(
@@ -205,9 +206,9 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
 
     /// B2 (PLAN-0027): Reset All Settings asks first, and Cancel keeps every setting.
     func testResetAllSettingsShowsConfirmation() {
-        openSettings()
-        let form = app.collectionViews.firstMatch
-        let hideShorts = form.switches["settings.hideShortsToggle"]
+        openSettings("appearance")
+        let form = UITestHelpers.settingsForm(in: app)
+        let hideShorts = form.switches[AccessibilityID.settingsHideShortsToggle]
         UITestHelpers.scrollUntilVisible(hideShorts, in: form)
         XCTAssertTrue(hideShorts.waitForExistence(timeout: 5), "settings.hideShortsToggle not found")
         let original = hideShorts.value as? String
@@ -215,6 +216,7 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
         let changed = hideShorts.value as? String
         XCTAssertNotEqual(original, changed, "Hide Shorts must change before the reset is cancelled")
 
+        UITestHelpers.selectSettingsCategory("about", in: app)
         let resetButton = form.buttons[AccessibilityID.settingsResetAllButton]
         UITestHelpers.scrollUntilVisible(resetButton, in: form, maxSwipes: 16)
         XCTAssertTrue(resetButton.waitForExistence(timeout: 5), "settings.resetAllButton not found")
@@ -230,15 +232,17 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
         }
         XCTAssertTrue(confirm.waitForNonExistence(timeout: 3), "Cancel must close the confirmation")
 
+        UITestHelpers.selectSettingsCategory("appearance", in: app)
         for _ in 0..<16 where !hideShorts.isHittable { form.swipeDown() }
+        UITestHelpers.scrollUntilVisible(hideShorts, in: form)
         XCTAssertEqual(hideShorts.value as? String, changed, "Cancel must keep the changed setting")
         hideShorts.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
         XCTAssertEqual(hideShorts.value as? String, original, "Restore Hide Shorts for the next test")
     }
 
     func testAudioOnlyToggleAbsentFromSettings() {
-        openSettings()
-        let form = app.collectionViews.firstMatch
+        openSettings("playback")
+        let form = UITestHelpers.settingsForm(in: app)
         XCTAssertTrue(
             form.waitForExistence(timeout: 5),
             "Settings form must be visible")
@@ -252,8 +256,8 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
     /// The "Landscape Always Play" toggle must no longer appear in Settings (moved to in-player lock button).
     /// Moved here from LandscapeLockButtonUITests which uses a deeplink launch profile.
     func testLandscapeAlwaysPlayRemovedFromSettings() {
-        openSettings()
-        let form = app.collectionViews.firstMatch
+        openSettings("playback")
+        let form = UITestHelpers.settingsForm(in: app)
         XCTAssertTrue(
             form.waitForExistence(timeout: 5),
             "Settings form must appear")
@@ -280,8 +284,8 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
     /// The "Prefer H.264 Codec" toggle must not appear on iOS — it only affects the
     /// AVPlayer DASH/HLS pipeline, which TOS (the default iOS player) never uses.
     func testPreferH264ToggleAbsentFromIOSSettings() {
-        openSettings()
-        let form = app.collectionViews.firstMatch
+        openSettings("playback")
+        let form = UITestHelpers.settingsForm(in: app)
         XCTAssertTrue(
             form.waitForExistence(timeout: 5),
             "Settings form must be visible")

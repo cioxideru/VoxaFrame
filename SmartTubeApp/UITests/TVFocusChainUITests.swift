@@ -350,31 +350,38 @@ final class TVFocusChainUITests: XCTestCase {
         // Navigate to Settings tab (rightmost)
         for _ in 0..<4 { remote.press(.right) }
         remote.press(.select)
-        Thread.sleep(forTimeInterval: 2)
 
-        let resetButton = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'settings.resetAllButton'"))
+        let categories = app.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.settingsCategories)
             .firstMatch
-        guard resetButton.waitForExistence(timeout: 10) else {
-            try captureAndSkip("settings.resetAllButton not found — Settings did not open", in: app)
-        }
+        XCTAssertTrue(categories.waitForExistence(timeout: 10), "Settings must show its categories")
 
-        // Scroll down to trigger tab bar hide
+        let appearance = app.buttons[AccessibilityID.settingsCategory("appearance")].firstMatch
+        for _ in 0..<10 where !appearance.hasFocus { remote.press(.down) }
+        XCTAssertTrue(appearance.hasFocus, "Focus must reach the Appearance category")
+        remote.press(.select)
+        remote.press(.right)
+        let enteredDetail = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "hasFocus == false"), object: appearance)
+        XCTAssertEqual(XCTWaiter().wait(for: [enteredDetail], timeout: 5), .completed, "Right must enter Appearance")
+
+        // Scroll the long Appearance form, not the eight-row category list, to trigger tab bar hide.
         for _ in 0..<12 { remote.press(.down) }
-        Thread.sleep(forTimeInterval: 0.5)
+        let lastRow = app.buttons[AccessibilityID.settingsVisibleSectionsLink].firstMatch
+        XCTAssertTrue(lastRow.hasFocus, "Down must scroll the detail all the way to Visible Sections")
 
         // Scroll back up past the top to restore tab bar
         for _ in 0..<15 { remote.press(.up) }
-        Thread.sleep(forTimeInterval: 1.0)
 
         let settingsTabButton = app.buttons["Settings"].firstMatch
         XCTAssertTrue(
             settingsTabButton.waitForExistence(timeout: 5),
             "Settings tab bar button must exist after scroll-down-then-up"
         )
-        XCTAssertTrue(
-            settingsTabButton.isHittable,
-            "Settings tab bar button must be hittable after scroll-down-then-up — regression for issue #102 / gh-34"
-        )
+        let hittable = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "hittable == true"), object: settingsTabButton)
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [hittable], timeout: 5), .completed,
+            "Settings tab bar button must be hittable after scroll-down-then-up — regression for issue #102 / gh-34")
     }
 }

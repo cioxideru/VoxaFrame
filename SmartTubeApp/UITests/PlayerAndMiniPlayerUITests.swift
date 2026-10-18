@@ -554,8 +554,9 @@ extension PlayerAndMiniPlayerUITests {
         XCTAssertTrue(miniPlayerBar.waitForExistence(timeout: 5), "miniPlayer.bar did not appear")
 
         UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("appearance", in: app)
         let link = app.buttons[AccessibilityID.settingsVisibleSectionsLink].firstMatch
-        for _ in 0..<8 where !(link.exists && link.isHittable) { app.swipeUp() }
+        UITestHelpers.scrollUntilVisible(link, in: UITestHelpers.settingsForm(in: app))
         XCTAssertTrue(link.waitForExistence(timeout: 5), "Settings → Visible Sections link not found")
         link.tap()
         let list = app.collectionViews[AccessibilityID.settingsVisibleSectionsList].firstMatch

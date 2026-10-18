@@ -596,8 +596,9 @@ final class ShortsAccountControlsUITests: XCTestCase {
         app.launchArguments.removeAll { $0 == "--uitesting-shorts" }
         app.launch()
         UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("languages", in: app)
         let language = app.buttons[AccessibilityID.settingsPreferredAudioLanguageRow]
-        UITestHelpers.scrollUntilVisible(language, in: app.collectionViews.firstMatch)
+        UITestHelpers.scrollUntilVisible(language, in: UITestHelpers.settingsForm(in: app))
         XCTAssertTrue(language.waitForExistence(timeout: 5))
         language.tap()
         app.buttons["Russian"].firstMatch.tap()

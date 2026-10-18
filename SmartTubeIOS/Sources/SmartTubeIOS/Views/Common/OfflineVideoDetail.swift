@@ -4,6 +4,7 @@ import SwiftUI
 /// Saved-video page: pick saved audio and translation, play a saved file, add variants online.
 struct OfflineVideoDetail: View {
     let videoID: String
+    var isEmbedded = false
     @State private var coordinator = OfflineCoordinator.shared
     @State private var available: [OfflineTrack] = []
     @State private var audioID: String?
@@ -25,6 +26,21 @@ struct OfflineVideoDetail: View {
             pendingRemovals: coordinator.snapshot.pendingRemovals)
     }
     var body: some View {
+        Group {
+            if isEmbedded {
+                detailList
+            } else {
+                detailList
+                    .navigationTitle(entry.map { Text($0.video.title) } ?? Text("Offline video", bundle: .module))
+                    .toolbarTitleDisplayMode(.inline)
+            }
+        }
+        #if !os(iOS)
+        .sheet(item: $selectedVideo) { video in PlayerView(video: video, api: api) }
+        #endif
+    }
+
+    private var detailList: some View {
         List {
             if let storageError = coordinator.error { OfflineStorageNotice(message: storageError) }
             if let entry {
@@ -155,11 +171,7 @@ struct OfflineVideoDetail: View {
                 .foregroundStyle(VFColor.danger)
             }
         }
-        .navigationTitle(entry.map { Text($0.video.title) } ?? Text("Offline video", bundle: .module))
-        .toolbarTitleDisplayMode(.inline)
-        #if !os(iOS)
-        .sheet(item: $selectedVideo) { video in PlayerView(video: video, api: api) }
-        #endif
+        .accessibilityIdentifier(AccessibilityID.offlineDetailList)
     }
 
     /// Checked again at tap time: a removal may have started in another window.
