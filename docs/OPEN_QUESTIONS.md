@@ -320,15 +320,35 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   and `.vfProminent` adds a 2 pt edge as the interim.
 - One button keeps the system style on purpose: the SponsorBlock skip toast is tinted with the segment colour, whose
   label contrast is not tested.
-- macOS shell (stage 2b, `084cec3`): the harness never builds the macOS app scheme, so the two `AppEntry.swift` lines
+- macOS shell (stage 2b, `084cec3`): `scripts/verify.sh` never builds the macOS app scheme, so the two `AppEntry.swift` lines
   that call `MacWindowCommands()` and `MacSettingsScene` are checked by reading only (the types compile in the package).
   Build and run the macOS scheme in Xcode: inspector at 1440, 1000 and 800 pt windows, View > Show/Hide Inspector,
   Settings window, and a deep link over a card-pushed player (card A → link B → link C → Back: visible video,
   previous player stopped, navigation state). `InspectorCommands()` was replaced by one menu item, so ⌃⌘I is gone until B8.
 - Tab and sidebar labels on every platform use `AppSection.rawValue`, not localized strings (the value is also the
-  UI-test identifier, so localize the label only). On macOS `SearchView` sets `selectedVideo` but has
-  no player destination on macOS, so a search result does not open (existed before stage 2; stage 8).
-  `SmartTubeApp/UITests/MacWKHLSReplayRegressionUITests.swift:27` still describes the old ZStack overlay.
+  UI-test identifier, so localize the label only). Stage 8 (`daa217c`) gave macOS Search the content-stack player
+  route; open a result on the Mac app to confirm.
+  `SmartTubeApp/UITests/MacWKHLSReplayRegressionUITests.swift:27` still describes the old ZStack overlay, and its title
+  check looks for a `video.card.title` child the redesigned card no longer has, so on macOS the title comparison is
+  skipped. The iOS suite asserts the exact title through `AccessibilityID.videoCardTitle`.
+- Stages 3–8 deferred by the acceptor:
+  - Offline list/detail layout on iPad and Mac; Settings category navigation on iPad and tvOS.
+  - Mac Search filters live only in a toolbar popover: View > Hide Toolbar removes access. A menu item needs a sheet fallback.
+  - Queue position race: when the same video is reopened from another list while it is still loading, the load later
+    recomputes `hasNext` from its captured video (`PlaybackViewModel+Loading.swift`, the queue fallback after related
+    videos). With no related videos it can switch Next back off. The fix is to read `currentVideo` there, which needs a
+    `PlaybackViewModel` change (WS4).
+  - Player logic the re-skin did not add: "now playing" next to the selected quality, buffering state and buffered range,
+    sleep-timer remaining time, end-of-video countdown, queue position, live variants, inline watch-page layout.
+  - Russian UI: older labels (`Text` without `bundle: .module`) look up translations in the main bundle and stay English;
+    "Parental Controls" has no ru string. Mac Settings pane heights are estimates.
+  - Stage 8 on iOS 26: Queue can appear in the iPad top tabs; check selection when the window narrows (Queue → Library ›
+    Queue). The queue has no "open offline" action and no now-playing mark.
+  - Shorts seek bar on iOS is a `UISlider` wrapper (the SwiftUI `Slider` cannot tint its track); on macOS the SwiftUI
+    slider keeps the system track colour. Check the rail at AX5 on a 375×667 device and the 760 pt threshold.
+  - UI tests: `testDownloadsSegmentExistsInLibrary` fails because `ENABLE_DOWNLOADS` is never defined; the tvOS lookup
+    `library.chip.subscriptions` never matches the real `library.chip.subs`, so that test skips.
+  - `PlayerRouterQueueTests` is iOS-only, so `scripts/ci.sh` (native macOS) skips it; run it on an iOS simulator.
 - Glass modifier leftovers: the glass and opaque branches are different view types, so toggling Reduce Transparency live resets content
   state; no `.interactive()` variant and no `GlassEffectContainer` guidance for adjacent glass shapes (mini-player plus bar).
   The macOS `surface` is a translucent fill (`quaternarySystemFill`) and is untested; `elevated` has no shadow.
