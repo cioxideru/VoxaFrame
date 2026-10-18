@@ -553,7 +553,8 @@ extension PlayerView {
             showQualityPicker: $showQualityPicker,
             showSpeedPicker: $showSpeedPicker,
             showAudioTrackPicker: $showAudioTrackPicker,
-            showSleepTimerPicker: $showSleepTimerPicker
+            showSleepTimerPicker: $showSleepTimerPicker,
+            bottomBarHeight: $controlsBottomBarHeight
         )
         #elseif os(tvOS)
         PlayerControlsOverlay(
@@ -578,7 +579,8 @@ extension PlayerView {
             showQualityPicker: $showQualityPicker,
             showSpeedPicker: $showSpeedPicker,
             showAudioTrackPicker: $showAudioTrackPicker,
-            showSleepTimerPicker: $showSleepTimerPicker
+            showSleepTimerPicker: $showSleepTimerPicker,
+            bottomBarHeight: $controlsBottomBarHeight
         )
         #endif
     }

@@ -141,6 +141,8 @@ enum AccessibilityID {
     static var shortsBackButton: String { "shorts.backButton" }
     static var shortsIndexLabel: String { "shorts.indexLabel" }
     static var shortsPlayPauseButton: String { "shorts.playPauseButton" }
+    static var shortsPreviousButton: String { "shorts.previousButton" }
+    static var shortsNextButton: String { "shorts.nextButton" }
     static var shortsPreloadStatus: String { "shorts.preloadStatus" }
     static var shortsReopenTestButton: String { "shorts.reopenTestButton" }
     static var shortsAudioTrackButton: String { "shorts.audioTrackButton" }
@@ -159,10 +161,19 @@ enum AccessibilityID {
     static var shortsErrorBanner: String { "shorts.errorBanner" }
     static var playerBackButton: String { "player.backButton" }
     static var playerPiPButton: String { "player.pipButton" }
+    static var playerAirPlayButton: String { "player.airPlayButton" }
+    static var playerChannelName: String { "player.channelName" }
+    static var playerDurationLabel: String { "player.durationLabel" }
+    static var playerLandscapeLockButton: String { "player.landscapeLockButton" }
+    static var playerAudioOnlyButton: String { "player.audioOnlyButton" }
     static var playerVideoScaleButton: String { "player.videoScaleButton" }
     static var playerQuickAudioButton: String { "player.quickAccess.audioTrack" }
     static var playerQuickQualityButton: String { "player.quickAccess.quality" }
     static var playerQualityPicker: String { "player.qualityPicker" }
+    static var playerSleepTimerPicker: String { "player.sleepTimerPicker" }
+    static var playerCaptionPicker: String { "player.captionPicker" }
+    static var playerCaptionPickerOff: String { "player.captionPicker.off" }
+    static func playerCaptionPickerTrack(_ id: String) -> String { "player.captionPicker.track.\(id)" }
     static var playerNextButton: String { "player.nextBtn" }
     static var playerCurrentTimeLabel: String { "player.currentTimeLabel" }
     static var playerPlayPauseButton: String { "player.playPauseButton" }

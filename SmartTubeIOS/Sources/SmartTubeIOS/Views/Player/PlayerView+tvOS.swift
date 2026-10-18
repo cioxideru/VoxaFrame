@@ -175,6 +175,38 @@ extension PlayerView {
         }
     }
 
+    // MARK: - Option panels
+
+    /// tvOS option menus slide in from the trailing edge, where they sit (T-Player-Menu); with Reduce Motion they
+    /// cross-fade. `overlayStack` draws them inside the player's focus scope.
+    @ViewBuilder var tvOptionPanels: some View {
+        let transition: AnyTransition = reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity)
+        if showSpeedPicker {
+            speedPickerOverlay
+                .transition(transition)
+                .vfAnimation(value: showSpeedPicker)
+        }
+        if showQualityPicker {
+            qualityPickerOverlay
+                .transition(transition)
+                .vfAnimation(value: showQualityPicker)
+        }
+        if showCaptionPicker {
+            captionPickerOverlay
+                .transition(transition)
+                .vfAnimation(value: showCaptionPicker)
+        }
+        if showAudioTrackPicker {
+            audioTrackPickerOverlay
+                .transition(transition)
+                .vfAnimation(value: showAudioTrackPicker)
+        }
+        if showSleepTimerPicker {
+            sleepTimerPickerOverlay
+                .transition(transition)
+                .vfAnimation(value: showSleepTimerPicker)
+        }
+    }
 }
 
 extension PlayerControlsOverlay {
@@ -182,7 +214,7 @@ extension PlayerControlsOverlay {
     // MARK: - tvOS progress bar
 
     /// Custom progress bar for tvOS: larger thumb, wider padding, bigger time labels.
-    /// The iOS variant (`iosProgressBar`) lives in PlayerView+ControlElements.swift.
+    /// The iOS variant (`iosProgressBar`) lives in PlayerControlsOverlay+Markers.swift.
     var tvProgressBar: some View {
         VStack(spacing: 6) {
             // Scrub time tooltip
@@ -228,28 +260,29 @@ extension PlayerControlsOverlay {
                 ZStack {
                     // Background track
                     Capsule()
-                        .fill(Color.white.opacity(0.25))
+                        .fill(VFColor.onMediaTrack)
                         .frame(height: 6)
                         .padding(.horizontal, hPad)
 
                     // Progress fill
                     HStack(spacing: 0) {
                         Capsule()
-                            .fill(Color.red.opacity(0.85))
+                            .fill(VFColor.onMedia)
                             .frame(width: max(thumbX - hPad, 0), height: 6)
                         Spacer(minLength: 0)
                     }
                     .padding(.leading, hPad)
-
-                    // Thumb
+                }
+                .overlay(sponsorBlockMarkers(inset: hPad, height: 6))
+                .overlay(chapterMarkers(inset: hPad, height: 6))
+                .overlay {
+                    // Thumb, above the marks
                     Circle()
-                        .fill(Color.white)
+                        .fill(VFColor.onMedia)
                         .frame(width: 22, height: 22)
                         .shadow(color: .black.opacity(0.4), radius: 4)
                         .position(x: thumbX, y: geo.size.height / 2)
                 }
-                .overlay(sponsorBlockMarkers)
-                .overlay(chapterMarkers)
             }
             .frame(height: 36)
 

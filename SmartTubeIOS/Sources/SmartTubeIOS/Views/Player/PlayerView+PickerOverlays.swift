@@ -8,21 +8,73 @@ import UIKit
 
 private let pickerLog = ViewModelLogger(category: "PlayerMenu")
 
-// MARK: - PlayerView picker overlays + share sheet
+// MARK: - PlayerView option panels + share sheet
 //
-// Pure-SwiftUI bottom-sheet overlays for all media settings pickers.
-// Rendered inside the player's ZStack — no UIKit sheet presentation fires
-// onDisappear and tears down playback.
+// The media settings panels (VF/PlaybackOptions). Their container is in PlayerOptionPanel.swift: a sheet or
+// popover on iOS and macOS (`playerContentView`), a full-height menu inside the player's ZStack on tvOS
+// (`overlayStack`), where the Siri Remote focus and Back handling need the panel in the player's own tree.
 //
 // Includes:
 //   • qualityPickerOverlay       — video quality selection
 //   • speedPickerOverlay         — playback speed selection
 //   • sleepTimerPickerOverlay    — sleep timer duration
 //   • captionPickerOverlay       — subtitle/caption track selection
-//   • audioTrackPickerOverlay    — audio track selection
+//   • audioTrackPickerOverlay    — audio track and translation
 //   • presentShareSheet(url:)    — UIActivityViewController (iOS only)
 
 extension PlayerView {
+
+    /// The player with its option panels attached. tvOS draws them in `overlayStack` instead.
+    @ViewBuilder var playerContentView: some View {
+        #if os(tvOS)
+        playerContentBase
+        #else
+        let panels =
+            playerContentBase
+            .playerOptionPanel(isPresented: $showSpeedPicker, trigger: .speed) { speedPickerOverlay }
+            .playerOptionPanel(isPresented: $showQualityPicker, trigger: .quality) { qualityPickerOverlay }
+            .playerOptionPanel(isPresented: $showCaptionPicker, trigger: nil) { captionPickerOverlay }
+            .playerOptionPanel(isPresented: $showAudioTrackPicker, trigger: .audio) { audioTrackPickerOverlay }
+            .playerOptionPanel(isPresented: $showSleepTimerPicker, trigger: .sleepTimer) { sleepTimerPickerOverlay }
+            // The controls stay while a panel is open, so its popover keeps pointing at the button that opened it;
+            // closing the last panel starts the hide timer again.
+            .onChange(of: isOptionPanelOpen) { _, open in
+                vm.showControls()
+                if open { vm.cancelControlsHide() }
+            }
+            // Playback can restart the hide timer under an open panel (the first frame after loading, say), so a
+            // hide that fires then is undone at once.
+            .onChange(of: vm.controlsVisible) { _, visible in
+                guard !visible, isOptionPanelOpen else { return }
+                vm.showControls()
+                vm.cancelControlsHide()
+            }
+        #if os(iOS)
+        // Leaving full screen (mini-player, PiP, stop) closes the panels with the player.
+        panels.onChange(of: playerState.presentation) { _, presentation in
+            if presentation != .fullScreen { closeOptionPanels() }
+        }
+        #else
+        panels
+        #endif
+        #endif
+    }
+
+    #if !os(tvOS)
+    private var isOptionPanelOpen: Bool {
+        showSpeedPicker || showQualityPicker || showCaptionPicker || showAudioTrackPicker || showSleepTimerPicker
+    }
+    #endif
+
+    #if os(iOS)
+    private func closeOptionPanels() {
+        showSpeedPicker = false
+        showQualityPicker = false
+        showCaptionPicker = false
+        showAudioTrackPicker = false
+        showSleepTimerPicker = false
+    }
+    #endif
 
     // MARK: - Quality picker overlay
 
@@ -31,310 +83,184 @@ extension PlayerView {
         store.settings.lastVideoQuality = vm.settings.lastVideoQuality
     }
 
+    /// Lists Auto and the formats this video actually has. The checkmark is the user's choice, which is
+    /// remembered for the next videos.
     var qualityPickerOverlay: some View {
-        ZStack(alignment: .bottom) {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { showQualityPicker = false }
-            VStack(spacing: 0) {
-                HStack {
-                    Button("Cancel") { showQualityPicker = false }
-                        #if os(tvOS)
-                    .buttonStyle(PickerHeaderButtonStyle())
-                        #endif
-                        .padding()
-                    Spacer()
-                    Text("Quality")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Color.clear.frame(width: 70, height: 44)
-                }
-                Divider()
-                ScrollView {
-                    VStack(spacing: 0) {
-                        Button {
-                            pickerLog.notice(
-                                "[qualityPicker] selected Auto (was: \(vm.selectedFormat?.qualityLabel ?? "Auto"))")
-                            selectAndRememberQuality(nil)
-                            showQualityPicker = false
-                            qualityToastMessage = "Auto quality"
-                        } label: {
-                            HStack {
-                                Text("Auto")
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                if vm.selectedFormat == nil {
-                                    Image(systemName: AppSymbol.checkmark)
-                                        .foregroundStyle(Color.accentColor)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .padding(.horizontal)
-                            .padding(.vertical, 12)
-                        }
-                        .buttonStyle(.plain)
-                        #if os(tvOS)
-                        .prefersDefaultFocus(in: qualityPickerNamespace)
-                        #endif
-                        Divider()
-                        ForEach(vm.availableFormats) { fmt in
-                            Button {
-                                pickerLog.notice(
-                                    "[qualityPicker] selected \(fmt.qualityLabel) (was: \(vm.selectedFormat?.qualityLabel ?? "Auto"))"
-                                )
-                                selectAndRememberQuality(fmt)
-                                showQualityPicker = false
-                                qualityToastMessage = "\(fmt.qualityLabel) · may take up to 30s"
-                            } label: {
-                                HStack {
-                                    Text(fmt.qualityLabel)
-                                        .foregroundStyle(.primary)
-                                    if !fmt.codecShortLabel.isEmpty {
-                                        Text(fmt.codecShortLabel)
-                                            .foregroundStyle(.secondary)
-                                            .font(.caption)
-                                    }
-                                    Spacer()
-                                    if vm.selectedFormat?.id == fmt.id {
-                                        Image(systemName: AppSymbol.checkmark)
-                                            .foregroundStyle(Color.accentColor)
-                                    }
-                                }
-                                .contentShape(Rectangle())
-                                .padding(.horizontal)
-                                .padding(.vertical, 12)
-                            }
-                            .buttonStyle(.plain)
-                            // Explicit accessibility label keeps XCTest queries like
-                            // `label BEGINSWITH "720p"` working even when the button HStack
-                            // contains multiple Text views (e.g. the codec short label).
-                            .accessibilityLabel(fmt.qualityLabel)
-                            Divider()
-                        }
-                    }
-                }
-                .frame(maxHeight: 320)
-                #if os(tvOS)
-                .prefersDefaultFocus(in: qualityPickerNamespace)
-                .focused($qualityPickerFocused)
-                #endif
-            }
-            .frame(maxWidth: moreMenuPortraitWidth)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .accessibilityIdentifier(AccessibilityID.playerQualityPicker)
-            .task {
-                // Fix 2A: pre-warm all quality tiers the moment the picker opens so that
-                // by the time the user taps a resolution, tracks are cached (< 100ms switch).
-                await vm.prefetchAllQualityTracks()
-            }
-            #if os(tvOS)
+        let panel = PlayerOptionPanel(title: Text("Quality", bundle: .module), isPresented: $showQualityPicker) {
+            qualityChoices
+        }
+        .accessibilityIdentifier(AccessibilityID.playerQualityPicker)
+        .task {
+            // Fix 2A: pre-warm all quality tiers the moment the picker opens so that
+            // by the time the user taps a resolution, tracks are cached (< 100ms switch).
+            await vm.prefetchAllQualityTracks()
+        }
+        #if os(tvOS)
+        return
+            panel
             .focusScope(qualityPickerNamespace)
             .onExitCommand {
                 pickerLog.notice("[qualityPicker] onExitCommand fired — dismissing")
                 showQualityPicker = false
             }
-            #endif
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
+        #else
+        return panel
+        #endif
+    }
+
+    @ViewBuilder private var qualityChoices: some View {
+        let scroll = ScrollView {
+            VStack(spacing: 0) {
+                let auto = PlayerOptionRow(title: Text("Auto", bundle: .module), isSelected: vm.selectedFormat == nil) {
+                    pickerLog.notice(
+                        "[qualityPicker] selected Auto (was: \(vm.selectedFormat?.qualityLabel ?? "Auto"))")
+                    selectAndRememberQuality(nil)
+                    showQualityPicker = false
+                    qualityToastMessage = "Auto quality"
+                }
+                #if os(tvOS)
+                auto.prefersDefaultFocus(in: qualityPickerNamespace)
+                #else
+                auto
+                #endif
+                Divider()
+                ForEach(vm.availableFormats) { fmt in
+                    let name =
+                        fmt.codecShortLabel.isEmpty ? fmt.qualityLabel : "\(fmt.qualityLabel) · \(fmt.codecShortLabel)"
+                    PlayerOptionRow(title: Text(name), isSelected: vm.selectedFormat?.id == fmt.id) {
+                        pickerLog.notice(
+                            "[qualityPicker] selected \(fmt.qualityLabel) (was: \(vm.selectedFormat?.qualityLabel ?? "Auto"))"
+                        )
+                        selectAndRememberQuality(fmt)
+                        showQualityPicker = false
+                        qualityToastMessage = "\(fmt.qualityLabel) · may take up to 30s"
+                    }
+                    // The label starts with the quality, so XCTest queries like `label BEGINSWITH "720p"` keep
+                    // working; the codec follows for VoiceOver.
+                    .accessibilityLabel(
+                        fmt.codecShortLabel.isEmpty ? fmt.qualityLabel : "\(fmt.qualityLabel), \(fmt.codecShortLabel)")
+                    Divider()
+                }
+            }
         }
-        .ignoresSafeArea()
+        #if os(tvOS)
+        scroll
+            .prefersDefaultFocus(in: qualityPickerNamespace)
+            .focused($qualityPickerFocused)
+        #else
+        scroll
+        #endif
     }
 
     // MARK: - Speed picker overlay
 
     var speedPickerOverlay: some View {
-        PlayerSpeedPicker(vm: vm, showSpeedPicker: $showSpeedPicker, maxWidth: moreMenuPortraitWidth)
+        PlayerSpeedPicker(vm: vm, showSpeedPicker: $showSpeedPicker)
     }
 
     // MARK: - Sleep timer picker overlay
 
     var sleepTimerPickerOverlay: some View {
-        ZStack(alignment: .bottom) {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { showSleepTimerPicker = false }
-            VStack(spacing: 0) {
-                HStack {
-                    Button("Cancel") { showSleepTimerPicker = false }
-                        #if os(tvOS)
-                    .buttonStyle(PickerHeaderButtonStyle())
-                        #endif
-                        .padding()
-                    Spacer()
-                    Text("Sleep Timer")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Color.clear.frame(width: 70, height: 44)
-                }
-                Divider()
+        let panel = PlayerOptionPanel(title: Text("Sleep Timer", bundle: .module), isPresented: $showSleepTimerPicker) {
+            ScrollView {
                 VStack(spacing: 0) {
-                    Button {
+                    let off = PlayerOptionRow(
+                        title: Text("Off", bundle: .module), isSelected: vm.sleepTimerMinutes == nil
+                    ) {
                         vm.setSleepTimer(minutes: nil)
                         showSleepTimerPicker = false
-                    } label: {
-                        HStack {
-                            Text("Off")
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            if vm.sleepTimerMinutes == nil {
-                                Image(systemName: AppSymbol.checkmark)
-                                    .foregroundStyle(Color.accentColor)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .padding(.horizontal)
-                        .padding(.vertical, 12)
                     }
-                    .buttonStyle(.plain)
                     #if os(tvOS)
-                    .prefersDefaultFocus(in: sleepTimerNamespace)
-                    .focused($sleepTimerPickerFocused)
+                    off
+                        .prefersDefaultFocus(in: sleepTimerNamespace)
+                        .focused($sleepTimerPickerFocused)
+                    #else
+                    off
                     #endif
                     Divider()
                     ForEach(PlaybackViewModel.sleepTimerOptions, id: \.self) { mins in
-                        Button {
+                        PlayerOptionRow(
+                            title: Text("\(mins) min", bundle: .module), isSelected: vm.sleepTimerMinutes == mins
+                        ) {
                             vm.setSleepTimer(minutes: mins)
                             showSleepTimerPicker = false
-                        } label: {
-                            HStack {
-                                Text("\(mins) min")
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                if vm.sleepTimerMinutes == mins {
-                                    Image(systemName: AppSymbol.checkmark)
-                                        .foregroundStyle(Color.accentColor)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .padding(.horizontal)
-                            .padding(.vertical, 12)
                         }
-                        .buttonStyle(.plain)
                         Divider()
                     }
                 }
-                .frame(maxHeight: 320)
             }
-            .frame(maxWidth: moreMenuPortraitWidth)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .accessibilityIdentifier("player.sleepTimerPicker")
-            #if os(tvOS)
+        }
+        .accessibilityIdentifier(AccessibilityID.playerSleepTimerPicker)
+        #if os(tvOS)
+        return
+            panel
             .focusScope(sleepTimerNamespace)
             .onExitCommand {
                 pickerLog.notice("[sleepTimerPicker] onExitCommand fired — dismissing")
                 showSleepTimerPicker = false
             }
-            #endif
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
-        }
-        .ignoresSafeArea()
+        #else
+        return panel
+        #endif
     }
 
     // MARK: - Caption picker overlay
 
     var captionPickerOverlay: some View {
-        ZStack(alignment: .bottom) {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { showCaptionPicker = false }
-            VStack(spacing: 0) {
-                HStack {
-                    Button("Cancel") { showCaptionPicker = false }
-                        #if os(tvOS)
-                    .buttonStyle(PickerHeaderButtonStyle())
-                        #endif
-                        .padding()
-                    Spacer()
-                    Text("Captions")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Color.clear.frame(width: 70, height: 44)
-                }
-                Divider()
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Off row
-                        Button {
-                            vm.selectCaption(nil)
-                            showCaptionPicker = false
-                        } label: {
-                            HStack {
-                                Text("Off")
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                if vm.selectedCaption == nil {
-                                    Image(systemName: AppSymbol.checkmark)
-                                        .foregroundStyle(Color.accentColor)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .padding(.horizontal)
-                            .padding(.vertical, 12)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("player.captionPicker.off")
-                        #if os(tvOS)
-                        .prefersDefaultFocus(in: captionPickerNamespace)
-                        #endif
-                        Divider()
-                        ForEach(vm.availableCaptions) { track in
-                            Button {
-                                vm.selectCaption(track)
-                                showCaptionPicker = false
-                            } label: {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(track.name)
-                                            .foregroundStyle(.primary)
-                                        if track.isAutoGenerated {
-                                            Text("Auto-generated")
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
-                                        }
-                                    }
-                                    Spacer()
-                                    if vm.selectedCaption?.id == track.id {
-                                        Image(systemName: AppSymbol.checkmark)
-                                            .foregroundStyle(Color.accentColor)
-                                    }
-                                }
-                                .contentShape(Rectangle())
-                                .padding(.horizontal)
-                                .padding(.vertical, 12)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityIdentifier("player.captionPicker.track.\(track.id)")
-                            Divider()
-                        }
-                    }
-                }
-                .frame(maxHeight: 360)
-                #if os(tvOS)
-                .focused($captionPickerFocused)
-                #endif
-            }
-            .frame(maxWidth: moreMenuPortraitWidth)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .accessibilityIdentifier("player.captionPicker")
-            #if os(tvOS)
+        let panel = PlayerOptionPanel(title: Text("Captions", bundle: .module), isPresented: $showCaptionPicker) {
+            captionChoices
+        }
+        .accessibilityIdentifier(AccessibilityID.playerCaptionPicker)
+        #if os(tvOS)
+        return
+            panel
             .focusScope(captionPickerNamespace)
             .onExitCommand { showCaptionPicker = false }
-            #endif
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
+        #else
+        return panel
+        #endif
+    }
+
+    @ViewBuilder private var captionChoices: some View {
+        let scroll = ScrollView {
+            VStack(spacing: 0) {
+                // Off row
+                let off = PlayerOptionRow(title: Text("Off", bundle: .module), isSelected: vm.selectedCaption == nil) {
+                    vm.selectCaption(nil)
+                    showCaptionPicker = false
+                }
+                .accessibilityIdentifier(AccessibilityID.playerCaptionPickerOff)
+                #if os(tvOS)
+                off.prefersDefaultFocus(in: captionPickerNamespace)
+                #else
+                off
+                #endif
+                Divider()
+                ForEach(vm.availableCaptions) { track in
+                    PlayerOptionRow(
+                        title: Text(track.name),
+                        detail: track.isAutoGenerated ? Text("Auto-generated") : nil,
+                        isSelected: vm.selectedCaption?.id == track.id
+                    ) {
+                        vm.selectCaption(track)
+                        showCaptionPicker = false
+                    }
+                    .accessibilityIdentifier(AccessibilityID.playerCaptionPickerTrack(track.id))
+                    Divider()
+                }
+            }
         }
-        .ignoresSafeArea()
+        #if os(tvOS)
+        scroll.focused($captionPickerFocused)
+        #else
+        scroll
+        #endif
     }
 
     // MARK: - Audio track picker overlay
 
     var audioTrackPickerOverlay: some View {
-        PlayerAudioTrackPicker(
-            vm: vm, showAudioTrackPicker: $showAudioTrackPicker, maxWidth: moreMenuPortraitWidth)
+        PlayerAudioTrackPicker(vm: vm, showAudioTrackPicker: $showAudioTrackPicker)
     }
 
     // MARK: - Share sheet

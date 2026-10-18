@@ -9,6 +9,16 @@ import UIKit
 #endif
 
 extension PlayerView {
+    /// Caption bottom margin while the controls show. iPhone, iPad and Mac: the bottom bar's measured height, which
+    /// follows the layout and text size. TV keeps its margin, as its controls are unchanged.
+    var captionLiftAboveControls: CGFloat {
+        #if os(tvOS)
+        130
+        #else
+        controlsBottomBarHeight + VFSpace.s8
+        #endif
+    }
+
     // MARK: - Title and back-button overlay
     //
     // Extracted from bodyWithLifecycleModifiers to keep the Swift type-checker from
@@ -72,8 +82,8 @@ extension PlayerView {
     // Contains the GeometryReader / ZStack with AVLayer, controls, and iOS swipe gesture.
     // Extracted from bodyWithLifecycleModifiers so the Swift type-checker handles each
     // property in a separate inference scope (compiler error: "unable to type-check
-    // this expression in reasonable time").
-    var playerContentView: some View {
+    // this expression in reasonable time"). `playerContentView` adds the option panels.
+    var playerContentBase: some View {
         GeometryReader { geo in
             ZStack {
                 Color.black.ignoresSafeArea()
@@ -197,52 +207,19 @@ extension PlayerView {
                     .ignoresSafeArea()
                 #endif
 
-                // Loading spinner
+                // Loading: a spinner on a glass disc, with the retry status under it (P-Player-States).
                 if vm.isLoading {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .tint(.white)
-                            .scaleEffect(1.5)
-                        if let msg = vm.retryStatusMessage {
-                            Text(msg)
-                                .font(.caption)
-                                .foregroundStyle(.white.opacity(0.75))
-                                .transition(.opacity)
-                                .animation(.easeInOut(duration: 0.3), value: vm.retryStatusMessage)
-                        }
-                    }
-                    .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.2), value: vm.isLoading)
-                    .allowsHitTesting(false)
+                    PlayerLoadingIndicator(message: vm.retryStatusMessage)
+                        .allowsHitTesting(false)
                 }
 
-                // Yandex voice-over: a compact top-corner badge while the video is held for the translation.
-                if case .waiting(let remaining) = vm.voiceOver.state, !vm.isLoading {
-                    HStack(spacing: 8) {
-                        ProgressView().tint(.white).controlSize(.small)
-                        Text("Yandex translating")
-                        if let remaining, remaining > 0 {
-                            Text("~\(max(1, remaining / 60)) min").foregroundStyle(.white.opacity(0.7))
-                        }
-                        Button {
-                            vm.setVoiceOverForCurrentVideo(false)
-                        } label: {
-                            Image(systemName: AppSymbol.xmarkCircle)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Watch Without Translation")
-                        .accessibilityIdentifier(AccessibilityID.playerVoiceOverCancelButton)
-                    }
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(.black.opacity(0.55), in: Capsule())
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                    .padding(.top, 56)
-                    .padding(.trailing, 12)
-                    .transition(.opacity)
+                // Yandex voice-over: preparing (the video waits) or failed, each with its way out, under the top bar.
+                if !vm.isLoading {
+                    PlayerTranslationStatus(vm: vm)
+                        .padding(.horizontal, VFSpace.s16)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .padding(.top, max(geo.safeAreaInsets.top, VFSpace.s20) + VFTarget.touch + VFSpace.s12)
+                        .transition(.opacity)
                 }
 
                 #if DEBUG
@@ -290,10 +267,9 @@ extension PlayerView {
                     VStack(spacing: 0) {
                         Spacer()
                         CaptionCueView(text: cue.text)
-                            // When controls are visible the scrub bar + bottom controls
-                            // occupy ~130pt. Push captions above that area. When controls
-                            // are hidden, a small margin from the safe-area bottom is enough.
-                            .padding(.bottom, vm.controlsVisible ? 130 : 24)
+                            // Above the bottom controls while they show; when they are hidden, a small
+                            // margin from the safe-area bottom is enough.
+                            .padding(.bottom, vm.controlsVisible ? captionLiftAboveControls : 24)
                             .animation(.easeInOut(duration: 0.2), value: vm.controlsVisible)
                     }
                     .ignoresSafeArea()

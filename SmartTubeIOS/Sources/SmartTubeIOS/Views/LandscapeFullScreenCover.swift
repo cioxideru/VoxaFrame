@@ -206,7 +206,9 @@ private struct LandscapePresenter<Item: Identifiable & Hashable>: UIViewControll
             let presentingRoot = hc.view.window?.rootViewController ?? root
             hc.onDismiss = nil
             isTransitioning = true
-            hc.dismiss(animated: false) { [weak self] in
+            // Dismiss from the presenter: `hc.dismiss` would only close a sheet or popover the player itself
+            // presented (an option panel), leaving the player on screen with its presentation state cleared.
+            (hc.presentingViewController ?? hc).dismiss(animated: false) { [weak self] in
                 guard let self, self.hostedVC === hc else { return }
                 self.clearPresentation()
                 self.sync(root: presentingRoot)

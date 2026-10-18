@@ -10,11 +10,46 @@ extension ShortsPlayerView {
 
     // MARK: - Navigation
 
+    /// While the speed or audio panel is open, moving to another Short is blocked (§13).
+    var isPanelOpen: Bool { showAudioTrackPicker || showSpeedPicker }
+
+    /// The ▼ button and the remote's up, like a swipe up: the next Short, or more of the feed at the end.
+    func showNextShort() {
+        guard !isTransitioning, !isPanelOpen else { return }
+        if let next = ShortsNavigation.targetIndex(
+            vertical: -100, horizontal: 0, current: currentIndex, count: videos.count)
+        {
+            performVerticalTransition(direction: -1) { goTo(next) }
+        } else {
+            loadMoreIfNeeded(advanceWhenReady: true)
+        }
+    }
+
+    /// The ▲ button and the remote's down, like a swipe down: the previous Short, or earlier ones at the start.
+    func showPreviousShort() {
+        guard !isTransitioning, !isPanelOpen else { return }
+        if let previous = ShortsNavigation.targetIndex(
+            vertical: 100, horizontal: 0, current: currentIndex, count: videos.count)
+        {
+            performVerticalTransition(direction: 1) { goTo(previous) }
+        } else {
+            loadMoreAtStart()
+        }
+    }
+
     /// Animates the current content off-screen in `direction` (-1 = up, +1 = down),
     /// runs `action` to switch to the new video, then slides the new content in
-    /// from the opposite side.
+    /// from the opposite side. Every move to another Short comes through here, including one that waited for the
+    /// next page of the feed, so an open panel blocks it at the moment it would happen. The panel buttons are
+    /// disabled during the slide, and the panel is checked again just before the switch: a panel that opened
+    /// anyway keeps this Short, which slides back.
     func performVerticalTransition(direction: CGFloat, action: @escaping () -> Void) {
-        guard !isTransitioning else { return }
+        guard !isTransitioning, !isPanelOpen else { return }
+        if reduceMotion {
+            slideOffset = 0
+            action()
+            return
+        }
         let transitionHeight = containerHeight
         isTransitioning = true
         withAnimation(.easeIn(duration: 0.2)) {
@@ -23,6 +58,12 @@ extension ShortsPlayerView {
         transitionTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(220))
             guard !Task.isCancelled else { return }
+            guard !isPanelOpen else {
+                isTransitioning = false
+                transitionTask = nil
+                snapBack()
+                return
+            }
             action()  // switch video, clears AVPlayer
             slideOffset = -direction * transitionHeight  // snap to opposite side (off-screen)
             withAnimation(.easeOut(duration: 0.25)) {
@@ -52,8 +93,13 @@ extension ShortsPlayerView {
     }
 
     func loadMoreAtStart() {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
+        snapBack()
         loadMore(prepending: true, advanceWhenReady: true)
+    }
+
+    /// Returns a dragged, refused or aborted Short to rest: a spring, or at once with Reduce Motion.
+    func snapBack() {
+        withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
     }
 
     private func loadMore(prepending: Bool, advanceWhenReady: Bool) {
@@ -104,12 +150,12 @@ extension ShortsPlayerView {
         }
     }
 
-    /// End of a Short: replay, advance to the next Short, or freeze on the last one —
-    /// never the regular player's queue/recommendation autoplay.
+    /// End of a Short: replay, advance to the next Short, or freeze on the last one (or on this one while a panel
+    /// is open) — never the regular player's queue/recommendation autoplay.
     func handleShortEnded() {
         guard !isTransitioning else { return }
         switch ShortsEndOfVideoDecision.decide(
-            settings: store.settings, currentIndex: currentIndex, count: videos.count)
+            settings: store.settings, currentIndex: currentIndex, count: videos.count, isPanelOpen: isPanelOpen)
         {
         case .replay:
             vm.videoEnded = true

@@ -14,6 +14,11 @@ private let controlsLog = ViewModelLogger(category: "Player")
 // Dedicated view for the interactive transport controls overlaid on the player.
 // Extracted from PlayerView.body to reduce the compiled function size and
 // the Swift generic type tree depth in __swift5_typeref.
+//
+// iPhone, iPad and Mac (VF/Player, VF/Transport): top bar, then previous · back · play/pause · forward · next,
+// then the timeline, time and chapter row and the quick settings. Every glyph is `onMedia` on glass over the
+// scrim, so it reads on any frame; an active toggle is inverted, not only tinted. tvOS keeps its own layout
+// because its remote navigation (`tvNextControl`) is built on those rows.
 
 struct PlayerControlsOverlay: View {
     let size: CGSize
@@ -28,6 +33,7 @@ struct PlayerControlsOverlay: View {
     let isPiPActive: Bool
     @Binding var isLandscapeLocked: Bool
     @Environment(PlayerStateStore.self) private var playerState
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     var vm: PlaybackViewModel { playerState.vm }
     #else
     let vm: PlaybackViewModel
@@ -37,17 +43,21 @@ struct PlayerControlsOverlay: View {
     @Binding var showSpeedPicker: Bool
     @Binding var showAudioTrackPicker: Bool
     @Binding var showSleepTimerPicker: Bool
+    /// The bottom bar's height, which the captions keep clear of.
+    @Binding var bottomBarHeight: CGFloat
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     #endif
     #if os(tvOS)
     @Binding var highlightedControl: PlayerView.TVPlayerControl?
     #endif
     @Environment(SettingsStore.self) var store
     @Environment(\.dismiss) var dismiss
+
+    #if os(tvOS)
     var body: some View {
         VStack {
             // Top bar: back + title
             HStack {
-                #if os(tvOS)
                 tvOverlayControl(
                     highlighted: highlightedControl == .back,
                     scale: 1.5,
@@ -58,35 +68,15 @@ struct PlayerControlsOverlay: View {
                 ) {
                     Image(systemName: AppSymbol.chevronLeft)
                         .font(.title2)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(VFColor.onMedia)
                 }
-                #else
-                Button {
-                    #if os(iOS)
-                    if store.settings.miniPlayerEnabled { playerState.minimize() } else { playerState.stop() }
-                    #else
-                    vm.stop()
-                    withAnimation(.none) { dismiss() }
-                    #endif
-                } label: {
-                    Image(systemName: AppSymbol.chevronLeft)
-                        .font(.title2)
-                        .foregroundStyle(.white)
-                        .padding(12)
-                        .background(.black.opacity(0.4))
-                        .clipShape(Circle())
-                }
-                .accessibilityIdentifier(AccessibilityID.playerBackButton)
-                #endif
                 VStack(alignment: .leading, spacing: 2) {
                     Text(vm.playerInfo?.video.title ?? video.title)
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(VFColor.onMedia)
                         .lineLimit(1)
                         .accessibilityIdentifier(AccessibilityID.playerTitleLabel)
                     let channelId = vm.playerInfo?.video.channelId ?? video.channelId
-                    let channelTitle = vm.playerInfo?.video.channelTitle ?? video.channelTitle
-                    #if os(tvOS)
                     tvOverlayControl(
                         highlighted: highlightedControl == .channel,
                         scale: 1.5,
@@ -94,68 +84,14 @@ struct PlayerControlsOverlay: View {
                         identifier: "player.channelName",
                         enabled: channelId?.isEmpty == false
                     ) {
-                        Text(channelTitle)
+                        Text(vm.playerInfo?.video.channelTitle ?? video.channelTitle)
                             .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.8))
+                            .foregroundStyle(VFColor.onMedia.opacity(0.8))
                             .lineLimit(1)
                     }
-                    #else
-                    Button {
-                        guard let cid = channelId, !cid.isEmpty else { return }
-                        #if os(iOS)
-                        // PlayerView is presented via fullScreenCover — there is no
-                        // NavigationStack, so setting channelDestination is a no-op.
-                        // Post the shared notification instead (same path as VideoCardView),
-                        // then dismiss the player so the parent can push ChannelView.
-                        NotificationCenter.default.post(
-                            name: .openChannel,
-                            object: nil,
-                            userInfo: ["channelId": cid]
-                        )
-                        dismiss()
-                        #else
-                        channelDestination = ChannelDestination(channelId: cid)
-                        #endif
-                    } label: {
-                        Text(channelTitle)
-                            .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.8))
-                            .lineLimit(1)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("player.channelName")
-                    .disabled(channelId == nil || channelId?.isEmpty == true)
-                    #endif
                 }
                 Spacer()
                 videoScaleButton
-                #if os(iOS)
-                // Picture-in-Picture button — shown when PiP is enabled in settings and supported on this device
-                if store.settings.pipEnabled, let pip = pipController {
-                    Button {
-                        if isPiPActive {
-                            pip.stopPictureInPicture()
-                        } else {
-                            pip.startPictureInPicture()
-                        }
-                    } label: {
-                        Image(systemName: isPiPActive ? "pip.exit" : "pip.enter")
-                            .font(.system(size: 18 * controlScale))
-                            .foregroundStyle(.white)
-                            .padding(8)
-                            .background(.black.opacity(0.4))
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier(AccessibilityID.playerPiPButton)
-                }
-                // AirPlay route picker
-                AirPlayRoutePickerView()
-                    .frame(width: 40, height: 40)
-                    .accessibilityIdentifier("player.airPlayButton")
-                #endif
-                // Share / Download menu
-                #if os(tvOS)
                 tvOverlayControl(
                     highlighted: highlightedControl == .more,
                     scale: 1.5,
@@ -166,57 +102,25 @@ struct PlayerControlsOverlay: View {
                 ) {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 18 * controlScale))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(VFColor.onMedia)
                 }
-                #else
-                Button {
-                    controlsLog.notice(
-                        "[menu] ... button tapped — controlsVisible=\(vm.controlsVisible) showMoreMenu=\(showMoreMenu)")
-                    showMoreMenu = true
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 18 * controlScale))
-                        .foregroundStyle(.white)
-                        .padding(8)
-                        .background(.black.opacity(0.4))
-                        .clipShape(Circle())
-                }
-                .accessibilityIdentifier(AccessibilityID.playerMoreButton)
-                .buttonStyle(.plain)
-                #endif
             }
             .padding(.horizontal, 20)
-            #if os(tvOS)
             .padding(.top, 0)
-            #else
-            .padding(.top, max(safeAreaInsets.top, 20))
-            #endif
 
             Spacer()
 
             // Centre: rewind / play-pause / forward
             HStack(spacing: 40) {
-                #if os(tvOS)
                 seekButton(
                     symbol: "gobackward.\(store.settings.seekBackSeconds)",
                     seconds: -Double(store.settings.seekBackSeconds),
                     tvHighlighted: highlightedControl == .seekBack)
-                #else
-                seekButton(
-                    symbol: "gobackward.\(store.settings.seekBackSeconds)",
-                    seconds: -Double(store.settings.seekBackSeconds))
-                #endif
                 playPauseButton
-                #if os(tvOS)
                 seekButton(
                     symbol: "goforward.\(store.settings.seekForwardSeconds)",
                     seconds: Double(store.settings.seekForwardSeconds),
                     tvHighlighted: highlightedControl == .seekForward)
-                #else
-                seekButton(
-                    symbol: "goforward.\(store.settings.seekForwardSeconds)",
-                    seconds: Double(store.settings.seekForwardSeconds))
-                #endif
             }
             .disabled(vm.isLoading)
             .opacity(vm.isLoading ? 0.3 : 1)
@@ -225,23 +129,9 @@ struct PlayerControlsOverlay: View {
 
             // Bottom: progress bar + prev/next
             VStack(spacing: 8) {
-                // Current chapter title — shown whenever chapters are available
-                if let chapter = vm.currentChapter {
-                    Text(chapter.title)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .padding(.horizontal, 20)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .transition(.opacity)
-                        .animation(.easeInOut(duration: 0.2), value: chapter.title)
-                }
+                currentChapterTitle
                 progressBar
-                #if !os(tvOS)
-                quickAccessButtonRow
-                #endif
                 HStack {
-                    // Previous video button
-                    #if os(tvOS)
                     tvOverlayControl(
                         highlighted: highlightedControl == .prevVideo,
                         scale: 1.55,
@@ -253,29 +143,9 @@ struct PlayerControlsOverlay: View {
                     ) {
                         Image(systemName: AppSymbol.previousTrack)
                             .font(.system(size: 18 * controlScale))
-                            .foregroundStyle(vm.hasPrevious && !vm.isLoading ? .white : .white.opacity(0.3))
+                            .foregroundStyle(VFColor.onMedia.opacity(vm.hasPrevious && !vm.isLoading ? 1 : 0.3))
                     }
-                    #else
-                    Button {
-                        vm.playPrevious()
-                    } label: {
-                        Image(systemName: AppSymbol.previousTrack)
-                            .font(.system(size: 18 * controlScale))
-                            .foregroundStyle(vm.hasPrevious && !vm.isLoading ? .white : .white.opacity(0.3))
-                            #if os(iOS)
-                        .padding(8)
-                        .background(.black.opacity(0.4))
-                        .clipShape(Circle())
-                            #endif
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!vm.hasPrevious || vm.isLoading)
-                    .accessibilityIdentifier("player.prevBtn")
-                    #endif
-
-                    // Previous chapter button — only present when the video has chapters
                     if !vm.chapters.isEmpty {
-                        #if os(tvOS)
                         tvOverlayControl(
                             highlighted: highlightedControl == .prevChapter,
                             scale: 1.55,
@@ -287,37 +157,12 @@ struct PlayerControlsOverlay: View {
                         ) {
                             Image(systemName: AppSymbol.previousChapter)
                                 .font(.system(size: 18 * controlScale))
-                                .foregroundStyle(vm.hasPreviousChapter && !vm.isLoading ? .white : .white.opacity(0.3))
+                                .foregroundStyle(
+                                    VFColor.onMedia.opacity(vm.hasPreviousChapter && !vm.isLoading ? 1 : 0.3))
                         }
-                        #else
-                        Button {
-                            vm.skipToPreviousChapter()
-                        } label: {
-                            Image(systemName: AppSymbol.previousChapter)
-                                .font(.system(size: 18 * controlScale))
-                                .foregroundStyle(vm.hasPreviousChapter && !vm.isLoading ? .white : .white.opacity(0.3))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(!vm.hasPreviousChapter || vm.isLoading)
-                        .accessibilityIdentifier("player.prevChapterBtn")
-                        #endif
                     }
-
-                    #if !os(tvOS)
-                    Text(formatDuration(vm.currentTime))
-                        .padding(.leading, 6)
-                        .accessibilityIdentifier(AccessibilityID.playerCurrentTimeLabel)
                     Spacer()
-                    Text(formatDuration(vm.duration))
-                        .padding(.trailing, 6)
-                        .accessibilityIdentifier("player.durationLabel")
-                    #else
-                    Spacer()
-                    #endif
-
-                    // Next chapter button — only present when the video has chapters
                     if !vm.chapters.isEmpty {
-                        #if os(tvOS)
                         tvOverlayControl(
                             highlighted: highlightedControl == .nextChapter,
                             scale: 1.55,
@@ -329,55 +174,9 @@ struct PlayerControlsOverlay: View {
                         ) {
                             Image(systemName: AppSymbol.nextChapter)
                                 .font(.system(size: 18 * controlScale))
-                                .foregroundStyle(vm.hasNextChapter && !vm.isLoading ? .white : .white.opacity(0.3))
+                                .foregroundStyle(VFColor.onMedia.opacity(vm.hasNextChapter && !vm.isLoading ? 1 : 0.3))
                         }
-                        #else
-                        Button {
-                            vm.skipToNextChapter()
-                        } label: {
-                            Image(systemName: AppSymbol.nextChapter)
-                                .font(.system(size: 18 * controlScale))
-                                .foregroundStyle(vm.hasNextChapter && !vm.isLoading ? .white : .white.opacity(0.3))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(!vm.hasNextChapter || vm.isLoading)
-                        .accessibilityIdentifier("player.nextChapterBtn")
-                        #endif
                     }
-
-                    #if os(iOS)
-                    // Landscape lock button
-                    Button {
-                        isLandscapeLocked.toggle()
-                    } label: {
-                        Image(systemName: isLandscapeLocked ? "lock.rotation" : "lock.rotation.open")
-                            .font(.system(size: 18 * controlScale))
-                            .foregroundStyle(.white)
-                            .padding(8)
-                            .background(.black.opacity(0.4))
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("player.landscapeLockButton")
-
-                    // Audio-only button
-                    Button {
-                        vm.toggleAudioOnlyLive()
-                        store.settings.audioOnlyMode = vm.isAudioOnlyMode
-                    } label: {
-                        Image(systemName: store.settings.audioOnlyMode ? "video" : AppSymbol.audioOnly)
-                            .font(.system(size: 18 * controlScale))
-                            .foregroundStyle(VFColor.onMedia)
-                            .padding(8)
-                            .background(.black.opacity(0.4))
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("player.audioOnlyButton")
-                    #endif
-
-                    // Next video button
-                    #if os(tvOS)
                     tvOverlayControl(
                         highlighted: highlightedControl == .nextVideo,
                         scale: 1.55,
@@ -389,57 +188,367 @@ struct PlayerControlsOverlay: View {
                     ) {
                         Image(systemName: AppSymbol.nextTrack)
                             .font(.system(size: 18 * controlScale))
-                            .foregroundStyle(vm.hasNext ? .white : .white.opacity(0.3))
+                            .foregroundStyle(VFColor.onMedia.opacity(vm.hasNext ? 1 : 0.3))
                     }
-                    #else
-                    Button {
-                        vm.playNext()
-                    } label: {
-                        Image(systemName: AppSymbol.nextTrack)
-                            .font(.system(size: 18 * controlScale))
-                            .foregroundStyle(vm.hasNext ? .white : .white.opacity(0.3))
-                            #if os(iOS)
-                        .padding(8)
-                        .background(.black.opacity(0.4))
-                        .clipShape(Circle())
-                            #endif
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!vm.hasNext)
-                    .accessibilityIdentifier(AccessibilityID.playerNextButton)
-                    #endif
                 }
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.8))
-                #if os(tvOS)
+                .foregroundStyle(VFColor.onMedia.opacity(0.8))
                 .padding(.horizontal, 40)
-                #else
-                .padding(.horizontal, 20)
-                #endif
             }
             .padding(.bottom, 20)
+            // The timeline and its buttons on a solid scrim, so the unplayed track keeps 3:1 over a white frame.
+            .playerBarScrim(fadingDown: false)
         }
         .background(
-            LinearGradient(
-                colors: [.black.opacity(0.6), .clear, .clear, .black.opacity(0.6)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            #if os(iOS)
-            .allowsHitTesting(false)
-            #else
-            .contentShape(Rectangle())
-            .onTapGesture {
-                controlsLog.notice("[menu] gradient background tap — controlsVisible=\(vm.controlsVisible)")
-                vm.toggleControls()
-            }
-            #endif
+            scrimGradient
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    controlsLog.notice("[menu] gradient background tap — controlsVisible=\(vm.controlsVisible)")
+                    vm.toggleControls()
+                }
         )
-        #if os(tvOS)
         // Controls overlay is not a focus section — the outer view handles all input.
         .onTapGesture { vm.toggleControls() }
+    }
+    #else
+    var body: some View {
+        // The safe area is ignored by the caller so each bar's scrim reaches the edges; the bars keep their
+        // content out of the notch and home indicator.
+        VStack(spacing: 0) {
+            topBar
+                .padding(.leading, safeAreaInsets.leading)
+                .padding(.trailing, safeAreaInsets.trailing)
+                .playerBarScrim(fadingDown: true)
+            Spacer(minLength: VFSpace.s8)
+            transportRow
+            Spacer(minLength: VFSpace.s8)
+            bottomBar
+                .padding(.leading, safeAreaInsets.leading)
+                .padding(.trailing, safeAreaInsets.trailing)
+                .playerBarScrim(fadingDown: false)
+                // Captions sit above whatever height the bar has in this layout and text size.
+                .onGeometryChange(for: CGFloat.self, of: { $0.size.height }, action: { bottomBarHeight = $0 })
+        }
+        // Controls always sit on dark media, whatever the app's appearance, so glass and fallbacks resolve dark.
+        .environment(\.colorScheme, .dark)
+        .background { tapSurface }
+    }
+
+    /// macOS: a click on the video outside the controls hides them. iOS uses the player's own tap gesture.
+    @ViewBuilder private var tapSurface: some View {
+        #if os(macOS)
+        Color.clear
+            .contentShape(Rectangle())
+            .onTapGesture {
+                controlsLog.notice("[menu] background tap — controlsVisible=\(vm.controlsVisible)")
+                vm.toggleControls()
+            }
         #endif
     }
+    #endif
+}
+
+// MARK: - iPhone, iPad and Mac bars
+
+#if !os(tvOS)
+extension PlayerControlsOverlay {
+
+    // MARK: Top bar
+
+    private var topBar: some View {
+        HStack(spacing: VFSpace.s8) {
+            Button {
+                #if os(iOS)
+                if store.settings.miniPlayerEnabled { playerState.minimize() } else { playerState.stop() }
+                #else
+                vm.stop()
+                withAnimation(.none) { dismiss() }
+                #endif
+            } label: {
+                Image(systemName: backSymbol)
+                    .font(.system(size: 18 * controlScale, weight: .semibold))
+                    .playerMediaControl(diameter: VFTarget.touch * controlScale)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(backLabel)
+            .accessibilityIdentifier(AccessibilityID.playerBackButton)
+            titleBlock
+            Spacer(minLength: VFSpace.s8)
+            videoScaleButton
+            #if os(iOS)
+            // Picture-in-Picture button — shown when PiP is enabled in settings and supported on this device
+            if store.settings.pipEnabled, let pip = pipController {
+                Button {
+                    if isPiPActive {
+                        pip.stopPictureInPicture()
+                    } else {
+                        pip.startPictureInPicture()
+                    }
+                } label: {
+                    Image(systemName: isPiPActive ? "pip.exit" : "pip.enter")
+                        .font(.system(size: 18 * controlScale))
+                        .playerMediaControl(diameter: VFTarget.touch * controlScale, isActive: isPiPActive)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Picture in Picture", bundle: .module))
+                .accessibilityAddTraits(isPiPActive ? .isSelected : [])
+                .accessibilityIdentifier(AccessibilityID.playerPiPButton)
+            }
+            // AirPlay route picker: draws its own glyph and takes touches across the whole disc.
+            AirPlayRoutePickerView()
+                .playerMediaControl(diameter: VFTarget.touch * controlScale)
+                .accessibilityIdentifier(AccessibilityID.playerAirPlayButton)
+            #endif
+            Button {
+                controlsLog.notice(
+                    "[menu] ... button tapped — controlsVisible=\(vm.controlsVisible) showMoreMenu=\(showMoreMenu)")
+                showMoreMenu = true
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 18 * controlScale, weight: .semibold))
+                    .playerMediaControl(diameter: VFTarget.touch * controlScale)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("More", bundle: .module))
+            .accessibilityIdentifier(AccessibilityID.playerMoreButton)
+            .playerOptionPanelTrigger(.more)
+        }
+        .padding(.horizontal, VFSpace.s20)
+        .padding(.top, max(safeAreaInsets.top, VFSpace.s20))
+    }
+
+    private var backSymbol: String {
+        #if os(iOS)
+        store.settings.miniPlayerEnabled ? AppSymbol.chevronDown : AppSymbol.xmark
+        #else
+        AppSymbol.chevronLeft
+        #endif
+    }
+
+    private var backLabel: Text {
+        #if os(iOS)
+        if store.settings.miniPlayerEnabled { return Text("Minimize", bundle: .module) }
+        return Text("Close", bundle: .module)
+        #else
+        return Text("Back", bundle: .module)
+        #endif
+    }
+
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(vm.playerInfo?.video.title ?? video.title)
+                .font(.headline)
+                .foregroundStyle(VFColor.onMedia)
+                .lineLimit(1)
+                .accessibilityIdentifier(AccessibilityID.playerTitleLabel)
+            let channelId = vm.playerInfo?.video.channelId ?? video.channelId
+            Button {
+                guard let cid = channelId, !cid.isEmpty else { return }
+                #if os(iOS)
+                // PlayerView is presented via fullScreenCover — there is no
+                // NavigationStack, so setting channelDestination is a no-op.
+                // Post the shared notification instead (same path as VideoCardView),
+                // then dismiss the player so the parent can push ChannelView.
+                NotificationCenter.default.post(
+                    name: .openChannel,
+                    object: nil,
+                    userInfo: ["channelId": cid]
+                )
+                dismiss()
+                #else
+                channelDestination = ChannelDestination(channelId: cid)
+                #endif
+            } label: {
+                Text(vm.playerInfo?.video.channelTitle ?? video.channelTitle)
+                    .font(.subheadline)
+                    .foregroundStyle(VFColor.onMedia.opacity(0.8))
+                    .lineLimit(1)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.playerChannelName)
+            .disabled(channelId == nil || channelId?.isEmpty == true)
+        }
+    }
+
+    // MARK: Transport
+
+    private var transportRow: some View {
+        HStack(spacing: VFSpace.s24) {
+            mediaButton(
+                symbol: AppSymbol.previousTrack, label: Text("Previous Video", bundle: .module),
+                identifier: "player.prevBtn", enabled: vm.hasPrevious && !vm.isLoading
+            ) { vm.playPrevious() }
+            HStack(spacing: VFSpace.s24) {
+                seekButton(
+                    symbol: "gobackward.\(store.settings.seekBackSeconds)",
+                    seconds: -Double(store.settings.seekBackSeconds))
+                playPauseButton
+                seekButton(
+                    symbol: "goforward.\(store.settings.seekForwardSeconds)",
+                    seconds: Double(store.settings.seekForwardSeconds))
+            }
+            .disabled(vm.isLoading)
+            .opacity(vm.isLoading ? 0.35 : 1)
+            mediaButton(
+                symbol: AppSymbol.nextTrack, label: Text("Next Video", bundle: .module),
+                identifier: AccessibilityID.playerNextButton, enabled: vm.hasNext
+            ) { vm.playNext() }
+        }
+    }
+
+    /// A round transport button; an unavailable one stays visible and disabled rather than disappearing.
+    private func mediaButton(
+        symbol: String, label: Text, identifier: String, enabled: Bool, diameter: CGFloat = 52,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 20 * controlScale))
+                .playerMediaControl(diameter: diameter * controlScale)
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.35)
+        .accessibilityLabel(label)
+        .accessibilityIdentifier(identifier)
+    }
+
+    // MARK: Bottom bar
+
+    /// Timeline, then time and buttons, then the setting pills. In a landscape iPhone the time, pills and buttons
+    /// share one row, so the bar leaves the picture (and the captions above it) as much room as it can. At
+    /// accessibility text sizes they keep two rows and the pills scroll sideways instead of being cut.
+    private var bottomBar: some View {
+        VStack(spacing: VFSpace.s8) {
+            currentChapterTitle
+            progressBar
+            if isCompactHeight && !dynamicTypeSize.isAccessibilitySize {
+                HStack(spacing: VFSpace.s12) {
+                    timeLabel
+                    quickAccessButtons
+                    Spacer(minLength: VFSpace.s8)
+                    rowButtons
+                }
+                .padding(.horizontal, VFSpace.s20)
+            } else {
+                HStack(spacing: VFSpace.s8) {
+                    timeLabel
+                    Spacer(minLength: VFSpace.s8)
+                    rowButtons
+                }
+                .padding(.horizontal, VFSpace.s20)
+                if dynamicTypeSize.isAccessibilitySize {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        quickAccessButtons.padding(.horizontal, VFSpace.s20)
+                    }
+                } else {
+                    quickAccessButtons
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, VFSpace.s20)
+                }
+            }
+        }
+        .padding(.bottom, max(safeAreaInsets.bottom, VFSpace.s16))
+    }
+
+    private var isCompactHeight: Bool {
+        #if os(iOS)
+        verticalSizeClass == .compact
+        #else
+        false
+        #endif
+    }
+
+    private var timeLabel: some View {
+        HStack(spacing: VFSpace.s4) {
+            Text(formatDuration(vm.currentTime))
+                .accessibilityIdentifier(AccessibilityID.playerCurrentTimeLabel)
+            Text(verbatim: "/")  // verbatim: a separator between two times, the same in every language
+                .accessibilityHidden(true)
+            Text(formatDuration(vm.duration))
+                .accessibilityIdentifier(AccessibilityID.playerDurationLabel)
+        }
+        .font(.caption.monospacedDigit().weight(.semibold))
+        .foregroundStyle(VFColor.onMedia)
+        .fixedSize()
+    }
+
+    /// Chapter steps, then the iPhone and iPad toggles.
+    private var rowButtons: some View {
+        HStack(spacing: VFSpace.s8) {
+            // Chapter buttons only exist when the video has chapters.
+            if !vm.chapters.isEmpty {
+                mediaButton(
+                    symbol: AppSymbol.previousChapter, label: Text("Previous Chapter", bundle: .module),
+                    identifier: "player.prevChapterBtn", enabled: vm.hasPreviousChapter && !vm.isLoading,
+                    diameter: VFTarget.touch
+                ) { vm.skipToPreviousChapter() }
+                mediaButton(
+                    symbol: AppSymbol.nextChapter, label: Text("Next Chapter", bundle: .module),
+                    identifier: "player.nextChapterBtn", enabled: vm.hasNextChapter && !vm.isLoading,
+                    diameter: VFTarget.touch
+                ) { vm.skipToNextChapter() }
+            }
+            #if os(iOS)
+            Button {
+                isLandscapeLocked.toggle()
+            } label: {
+                Image(systemName: isLandscapeLocked ? "lock.rotation" : "lock.rotation.open")
+                    .font(.system(size: 18 * controlScale))
+                    .playerMediaControl(diameter: VFTarget.touch * controlScale, isActive: isLandscapeLocked)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Landscape Lock", bundle: .module))
+            .accessibilityAddTraits(isLandscapeLocked ? .isSelected : [])
+            .accessibilityIdentifier(AccessibilityID.playerLandscapeLockButton)
+
+            Button {
+                vm.toggleAudioOnlyLive()
+                store.settings.audioOnlyMode = vm.isAudioOnlyMode
+            } label: {
+                Image(systemName: AppSymbol.audioOnly)
+                    .font(.system(size: 18 * controlScale))
+                    .playerMediaControl(
+                        diameter: VFTarget.touch * controlScale, isActive: store.settings.audioOnlyMode)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Audio-Only", bundle: .module))
+            .accessibilityAddTraits(store.settings.audioOnlyMode ? .isSelected : [])
+            .accessibilityIdentifier(AccessibilityID.playerAudioOnlyButton)
+            #endif
+        }
+    }
+}
+#endif
+
+extension PlayerControlsOverlay {
+
+    // MARK: Shared parts
+
+    @ViewBuilder private var currentChapterTitle: some View {
+        // Current chapter title — shown whenever chapters are available
+        if let chapter = vm.currentChapter {
+            Text(chapter.title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(VFColor.onMedia.opacity(0.9))
+                .lineLimit(1)
+                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .transition(.opacity)
+                .vfAnimation(value: chapter.title)
+        }
+    }
+
+    #if os(tvOS)
+    /// The scrim behind the TV controls: darkest at the top and bottom, where the text and buttons are.
+    private var scrimGradient: some View {
+        LinearGradient(
+            colors: [VFColor.scrim, .clear, .clear, VFColor.scrim],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+    #endif
 }
 
 // MARK: - Control element views
@@ -492,10 +601,10 @@ extension PlayerControlsOverlay {
             vm.togglePlayPause()
         } label: {
             playPauseIcon
-                .padding(12)
+                .playerMediaControl(diameter: 72 * controlScale)
         }
         .buttonStyle(.plain)
-        .contentShape(Rectangle())
+        .accessibilityLabel(playPauseLabel)
         .accessibilityIdentifier(AccessibilityID.playerPlayPauseButton)
         #endif
     }
@@ -503,8 +612,14 @@ extension PlayerControlsOverlay {
     var playPauseIcon: some View {
         Image(systemName: vm.videoEnded ? "arrow.counterclockwise" : (vm.isPlaying ? "pause.fill" : "play.fill"))
             .renderingMode(.original)
-            .font(.system(size: 42 * controlScale))
-            .foregroundStyle(.white)
+            .font(.system(size: 34 * controlScale))
+            .foregroundStyle(VFColor.onMedia)
+    }
+
+    /// Names the action, as the glyph does: Replay after the end, otherwise Pause or Play.
+    private var playPauseLabel: Text {
+        if vm.videoEnded { return Text("Replay", bundle: .module) }
+        return vm.isPlaying ? Text("Pause", bundle: .module) : Text("Play", bundle: .module)
     }
 
     // MARK: - Seek buttons
@@ -524,14 +639,20 @@ extension PlayerControlsOverlay {
             seekIcon(symbol: symbol)
         }
         #else
+        // The interval in the glyph and the label comes from Settings, never a drawn constant.
+        let interval = Int(abs(seconds))
         Button {
             vm.seekRelative(seconds: seconds)
         } label: {
             seekIcon(symbol: symbol)
-                .padding(12)
+                .playerMediaControl(diameter: 52 * controlScale)
         }
         .buttonStyle(.plain)
-        .contentShape(Rectangle())
+        .accessibilityLabel(
+            seconds < 0
+                ? Text("Back \(interval) seconds", bundle: .module)
+                : Text("Forward \(interval) seconds", bundle: .module)
+        )
         .accessibilityIdentifier(seconds < 0 ? "player.seekBackButton" : "player.seekForwardButton")
         #endif
     }
@@ -539,8 +660,8 @@ extension PlayerControlsOverlay {
     func seekIcon(symbol: String) -> some View {
         Image(systemName: symbol)
             .renderingMode(.original)
-            .font(.system(size: 28 * controlScale))
-            .foregroundStyle(.white)
+            .font(.system(size: 24 * controlScale))
+            .foregroundStyle(VFColor.onMedia)
     }
 
     // MARK: - Progress bar
@@ -552,105 +673,4 @@ extension PlayerControlsOverlay {
         iosProgressBar
         #endif
     }
-
-    var iosProgressBar: some View {
-        // Wrap in an outer GeometryReader so the highPriorityGesture below can
-        // reference the bar's width.  The gesture is placed on the full-height
-        // VStack (tooltip row + track row = 60 pt) so any touch in that area —
-        // including the 28 pt invisible tooltip strip above the visible bar — will
-        // activate the scrub drag.  Previously the gesture was only on the inner
-        // 28 pt track ZStack, which meant touches on the empty tooltip row were
-        // silently swallowed without triggering the seek.
-        GeometryReader { outerGeo in
-            let hPad: CGFloat = 20
-            let trackW = outerGeo.size.width - hPad * 2
-
-            VStack(spacing: 4) {
-                // Tooltip row — always occupies space so layout doesn't jump
-                GeometryReader { geo in
-                    if vm.isScrubbing && vm.duration > 0 {
-                        let fraction = CGFloat(vm.scrubTime / vm.duration)
-                        let thumbX = hPad + trackW * fraction
-                        let chapterAtScrub = vm.chapters.last(where: { $0.startTime <= vm.scrubTime })
-                        let labelW: CGFloat = chapterAtScrub != nil ? min(outerGeo.size.width * 0.5, 180) : 64
-                        let clampedX = min(max(thumbX, hPad + labelW / 2), outerGeo.size.width - hPad - labelW / 2)
-
-                        VStack(spacing: 2) {
-                            if let chapter = chapterAtScrub {
-                                Text(chapter.title)
-                                    .font(.caption2.weight(.medium))
-                                    .foregroundStyle(.white.opacity(0.85))
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                            }
-                            Text(formatDuration(vm.scrubTime))
-                                .font(.caption.monospacedDigit())
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.white)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 6))
-                        .frame(width: labelW)
-                        .position(x: clampedX, y: geo.size.height / 2)
-                    }
-                }
-                .frame(height: 28)
-
-                // Track + slider row (custom — fully transparent thumb and track)
-                GeometryReader { geo in
-                    let time = vm.isScrubbing ? vm.scrubTime : vm.currentTime
-                    let progress = vm.duration > 0 ? CGFloat(time / vm.duration) : 0
-                    let thumbX = hPad + trackW * progress
-
-                    ZStack {
-                        // Background track
-                        Capsule()
-                            .fill(Color.white.opacity(0.2))
-                            .frame(height: 4)
-                            .padding(.horizontal, hPad)
-
-                        // Progress fill
-                        HStack(spacing: 0) {
-                            Capsule()
-                                .fill(Color.red.opacity(0.5))
-                                .frame(width: max(thumbX - hPad, 0), height: 4)
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.leading, hPad)
-
-                        // Thumb
-                        Circle()
-                            .fill(Color.white.opacity(0.5))
-                            .frame(width: 16, height: 16)
-                            .position(x: thumbX, y: geo.size.height / 2)
-                    }
-                    .overlay(sponsorBlockMarkers)
-                    .overlay(chapterMarkers)
-                }
-                .frame(height: 28)
-            }
-            .contentShape(Rectangle())
-            #if !os(tvOS)
-            // highPriorityGesture on the full VStack (tooltip + track, 60 pt total)
-            // ensures the seek-bar drag beats any child-view tap gestures (e.g.
-            // chapter-marker hit areas) and activates even when the touch lands on
-            // the invisible tooltip strip above the visible progress bar.
-            .highPriorityGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { value in
-                        let fraction = min(max((value.location.x - hPad) / trackW, 0), 1)
-                        if !vm.isScrubbing { vm.beginScrubbing() }
-                        vm.updateScrub(to: Double(fraction) * vm.duration)
-                    }
-                    .onEnded { _ in vm.commitScrub() }
-            )
-            #endif
-        }
-        .frame(height: 60)
-        .accessibilityIdentifier(AccessibilityID.playerProgressBar)
-    }
-
-    // Chapter tick marks on the progress bar — small white notches at each chapter boundary.
-    // Each tick has a 24×44 pt transparent tap area so the user can tap to jump to it.
 }

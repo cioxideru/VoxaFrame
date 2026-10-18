@@ -23,10 +23,18 @@ public struct ShortsPlayerView: View {
     @Environment(\.scenePhase) var scenePhase
     @Environment(SettingsStore.self) var store
     @Environment(AuthService.self) var authService
+    /// With Reduce Motion a Short replaces the previous one at once instead of sliding the full height.
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
     #if os(iOS)
     /// The regular player. Stopped when Shorts open so only one AVPlayer plays and owns
     /// the remote commands.
     @Environment(PlayerStateStore.self) var playerState
+    /// Landscape iPhone: the control rail runs in a row.
+    @Environment(\.verticalSizeClass) var verticalSizeClass
+    #endif
+    #if !os(tvOS)
+    /// Accessibility text: the control rail folds into two rows.
+    @Environment(\.dynamicTypeSize) var dynamicTypeSize
     #endif
     @State var slideOffset: CGFloat = 0
     @GestureState var isDragging = false
@@ -71,21 +79,7 @@ public struct ShortsPlayerView: View {
                 #endif
 
                 if vm.isLoading {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .tint(.white)
-                            .scaleEffect(1.5)
-                        if let msg = vm.retryStatusMessage {
-                            Text(msg)
-                                .font(.caption)
-                                .foregroundStyle(.white.opacity(0.75))
-                                .transition(.opacity)
-                                .animation(.easeInOut(duration: 0.3), value: vm.retryStatusMessage)
-                        }
-                    }
-                    .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.2), value: vm.isLoading)
+                    PlayerLoadingIndicator(message: vm.retryStatusMessage)
                 }
 
                 // Stats for Nerds overlay (toggled by two-finger tap)
@@ -112,33 +106,18 @@ public struct ShortsPlayerView: View {
             .simultaneousGesture(shortsSwipeGesture)
             .onChange(of: isDragging) { _, dragging in
                 guard !dragging, !isTransitioning else { return }
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
+                snapBack()
             }
             #endif
             #if os(tvOS)
             .onPlayPauseCommand { vm.togglePlayPause() }
-            // Siri Remote D-pad: up/down navigate prev/next short.
+            // Siri Remote D-pad: up/down navigate next/prev short.
             .onMoveCommand { direction in
-                guard !isTransitioning, !showAudioTrackPicker, !showSpeedPicker else { return }
+                guard !isTransitioning, !isPanelOpen else { return }
                 switch direction {
-                case .up:
-                    if let next = ShortsNavigation.targetIndex(
-                        vertical: -100, horizontal: 0, current: currentIndex, count: videos.count)
-                    {
-                        performVerticalTransition(direction: -1) { goTo(next) }
-                    } else {
-                        loadMoreIfNeeded(advanceWhenReady: true)
-                    }
-                case .down:
-                    if let prev = ShortsNavigation.targetIndex(
-                        vertical: 100, horizontal: 0, current: currentIndex, count: videos.count)
-                    {
-                        performVerticalTransition(direction: 1) { goTo(prev) }
-                    } else {
-                        loadMoreAtStart()
-                    }
-                default:
-                    vm.toggleControls()
+                case .up: showNextShort()
+                case .down: showPreviousShort()
+                default: vm.toggleControls()
                 }
             }
             #endif
@@ -151,17 +130,24 @@ public struct ShortsPlayerView: View {
             .overlay {
                 if let err = vm.error {
                     VStack(spacing: 12) {
+                        Image(systemName: AppSymbol.warning)
+                            .font(.title2)
+                            .accessibilityHidden(true)
                         Text(err.localizedDescription)
-                            .font(.caption)
+                            .font(.callout.weight(.semibold))
                             .multilineTextAlignment(.center)
                             .accessibilityIdentifier(AccessibilityID.shortsErrorBanner)
                         Button("Retry") { vm.retryLoad() }
                             .buttonStyle(.vfProminent)
+                            // A one-word action: its own width, never truncated by the card's measuring.
+                            .fixedSize()
                             .accessibilityIdentifier(AccessibilityID.shortsRetryButton)
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(VFColor.onMedia)
+                    .padding(VFSpace.s20)
+                    .vfGlass(in: RoundedRectangle(cornerRadius: VFRadius.card, style: .continuous))
+                    .environment(\.colorScheme, .dark)
                     .padding()
-                    .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 8))
                 }
             }
             .overlay(alignment: .bottomTrailing) {
@@ -177,14 +163,10 @@ public struct ShortsPlayerView: View {
                         .transition(.opacity)
                 }
             }
-            .overlay {
-                if showAudioTrackPicker {
-                    PlayerAudioTrackPicker(vm: vm, showAudioTrackPicker: $showAudioTrackPicker)
-                }
-                if showSpeedPicker {
-                    PlayerSpeedPicker(vm: vm, showSpeedPicker: $showSpeedPicker)
-                }
-            }
+            .modifier(
+                ShortsOptionPanels(
+                    vm: vm, showAudioTrackPicker: $showAudioTrackPicker, showSpeedPicker: $showSpeedPicker)
+            )
             #if DEBUG
             .overlay(alignment: .top) {
                 if ShortsPlaybackUITestFixture.baseURL != nil {

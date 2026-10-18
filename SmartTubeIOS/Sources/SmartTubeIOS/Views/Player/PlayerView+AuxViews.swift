@@ -89,6 +89,109 @@ struct StatsForNerdsOverlay: View {
     }
 }
 
+// MARK: - PlayerLoadingIndicator
+
+/// Source loading in the regular player and Shorts: a spinner on a glass disc and, while a retry runs,
+/// its status. It is not the translation wait, which has its own plate and exit (`PlayerTranslationStatus`).
+struct PlayerLoadingIndicator: View {
+    let message: String?
+
+    var body: some View {
+        VStack(spacing: VFSpace.s12) {
+            ProgressView()
+                .progressViewStyle(.circular)
+                .controlSize(.large)
+                .tint(VFColor.onMedia)
+                .frame(width: 72, height: 72)
+                .vfGlass(in: Circle())
+            if let message {
+                Text(message)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(VFColor.onMedia)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, VFSpace.s12)
+                    .padding(.vertical, VFSpace.s4)
+                    .background(VFColor.scrim, in: Capsule())
+                    .transition(.opacity)
+            }
+        }
+        .environment(\.colorScheme, .dark)
+        .vfAnimation(value: message)
+        .transition(.opacity)
+    }
+}
+
+/// How far a bar's scrim fades out beyond the bar.
+private let playerBarScrimFade: CGFloat = 32
+
+extension View {
+    /// Puts a bar of text and controls over video on its own scrim: solid under the bar, then fading out over the
+    /// video (downwards for a top bar, upwards for a bottom one). It follows the bar's real height and reaches into
+    /// the safe area, so white text keeps its contrast on a white frame in every layout and text size.
+    func playerBarScrim(fadingDown: Bool) -> some View {
+        background {
+            VStack(spacing: 0) {
+                if !fadingDown {
+                    LinearGradient(colors: [.clear, VFColor.scrim], startPoint: .top, endPoint: .bottom)
+                        .frame(height: playerBarScrimFade)
+                }
+                VFColor.scrim
+                if fadingDown {
+                    LinearGradient(colors: [VFColor.scrim, .clear], startPoint: .top, endPoint: .bottom)
+                        .frame(height: playerBarScrimFade)
+                }
+            }
+            .padding(fadingDown ? .bottom : .top, -playerBarScrimFade)
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// A round control drawn over video: an `onMedia` glyph on glass, never smaller than `diameter`.
+    /// `isActive` inverts it (white disc, dark glyph), so an on state does not rely on colour alone.
+    func playerMediaControl(diameter: CGFloat, isActive: Bool = false) -> some View {
+        foregroundStyle(isActive ? Color.black : VFColor.onMedia)
+            .frame(width: diameter, height: diameter)
+            .background {
+                if isActive { Circle().fill(VFColor.onMedia) }
+            }
+            .vfGlass(in: Circle())
+            .contentShape(Circle())
+    }
+}
+
+/// An action over the video (Try Again, Sign In, the translation exits). iPhone, iPad and Mac: a white capsule
+/// with a dark label, or a translucent one, which reads on any frame. tvOS: the system buttons, for the remote's
+/// focus effect, at the 10-foot target.
+struct PlayerMediaActionButton: View {
+    let title: Text
+    var primary = true
+    let action: () -> Void
+
+    var body: some View {
+        #if os(tvOS)
+        let button = Button(action: action) { title.frame(minHeight: playerActionTarget) }
+        if primary {
+            button.buttonStyle(.borderedProminent)
+        } else {
+            button.buttonStyle(.bordered)
+        }
+        #else
+        Button(action: action) {
+            title
+                .font(.callout.weight(.semibold))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(primary ? Color.black : VFColor.onMedia)
+                .padding(.horizontal, VFSpace.s20)
+                .frame(minHeight: playerActionTarget)
+                .background(primary ? VFColor.onMedia : VFColor.onMedia.opacity(0.2), in: Capsule())
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        #endif
+    }
+}
+
 // MARK: - RelatedVideosView
 
 struct RelatedVideosView: View {

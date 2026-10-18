@@ -2,125 +2,26 @@ import SmartTubeIOSCore
 import SwiftUI
 
 /// One audio and translation surface for the regular player and Shorts.
+/// Translation status first (preparing or failed, each with its way out), then the video's own tracks
+/// (Auto, Original, dubs), then Yandex voice-over: a dubbed track is never presented as a translation.
+/// The whole panel scrolls, so its toggles stay reachable at the medium detent and at large text sizes.
 struct PlayerAudioTrackPicker: View {
     let vm: PlaybackViewModel
     @Binding var showAudioTrackPicker: Bool
-    var maxWidth: CGFloat = .infinity
     @Environment(SettingsStore.self) private var store
-    @State private var trackListHeight: CGFloat = 0
     #if os(tvOS)
     @Namespace private var audioTrackPickerNamespace
     @FocusState private var audioTrackPickerFocused: Bool
     #endif
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { showAudioTrackPicker = false }
-            VStack(spacing: 0) {
-                HStack {
-                    Button("Cancel") { showAudioTrackPicker = false }
-                        #if os(tvOS)
-                    .buttonStyle(PickerHeaderButtonStyle())
-                        #endif
-                        .padding()
-                    Spacer()
-                    Text("Audio Track")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Color.clear.frame(width: 70, height: 44)
-                }
-                Divider()
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            // "Auto" row — resets this video to the HLS default track
-                            Button {
-                                vm.setVoiceOverForCurrentVideo(false)
-                                vm.selectAudioTrack(nil)
-                                showAudioTrackPicker = false
-                            } label: {
-                                HStack {
-                                    Text("Auto")
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    if vm.selectedAudioTrack == nil {
-                                        Image(systemName: AppSymbol.checkmark)
-                                            .foregroundStyle(Color.accentColor)
-                                    }
-                                }
-                                .contentShape(Rectangle())
-                                .padding(.horizontal)
-                                .padding(.vertical, 12)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityIdentifier(AccessibilityID.playerAudioTrackPickerAuto)
-                            #if os(tvOS)
-                            .prefersDefaultFocus(in: audioTrackPickerNamespace)
-                            #endif
-                            Divider()
-                            // Original first, then dubs — the list can hold ~25 languages.
-                            ForEach(
-                                vm.availableAudioTracks.filter(\.isOriginal)
-                                    + vm.availableAudioTracks.filter { !$0.isOriginal }
-                            ) { track in
-                                Button {
-                                    vm.setVoiceOverForCurrentVideo(false)
-                                    vm.selectAudioTrack(track)
-                                    showAudioTrackPicker = false
-                                } label: {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(track.name)
-                                                .foregroundStyle(.primary)
-                                            if track.isOriginal {
-                                                Text("Original")
-                                                    .font(.caption)
-                                                    .foregroundStyle(.secondary)
-                                            }
-                                        }
-                                        Spacer()
-                                        if vm.selectedAudioTrack?.id == track.id {
-                                            Image(systemName: AppSymbol.checkmark)
-                                                .foregroundStyle(Color.accentColor)
-                                        }
-                                    }
-                                    .contentShape(Rectangle())
-                                    .padding(.horizontal)
-                                    .padding(.vertical, 12)
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityIdentifier(AccessibilityID.playerAudioTrack(track.id))
-                                .id(track.id)
-                                Divider()
-                            }
-                        }
-                        .onGeometryChange(for: CGFloat.self) {
-                            $0.size.height
-                        } action: {
-                            trackListHeight = $0
-                        }
-                    }
-                    .onAppear {
-                        if let selected = vm.selectedAudioTrack?.id { proxy.scrollTo(selected, anchor: .center) }
-                    }
-                }
-                .frame(height: min(trackListHeight, 360))
-                #if os(tvOS)
-                .focused($audioTrackPickerFocused)
-                #endif
-                translationLanguagePicker
-                if let target = vm.voiceOverTargetLanguage {
-                    voiceOverControls(target: target)
-                }
-            }
-            .frame(maxWidth: maxWidth)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier(AccessibilityID.playerAudioTrackPicker)
-            #if os(tvOS)
+        let panel = PlayerOptionPanel(title: Text("Audio Track", bundle: .module), isPresented: $showAudioTrackPicker) {
+            panelScroll
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.playerAudioTrackPicker)
+        #if os(tvOS)
+        panel
             .focusScope(audioTrackPickerNamespace)
             .task {
                 await Task.yield()
@@ -128,11 +29,69 @@ struct PlayerAudioTrackPicker: View {
                 audioTrackPickerFocused = true
             }
             .onExitCommand { showAudioTrackPicker = false }
-            #endif
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
+        #else
+        panel
+        #endif
+    }
+
+    @ViewBuilder private var panelScroll: some View {
+        let scroll = ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 0) {
+                    PlayerTranslationStatus(vm: vm, overVideo: false)
+                    trackRows
+                    translationLanguagePicker
+                    if let target = vm.voiceOverTargetLanguage {
+                        voiceOverControls(target: target)
+                    }
+                }
+            }
+            .onAppear {
+                if let selected = vm.selectedAudioTrack?.id { proxy.scrollTo(selected, anchor: .center) }
+            }
         }
-        .ignoresSafeArea()
+        #if os(tvOS)
+        scroll.focused($audioTrackPickerFocused)
+        #else
+        scroll
+        #endif
+    }
+
+    // MARK: - The video's own tracks
+
+    @ViewBuilder private var trackRows: some View {
+        // "Auto" row — resets this video to the HLS default track
+        let auto = PlayerOptionRow(title: Text("Auto", bundle: .module), isSelected: vm.selectedAudioTrack == nil) {
+            vm.setVoiceOverForCurrentVideo(false)
+            vm.selectAudioTrack(nil)
+            showAudioTrackPicker = false
+        }
+        .accessibilityIdentifier(AccessibilityID.playerAudioTrackPickerAuto)
+        #if os(tvOS)
+        auto.prefersDefaultFocus(in: audioTrackPickerNamespace)
+        #else
+        auto
+        #endif
+        Divider()
+        // Original first, then dubs — the list can hold ~25 languages.
+        ForEach(
+            vm.availableAudioTracks.filter(\.isOriginal)
+                + vm.availableAudioTracks.filter { !$0.isOriginal }
+        ) { track in
+            // Choosing a track turns a forced translation off for this video.
+            PlayerOptionRow(
+                title: Text(track.name),
+                detail: track.isOriginal ? Text("Original") : nil,
+                isSelected: vm.selectedAudioTrack?.id == track.id
+            ) {
+                vm.setVoiceOverForCurrentVideo(false)
+                vm.selectAudioTrack(track)
+                showAudioTrackPicker = false
+            }
+            .accessibilityIdentifier(AccessibilityID.playerAudioTrack(track.id))
+            .id(track.id)
+            Divider()
+        }
     }
 
     // MARK: - Yandex voice-over controls (inside the audio track picker)
@@ -144,6 +103,10 @@ struct PlayerAudioTrackPicker: View {
             vm.isShortsPlayer ? \AppSettings.shortsYandexVOTKeepOriginalAudio : \.yandexVOTKeepOriginalAudio
         Divider()
         VStack(alignment: .leading, spacing: 10) {
+            Text("Translation · Yandex", bundle: .module)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .accessibilityAddTraits(.isHeader)
             Toggle(
                 "Yandex Translation → \(Locale.current.localizedString(forLanguageCode: target) ?? target)",
                 isOn: Binding(
@@ -178,7 +141,7 @@ struct PlayerAudioTrackPicker: View {
                 )
             )
             .accessibilityIdentifier(AccessibilityID.playerAudioKeepOriginalAudioToggle)
-            if let status = voiceOverStatus {
+            if let status = playingStatus {
                 Text(status)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -187,16 +150,13 @@ struct PlayerAudioTrackPicker: View {
         .padding()
     }
 
-    private var voiceOverStatus: String? {
-        guard vm.voiceOver.videoId == vm.currentVideoId else { return nil }
-        switch vm.voiceOver.state {
-        case .idle: return nil
-        case .waiting: return String(localized: "Yandex is translating the video…")
-        case .playing(let livelyVoice):
-            return livelyVoice
-                ? String(localized: "Playing: lively voice") : String(localized: "Playing: classic voice")
-        case .failed(let message): return message
+    /// The playing voice; preparing and failed are shown with their actions at the top of the panel.
+    private var playingStatus: String? {
+        guard vm.voiceOver.videoId == vm.currentVideoId, case .playing(let livelyVoice) = vm.voiceOver.state else {
+            return nil
         }
+        return livelyVoice
+            ? String(localized: "Playing: lively voice") : String(localized: "Playing: classic voice")
     }
 
     private var translationLanguagePicker: some View {
@@ -227,5 +187,6 @@ struct PlayerAudioTrackPicker: View {
         }
         .accessibilityIdentifier(AccessibilityID.playerTranslationLanguagePicker)
         .padding(.horizontal)
+        .frame(minHeight: VFTarget.touch)
     }
 }

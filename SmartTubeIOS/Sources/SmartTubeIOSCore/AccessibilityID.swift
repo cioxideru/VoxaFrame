@@ -136,6 +136,8 @@ public enum AccessibilityID {
     public static var shortsPreloadStatus: String { "shorts.preloadStatus" }
     public static var shortsReopenTestButton: String { "shorts.reopenTestButton" }
     public static var shortsPlayPauseButton: String { "shorts.playPauseButton" }
+    public static var shortsPreviousButton: String { "shorts.previousButton" }
+    public static var shortsNextButton: String { "shorts.nextButton" }
     public static var shortsAudioTrackButton: String { "shorts.audioTrackButton" }
     public static var shortsSpeedButton: String { "shorts.speedButton" }
     public static var playerSpeedPicker: String { "player.speedPicker" }
@@ -152,10 +154,19 @@ public enum AccessibilityID {
     public static var shortsErrorBanner: String { "shorts.errorBanner" }
     public static var playerBackButton: String { "player.backButton" }
     public static var playerPiPButton: String { "player.pipButton" }
+    public static var playerAirPlayButton: String { "player.airPlayButton" }
+    public static var playerChannelName: String { "player.channelName" }
+    public static var playerDurationLabel: String { "player.durationLabel" }
+    public static var playerLandscapeLockButton: String { "player.landscapeLockButton" }
+    public static var playerAudioOnlyButton: String { "player.audioOnlyButton" }
     public static var playerVideoScaleButton: String { "player.videoScaleButton" }
     public static var playerQuickAudioButton: String { "player.quickAccess.audioTrack" }
     public static var playerQuickQualityButton: String { "player.quickAccess.quality" }
     public static var playerQualityPicker: String { "player.qualityPicker" }
+    public static var playerSleepTimerPicker: String { "player.sleepTimerPicker" }
+    public static var playerCaptionPicker: String { "player.captionPicker" }
+    public static var playerCaptionPickerOff: String { "player.captionPicker.off" }
+    public static func playerCaptionPickerTrack(_ id: String) -> String { "player.captionPicker.track.\(id)" }
     public static var playerNextButton: String { "player.nextBtn" }
     public static var playerCurrentTimeLabel: String { "player.currentTimeLabel" }
     public static var playerPlayPauseButton: String { "player.playPauseButton" }

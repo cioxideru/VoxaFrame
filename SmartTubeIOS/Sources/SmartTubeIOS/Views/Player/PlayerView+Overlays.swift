@@ -36,37 +36,16 @@ extension PlayerView {
     /// All picker / sheet overlays rendered inside the player ZStack.
     /// Consolidating them here caps the 8-branch ModifiedContent type tree in a single
     /// compiled function, reducing __swift5_typeref size in the binary.
+    /// The option panels are here on tvOS only; iOS and macOS present them natively (`playerContentView`).
     @ViewBuilder var overlayStack: some View {
         if showMoreMenu {
             moreMenuOverlay
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .animation(.easeOut(duration: 0.2), value: showMoreMenu)
         }
-        if showSpeedPicker {
-            speedPickerOverlay
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeOut(duration: 0.2), value: showSpeedPicker)
-        }
-        if showQualityPicker {
-            qualityPickerOverlay
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeOut(duration: 0.2), value: showQualityPicker)
-        }
-        if showCaptionPicker {
-            captionPickerOverlay
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeOut(duration: 0.2), value: showCaptionPicker)
-        }
-        if showAudioTrackPicker {
-            audioTrackPickerOverlay
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeOut(duration: 0.2), value: showAudioTrackPicker)
-        }
-        if showSleepTimerPicker {
-            sleepTimerPickerOverlay
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeOut(duration: 0.2), value: showSleepTimerPicker)
-        }
+        #if os(tvOS)
+        tvOptionPanels
+        #endif
         if showDescriptionSheet {
             descriptionOverlay
                 .transition(.move(edge: .bottom).combined(with: .opacity))

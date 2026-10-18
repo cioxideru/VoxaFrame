@@ -45,4 +45,20 @@ struct ShortsEndOfVideoDecisionTests {
         let result = ShortsEndOfVideoDecision.decide(settings: settings, currentIndex: 0, count: 1)
         #expect(result == .replay)
     }
+
+    @Test("A panel is open → freeze instead of advancing, so the panel is not closed by the next Short")
+    func openPanelFreezesInsteadOfAdvancing() {
+        var settings = AppSettings()
+        settings.loopEnabled = false
+        let result = ShortsEndOfVideoDecision.decide(settings: settings, currentIndex: 0, count: 3, isPanelOpen: true)
+        #expect(result == .freeze)
+    }
+
+    @Test("A panel is open, loop enabled → still replay; the Short stays")
+    func openPanelStillReplaysWithLoop() {
+        var settings = AppSettings()
+        settings.loopEnabled = true
+        let result = ShortsEndOfVideoDecision.decide(settings: settings, currentIndex: 0, count: 3, isPanelOpen: true)
+        #expect(result == .replay)
+    }
 }

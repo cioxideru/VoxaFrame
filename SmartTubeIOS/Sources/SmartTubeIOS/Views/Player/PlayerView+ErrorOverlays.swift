@@ -90,37 +90,32 @@ extension PlayerView {
     func errorBanner(_ err: Error) -> some View {
         // IP-block errors show a specific message and no retry button — retrying
         // with the same IP will also fail and may extend the YouTube block duration.
+        // A video error is about this video only: it never signs the user out (P-Player-States).
         let isIPBlock = isIPBlockError(err)
         let isSignInRequired = isSignInRequiredError(err)
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: AppSymbol.warning)
-                    .foregroundStyle(.yellow)
-                Text(err.localizedDescription)
-                    .font(.callout)
-                    .foregroundStyle(.white)
-            }
+        VStack(spacing: VFSpace.s12) {
+            // The symbol and the text carry the state; colour is not needed to read it.
+            Image(systemName: AppSymbol.warning)
+                .font(.title2)
+                .accessibilityHidden(true)
+            Text(err.localizedDescription)
+                .font(.callout.weight(.semibold))
+                .multilineTextAlignment(.center)
             if !isIPBlock && !isSignInRequired {
-                Button {
-                    vm.retryLoad()
-                } label: {
-                    Text("Try Again")
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(.black)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 8)
-                        .background(Color.white)
-                        .clipShape(Capsule())
-                }
-                .accessibilityIdentifier(AccessibilityID.playerRetryButton)
+                PlayerMediaActionButton(title: Text("Try Again")) { vm.retryLoad() }
+                    // Its own width, as the Shorts Retry: the card's measuring otherwise truncates the label.
+                    .fixedSize()
+                    .accessibilityIdentifier(AccessibilityID.playerRetryButton)
             }
             if isSignInRequired {
                 SignInButtonView()
             }
         }
-        .padding()
-        .background(.black.opacity(0.75))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .foregroundStyle(VFColor.onMedia)
+        .padding(VFSpace.s20)
+        .frame(maxWidth: 420)
+        .vfGlass(in: RoundedRectangle(cornerRadius: VFRadius.card, style: .continuous))
+        .environment(\.colorScheme, .dark)
         .padding()
         .accessibilityIdentifier(isIPBlock ? "player.ipBlockBanner" : "player.errorBanner")
     }
@@ -135,18 +130,9 @@ private struct SignInButtonView: View {
     @State private var showSignIn = false
 
     var body: some View {
-        Button {
-            showSignIn = true
-        } label: {
-            Text("Sign In")
-                .font(.callout.weight(.semibold))
-                .foregroundStyle(.black)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-                .background(Color.white)
-                .clipShape(Capsule())
-        }
-        .accessibilityIdentifier(AccessibilityID.playerSignInButton)
-        .sheet(isPresented: $showSignIn) { SignInView() }
+        PlayerMediaActionButton(title: Text("Sign In")) { showSignIn = true }
+            .fixedSize()
+            .accessibilityIdentifier(AccessibilityID.playerSignInButton)
+            .sheet(isPresented: $showSignIn) { SignInView() }
     }
 }

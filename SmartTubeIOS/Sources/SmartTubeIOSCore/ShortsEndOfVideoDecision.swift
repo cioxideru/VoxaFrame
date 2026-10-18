@@ -19,12 +19,15 @@ public enum ShortsEndOfVideoDecision: Equatable {
     ///   - settings: Only `settings.loopEnabled` is consulted.
     ///   - currentIndex: Index of the Short that just ended.
     ///   - count: `videos.count`.
-    public static func decide(settings: AppSettings, currentIndex: Int, count: Int) -> ShortsEndOfVideoDecision {
+    ///   - isPanelOpen: A speed or audio panel is open; moving to another Short would close it, so the Short stops.
+    public static func decide(
+        settings: AppSettings, currentIndex: Int, count: Int, isPanelOpen: Bool = false
+    ) -> ShortsEndOfVideoDecision {
         if settings.loopEnabled {
             return .replay
         }
         let next = currentIndex + 1
-        if next < count {
+        if next < count, !isPanelOpen {
             return .advance(to: next)
         }
         return .freeze

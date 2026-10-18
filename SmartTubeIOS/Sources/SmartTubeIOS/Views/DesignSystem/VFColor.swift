@@ -69,6 +69,8 @@ enum VFColor {
     static let scrim = Color.black.opacity(0.72)
     /// Text and transport icons on `scrim`.
     static let onMedia = Color.white
+    /// The unplayed part of a timeline over video: 3.7:1 on `scrim` over a white frame, 5.3:1 on black (non-text, 3:1).
+    static let onMediaTrack = Color.white.opacity(0.5)
 
     #if os(tvOS)
     // tvOS has no grouped-background roles, so these two use the reference values from tokens.json.
