@@ -3,6 +3,7 @@ import XCTest
 /// Requires the local HLS fixture server; independent of YouTube and account recommendations.
 final class ShortsPreloadingUITests: XCTestCase {
     private let mediaURL = "http://127.0.0.1:18765"
+    let controlsHideTimeout = 5
 
     override func setUp() async throws {
         let url = try XCTUnwrap(URL(string: mediaURL + "/health"))
@@ -21,22 +22,28 @@ final class ShortsPreloadingUITests: XCTestCase {
         await MainActor.run { XCUIApplication().terminate() }
     }
 
-    private func launch(preload: Bool, count: Int) -> XCUIApplication {
+    func launch(preload: Bool, count: Int, autoHideControls: Bool = false) -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = [
             "--uitesting", "--uitesting-shorts", "--uitesting-reset-settings",
             "--uitesting-disable-sponsorblock", "--uitesting-sign-out",
             "--uitesting-shorts-ids=" + (0..<count).map { "preload-\($0)" }.joined(separator: ","),
-            "--uitesting-show-controls", "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
         ]
+        if autoHideControls {
+            XCUIDevice.shared.orientation = .portrait
+            app.launchArguments.append("--uitesting-controls-hide-timeout=\(controlsHideTimeout)")
+        } else {
+            app.launchArguments.append("--uitesting-show-controls")
+        }
         if !preload { app.launchArguments.append("--uitesting-disable-shorts-preload") }
         app.launchEnvironment["SHORTS_TEST_MEDIA_URL"] = mediaURL
         app.launch()
         return app
     }
 
-    private func wait(_ app: XCUIApplication, id: Int, buffered: Bool) -> String {
+    func wait(_ app: XCUIApplication, id: Int, buffered: Bool) -> String {
         let probe = app.staticTexts[AccessibilityID.shortsPreloadStatus]
         XCTAssertTrue(probe.waitForExistence(timeout: 15))
         let expectation = XCTNSPredicateExpectation(
@@ -54,7 +61,7 @@ final class ShortsPreloadingUITests: XCTestCase {
             .flatMap { Int($0.dropFirst(name.count + 1)) } ?? -1
     }
 
-    private func next(_ app: XCUIApplication) {
+    func next(_ app: XCUIApplication) {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
             .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)))
     }
@@ -312,7 +319,7 @@ final class ShortsPlayerUITests: XCTestCase {
     /// Direct-launch: `ShortsPlayerView` with three stub videos.
     /// No network required. `shorts.indexLabel` shows "1 / 3" immediately.
     private func launchWithStubs() {
-        app.launchArguments = ["--uitesting", "--uitesting-shorts"]
+        app.launchArguments = ["--uitesting", "--uitesting-shorts", "--uitesting-show-controls"]
         app.launch()
     }
 
@@ -321,6 +328,7 @@ final class ShortsPlayerUITests: XCTestCase {
     private func launchWithRealShorts(ids: [String]) {
         app.launchArguments = [
             "--uitesting", "--uitesting-shorts",
+            "--uitesting-show-controls",
             "--uitesting-shorts-ids=\(ids.joined(separator: ","))",
         ]
         app.launch()

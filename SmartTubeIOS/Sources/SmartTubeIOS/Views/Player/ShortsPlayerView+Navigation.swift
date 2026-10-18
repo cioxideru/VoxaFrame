@@ -16,6 +16,7 @@ extension ShortsPlayerView {
     /// The ▼ button and the remote's up, like a swipe up: the next Short, or more of the feed at the end.
     func showNextShort() {
         guard !isTransitioning, !isPanelOpen else { return }
+        vm.showControls()
         if let next = ShortsNavigation.targetIndex(
             vertical: -100, horizontal: 0, current: currentIndex, count: videos.count)
         {
@@ -28,6 +29,7 @@ extension ShortsPlayerView {
     /// The ▲ button and the remote's down, like a swipe down: the previous Short, or earlier ones at the start.
     func showPreviousShort() {
         guard !isTransitioning, !isPanelOpen else { return }
+        vm.showControls()
         if let previous = ShortsNavigation.targetIndex(
             vertical: 100, horizontal: 0, current: currentIndex, count: videos.count)
         {
@@ -171,12 +173,30 @@ extension ShortsPlayerView {
         guard videos.indices.contains(index) else { return }
         let video = videos[index]
         vm.updateSettings(store.settings)
+        #if DEBUG
+        applyControlsHideTimeoutForUITesting()
+        #endif
         showAudioTrackPicker = false
         showSpeedPicker = false
         vm.load(video: video)
+        vm.showControls()
         vm.player.isMuted = isMuted
         vm.voiceOver.isMuted = isMuted
     }
+
+    #if DEBUG
+    /// Override only the player's copy, including after a picker refreshes it; never persist test timing.
+    func applyControlsHideTimeoutForUITesting() {
+        let arguments = ProcessInfo.processInfo.arguments
+        let timeoutPrefix = "--uitesting-controls-hide-timeout="
+        if arguments.contains("--uitesting"),
+            let argument = arguments.first(where: { $0.hasPrefix(timeoutPrefix) }),
+            let seconds = Int(argument.dropFirst(timeoutPrefix.count)), seconds > 0
+        {
+            vm.settings.controlsHideTimeout = seconds
+        }
+    }
+    #endif
 
     func preloadNextShort() {
         guard !isInBackground else { return }

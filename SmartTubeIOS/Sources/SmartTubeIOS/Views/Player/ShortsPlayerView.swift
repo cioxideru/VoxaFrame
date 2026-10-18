@@ -25,6 +25,11 @@ public struct ShortsPlayerView: View {
     @Environment(AuthService.self) var authService
     /// With Reduce Motion a Short replaces the previous one at once instead of sliding the full height.
     @Environment(\.accessibilityReduceMotion) var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) var voiceOverEnabled
+    #if os(tvOS)
+    @FocusState var videoFocused: Bool
+    @FocusState var focusedControl: String?
+    #endif
     #if os(iOS)
     /// The regular player. Stopped when Shorts open so only one AVPlayer plays and owns
     /// the remote commands.
@@ -90,34 +95,54 @@ public struct ShortsPlayerView: View {
                 }
             }
             .offset(y: slideOffset)
-            .onGeometryChange(for: CGFloat.self) {
-                $0.size.height
-            } action: {
-                containerHeight = $0
+            .onGeometryChange(for: CGSize.self) {
+                $0.size
+            } action: { size in
+                containerHeight = size.height
+                #if os(iOS)
+                let landscape = size.width > size.height
+                if vm.isLandscape != landscape {
+                    vm.isLandscape = landscape
+                    if vm.controlsVisible { vm.showControls() }
+                }
+                #endif
             }
             .background(Color.black.ignoresSafeArea())
-            #if os(iOS)
+            #if !os(tvOS)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard !vm.isLoading, vm.error == nil else { return }
-                vm.togglePlayPause()
+                guard !isTransitioning, !vm.isScrubbing, !isPanelOpen else { return }
+                if keepsControlsVisible { vm.showControls() } else { vm.toggleControls() }
             }
+            #endif
+            #if os(iOS)
             // Keep navigation below the overlay so it cannot cancel the slider's drag.
             .simultaneousGesture(shortsSwipeGesture)
             .onChange(of: isDragging) { _, dragging in
-                guard !dragging, !isTransitioning else { return }
-                snapBack()
+                guard !isTransitioning else { return }
+                if dragging {
+                    if !vm.isScrubbing, !isPanelOpen { vm.showControls() }
+                } else {
+                    snapBack()
+                }
             }
             #endif
             #if os(tvOS)
-            .onPlayPauseCommand { vm.togglePlayPause() }
+            // With the buttons hidden, the video takes focus so remote input still reaches Shorts.
+            .focusable(!showsControls)
+            .focused($videoFocused)
+            .onTapGesture { vm.showControls() }
+            .onPlayPauseCommand {
+                vm.togglePlayPause()
+                vm.showControls()
+            }
             // Siri Remote D-pad: up/down navigate next/prev short.
             .onMoveCommand { direction in
                 guard !isTransitioning, !isPanelOpen else { return }
                 switch direction {
                 case .up: showNextShort()
                 case .down: showPreviousShort()
-                default: vm.toggleControls()
+                default: vm.showControls()
                 }
             }
             #endif
@@ -137,11 +162,14 @@ public struct ShortsPlayerView: View {
                             .font(.callout.weight(.semibold))
                             .multilineTextAlignment(.center)
                             .accessibilityIdentifier(AccessibilityID.shortsErrorBanner)
-                        Button("Retry") { vm.retryLoad() }
-                            .buttonStyle(.vfProminent)
-                            // A one-word action: its own width, never truncated by the card's measuring.
-                            .fixedSize()
-                            .accessibilityIdentifier(AccessibilityID.shortsRetryButton)
+                        Button("Retry") {
+                            vm.retryLoad()
+                            vm.showControls()
+                        }
+                        .buttonStyle(.vfProminent)
+                        // A one-word action: its own width, never truncated by the card's measuring.
+                        .fixedSize()
+                        .accessibilityIdentifier(AccessibilityID.shortsRetryButton)
                     }
                     .foregroundStyle(VFColor.onMedia)
                     .padding(VFSpace.s20)
@@ -167,7 +195,23 @@ public struct ShortsPlayerView: View {
                 ShortsOptionPanels(
                     vm: vm, showAudioTrackPicker: $showAudioTrackPicker, showSpeedPicker: $showSpeedPicker)
             )
+            #if os(tvOS)
+            .onExitCommand {
+                if showAudioTrackPicker {
+                    showAudioTrackPicker = false
+                } else if showSpeedPicker {
+                    showSpeedPicker = false
+                } else if showsControls, !keepsControlsVisible {
+                    vm.toggleControls()
+                } else {
+                    dismiss()
+                }
+            }
+            #endif
             #if DEBUG
+            .onChange(of: vm.settings.controlsHideTimeout) { _, _ in
+                applyControlsHideTimeoutForUITesting()
+            }
             .overlay(alignment: .top) {
                 if ShortsPlaybackUITestFixture.baseURL != nil {
                     TimelineView(.periodic(from: .now, by: 0.2)) { _ in

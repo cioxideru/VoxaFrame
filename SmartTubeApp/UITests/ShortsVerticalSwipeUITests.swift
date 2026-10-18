@@ -19,7 +19,7 @@ final class ShortsVerticalSwipeUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--uitesting-signed-in"]
+        app.launchArguments = ["--uitesting", "--uitesting-signed-in", "--uitesting-show-controls"]
         app.launch()
         UITestHelpers.tapTab(named: "Home", in: app)
     }

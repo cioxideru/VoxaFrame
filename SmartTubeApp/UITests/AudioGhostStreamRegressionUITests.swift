@@ -223,23 +223,13 @@ final class ShortsGhostStreamRegressionUITests: XCTestCase {
         app.launchArguments = [
             "--uitesting",
             "--uitesting-shorts",
+            "--uitesting-show-controls",
             "--uitesting-shorts-ids=\(ids)",
         ]
         app.launch()
 
         guard indexLabel.waitForExistence(timeout: 20) else {
             try captureAndSkip("Shorts player did not appear — network unavailable or short IDs may be stale", in: app)
-        }
-    }
-
-    /// Taps the player until `shorts.controlsOverlay` is visible.
-    private func showControls() {
-        let pred = NSPredicate(format: "identifier == 'shorts.controlsOverlay'")
-        let overlay = app.descendants(matching: .any).matching(pred).firstMatch
-        for _ in 0..<5 {
-            if overlay.exists { return }
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-            Thread.sleep(forTimeInterval: 1.5)
         }
     }
 
@@ -310,20 +300,27 @@ final class ShortsGhostStreamRegressionUITests: XCTestCase {
         )
     }
 
-    /// Regression for root cause 3 — simpler variant that doesn't require a live
-    /// channelId.  A sheet appearing and disappearing on top of ShortsPlayerView
-    /// (here: the controls overlay itself being shown) must not reset the index.
+    /// Hiding and revealing controls must not reload the Short or reset its index.
     func testIndexStableAfterShowingAndHidingControls() throws {
         try openFirstShort()
+        // Loading completion reveals controls; finish it before testing explicit taps.
+        let ready = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isEnabled == true"),
+            object: app.buttons[AccessibilityID.shortsPlayPauseButton])
+        guard XCTWaiter.wait(for: [ready], timeout: 20) == .completed else {
+            try captureAndSkip("Short did not finish loading for the controls visibility test", in: app)
+        }
         let indexBefore = indexLabel.label
-
-        // Toggle controls on then wait for them to auto-hide.
-        showControls()
-        Thread.sleep(forTimeInterval: 5)  // controls auto-hide after ~4 s
+        let back = app.buttons[AccessibilityID.shortsBackButton]
+        XCTAssertTrue(back.waitForExistence(timeout: 5))
+        let video = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.35))
+        video.tap()
+        XCTAssertTrue(back.waitForNonExistence(timeout: 5))
+        video.tap()
 
         XCTAssertTrue(
             indexLabel.waitForExistence(timeout: 5),
-            "shorts.indexLabel must remain after controls auto-hide")
+            "shorts.indexLabel must reappear when controls are shown")
         XCTAssertEqual(
             indexLabel.label, indexBefore,
             "Index must not change after showing/hiding controls overlay")

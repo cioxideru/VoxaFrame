@@ -25,7 +25,7 @@ final class ShortsSwipeUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments += ["--uitesting", "--uitesting-shorts"]
+        app.launchArguments += ["--uitesting", "--uitesting-shorts", "--uitesting-show-controls"]
         app.launch()
     }
 
@@ -38,7 +38,7 @@ final class ShortsSwipeUITests: XCTestCase {
     /// Performs initial setup: waits for the shorts player to be on screen.
     /// Returns the window element used for swipe gestures.
     private func openControls() -> XCUIElement {
-        // The index label is always visible — wait for it as the ready signal.
+        // This suite pins the controls; auto-hide has its own local playback tests.
         XCTAssertTrue(indexLabel.waitForExistence(timeout: 5), "Index label should appear on launch")
         return app.windows.firstMatch
     }
@@ -76,10 +76,12 @@ final class ShortsSwipeUITests: XCTestCase {
         XCTAssertEqual(indexLabel.label, "2 / 3", "Swipe up should advance to the next short")
     }
 
-    /// A short swipe must work with the same AVPlayerLayer used outside UI tests.
-    func testShortSwipeAdvancesWithoutControls() {
+    /// A short swipe must still advance after a tap has hidden the controls.
+    func testShortSwipeAdvancesAfterHidingControls() {
         let player = openControls()
         XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].exists)
+        player.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.35)).tap()
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].waitForNonExistence(timeout: 2))
         let start = player.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
         start.press(
             forDuration: 0, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -100)),
@@ -163,9 +165,7 @@ final class ShortsSwipeUITests: XCTestCase {
     // MARK: - Controls-visible swipe tests
     //
     // These tests verify that swipe navigation still works when the controls
-    // overlay is displayed on screen.  The overlay is revealed by tapping the
-    // player window (togglePlayPause also reveals the controls).
-    // The swipe is then performed immediately while the overlay is visible.
+    // overlay is displayed on screen. The launch hook keeps it visible.
 
     /// Swipe up advances to the next short even when the controls overlay is shown.
     func testSwipeUpWorksWhenControlsAreVisible() {
@@ -173,8 +173,6 @@ final class ShortsSwipeUITests: XCTestCase {
         XCTAssertTrue(indexLabel.waitForExistence(timeout: 3))
         XCTAssertEqual(indexLabel.label, "1 / 3")
 
-        // Tap to reveal the controls overlay (vm.showControls → controlsVisible = true).
-        player.tap()
         XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].waitForExistence(timeout: 3))
 
         // Swipe up immediately while the controls overlay is still on screen.
@@ -209,13 +207,11 @@ final class ShortsSwipeUITests: XCTestCase {
     func testSwipeDownWorksWhenControlsAreVisible() {
         let player = openControls()
 
-        // Advance to short 2 first (controls not shown).
+        // Advance to short 2 first.
         swipe(.up, on: player)
         _ = indexLabel.waitForExistence(timeout: 3)
         XCTAssertEqual(indexLabel.label, "2 / 3")
 
-        // Tap to reveal the controls overlay.
-        player.tap()
         XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].waitForExistence(timeout: 3))
 
         // Swipe down while controls are visible.
@@ -228,12 +224,109 @@ final class ShortsSwipeUITests: XCTestCase {
     }
 }
 
+// Controls visibility uses the same local media fixture and setup as the preloading suite.
+extension ShortsPreloadingUITests {
+    private func waitForControls(_ visible: Bool, in app: XCUIApplication, timeout: TimeInterval = 8) {
+        let back = app.buttons[AccessibilityID.shortsBackButton]
+        XCTAssertTrue(visible ? back.waitForExistence(timeout: timeout) : back.waitForNonExistence(timeout: timeout))
+    }
+
+    private func tapVideo(in app: XCUIApplication) {
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.35)).tap()
+    }
+
+    func testControlsAutoHideAndSingleTapTogglesWithoutPausing() {
+        let app = launch(preload: true, count: 3, autoHideControls: true)
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].waitForExistence(timeout: 10))
+        _ = wait(app, id: 0, buffered: false)
+        waitForControls(false, in: app)
+        XCTAssertFalse(app.buttons[AccessibilityID.shortsMuteButton].exists)
+        XCTAssertFalse(app.sliders[AccessibilityID.shortsSeekBar].exists)
+        XCTAssertFalse(app.staticTexts[AccessibilityID.shortsTimeLabel].exists)
+
+        tapVideo(in: app)
+        waitForControls(true, in: app, timeout: 1)
+        XCTAssertEqual(app.buttons[AccessibilityID.shortsPlayPauseButton].label, "Pause")
+        tapVideo(in: app)
+        // Shorter than the hide setting: this must be the tap, not a later timer firing.
+        waitForControls(false, in: app, timeout: 1)
+
+        tapVideo(in: app)
+        let title = app.staticTexts[AccessibilityID.shortsTitleLabel]
+        XCTAssertTrue(title.waitForExistence(timeout: 1))
+        title.tap()
+        waitForControls(false, in: app, timeout: 1)
+        _ = wait(app, id: 0, buffered: false)
+    }
+
+    func testHiddenControlsDoNotCatchTapsAndSwipesStillChangeShorts() {
+        let app = launch(preload: true, count: 3, autoHideControls: true)
+        _ = wait(app, id: 0, buffered: true)
+        waitForControls(false, in: app)
+        tapVideo(in: app)
+        waitForControls(true, in: app, timeout: 1)
+        let mute = app.buttons[AccessibilityID.shortsMuteButton]
+        let muteFrame = mute.frame
+        let mutePoint = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: muteFrame.midX - app.frame.minX, dy: muteFrame.midY - app.frame.minY))
+        tapVideo(in: app)
+        waitForControls(false, in: app, timeout: 1)
+        mutePoint.tap()
+        waitForControls(true, in: app, timeout: 1)
+        XCTAssertEqual(mute.value as? String, "Sound on", "The hidden mute button must not receive the tap")
+
+        tapVideo(in: app)
+        waitForControls(false, in: app, timeout: 1)
+        next(app)
+        let index = app.staticTexts[AccessibilityID.shortsIndexLabel]
+        let advanced = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == '2 / 3'"), object: index)
+        XCTAssertEqual(XCTWaiter.wait(for: [advanced], timeout: 5), .completed)
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].isHittable)
+        _ = wait(app, id: 1, buffered: false)
+        waitForControls(false, in: app)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.3)).press(
+            forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.7)))
+        let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == '1 / 3'"), object: index)
+        XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 5), .completed)
+        XCTAssertTrue(app.buttons[AccessibilityID.shortsBackButton].isHittable)
+    }
+
+    func testOptionPanelsStayOpenAndClosingRestartsControlsTimeout() {
+        let app = launch(preload: false, count: 3, autoHideControls: true)
+        _ = wait(app, id: 0, buffered: false)
+        for (trigger, choice) in [
+            (AccessibilityID.shortsSpeedButton, AccessibilityID.playerSpeed(1)),
+            (AccessibilityID.shortsAudioTrackButton, AccessibilityID.playerAudioTrackPickerAuto),
+        ] {
+            waitForControls(false, in: app)
+            tapVideo(in: app)
+            waitForControls(true, in: app, timeout: 1)
+            app.buttons[trigger].tap()
+            let option = app.buttons[choice]
+            XCTAssertTrue(option.waitForExistence(timeout: 5))
+            XCTAssertFalse(option.waitForNonExistence(timeout: Double(controlsHideTimeout) + 1))
+            option.tap()
+            waitForControls(true, in: app, timeout: 1)
+        }
+        waitForControls(false, in: app)
+        tapVideo(in: app)
+        waitForControls(true, in: app, timeout: 1)
+        app.buttons[AccessibilityID.shortsPlayPauseButton].tap()
+        XCTAssertEqual(app.buttons[AccessibilityID.shortsPlayPauseButton].label, "Play")
+        waitForControls(false, in: app)
+        tapVideo(in: app)
+        waitForControls(true, in: app, timeout: 1)
+        XCTAssertEqual(app.buttons[AccessibilityID.shortsPlayPauseButton].label, "Play")
+    }
+}
+
 final class ShortsPlaybackControlsUITests: XCTestCase {
     func testPauseMuteSeekAndAdvanceKeepWorking() {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = [
             "--uitesting", "--uitesting-reset-settings", "--uitesting-shorts",
+            "--uitesting-show-controls",
             "--uitesting-disable-sponsorblock", "--uitesting-shorts-ids=fKopy74weus,9bZkp7q19f0",
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
         ]

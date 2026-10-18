@@ -14,7 +14,54 @@ import UIKit
 
 extension ShortsPlayerView {
 
-    @ViewBuilder var shortsOverlay: some View {
+    var keepsControlsVisible: Bool {
+        #if os(macOS)
+        isPanelOpen || vm.isScrubbing || !vm.isPlaying || voiceOverEnabled
+        #else
+        isPanelOpen || vm.isScrubbing || voiceOverEnabled
+        #endif
+    }
+
+    var showsControls: Bool { vm.controlsVisible || keepsControlsVisible }
+
+    var shortsOverlay: some View {
+        ZStack {
+            if showsControls {
+                shortsOverlayContent
+                    .transition(.opacity)
+            }
+        }
+        .allowsHitTesting(showsControls)
+        .accessibilityHidden(!showsControls)
+        .vfAnimation(value: showsControls)
+        .onChange(of: keepsControlsVisible) { _, keepVisible in
+            vm.showControls()
+            if keepVisible { vm.cancelControlsHide() }
+        }
+        // Loading or a control can restart the shared timer while a panel is still open.
+        .onChange(of: vm.controlsVisible) { _, visible in
+            if !visible, keepsControlsVisible {
+                vm.showControls()
+                vm.cancelControlsHide()
+            }
+            #if os(tvOS)
+            if !showsControls {
+                focusedControl = nil
+                Task { @MainActor in
+                    guard !showsControls else { return }
+                    videoFocused = true
+                }
+            }
+            #endif
+        }
+        #if os(tvOS)
+        .onChange(of: focusedControl) { _, control in
+            if control != nil, showsControls { vm.showControls() }
+        }
+        #endif
+    }
+
+    @ViewBuilder private var shortsOverlayContent: some View {
         #if os(tvOS)
         tvShortsOverlay
         #else
@@ -35,6 +82,7 @@ extension ShortsPlayerView {
         isMuted.toggle()
         vm.player.isMuted = isMuted
         vm.voiceOver.isMuted = isMuted
+        vm.showControls()
     }
 
     #if !os(tvOS)
@@ -58,6 +106,7 @@ extension ShortsPlayerView {
                 Spacer()
                 Button {
                     vm.togglePlayPause()
+                    vm.showControls()
                 } label: {
                     Image(systemName: vm.isPlaying ? AppSymbol.pause : AppSymbol.play)
                         .font(.title3)
@@ -72,6 +121,7 @@ extension ShortsPlayerView {
 
             PlayerTranslationStatus(vm: vm)
                 .padding(.horizontal, VFSpace.s16)
+                .simultaneousGesture(TapGesture().onEnded { vm.showControls() })
 
             Spacer(minLength: 0)
 
@@ -100,6 +150,7 @@ extension ShortsPlayerView {
                             } else {
                                 // Accessibility adjustments do not send editing callbacks.
                                 vm.seek(to: position)
+                                vm.showControls()
                             }
                         }),
                     in: 0...max(vm.duration, 1),
@@ -121,6 +172,10 @@ extension ShortsPlayerView {
             .padding(.horizontal, VFSpace.s16)
             .padding(.bottom, VFSpace.s8)
             .playerBarScrim(fadingDown: false)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if keepsControlsVisible { vm.showControls() } else { vm.toggleControls() }
+            }
         }
         .buttonStyle(.plain)
         .foregroundStyle(VFColor.onMedia)
@@ -223,6 +278,7 @@ extension ShortsPlayerView {
     private var videoScaleButton: some View {
         Button {
             store.settings.videoGravityMode.toggle()
+            vm.showControls()
         } label: {
             videoScaleGlyph
         }
@@ -232,6 +288,9 @@ extension ShortsPlayerView {
                 ? Text("Fill (crop)", bundle: .module) : Text("Fit (letterbox)", bundle: .module)
         )
         .accessibilityIdentifier(AccessibilityID.shortsVideoScaleButton)
+        #if os(tvOS)
+        .focused($focusedControl, equals: AccessibilityID.shortsVideoScaleButton)
+        #endif
     }
 
     @ViewBuilder private var videoScaleGlyph: some View {
@@ -258,6 +317,7 @@ extension ShortsPlayerView {
                 }
                 .accessibilityLabel("Back")
                 .accessibilityIdentifier(AccessibilityID.shortsBackButton)
+                .focused($focusedControl, equals: AccessibilityID.shortsBackButton)
                 Spacer()
                 indexLabel
                 Button(action: toggleMute) {
@@ -267,8 +327,10 @@ extension ShortsPlayerView {
                 .accessibilityLabel(isMuted ? "Unmute" : "Mute")
                 .accessibilityValue(isMuted ? "Muted" : "Sound on")
                 .accessibilityIdentifier(AccessibilityID.shortsMuteButton)
+                .focused($focusedControl, equals: AccessibilityID.shortsMuteButton)
                 Button {
                     vm.togglePlayPause()
+                    vm.showControls()
                 } label: {
                     Image(systemName: vm.isPlaying ? AppSymbol.pause : AppSymbol.play)
                         .frame(minWidth: 44, minHeight: 44)
@@ -276,6 +338,7 @@ extension ShortsPlayerView {
                 .disabled(vm.isLoading || vm.error != nil)
                 .accessibilityLabel(vm.isPlaying ? "Pause" : "Play")
                 .accessibilityIdentifier(AccessibilityID.shortsPlayPauseButton)
+                .focused($focusedControl, equals: AccessibilityID.shortsPlayPauseButton)
             }
             .font(.title2)
             .buttonStyle(.borderless)
@@ -298,6 +361,7 @@ extension ShortsPlayerView {
                     // Panels wait until a move to another Short has finished, which would otherwise close them.
                     .disabled(isTransitioning)
                     .accessibilityIdentifier(AccessibilityID.shortsAudioTrackButton)
+                    .focused($focusedControl, equals: AccessibilityID.shortsAudioTrackButton)
                     Spacer()
                     Button {
                         showSpeedPicker = true
@@ -313,6 +377,7 @@ extension ShortsPlayerView {
                     .accessibilityLabel("Playback Speed")
                     .accessibilityValue(speedValue)
                     .accessibilityIdentifier(AccessibilityID.shortsSpeedButton)
+                    .focused($focusedControl, equals: AccessibilityID.shortsSpeedButton)
                     videoScaleButton
                 }
                 .buttonStyle(.borderless)
@@ -349,6 +414,7 @@ extension ShortsPlayerView {
             }
             .onEnded { value in
                 guard !isTransitioning, !vm.isScrubbing, !isPanelOpen else { return }
+                vm.showControls()
                 let dy = value.translation.height
                 if let target = ShortsNavigation.targetIndex(
                     vertical: dy, horizontal: abs(value.translation.width),
@@ -447,6 +513,7 @@ struct ShortsSeekSlider: UIViewRepresentable {
                 vm.updateScrub(to: Double(slider.value))
             } else {
                 vm.seek(to: Double(slider.value))
+                vm.showControls()
             }
         }
 
