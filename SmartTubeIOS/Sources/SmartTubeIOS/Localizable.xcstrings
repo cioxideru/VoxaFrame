@@ -805,6 +805,24 @@
         }
       }
     },
+    "%lld of %lld digits entered" : {
+      "comment" : "VoiceOver value of the PIN dots: entered digits of the PIN length",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld digits entered"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введено цифр: %lld из %lld"
+          }
+        }
+      }
+    },
     "%lld s" : {
       "localizations" : {
         "ar" : {
@@ -999,6 +1017,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld video%2$@"
+          }
+        }
+      }
+    },
+    "%lld videos will be removed from the watch history on this device." : {
+      "comment" : "Clear history confirmation; %lld = number of on-device history entries",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld video will be removed from the watch history on this device."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld videos will be removed from the watch history on this device."
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Из истории просмотров на этом устройстве будут удалены %lld видео."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Из истории просмотров на этом устройстве будет удалено %lld видео."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Из истории просмотров на этом устройстве будет удалено %lld видео."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Из истории просмотров на этом устройстве будет удалено %lld видео."
+                }
+              }
+            }
           }
         }
       }
@@ -2867,6 +2939,24 @@
         }
       }
     },
+    "All app settings return to their defaults, including options changed in the player." : {
+      "comment" : "Reset All Settings confirmation: first consequence",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All app settings return to their defaults, including options changed in the player."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все настройки приложения вернутся к исходным, включая параметры, изменённые в плеере."
+          }
+        }
+      }
+    },
     "All Channels" : {
 
     },
@@ -3154,6 +3244,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "任意时间"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "comment" : "Settings section header",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Внешний вид"
           }
         }
       }
@@ -4404,6 +4512,24 @@
     "Change PIN" : {
 
     },
+    "Changing it clears the quality you last picked in the player." : {
+      "comment" : "Settings > Playback > Default Quality description (Mac, TV)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changing it clears the quality you last picked in the player."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменение сбрасывает качество, выбранное в плеере последним."
+          }
+        }
+      }
+    },
     "Channel" : {
       "comment" : "Navigation title fallback for channel view; also a video-type filter option",
       "extractionState" : "manual",
@@ -4708,6 +4834,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "清除历史记录"
+          }
+        }
+      }
+    },
+    "Clear History on This Device?" : {
+      "comment" : "Confirmation title before clearing the on-device watch history",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear History on This Device?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить историю на этом устройстве?"
           }
         }
       }
@@ -5297,6 +5441,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "紧凑缩略图"
+          }
+        }
+      }
+    },
+    "Confirm New PIN" : {
+      "comment" : "Set or change PIN: confirmation step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm New PIN"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтвердите новый PIN"
           }
         }
       }
@@ -6051,6 +6213,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Удалить все офлайн-видео?"
+          }
+        }
+      }
+    },
+    "Delete Digit" : {
+      "comment" : "PIN keypad delete key, VoiceOver label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Digit"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить цифру"
           }
         }
       }
@@ -8181,6 +8361,60 @@
         }
       }
     },
+    "Enter Current PIN" : {
+      "comment" : "Change or remove PIN: first step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter Current PIN"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите текущий PIN"
+          }
+        }
+      }
+    },
+    "Enter New PIN" : {
+      "comment" : "Set or change PIN: new PIN step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter New PIN"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите новый PIN"
+          }
+        }
+      }
+    },
+    "Enter PIN to continue" : {
+      "comment" : "PIN lock screen subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter PIN to continue"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите PIN, чтобы продолжить"
+          }
+        }
+      }
+    },
     "Error" : {
       "comment" : "Generic error alert title",
       "extractionState" : "manual",
@@ -8703,6 +8937,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "订阅详情"
+          }
+        }
+      }
+    },
+    "Feed Filters" : {
+      "comment" : "Settings section header",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed Filters"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фильтры лент"
           }
         }
       }
@@ -9481,6 +9733,24 @@
         }
       }
     },
+    "Four digits. The PIN protects only the Settings screen." : {
+      "comment" : "Set or change PIN: new PIN step subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Four digits. The PIN protects only the Settings screen."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Четыре цифры. PIN защищает только экран настроек."
+          }
+        }
+      }
+    },
     "French" : {
       "localizations" : {
         "ar" : {
@@ -9872,6 +10142,24 @@
     "Hidden" : {
       "comment" : "A section header for hidden sections.",
       "isCommentAutoGenerated" : true
+    },
+    "Hidden channels appear in feeds again." : {
+      "comment" : "Reset All Settings confirmation, shown when channels were hidden with Don't Recommend Channel",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hidden channels appear in feeds again."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрытые каналы снова появятся в лентах."
+          }
+        }
+      }
     },
     "Hide Controls After" : {
       "comment" : "Settings picker label — duration before player controls auto-hide",
@@ -10566,9 +10854,45 @@
         }
       }
     },
+    "Home Sections" : {
+      "comment" : "Settings section header: Visible Sections link",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home Sections"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разделы Главной"
+          }
+        }
+      }
+    },
     "How to Get a Token" : {
       "comment" : "A button that shows a help sheet on how to get a Yandex OAuth token.",
       "isCommentAutoGenerated" : true
+    },
+    "iCloud Sync turns off." : {
+      "comment" : "Reset All Settings confirmation, shown when iCloud Sync is on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud Sync turns off."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронизация iCloud будет выключена."
+          }
+        }
+      }
     },
     "In-App Mini Player" : {
       "extractionState" : "stale",
@@ -10673,6 +10997,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Встроенный звук"
+          }
+        }
+      }
+    },
+    "Incorrect PIN. Try again." : {
+      "comment" : "PIN keypad error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incorrect PIN. Try again."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неверный PIN. Попробуйте ещё раз."
           }
         }
       }
@@ -11288,6 +11630,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "横屏始终播放"
+          }
+        }
+      }
+    },
+    "Languages" : {
+      "comment" : "macOS Settings window tab: audio, voice-over and Shorts translation languages",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Languages"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Языки"
           }
         }
       }
@@ -14161,6 +14521,24 @@
         }
       }
     },
+    "Offline videos are kept until you delete them in Offline videos." : {
+      "comment" : "Settings > This Device footer; 'Offline videos' is the section name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline videos are kept until you delete them in Offline videos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Офлайн-видео хранятся, пока вы не удалите их в разделе Offline videos."
+          }
+        }
+      }
+    },
     "Offline watch" : {
       "comment" : "A button that downloads a video for offline viewing.",
       "isCommentAutoGenerated" : true,
@@ -14487,6 +14865,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在此设备上，点击下面的按鈕 — 登录页面将以预填您的代码的方式打开。"
+          }
+        }
+      }
+    },
+    "Opaque bars and panels instead of glass." : {
+      "comment" : "Settings > Appearance > Disable Liquid Glass description (iOS 26+)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opaque bars and panels instead of glass."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Непрозрачные панели вместо стекла."
           }
         }
       }
@@ -15691,6 +16087,24 @@
       "comment" : "Display name for the `.pink` accent color choice.",
       "isCommentAutoGenerated" : true
     },
+    "PINs didn't match. Try again." : {
+      "comment" : "PIN confirmation mismatch error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PINs didn't match. Try again."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PIN не совпадает. Попробуйте ещё раз."
+          }
+        }
+      }
+    },
     "Play" : {
       "comment" : "A button that plays a video.",
       "isCommentAutoGenerated" : true,
@@ -15808,6 +16222,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Воспроизвести сохранённое видео"
+          }
+        }
+      }
+    },
+    "Playback" : {
+      "comment" : "Settings section header",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Воспроизведение"
           }
         }
       }
@@ -18100,6 +18532,24 @@
         }
       }
     },
+    "Reset All Settings to Defaults?" : {
+      "comment" : "Confirmation title before resetting all settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset All Settings to Defaults?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить все настройки?"
+          }
+        }
+      }
+    },
     "Retry" : {
       "comment" : "Alert button to retry a failed network request",
       "extractionState" : "manual",
@@ -20158,6 +20608,24 @@
         }
       }
     },
+    "Segments marked by the community inside videos." : {
+      "comment" : "Settings > SponsorBlock toggle description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segments marked by the community inside videos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отрезки внутри видео, размеченные сообществом."
+          }
+        }
+      }
+    },
     "Self-Promotion" : {
       "comment" : "SponsorBlock category display name",
       "extractionState" : "manual",
@@ -20353,6 +20821,42 @@
         }
       }
     },
+    "Settings Locked" : {
+      "comment" : "PIN lock screen title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings Locked"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки защищены"
+          }
+        }
+      }
+    },
+    "Settings PIN" : {
+      "comment" : "Navigation title of the set/change/remove PIN sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings PIN"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PIN для настроек"
+          }
+        }
+      }
+    },
     "Share" : {
       "comment" : "Player more-menu option to share the video link",
       "extractionState" : "manual",
@@ -20445,6 +20949,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "分享"
+          }
+        }
+      }
+    },
+    "Shared by videos and Shorts. Kept in this device's Keychain and shown only masked." : {
+      "comment" : "Settings > Yandex Token footer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared by videos and Shorts. Kept in this device's Keychain and shown only masked."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общий для видео и Shorts. Хранится в связке ключей этого устройства и показывается только скрытым."
           }
         }
       }
@@ -23160,6 +23682,24 @@
         }
       }
     },
+    "Subscriptions, playlists and likes are stored in your Google account; changes need a network connection." : {
+      "comment" : "Settings > Account footer: the Google-account data area",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscriptions, playlists and likes are stored in your Google account; changes need a network connection."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подписки, плейлисты и оценки хранятся в аккаунте Google; для изменений нужна сеть."
+          }
+        }
+      }
+    },
     "Subtitles" : {
       "comment" : "Settings toggle to enable subtitles/captions by default",
       "extractionState" : "manual",
@@ -23832,6 +24372,42 @@
       "comment" : "Display name for the teal accent color.",
       "isCommentAutoGenerated" : true
     },
+    "The Settings PIN is removed." : {
+      "comment" : "Reset All Settings confirmation, shown when a PIN is set",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Settings PIN is removed."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PIN для настроек будет удалён."
+          }
+        }
+      }
+    },
+    "The SponsorBlock excluded channels list is cleared." : {
+      "comment" : "Reset All Settings confirmation, shown when SponsorBlock has excluded channels",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The SponsorBlock excluded channels list is cleared."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список каналов-исключений SponsorBlock будет очищен."
+          }
+        }
+      }
+    },
     "The token is only needed for lively voices.\n\n1. Sign in to your Yandex account and open oauth.yandex.ru/client/new.\n2. Create an app for \"Web services\" with the \"Access to user's login\" permission (login:info) and Redirect URI https://oauth.yandex.ru/verification_code.\n3. Open oauth.yandex.ru/authorize?response_type=token&client_id=<your app's ClientID>.\n4. Allow access — Yandex shows the token on the page. Paste it here.\n\nThe token is stored in the Keychain on this device. A Yandex Plus subscription is not required." : {
       "comment" : "A message that explains how to get a Yandex OAuth token.",
       "isCommentAutoGenerated" : true
@@ -23957,6 +24533,24 @@
     "This cancels all offline downloads and deletes every saved video, audio track, translation, and their cache. This cannot be undone." : {
       "comment" : "The body of a confirmation dialog that asks the user to delete all of their offline videos.",
       "isCommentAutoGenerated" : true
+    },
+    "This Device" : {
+      "comment" : "Settings section header: data kept on this device",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Device"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это устройство"
+          }
+        }
+      }
     },
     "This device has no VP9 decoder (iOS 26.2 or later needed), so H.264 up to 1080p is used." : {
       "comment" : "A description of the limitations of the device's video codec support.",
@@ -24602,6 +25196,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重试"
+          }
+        }
+      }
+    },
+    "Turning it off stops recording but deletes nothing." : {
+      "comment" : "Settings > This Device > Watch History description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turning it off stops recording but deletes nothing."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выключение останавливает запись, но ничего не удаляет."
           }
         }
       }
@@ -26811,6 +27423,24 @@
     "Yandex OAuth Token" : {
 
     },
+    "Yandex Token" : {
+      "comment" : "Settings section header for the shared Yandex OAuth token",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yandex Token"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен Yandex"
+          }
+        }
+      }
+    },
     "Yandex translating" : {
 
     },
@@ -26934,6 +27564,24 @@
         }
       }
     },
+    "Your Google sign-in, Yandex token, watch history, subscriptions, RSS feeds, queue and offline videos are not affected." : {
+      "comment" : "Reset All Settings confirmation: what stays",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Google sign-in, Yandex token, watch history, subscriptions, RSS feeds, queue and offline videos are not affected."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в Google, токен Yandex, история просмотров, подписки, RSS-ленты, очередь и офлайн-видео не изменятся."
+          }
+        }
+      }
+    },
     "Your home feed, subscriptions and history\nrequire a Google account." : {
       "comment" : "Browse view empty state subtitle when user is not signed in",
       "extractionState" : "manual",
@@ -27026,6 +27674,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "首页、订阅和历史记录\n需要 Google 账户。"
+          }
+        }
+      }
+    },
+    "Your YouTube history, search history, saved playback positions, offline videos and queue are not affected." : {
+      "comment" : "Clear history confirmation: what stays",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your YouTube history, search history, saved playback positions, offline videos and queue are not affected."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История YouTube, история поиска, сохранённые позиции просмотра, офлайн-видео и очередь не изменятся."
           }
         }
       }

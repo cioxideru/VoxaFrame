@@ -115,3 +115,57 @@ struct SponsorBlockExcludedChannelsView: View {
         #endif
     }
 }
+
+// MARK: - GitHubQRView (tvOS)
+
+#if os(tvOS)
+/// The About link on tvOS: a QR code to scan with a phone, since tvOS has no browser.
+struct GitHubQRView: View {
+    let url: URL
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            // Opaque and appearance-aware, so the primary and secondary labels keep their contrast in Light and Dark.
+            VFColor.surface.ignoresSafeArea()
+
+            VStack(spacing: 32) {
+                VStack(spacing: 12) {
+                    Image(systemName: AppSymbol.sourceCode)
+                        .font(.system(size: 56))
+                        .foregroundStyle(.primary)
+                        .accessibilityHidden(true)
+
+                    Text("VoxaFrame on GitHub")
+                        .font(.largeTitle).fontWeight(.bold)
+
+                    Text("Scan the QR code with your phone to view the project on GitHub.")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                QRCodeView(content: url.absoluteString)
+                    .frame(width: 280, height: 280)
+                    .padding(16)
+                    .background(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+
+                Text(url.absoluteString)
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(60)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            Button {
+                dismiss()
+            } label: {
+                Label("Close", systemImage: AppSymbol.xmark)
+                    .font(.headline)
+            }
+            .padding(40)
+        }
+    }
+}
+#endif

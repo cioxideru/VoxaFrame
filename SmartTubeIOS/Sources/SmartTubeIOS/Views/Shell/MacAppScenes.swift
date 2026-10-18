@@ -40,7 +40,8 @@ public struct MacSettingsScene: Scene {
 
     public var body: some Scene {
         Settings {
-            SettingsView()
+            // The standard toolbar tabs; the panes with pushed links carry their own stack.
+            SettingsView(showsPanes: true)
                 // Inside the SettingsStore injection below: the scope reads the store from its ancestors.
                 .vfGlassScope()
                 .environment(authService)

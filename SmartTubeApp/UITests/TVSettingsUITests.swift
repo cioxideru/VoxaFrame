@@ -125,6 +125,56 @@ final class TVSettingsUITests: XCTestCase {
         )
     }
 
+    /// B2 (PLAN-0027): Reset All Settings asks first; Back cancels, keeps a changed preference and returns
+    /// the focus to Reset.
+    func testResetAllSettingsAsksAndBackCancels() {
+        let hideShorts = app.descendants(matching: .any).matching(identifier: "settings.hideShortsToggle").firstMatch
+        let button = app.descendants(matching: .any).matching(identifier: AccessibilityID.settingsResetAllButton)
+            .firstMatch
+        XCTAssertTrue(hideShorts.waitForExistence(timeout: 10), "settings.hideShortsToggle not found")
+
+        // Turn Hide Shorts on (its default is off), so a reset that slipped through would show.
+        let onValues = ["1", "On"]
+        let isOn = NSPredicate(format: "value IN %@", onValues)
+        moveFocus(to: hideShorts, pressing: .down)
+        let original = hideShorts.value as? String
+        XCTAssertNotNil(original, "Hide Shorts must report its state")
+        let wasOn = onValues.contains(original ?? "")
+        if !wasOn {
+            remote.press(.select)
+            waitUntil(hideShorts, matches: isOn, "Select must turn Hide Shorts on")
+        }
+
+        // Reset is the last row.
+        moveFocus(to: button, pressing: .down)
+        remote.press(.select)
+        let confirm = app.descendants(matching: .any).matching(identifier: AccessibilityID.settingsResetAllConfirm)
+            .firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Reset All Settings must ask before resetting")
+        remote.press(.menu)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 5), "Back must cancel the confirmation")
+        waitUntil(button, matches: NSPredicate(format: "hasFocus == true"), "Back must return the focus to Reset")
+
+        // Back up to Hide Shorts: still on. Then restore it, since this class does not reset settings.
+        moveFocus(to: hideShorts, pressing: .up)
+        XCTAssertTrue(isOn.evaluate(with: hideShorts), "Cancel must keep Hide Shorts on")
+        if !wasOn {
+            remote.press(.select)
+            waitUntil(hideShorts, matches: NSPredicate(format: "value == %@", original ?? ""), "Restore Hide Shorts")
+        }
+    }
+
+    /// Presses `direction` until `element` has the focus; fails the test when it never does.
+    private func moveFocus(to element: XCUIElement, pressing direction: XCUIRemote.Button) {
+        for _ in 0..<80 where !element.hasFocus { remote.press(direction) }
+        XCTAssertTrue(element.hasFocus, "Focus never reached \(element.identifier)")
+    }
+
+    private func waitUntil(_ element: XCUIElement, matches predicate: NSPredicate, _ message: String) {
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        XCTAssertEqual(XCTWaiter().wait(for: [expectation], timeout: 5), .completed, message)
+    }
+
     /// Regression test for #149: the Settings tab must open on the first select press.
     /// Before the fix, MainTVTabView used an unbound TabView which made the tvOS focus
     /// engine require two presses — the first focused the tab, the second activated it.

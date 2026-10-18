@@ -38,7 +38,7 @@ struct ParentalControlsSheet: View {
 
     var body: some View {
         NavigationStack {
-            content
+            titled(content)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") { dismiss() }
@@ -47,16 +47,26 @@ struct ParentalControlsSheet: View {
         }
     }
 
+    private func titled(_ view: some View) -> some View {
+        let titled = view.navigationTitle(Text("Settings PIN", bundle: .module))
+        #if os(iOS)
+        return titled.navigationBarTitleDisplayMode(.inline)
+        #else
+        return titled
+        #endif
+    }
+
     @ViewBuilder
     private var content: some View {
         switch step {
         case .verifyCurrent:
             PINKeypadView(
-                title: "Enter Current PIN",
+                title: String(localized: "Enter Current PIN", bundle: .module),
                 errorMessage: errorMessage
             ) { pin in
                 guard SettingsPINHasher.hash(pin) == store.settings.settingsPINHash else {
-                    errorMessage = "Incorrect PIN"
+                    errorMessage = PINKeypadView.rejection(
+                        String(localized: "Incorrect PIN. Try again.", bundle: .module))
                     return
                 }
                 errorMessage = nil
@@ -74,7 +84,8 @@ struct ParentalControlsSheet: View {
 
         case .enterNew:
             PINKeypadView(
-                title: "Enter New PIN",
+                title: String(localized: "Enter New PIN", bundle: .module),
+                subtitle: String(localized: "Four digits. The PIN protects only the Settings screen.", bundle: .module),
                 errorMessage: errorMessage
             ) { pin in
                 errorMessage = nil
@@ -84,11 +95,12 @@ struct ParentalControlsSheet: View {
 
         case .confirmNew(let firstPIN):
             PINKeypadView(
-                title: "Confirm New PIN",
+                title: String(localized: "Confirm New PIN", bundle: .module),
                 errorMessage: errorMessage
             ) { pin in
                 guard pin == firstPIN else {
-                    errorMessage = "PINs didn't match. Try again."
+                    errorMessage = PINKeypadView.rejection(
+                        String(localized: "PINs didn't match. Try again.", bundle: .module))
                     step = .enterNew
                     return
                 }

@@ -69,6 +69,46 @@ final class SettingsUITests: XCTestCase {
         XCTAssertEqual(original.value as? String, "0")
         XCTAssertEqual(regularToggle.value as? String, "0")
     }
+
+    /// B1 (PLAN-0027): clearing the on-device history asks first, and Cancel keeps it.
+    func testClearLocalHistoryConfirmationCancelKeepsHistory() {
+        app.terminate()
+        app = XCUIApplication()
+        app.launchArguments = [
+            "--uitesting", "--uitesting-reset-settings", "--uitesting-signed-in", "--uitesting-mixed-feed",
+        ]
+        app.launch()
+        // Opening any card records it in the on-device history, even if the fixture video cannot play.
+        guard let card = UITestHelpers.waitForVideoCards(in: app) else {
+            XCTFail("The fixture feed must show a card")
+            return
+        }
+        card.tap()
+        let back = app.buttons[AccessibilityID.playerBackButton].firstMatch
+        if back.waitForExistence(timeout: 10) { back.tap() }
+
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        let form = app.collectionViews.firstMatch
+        let clear = app.buttons[AccessibilityID.settingsClearLocalHistoryButton]
+        UITestHelpers.scrollUntilVisible(clear, in: form, maxSwipes: 16)
+        XCTAssertTrue(clear.waitForExistence(timeout: 5), "A watched card must enable the clear row")
+        clear.tap()
+        let confirm = app.buttons[AccessibilityID.settingsClearLocalHistoryConfirm].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Clearing must ask first")
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Clear watch history confirmation"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        let cancel = app.buttons[AccessibilityID.settingsClearLocalHistoryCancel].firstMatch
+        if cancel.exists {
+            cancel.tap()
+        } else {
+            // iPad and iOS 26 show the dialog as a popover without Cancel; tapping outside cancels.
+            app.otherElements[AccessibilityID.popoverDismissRegion].tap()
+        }
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 3), "Cancel must close the confirmation")
+        XCTAssertTrue(clear.exists, "Cancel must keep the on-device history")
+    }
 }
 
 #if os(iOS)

@@ -17,15 +17,15 @@ struct SettingsPINLockView: View {
 
     var body: some View {
         PINKeypadView(
-            title: "Settings Locked",
-            subtitle: "Enter PIN to continue",
+            title: String(localized: "Settings Locked", bundle: .module),
+            subtitle: String(localized: "Enter PIN to continue", bundle: .module),
             errorMessage: errorMessage
         ) { pin in
             if SettingsPINHasher.hash(pin) == expectedHash {
                 errorMessage = nil
                 onUnlock()
             } else {
-                errorMessage = "Incorrect PIN"
+                errorMessage = PINKeypadView.rejection(String(localized: "Incorrect PIN. Try again.", bundle: .module))
             }
         }
         .accessibilityIdentifier(AccessibilityID.settingsPINLock)

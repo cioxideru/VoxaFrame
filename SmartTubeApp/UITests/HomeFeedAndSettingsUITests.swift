@@ -199,29 +199,44 @@ final class HomeFeedAndSettingsUITests: XCTestCase {
     func testAboutSectionResetButtonVisible() {
         openSettings()
         let form = app.collectionViews.firstMatch
-        let resetButton = form.buttons["settings.resetAllButton"]
-        UITestHelpers.scrollUntilVisible(resetButton, in: form)
+        let resetButton = form.buttons[AccessibilityID.settingsResetAllButton]
+        UITestHelpers.scrollUntilVisible(resetButton, in: form, maxSwipes: 16)
         XCTAssertTrue(
             resetButton.waitForExistence(timeout: 5),
             "settings.resetAllButton should be visible in the About section")
     }
 
+    /// B2 (PLAN-0027): Reset All Settings asks first, and Cancel keeps every setting.
     func testResetAllSettingsShowsConfirmation() {
         openSettings()
         let form = app.collectionViews.firstMatch
-        let resetButton = form.buttons["settings.resetAllButton"]
-        UITestHelpers.scrollUntilVisible(resetButton, in: form)
-        guard resetButton.waitForExistence(timeout: 5) else {
-            XCTFail("settings.resetAllButton not found")
-            return
-        }
+        let hideShorts = form.switches["settings.hideShortsToggle"]
+        UITestHelpers.scrollUntilVisible(hideShorts, in: form)
+        XCTAssertTrue(hideShorts.waitForExistence(timeout: 5), "settings.hideShortsToggle not found")
+        let original = hideShorts.value as? String
+        hideShorts.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+        let changed = hideShorts.value as? String
+        XCTAssertNotEqual(original, changed, "Hide Shorts must change before the reset is cancelled")
+
+        let resetButton = form.buttons[AccessibilityID.settingsResetAllButton]
+        UITestHelpers.scrollUntilVisible(resetButton, in: form, maxSwipes: 16)
+        XCTAssertTrue(resetButton.waitForExistence(timeout: 5), "settings.resetAllButton not found")
         resetButton.tap()
-        if app.alerts.firstMatch.waitForExistence(timeout: 2) {
-            app.alerts.firstMatch.buttons.firstMatch.tap()
+        let confirm = app.buttons[AccessibilityID.settingsResetAllConfirm].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Reset All Settings must ask before resetting")
+        let cancel = app.buttons[AccessibilityID.settingsResetAllCancel].firstMatch
+        if cancel.exists {
+            cancel.tap()
+        } else {
+            // iPad and iOS 26 show the dialog as a popover without Cancel; tapping outside cancels.
+            app.otherElements[AccessibilityID.popoverDismissRegion].tap()
         }
-        XCTAssertEqual(
-            app.state, .runningForeground,
-            "App should still be running after Reset All Settings")
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 3), "Cancel must close the confirmation")
+
+        for _ in 0..<16 where !hideShorts.isHittable { form.swipeDown() }
+        XCTAssertEqual(hideShorts.value as? String, changed, "Cancel must keep the changed setting")
+        hideShorts.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+        XCTAssertEqual(hideShorts.value as? String, original, "Restore Hide Shorts for the next test")
     }
 
     func testAudioOnlyToggleAbsentFromSettings() {

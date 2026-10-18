@@ -23,11 +23,22 @@ public struct SettingsView: View {
     /// seen the tab switch away and back.
     @State private var isUnlocked = false
     @State private var parentalControlsSheetMode: ParentalControlsMode?
-    /// Loaded from the Keychain when the token field appears, not on every view init.
-    @State private var yandexToken = ""
-    @State private var showYandexTokenHelp = false
+    /// B1 and B2: both destructive rows ask first; Cancel is the safe default.
+    @State private var confirmsClearHistory = false
+    @State private var confirmsReset = false
+    #if os(macOS)
+    private(set) var showsPanes = false
+    #endif
 
     public init() {}
+
+    #if os(macOS)
+    /// `true` for the Settings window (Command-comma): one toolbar tab per group. The main window's
+    /// Settings section keeps the single form.
+    init(showsPanes: Bool) {
+        self.showsPanes = showsPanes
+    }
+    #endif
 
     public var body: some View {
         Group {
@@ -42,42 +53,27 @@ public struct SettingsView: View {
         }
     }
 
+    @ViewBuilder
     private var settingsForm: some View {
-        Form {
-            accountSection
-            playerSection
-            videoCodecsSection
-            yandexVOTSection
-            shortsTranslationSection
-            generalSection
-            uiSection
-            sponsorBlockSection
-            deArrowSection
-            parentalControlsSection
-            aboutSection
+        let form = settingsContent.sheet(item: $parentalControlsSheetMode) { mode in
+            ParentalControlsSheet(mode: mode)
         }
-        #if os(macOS)
-        .formStyle(.grouped)
-        #endif
         // Hide the blank navigation bar on iOS and tvOS — a visible nav bar on tvOS
         // conflicts with the TabView tab bar scroll-hide animation (issue #102 / gh-34).
         // .navigationBar placement is unavailable on macOS.
-        #if !os(macOS)
-        .toolbar(.hidden, for: .navigationBar)
+        #if os(macOS)
+        form
+        #elseif os(tvOS)
+        form.toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showGithubQR) { GitHubQRView(url: settingsGitHubURL) }
+        #else
+        form.toolbar(.hidden, for: .navigationBar)
         #endif
-        #if os(tvOS)
-        .sheet(isPresented: $showGithubQR) {
-            GitHubQRView()
-        }
-        #endif
-        .sheet(item: $parentalControlsSheetMode) { mode in
-            ParentalControlsSheet(mode: mode)
-        }
     }
 
     // MARK: - Parental Controls
 
-    private var parentalControlsSection: some View {
+    var parentalControlsSection: some View {
         Section {
             if store.settings.settingsPINHash == nil {
                 Button("Set PIN") { parentalControlsSheetMode = .set }
@@ -97,8 +93,8 @@ public struct SettingsView: View {
 
     // MARK: - Account
 
-    private var accountSection: some View {
-        Section("Account") {
+    var accountSection: some View {
+        Section {
             if auth.isSignedIn {
                 HStack {
                     #if os(tvOS)
@@ -127,14 +123,23 @@ public struct SettingsView: View {
                     .accessibilityIdentifier("settings.signInButton")
                     .sheet(isPresented: $showSignIn) { SignInView() }
             }
+        } header: {
+            Text("Account")
+        } footer: {
+            // The first of the three data areas (§17): what lives in the Google account, not on this device.
+            if auth.isSignedIn {
+                Text(
+                    "Subscriptions, playlists and likes are stored in your Google account; changes need a network connection.",
+                    bundle: .module)
+            }
         }
     }
 
     // MARK: - Player
 
-    private var playerSection: some View {
+    var playerSection: some View {
         @Bindable var store = store
-        return Section("Player") {
+        return Section {
             Picker("Playback Speed", selection: $store.settings.playbackSpeed) {
                 ForEach(AppSettings.availableSpeeds, id: \.self) { s in
                     Text(s == 1.0 ? "Normal" : "\(s, specifier: "%.2g")×").tag(s)
@@ -143,7 +148,6 @@ public struct SettingsView: View {
 
             #if !os(iOS)
             Picker(
-                "Default Quality",
                 selection: Binding(
                     get: { store.settings.preferredQuality },
                     set: {
@@ -155,6 +159,9 @@ public struct SettingsView: View {
                 ForEach(AppSettings.VideoQuality.allCases, id: \.self) { q in
                     Text(q.rawValue.capitalized).tag(q)
                 }
+            } label: {
+                Text("Default Quality")
+                Text("Changing it clears the quality you last picked in the player.", bundle: .module)
             }
             .accessibilityIdentifier("settings.preferredQualityPicker")
             #endif
@@ -214,34 +221,87 @@ public struct SettingsView: View {
             Toggle("Prefer H.264 Codec", isOn: $store.settings.preferH264)
                 .accessibilityIdentifier("settings.preferH264Toggle")
             #endif
+        } header: {
+            Text("Playback", bundle: .module)
+        }
+    }
+}
+
+extension SettingsView {
+
+    // MARK: - History and data on this device
+
+    /// The second data area (§17). There is no "clear everything" action: each kind of data keeps its own.
+    var generalSection: some View {
+        @Bindable var store = store
+        let history = LocalWatchHistoryStore.shared
+        return Section {
+            Picker(selection: $store.settings.historyState) {
+                Text("Enabled").tag(AppSettings.HistoryState.enabled)
+                Text("Disabled").tag(AppSettings.HistoryState.disabled)
+            } label: {
+                Text("Watch History")
+                Text("Turning it off stops recording but deletes nothing.", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.settingsHistoryPicker)
+            if !history.entries.isEmpty {
+                Button(role: .destructive) {
+                    confirmsClearHistory = true
+                } label: {
+                    Text("Clear Watch History on This Device")
+                }
+                .accessibilityIdentifier(AccessibilityID.settingsClearLocalHistoryButton)
+                .confirmationDialog(
+                    Text("Clear History on This Device?", bundle: .module),
+                    isPresented: $confirmsClearHistory,
+                    titleVisibility: .visible
+                ) {
+                    Button(role: .destructive) {
+                        history.clear()
+                    } label: {
+                        Text("Clear History", bundle: .module)
+                    }
+                    .accessibilityIdentifier(AccessibilityID.settingsClearLocalHistoryConfirm)
+                    confirmationCancelButton(AccessibilityID.settingsClearLocalHistoryCancel)
+                } message: {
+                    Text(SettingsConfirmationText.clearHistoryMessage(entryCount: history.entries.count))
+                }
+            }
+        } header: {
+            Text("This Device", bundle: .module)
+        } footer: {
+            VStack(alignment: .leading, spacing: VFSpace.s8) {
+                Text(
+                    "Watch history is saved on this device. VoxaFrame also tries to report watches to your YouTube account, but YouTube may not always record them."
+                )
+                // The third area: offline files are removed only from the Offline videos section.
+                Text("Offline videos are kept until you delete them in Offline videos.", bundle: .module)
+            }
         }
     }
 
-    // MARK: - General
-
-    private var generalSection: some View {
+    var iCloudSection: some View {
         @Bindable var store = store
         return Section {
-            Picker("Watch History", selection: $store.settings.historyState) {
-                Text("Enabled").tag(AppSettings.HistoryState.enabled)
-                Text("Disabled").tag(AppSettings.HistoryState.disabled)
-            }
-            .accessibilityIdentifier(AccessibilityID.settingsHistoryPicker)
-            if !LocalWatchHistoryStore.shared.entries.isEmpty {
-                Button("Clear Watch History on This Device", role: .destructive) {
-                    LocalWatchHistoryStore.shared.clear()
-                }
-                .accessibilityIdentifier(AccessibilityID.settingsClearLocalHistoryButton)
-            }
             Toggle("Sync to iCloud", isOn: $store.settings.iCloudSyncEnabled)
                 .accessibilityIdentifier("settings.iCloudSyncToggle")
         } header: {
-            Text("General")
-        } footer: {
-            Text(
-                "Watch history is saved on this device. VoxaFrame also tries to report watches to your YouTube account, but YouTube may not always record them."
-            )
+            Text(verbatim: "iCloud")  // verbatim: product name, the same in every language
         }
+    }
+
+    /// Cancel for the destructive confirmations: the safe default, and the Return key on macOS.
+    private func confirmationCancelButton(_ identifier: String) -> some View {
+        let button = Button(role: .cancel) {
+        } label: {
+            Text("Cancel", bundle: .module)
+        }
+        .accessibilityIdentifier(identifier)
+        #if os(macOS)
+        return button.keyboardShortcut(.defaultAction)
+        #else
+        return button
+        #endif
     }
 
     // MARK: - UI
@@ -264,9 +324,9 @@ public struct SettingsView: View {
         )
     }
 
-    private var uiSection: some View {
+    var uiSection: some View {
         @Bindable var store = store
-        return Section("Interface") {
+        return Section {
             Picker("Theme", selection: $store.settings.themeName) {
                 ForEach(AppSettings.ThemeName.allCases, id: \.self) { t in
                     Text(t.rawValue).tag(t)
@@ -302,14 +362,30 @@ public struct SettingsView: View {
             .disabled(store.settings.compactThumbnails)
             .accessibilityIdentifier(AccessibilityID.settingsGridColumnsLandscapePicker)
             #endif
+            #if os(iOS)
+            if #available(iOS 26.0, *) {
+                Toggle(isOn: $store.settings.disableLiquidGlass) {
+                    Text("Disable Liquid Glass")
+                    // Applied live: TabBarLiquidGlassConfigurator and vfGlassScope both read the setting.
+                    Text("Opaque bars and panels instead of glass.", bundle: .module)
+                }
+                .accessibilityIdentifier(AccessibilityID.settingsDisableLiquidGlassToggle)
+            }
+            #endif
+        } header: {
+            Text("Appearance", bundle: .module)
+        }
+    }
+
+    var feedFiltersSection: some View {
+        @Bindable var store = store
+        return Section {
             Toggle("Hide Shorts", isOn: $store.settings.hideShorts)
                 .accessibilityIdentifier("settings.hideShortsToggle")
             Toggle("Hide Live Shorts", isOn: $store.settings.hideLiveShorts)
                 .accessibilityIdentifier("settings.hideLiveShortsToggle")
             Toggle("Hide Video Premieres", isOn: $store.settings.hideVideoPremieres)
                 .accessibilityIdentifier("settings.hideVideoPremieresToggle")
-            Toggle("Per-Device Recommendations", isOn: $store.settings.perDeviceRecommendationsEnabled)
-                .accessibilityIdentifier("settings.perDeviceRecommendationsToggle")
             Toggle("Hide Watched Videos", isOn: $store.settings.hideWatchedVideos)
                 .accessibilityIdentifier(AccessibilityID.settingsHideWatchedVideosToggle)
             if store.settings.hideWatchedVideos {
@@ -337,38 +413,45 @@ public struct SettingsView: View {
                 .accessibilityIdentifier(AccessibilityID.settingsHideWatchedThresholdStepper)
                 #endif
             }
-            #if os(iOS)
-            if #available(iOS 26.0, *) {
-                Toggle("Disable Liquid Glass", isOn: $store.settings.disableLiquidGlass)
-                    .accessibilityIdentifier(AccessibilityID.settingsDisableLiquidGlassToggle)
-            }
-            #endif
+            Toggle("Per-Device Recommendations", isOn: $store.settings.perDeviceRecommendationsEnabled)
+                .accessibilityIdentifier("settings.perDeviceRecommendationsToggle")
+        } header: {
+            Text("Feed Filters", bundle: .module)
+        }
+    }
+
+    var homeSectionsSection: some View {
+        Section {
             NavigationLink("Visible Sections") {
                 SectionsSettingsView()
                     .environment(store)
             }
             .accessibilityIdentifier(AccessibilityID.settingsVisibleSectionsLink)
+        } header: {
+            Text("Home Sections", bundle: .module)
         }
     }
 
-}
-
-extension SettingsView {
-
     // MARK: - SponsorBlock
 
-    private var sponsorBlockSection: some View {
+    var sponsorBlockSection: some View {
         @Bindable var store = store
         return Section {
-            Toggle("Enable SponsorBlock", isOn: $store.settings.sponsorBlockEnabled)
-                .accessibilityIdentifier("settings.sponsorBlockToggle")
+            Toggle(isOn: $store.settings.sponsorBlockEnabled) {
+                Text("Enable SponsorBlock")
+                Text("Segments marked by the community inside videos.", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.settingsSponsorBlockToggle)
 
             if store.settings.sponsorBlockEnabled {
+                // Nine categories, each Skip / Show Toast / Nothing. The colour matches the timeline marks
+                // and is never the only cue: the category name is the label.
                 ForEach(SponsorSegment.Category.allCases, id: \.self) { cat in
                     HStack {
                         Circle()
                             .fill(cat.color)
                             .frame(width: 10, height: 10)
+                            .accessibilityHidden(true)
                         Picker(
                             cat.displayName,
                             selection: Binding(
@@ -408,7 +491,7 @@ extension SettingsView {
 
     // MARK: - DeArrow
 
-    private var deArrowSection: some View {
+    var deArrowSection: some View {
         @Bindable var store = store
         return Section {
             Toggle("Enable DeArrow", isOn: $store.settings.deArrowEnabled)
@@ -419,101 +502,9 @@ extension SettingsView {
         }
     }
 
-    // MARK: - Yandex voice-over translation
-
-    private var yandexVOTSection: some View {
-        @Bindable var store = store
-        return Section {
-            audioLanguagePicker(selection: $store.settings.preferredAudioLanguage)
-                .accessibilityIdentifier(AccessibilityID.settingsPreferredAudioLanguageRow)
-            Toggle("Yandex Voice-Over Translation", isOn: $store.settings.yandexVOTEnabled)
-                .accessibilityIdentifier(AccessibilityID.settingsYandexVOTToggle)
-            if store.settings.yandexVOTEnabled {
-                Toggle("Lively Voices", isOn: $store.settings.yandexVOTLivelyVoice)
-                    .accessibilityIdentifier(AccessibilityID.settingsYandexVOTLivelyVoiceToggle)
-                Toggle("Original Audio in Background", isOn: $store.settings.yandexVOTKeepOriginalAudio)
-                    .accessibilityIdentifier(AccessibilityID.settingsYandexVOTKeepOriginalAudioToggle)
-            }
-            if (store.settings.yandexVOTEnabled && store.settings.yandexVOTLivelyVoice)
-                || (store.settings.shortsYandexVOTEnabled && store.settings.shortsYandexVOTLivelyVoice)
-            {
-                SecureField("Yandex OAuth Token", text: $yandexToken)
-                    .autocorrectionDisabled()
-                    .onAppear { yandexToken = TokenManager.yandexVOTToken() ?? "" }
-                    .onChange(of: yandexToken) { _, token in
-                        if token != TokenManager.yandexVOTToken() ?? "" { TokenManager.setYandexVOTToken(token) }
-                    }
-                    .accessibilityIdentifier(AccessibilityID.settingsYandexVOTTokenField)
-                Button("How to Get a Token") { showYandexTokenHelp = true }
-                    .alert("Yandex OAuth Token", isPresented: $showYandexTokenHelp) {
-                        Button("OK", role: .cancel) {}
-                    } message: {
-                        Text(
-                            """
-                            The token is only needed for lively voices.
-
-                            1. Sign in to your Yandex account and open oauth.yandex.ru/client/new.
-                            2. Create an app for "Web services" with the "Access to user's login" permission (login:info) and Redirect URI https://oauth.yandex.ru/verification_code.
-                            3. Open oauth.yandex.ru/authorize?response_type=token&client_id=<your app's ClientID>.
-                            4. Allow access — Yandex shows the token on the page. Paste it here.
-
-                            The token is stored in the Keychain on this device. A Yandex Plus subscription is not required.
-                            """)
-                    }
-            }
-        } header: {
-            Text("Audio Language")
-        } footer: {
-            Text(
-                "The video's original or dubbed track in this language is played instead of the system language. With Yandex translation on, a video without such a track is voice-over translated by Yandex into Russian, English or Kazakh. AVPlayer only (turn off the IFrame Player). A video Yandex hasn't translated before stays paused for a few minutes until the translation is ready. Lively voices: Russian only, needs the token."
-            )
-        }
-    }
-
-    private var shortsTranslationSection: some View {
-        @Bindable var store = store
-        return Section {
-            audioLanguagePicker(selection: $store.settings.shortsPreferredAudioLanguage)
-                .accessibilityIdentifier(AccessibilityID.settingsShortsAudioLanguageRow)
-            Toggle("Yandex Voice-Over Translation", isOn: $store.settings.shortsYandexVOTEnabled)
-                .accessibilityIdentifier(AccessibilityID.settingsShortsYandexVOTToggle)
-            if store.settings.shortsYandexVOTEnabled {
-                Toggle("Lively Voices", isOn: $store.settings.shortsYandexVOTLivelyVoice)
-                    .accessibilityIdentifier(AccessibilityID.settingsShortsLivelyVoiceToggle)
-                Toggle("Original Audio in Background", isOn: $store.settings.shortsYandexVOTKeepOriginalAudio)
-                    .accessibilityIdentifier(AccessibilityID.settingsShortsKeepOriginalAudioToggle)
-            }
-        } header: {
-            HStack {
-                Text("Shorts")
-                Text(verbatim: "·")  // verbatim: punctuation separating two localized labels
-                Text("Audio Language")
-            }
-        }
-    }
-
-    private func audioLanguagePicker(selection: Binding<String?>) -> some View {
-        Picker("Default Audio Language", selection: selection) {
-            Text("Auto (System Default)").tag(nil as String?)
-            Divider()
-            Text("Russian").tag("ru" as String?)
-            Text("English").tag("en" as String?)
-            Text("Kazakh").tag("kk" as String?)
-            Text("Spanish").tag("es" as String?)
-            Text("French").tag("fr" as String?)
-            Text("German").tag("de" as String?)
-            Text("Japanese").tag("ja" as String?)
-            Text("Korean").tag("ko" as String?)
-            Text("Portuguese (Brazil)").tag("pt-BR" as String?)
-            Text("Chinese (Simplified)").tag("zh-Hans" as String?)
-            Divider()
-            Text("Original Track Only").tag("original" as String?)
-        }
-    }
-
     // MARK: - Video codecs (AVPlayer)
 
-    private var videoCodecsSection: some View {
+    var videoCodecsSection: some View {
         @Bindable var store = store
         let settings = store.settings
         return Section {
@@ -537,7 +528,7 @@ extension SettingsView {
 
     // MARK: - About
 
-    private var aboutSection: some View {
+    var aboutSection: some View {
         @Bindable var store = store
         return Section {
             LabeledContent("Version", value: appVersion)
@@ -545,18 +536,37 @@ extension SettingsView {
             Button {
                 showGithubQR = true
             } label: {
-                Label("View on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                Label("View on GitHub", systemImage: AppSymbol.sourceCode)
             }
             .accessibilityIdentifier(AccessibilityID.settingsGitHubLink)
             #else
             Link(destination: settingsGitHubURL) {
-                Label("View on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                Label("View on GitHub", systemImage: AppSymbol.sourceCode)
             }
             .accessibilityIdentifier(AccessibilityID.settingsGitHubLink)
             .accessibilityValue(settingsGitHubURL.absoluteString)
             #endif
-            Button("Reset All Settings", role: .destructive) { store.reset() }
-                .accessibilityIdentifier("settings.resetAllButton")
+            Button(role: .destructive) {
+                confirmsReset = true
+            } label: {
+                Text("Reset All Settings")
+            }
+            .accessibilityIdentifier(AccessibilityID.settingsResetAllButton)
+            .confirmationDialog(
+                Text("Reset All Settings to Defaults?", bundle: .module),
+                isPresented: $confirmsReset,
+                titleVisibility: .visible
+            ) {
+                Button(role: .destructive) {
+                    store.reset()
+                } label: {
+                    Text("Reset", bundle: .module)
+                }
+                .accessibilityIdentifier(AccessibilityID.settingsResetAllConfirm)
+                confirmationCancelButton(AccessibilityID.settingsResetAllCancel)
+            } message: {
+                Text(SettingsConfirmationText.resetAllConsequences(for: store.settings).joined(separator: "\n"))
+            }
         } header: {
             Text("About")
         }
@@ -570,53 +580,3 @@ extension SettingsView {
         return "\(v) (\(b))"
     }
 }
-
-// MARK: - GitHubQRView (tvOS)
-
-#if os(tvOS)
-private struct GitHubQRView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        ZStack(alignment: .topTrailing) {
-            Color.black.opacity(0.85).ignoresSafeArea()
-
-            VStack(spacing: 32) {
-                VStack(spacing: 12) {
-                    Image(systemName: "chevron.left.forwardslash.chevron.right")
-                        .font(.system(size: 56))
-                        .foregroundStyle(.white)
-
-                    Text("VoxaFrame on GitHub")
-                        .font(.largeTitle).fontWeight(.bold)
-
-                    Text("Scan the QR code with your phone to view the project on GitHub.")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-
-                QRCodeView(content: settingsGitHubURL.absoluteString)
-                    .frame(width: 280, height: 280)
-                    .padding(16)
-                    .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-
-                Text(settingsGitHubURL.absoluteString)
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(60)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            Button {
-                dismiss()
-            } label: {
-                Label("Close", systemImage: "xmark")
-                    .font(.headline)
-            }
-            .padding(40)
-        }
-    }
-}
-#endif

@@ -75,6 +75,8 @@ public enum AccessibilityID {
     public static var settingsAccentColorPicker: String { "settings.accentColorPicker" }
     public static var settingsChangePINButton: String { "settings.changePINButton" }
     public static var settingsClearLocalHistoryButton: String { "settings.clearLocalHistoryButton" }
+    public static var settingsClearLocalHistoryConfirm: String { "settings.clearLocalHistory.confirm" }
+    public static var settingsClearLocalHistoryCancel: String { "settings.clearLocalHistory.cancel" }
     public static var settingsDisableLiquidGlassToggle: String { "settings.disableLiquidGlassToggle" }
     public static var settingsGridColumnsLandscapePicker: String { "settings.gridColumnsLandscapePicker" }
     public static var settingsGridColumnsPortraitPicker: String { "settings.gridColumnsPortraitPicker" }
@@ -85,7 +87,11 @@ public enum AccessibilityID {
     public static var settingsGitHubLink: String { "settings.githubLink" }
     public static var homeFilteredLoadMoreButton: String { "home.filteredLoadMoreButton" }
     public static var settingsRemovePINButton: String { "settings.removePINButton" }
+    public static var settingsResetAllButton: String { "settings.resetAllButton" }
+    public static var settingsResetAllConfirm: String { "settings.resetAll.confirm" }
+    public static var settingsResetAllCancel: String { "settings.resetAll.cancel" }
     public static var settingsSetPINButton: String { "settings.setPINButton" }
+    public static var settingsSponsorBlockToggle: String { "settings.sponsorBlockToggle" }
     public static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }
     public static var settingsVp9Toggle: String { "settings.vp9Toggle" }
     public static var settingsVisibleSectionsLink: String { "settings.visibleSectionsLink" }

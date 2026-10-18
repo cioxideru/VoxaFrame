@@ -187,6 +187,10 @@ enum AppSymbol {
     static let search = "magnifyingglass"
     static let library = "square.stack.fill"
     static let settings = "gearshape.fill"
+    // The other macOS Settings window tabs (with `skipForward` and `personCircle`).
+    static let languages = "globe"
+    static let appearance = "paintbrush"
+    static let lock = "lock"
 
     // MARK: - Navigation / chevrons
     static let chevronLeft = "chevron.left"
@@ -217,6 +221,7 @@ enum AppSymbol {
     static let share = "square.and.arrow.up"
     static let copyDoc = "doc.on.doc"
     static let trash = "trash"
+    static let deleteBackward = "delete.left"
     static let download = "arrow.down.to.line"
     static let retry = "arrow.clockwise"
     static let watchLater = "clock.badge"
@@ -229,6 +234,7 @@ enum AppSymbol {
     static let hourglass = "hourglass"
     static let questionCircle = "questionmark.circle"
     static let qrcode = "qrcode"
+    static let sourceCode = "chevron.left.forwardslash.chevron.right"
     static let colorSwatch = "circle.fill"
 
     // MARK: - People / account
