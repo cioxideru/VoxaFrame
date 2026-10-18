@@ -36,14 +36,28 @@ let videoGridRowSpacing: CGFloat = 40
 #else
 let videoGridRowSpacing: CGFloat = 12
 
+/// Column counts this device offers: up to 5 on Mac, 4 in iPad landscape, otherwise 3.
+@MainActor
+func gridColumnChoices(landscape: Bool) -> ClosedRange<Int> {
+    #if os(macOS)
+    return AppSettings.availableGridColumnCounts
+    #else
+    let isPad = UIDevice.current.userInterfaceIdiom == .pad
+    return 1...(isPad && landscape ? 4 : 3)
+    #endif
+}
+
 /// Fixed (not adaptive) columns avoid the rotation hit-test mismatch of issue #82.
+@MainActor
 func videoGridColumns(_ settings: AppSettings, landscape: Bool) -> [GridItem] {
-    let count = landscape ? settings.gridColumnsLandscape : settings.gridColumnsPortrait
+    let stored = landscape ? settings.gridColumnsLandscape : settings.gridColumnsPortrait
+    let count = min(stored, gridColumnChoices(landscape: landscape).upperBound)
     return Array(repeating: GridItem(.flexible(), spacing: videoGridRowSpacing), count: count)
 }
 #endif
 
 /// Videos per row in `VideoGridSection`: 1 in the compact list, otherwise its grid columns.
+@MainActor
 func videoGridColumnCount(_ settings: AppSettings, landscape: Bool) -> Int {
     guard !settings.compactThumbnails else { return 1 }
     #if os(tvOS)

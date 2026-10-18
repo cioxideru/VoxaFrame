@@ -44,7 +44,7 @@ struct AppSettingsAppearanceTests {
     func columnsClamped() throws {
         let settings = try decode(#"{"gridColumnsPortrait": 0, "gridColumnsLandscape": 9}"#)
         #expect(settings.gridColumnsPortrait == 1)
-        #expect(settings.gridColumnsLandscape == 3)
+        #expect(settings.gridColumnsLandscape == 5)
     }
 
     @Test("Valid column counts are preserved")
@@ -52,7 +52,20 @@ struct AppSettingsAppearanceTests {
         let settings = try decode(#"{"gridColumnsPortrait": 1, "gridColumnsLandscape": 2}"#)
         #expect(settings.gridColumnsPortrait == 1)
         #expect(settings.gridColumnsLandscape == 2)
+        #expect(try decode(#"{"gridColumnsLandscape": 5}"#).gridColumnsLandscape == 5)
     }
+
+    #if os(macOS)
+    @Test("Mac offers up to five columns and lays out the stored count")
+    @MainActor
+    func macColumnChoices() {
+        #expect(gridColumnChoices(landscape: true) == 1...5)
+        #expect(gridColumnChoices(landscape: false) == 1...5)
+        var settings = AppSettings()
+        settings.gridColumnsLandscape = 5
+        #expect(videoGridColumnCount(settings, landscape: true) == 5)
+    }
+    #endif
 
     @Test("High-res thumbnails default off and decode when present")
     func highResThumbnails() throws {

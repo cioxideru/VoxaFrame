@@ -242,7 +242,8 @@ public struct AppSettings: Codable {
     /// Canonical ordered list of selectable seek-interval values (seconds) — used by Stepper on iOS and Picker on tvOS.
     public static let availableSeekOptions: [Int] = [5, 10, 15, 20, 30, 45, 60]
 
-    public static let availableGridColumnCounts: ClosedRange<Int> = 1...3
+    /// Every column count a stored setting may hold; each device offers a part of it (Mac up to 5, iPad landscape 4).
+    public static let availableGridColumnCounts: ClosedRange<Int> = 1...5
 
     /// `.system` is the VoxaFrame coral on iPhone and iPad and the platform accent on macOS and tvOS.
     /// The UI target resolves each choice to a colour (on iPhone and iPad, the design's contrast-safe pair).

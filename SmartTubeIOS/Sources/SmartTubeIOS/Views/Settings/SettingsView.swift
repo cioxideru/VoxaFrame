@@ -377,12 +377,12 @@ extension SettingsView {
             .accessibilityIdentifier(AccessibilityID.settingsThumbnailStylePicker)
             #if !os(tvOS)
             Picker("Columns (Portrait)", selection: $store.settings.gridColumnsPortrait) {
-                ForEach(AppSettings.availableGridColumnCounts, id: \.self) { Text("\($0)").tag($0) }
+                ForEach(gridColumnChoices(landscape: false), id: \.self) { Text("\($0)").tag($0) }
             }
             .disabled(store.settings.compactThumbnails)
             .accessibilityIdentifier(AccessibilityID.settingsGridColumnsPortraitPicker)
             Picker("Columns (Landscape)", selection: $store.settings.gridColumnsLandscape) {
-                ForEach(AppSettings.availableGridColumnCounts, id: \.self) { Text("\($0)").tag($0) }
+                ForEach(gridColumnChoices(landscape: true), id: \.self) { Text("\($0)").tag($0) }
             }
             .disabled(store.settings.compactThumbnails)
             .accessibilityIdentifier(AccessibilityID.settingsGridColumnsLandscapePicker)
