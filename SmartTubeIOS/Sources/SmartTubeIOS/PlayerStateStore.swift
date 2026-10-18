@@ -134,8 +134,11 @@ public final class PlayerStateStore {
         storeLog.notice("[PlayerStateStore] play — presentation set to .fullScreen")
     }
 
-    /// The Current Queue checked for a successor (`.shared` in the app; tests give the store their own).
-    @ObservationIgnored var queue = CurrentQueueStore.shared
+    /// Adoption, loading and navigation must use the same queue (`.shared` in the app).
+    var queue: any PlaybackQueue {
+        get { vm.queue }
+        set { vm.queue = newValue }
+    }
 
     /// The playing video picked again from another list keeps playing but takes that list's position, so Play Next
     /// and auto-advance follow the queue the user started it from last. A successor in that queue enables Next

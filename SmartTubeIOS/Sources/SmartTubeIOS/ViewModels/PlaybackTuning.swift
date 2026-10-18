@@ -10,6 +10,8 @@ enum PlaybackTuning {
     static let shortsForwardBufferSeconds: TimeInterval = 3
     static let shortsPreloadMaximumHeight = 720
     static let idleResourceRetention: Duration = .seconds(60)
+    /// Re-read the queue after reselection without keeping an action alive through endless changes.
+    static let maxQueueContextAttempts = 3
     /// A stream that never reports readiness must yield to the next playback source.
     static let itemReadinessTimeout: Duration = .seconds(15)
     static let bufferReleaseDelay: Duration = .seconds(5)

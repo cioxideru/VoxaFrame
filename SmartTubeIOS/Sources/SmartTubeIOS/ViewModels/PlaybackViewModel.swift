@@ -466,6 +466,7 @@ public final class PlaybackViewModel {
 
     // MARK: - Dependencies
 
+    @ObservationIgnored var queue: any PlaybackQueue = CurrentQueueStore.shared
     let api: InnerTubeAPI
     let sponsorBlock: SponsorBlockService
     let deArrow: DeArrowService

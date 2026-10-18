@@ -611,31 +611,25 @@ extension PlaybackViewModel {
                 if let nextInfo { await VideoPreloadCache.shared.store(nextInfo: nextInfo, for: video.id) }
             }
 
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, currentVideo?.hasSamePlaybackSource(as: video) == true else { return }
 
             if let nextInfo, !nextInfo.relatedVideos.isEmpty {
                 relatedVideos = nextInfo.relatedVideos.filter { $0.id != video.id }
-                hasNext = !relatedVideos.isEmpty
             } else {
                 let fallbackQuery = video.title.isEmpty ? nil : video.title
                 if let query = fallbackQuery {
                     let searched = try? await api.search(query: query)
+                    guard !Task.isCancelled, currentVideo?.hasSamePlaybackSource(as: video) == true else { return }
                     relatedVideos =
                         searched?.videos.filter { $0.id != video.id }.prefix(InnerTubeClients.maxVideoResults).map {
                             $0
                         } ?? []
-                    hasNext = !relatedVideos.isEmpty
+                } else {
+                    relatedVideos = []
                 }
             }
-            // If the related-videos fetch resolved hasNext=false but this is a queue
-            // video that still has a subsequent item, restore hasNext=true so the
-            // next button stays enabled for queue playback.
-            if !hasNext,
-                video.playlistId == CurrentQueueStore.playlistID,
-                let idx = video.playlistIndex
-            {
-                hasNext = await CurrentQueueStore.shared.videoAt(index: idx + 1) != nil
-            }
+            await updateNextAvailability(for: video)
+            guard !Task.isCancelled, currentVideo?.hasSamePlaybackSource(as: video) == true else { return }
             if let status = nextInfo?.likeStatus { likeDislike.setLikeStatus(status) }
             if let ch = nextInfo?.chapters, !ch.isEmpty {
                 chapters = ch
@@ -655,6 +649,24 @@ extension PlaybackViewModel {
             #endif
 
         }  // end of non-inject related-videos branch
+    }
+
+    private func updateNextAvailability(for video: Video) async {
+        // A same-source selection can adopt another queue while either the API or queue lookup is suspended.
+        for _ in 0..<PlaybackTuning.maxQueueContextAttempts {
+            guard !Task.isCancelled, parkedVideoId == nil,
+                let current = currentVideo, current.hasSamePlaybackSource(as: video)
+            else { return }
+            var canAdvance = !relatedVideos.isEmpty
+            if !canAdvance, let index = CurrentQueueStore.queueIndex(of: current) {
+                canAdvance = await queue.videoAt(index: index + 1) != nil
+            }
+            guard !Task.isCancelled, parkedVideoId == nil else { return }
+            guard hasCurrentQueueContext(current) else { continue }
+            hasNext = canAdvance
+            return
+        }
+        playerLog.notice("Next availability kept after repeated queue changes")
     }
 
     private func prefetchNeighboursIfNeeded(info: PlayerInfo) {

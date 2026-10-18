@@ -4,6 +4,14 @@ import os
 
 private let playerLog = ViewModelLogger(category: "Player")
 
+protocol PlaybackQueue: Sendable {
+    func videoAt(index: Int) async -> Video?
+    func remainingVideos(after index: Int) async -> [Video]
+    func clear() async
+}
+
+extension CurrentQueueStore: PlaybackQueue {}
+
 // MARK: - Queue, History & Chapter Navigation
 
 extension PlaybackViewModel {
@@ -17,16 +25,16 @@ extension PlaybackViewModel {
     func prefetchQueueVideo(at index: Int) {
         let sponsorCats = settings.activeSponsorCategories
         let token = currentAuthToken
-        // Pre-warm BotGuardWebViewRunner for rqh=1 queue videos — fire once, no-ops when ready.
-        #if canImport(WebKit)
-        if !BotGuardWebViewRunner.shared.isReady {
-            Task(priority: .background) {
-                await BotGuardWebViewRunner.shared.prepare()
+        Task(priority: .userInitiated) { [weak self, queue] in
+            guard let next = await queue.videoAt(index: index) else { return }
+            // Pre-warm only when the queue actually has a video to prepare.
+            #if canImport(WebKit)
+            if !BotGuardWebViewRunner.shared.isReady {
+                Task(priority: .background) {
+                    await BotGuardWebViewRunner.shared.prepare()
+                }
             }
-        }
-        #endif
-        Task(priority: .userInitiated) { [weak self] in
-            guard let next = await CurrentQueueStore.shared.videoAt(index: index) else { return }
+            #endif
             playerLog.notice("[prefetch] next-queue video index=\(index) id=\(next.id)")
             await VideoPreloadCache.shared.prefetch(
                 videoId: next.id,
@@ -37,7 +45,7 @@ extension PlaybackViewModel {
             // Also prefetch the one after — avoids a cold start if the user
             // taps "next" quickly before the first prefetch completes.
             guard let _ = self else { return }
-            let afterNext = await CurrentQueueStore.shared.videoAt(index: index + 1)
+            let afterNext = await queue.videoAt(index: index + 1)
             if let afterNext {
                 playerLog.notice("[prefetch] next+1 queue video index=\(index + 1) id=\(afterNext.id)")
                 await VideoPreloadCache.shared.prefetch(
@@ -52,26 +60,56 @@ extension PlaybackViewModel {
 
     // MARK: - Navigation
 
+    func hasCurrentQueueContext(_ video: Video) -> Bool {
+        currentVideo?.hasSamePlaybackSource(as: video) == true
+            && currentVideo?.playlistId == video.playlistId
+            && currentVideo?.playlistIndex == video.playlistIndex
+            && currentVideo?.setVideoId == video.setVideoId
+    }
+
     /// Play the next related video. Advances through the Current Queue if one is
     /// active; otherwise falls back to the first related (suggestion) video.
     public func playNext() {
-        if let idx = currentVideo?.playlistIndex,
-            currentVideo?.playlistId == CurrentQueueStore.playlistID
-        {
-            Task {
-                if let next = await CurrentQueueStore.shared.videoAt(index: idx + 1) {
-                    playerLog.notice("playNext (queue): index=\(idx + 1) id=\(next.id)")
-                    prefetchQueueVideo(at: idx + 2)
-                    load(video: next)
-                } else {
-                    playerLog.notice("playNext (queue): exhausted at index=\(idx), clearing")
-                    await CurrentQueueStore.shared.clear()
-                    playNextFromSuggestions()
-                }
-            }
+        guard parkedVideoId == nil else { return }
+        if let source = currentVideo, CurrentQueueStore.queueIndex(of: source) != nil {
+            Task { await advanceQueue(for: source, autoplay: false) }
             return
         }
         playNextFromSuggestions()
+    }
+
+    private func advanceQueue(for source: Video, autoplay: Bool) async {
+        // Reselection changes queue context without changing the playback source or cancelling this action.
+        for _ in 0..<PlaybackTuning.maxQueueContextAttempts {
+            guard parkedVideoId == nil, let current = currentVideo, current.hasSamePlaybackSource(as: source)
+            else { return }
+            guard let index = CurrentQueueStore.queueIndex(of: current) else {
+                if autoplay { autoplayFromRecommendations() } else { playNextFromSuggestions() }
+                return
+            }
+            let shuffle = autoplay && settings.queueShuffleEnabled
+            let next: Video?
+            if shuffle {
+                next = await queue.remainingVideos(after: index).randomElement()
+            } else {
+                next = await queue.videoAt(index: index + 1)
+            }
+            guard parkedVideoId == nil, currentVideo?.hasSamePlaybackSource(as: source) == true else { return }
+            guard hasCurrentQueueContext(current) else { continue }
+            if let next {
+                playerLog.notice("Queue advance: id=\(next.id) autoplay=\(autoplay) shuffle=\(shuffle)")
+                if !shuffle { prefetchQueueVideo(at: index + 2) }
+                load(video: next)
+                return
+            }
+            await queue.clear()
+            guard parkedVideoId == nil, currentVideo?.hasSamePlaybackSource(as: source) == true else { return }
+            guard hasCurrentQueueContext(current) else { continue }
+            if autoplay { autoplayFromRecommendations() } else { playNextFromSuggestions() }
+            return
+        }
+        playerLog.notice("Queue advance stopped after repeated queue changes")
+        if autoplay { videoEnded = true }
     }
 
     private func playNextFromSuggestions() {
@@ -110,6 +148,7 @@ extension PlaybackViewModel {
     }
 
     public func handlePlaybackEnd() {
+        guard parkedVideoId == nil else { return }
         if let onPlaybackEnd {
             onPlaybackEnd()
             return
@@ -119,32 +158,8 @@ extension PlaybackViewModel {
             player.rate = Float(settings.playbackSpeed)
             return
         }
-        if let idx = currentVideo?.playlistIndex,
-            currentVideo?.playlistId == CurrentQueueStore.playlistID
-        {
-            Task {
-                if settings.queueShuffleEnabled {
-                    let remaining = await CurrentQueueStore.shared.remainingVideos(after: idx)
-                    if let pick = remaining.randomElement() {
-                        playerLog.notice("Autoplay (queue, shuffle): random id=\(pick.id)")
-                        load(video: pick)
-                    } else {
-                        playerLog.notice("Autoplay (queue, shuffle): exhausted, falling back to recommendations")
-                        await CurrentQueueStore.shared.clear()
-                        autoplayFromRecommendations()
-                    }
-                } else {
-                    if let next = await CurrentQueueStore.shared.videoAt(index: idx + 1) {
-                        playerLog.notice("Autoplay (queue): index=\(idx + 1) id=\(next.id)")
-                        prefetchQueueVideo(at: idx + 2)
-                        load(video: next)
-                    } else {
-                        playerLog.notice("Autoplay (queue): exhausted, falling back to recommendations")
-                        await CurrentQueueStore.shared.clear()
-                        autoplayFromRecommendations()
-                    }
-                }
-            }
+        if let source = currentVideo, CurrentQueueStore.queueIndex(of: source) != nil {
+            Task { await advanceQueue(for: source, autoplay: true) }
             return
         }
         autoplayFromRecommendations()
