@@ -10,7 +10,10 @@ extension PlaybackViewModel {
     /// video has none and Yandex VOT is enabled, it is voice-over translated into that language.
     /// The player's per-video toggle (`voiceOverOverride`) overrides both checks.
     func applyAudioLanguagePolicy() {
-        guard currentVideo?.isDownloaded != true else { return }
+        if currentVideo?.isDownloaded == true {
+            applyOfflineTranslation()
+            return
+        }
         let forced = voiceOverOverride == true
         guard voiceOverOverride ?? settings.yandexVOTEnabled, let video = currentVideo, let info = playerInfo,
             let target = voiceOverTargetLanguage
@@ -59,10 +62,15 @@ extension PlaybackViewModel {
         )
     }
 
-    /// The default audio language when Yandex can translate into it (ru, en, kk), else `nil`.
+    /// Keep the saved track's controls reachable even when the online default is unsupported.
     var voiceOverTargetLanguage: String? {
-        settings.preferredAudioLanguage.map(Self.baseLanguage)
+        let preferred = settings.preferredAudioLanguage.map(Self.baseLanguage)
             .flatMap { YandexVOTClient.targetLanguages.contains($0) ? $0 : nil }
+        return preferred ?? currentVideo?.localTranslationLanguage
+    }
+
+    var hasAudioOptions: Bool {
+        currentVideo?.isDownloaded == true || availableAudioTracks.count > 1 || voiceOverTargetLanguage != nil
     }
 
     /// Holds or resumes the video while Yandex prepares the translation, keeping `isPlaying` in
@@ -96,8 +104,70 @@ extension PlaybackViewModel {
 
     /// Applies the player's translation toggles to the current video right away.
     func restartVoiceOver() {
+        offlineTranslationTask?.cancel()
+        offlineTranslationTask = nil
         voiceOver.cancelAndResume()
         applyAudioLanguagePolicy()
+    }
+
+    /// Offline starts honour the library's explicit selection, never the online auto-translation setting.
+    func applyOfflineTranslation() {
+        guard let video = currentVideo, video.isDownloaded, !isLoading, voiceOverOverride != false,
+            !isVoiceOverActive, offlineTranslationTask == nil
+        else { return }
+        // Resume/ready callbacks must leave a failure visible until an explicit retry clears it.
+        if voiceOver.videoId == video.id, case .failed = voiceOver.state { return }
+        voiceOver.keepsOriginalAudio = settings.yandexVOTKeepOriginalAudio
+        if voiceOverOverride == nil {
+            if let url = video.localTranslationFileURL { attachSavedTranslation(url, video: video) }
+            return
+        }
+        guard let target = voiceOverTargetLanguage else { return }
+        offlineTranslationTask = Task { [weak self, offlineTranslations] in
+            defer { if !Task.isCancelled { self?.offlineTranslationTask = nil } }
+            do {
+                let saved = try await offlineTranslations.savedTranslation(videoID: video.id, language: target)
+                guard let self, !Task.isCancelled,
+                    currentVideo?.hasSamePlaybackSource(as: video) == true
+                else { return }
+                if let saved {
+                    attachSavedTranslation(saved, video: video)
+                    return
+                }
+                let seconds = duration > 0 ? duration : (video.duration ?? 0)
+                guard seconds > 0, seconds <= YandexVOTClient.maximumDuration else {
+                    voiceOver.reportUnavailable(
+                        videoID: video.id,
+                        message: String(
+                            localized: "Translation is unavailable for this video duration.", bundle: .module))
+                    return
+                }
+                voiceOver.start(
+                    .init(
+                        videoId: video.id, duration: seconds, sourceLanguage: "auto", targetLanguage: target,
+                        livelyVoiceToken: settings.yandexVOTLivelyVoice && target == "ru"
+                            ? TokenManager.yandexVOTToken() : nil,
+                        originalAudioURL: nil, originalAudioHLSURL: nil,
+                        originalAudioUserAgent: InnerTubeClients.VisionOS.userAgent, isOfflineVideo: true),
+                    mainPlayer: player,
+                    setVideoPlaying: { [weak self] playing in self?.setPlayingForVoiceOver(playing) })
+            } catch {
+                guard let self, !Task.isCancelled,
+                    currentVideo?.hasSamePlaybackSource(as: video) == true
+                else { return }
+                voiceOver.reportUnavailable(
+                    videoID: video.id,
+                    message: String(
+                        localized: "The saved translation is unavailable. Download it again in Offline videos.",
+                        bundle: .module))
+            }
+        }
+    }
+
+    private func attachSavedTranslation(_ url: URL, video: Video) {
+        voiceOver.startLocal(
+            url: url, videoID: video.id, mainPlayer: player,
+            setVideoPlaying: { [weak self] playing in self?.setPlayingForVoiceOver(playing) })
     }
 
     private static func baseLanguage(_ code: String) -> String {

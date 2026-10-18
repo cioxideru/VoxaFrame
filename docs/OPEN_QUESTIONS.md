@@ -296,6 +296,34 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   use system background sessions; force-quitting the app does not promise continued downloads.
 - HLS uses its included audio with optional local VOT. External audio-file overrides require a
   direct video file; the UI explains this platform limit rather than attempting HLS composition.
+- PLAN-0029 OFFLINE follow-up: local starts now avoid a separate duration load before item
+  installation, queue prefetch and network artwork; local Next checks the current queue's successor
+  without delaying item preparation and rechecks context after a suspended lookup. The library
+  does not persist thumbnail bytes, so local lock-screen metadata has no artwork. Local preparation does not reserve network
+  priority. Saved translation selection survives parked-item reopening; an explicit player request
+  prefers the saved target-language track, then uses the original YouTube ID for live translation.
+  Live output is not saved automatically. A local live request stops on its first network error,
+  resumes original audio and keeps the error visible until an explicit retry. Online source-audio
+  acquisition is unchanged: the extra VISIONOS lookup is limited to local videos.
+  Offline AUDIO_REQUESTED polling re-uploads after three repeated polls, then fails with a localized
+  retry message after three more (two uploads per job attempt). Cancel/retry and removal/re-enqueue
+  start a fresh upload budget even if Yandex reuses its translation ID. At the existing 5–30-second poll delay this
+  adds 30–180 seconds before failure, excluding request/upload time. Item details expose waiting,
+  failure and retry states. Voice drift corrections require more than 1.5 seconds, a 10-second
+  cooldown and a budget of three per audio item; attachment, pause/resume and timeline jumps align separately.
+- Verification pending: the new protocol-fake unit tests and extended DownloadsPlaybackUITests
+  have not been run. Confirm full-screen opening from a mini player and after Stop on iPhone/iPad;
+  a late PiP didStart from before a new full-screen request is now rejected. Normal PiP entry
+  still minimizes. PiP stop clears an unfinished restoration so later PiP entry is not vetoed.
+  Repeated expand preserves the active cover's dismissal identity. Every minimize
+  logs its caller reason. The offline detail play action does not pop navigation or dismiss a sheet;
+  stale-cover dismissal remains hardening. Neither that dismissal nor the PiP race has been
+  established as the original device trigger; capture the new caller logs if collapse recurs.
+  Listen to saved/live translation, seek and change speed, then repeat without internet.
+  `[offline-start]` logs mark tap, file lookup, audio-session activation, asset preparation, item
+  installation, readiness and the first displayable iOS frame. Elapsed playback values start at
+  `load`; use log timestamps for tap-to-frame latency. No new latency/throughput measurement is
+  claimed, and the large background-response limitation above remains open.
 
 ## OQ-0019 — VoxaFrame redesign follow-ups
 

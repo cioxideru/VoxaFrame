@@ -64,7 +64,7 @@ enum OfflineUITestFixture {
             return result
         }
 
-        func resolve(video: Video, track: OfflineTrack) throws -> OfflineSource {
+        func resolve(video: Video, track: OfflineTrack, attempt: UUID) throws -> OfflineSource {
             if track.kind == .translation { return source(video, track: track, file: "voice.mp3") }
             let sources = try catalog(video: video)
             guard

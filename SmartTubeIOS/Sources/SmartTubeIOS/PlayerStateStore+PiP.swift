@@ -1,5 +1,6 @@
 #if os(iOS)
 import AVKit
+import os
 
 extension PlayerStateStore {
     /// PiP and its delegate must outlive the fullscreen view that PiP dismisses.
@@ -18,9 +19,16 @@ extension PlayerStateStore {
         let controller = AVPictureInPictureController(playerLayer: playerHostView.playerLayer)
         controller?.canStartPictureInPictureAutomaticallyFromInline = true
         let delegate = PiPDelegate(
-            onActiveChange: { [weak self] active in self?.pictureInPictureChanged(active: active) },
-            onRestore: { [weak self] completion in
-                guard let self else {
+            onWillStart: { [weak self, weak controller] in
+                guard let self, let controller, self.pipController === controller else { return }
+                pictureInPictureWillStart()
+            },
+            onActiveChange: { [weak self, weak controller] active in
+                guard let self, let controller, self.pipController === controller else { return }
+                pictureInPictureChanged(active: active)
+            },
+            onRestore: { [weak self, weak controller] completion in
+                guard let self, let controller, self.pipController === controller else {
                     completion(false)
                     return
                 }
@@ -31,12 +39,33 @@ extension PlayerStateStore {
         pipController = controller
     }
 
+    func pictureInPictureWillStart() {
+        pipStartRequestID = fullScreenRequestID
+        storeLog.notice(
+            "[PlayerStateStore] PiP willStart presentation=\(String(describing: self.presentation), privacy: .public)")
+    }
+
     func pictureInPictureChanged(active: Bool) {
         isPiPActive = active
-        guard currentVideo != nil else { return }
+        if !active {
+            pipStartRequestID = nil
+            let completion = pipRestoreCompletion
+            pipRestoreCompletion = nil
+            completion?(false)
+        }
+        guard currentVideo != nil else {
+            if active { pipController?.stopPictureInPicture() }
+            return
+        }
         if active {
+            // A library tap/restore can expand while AVKit is still entering PiP for the old cover.
+            guard pipStartRequestID == fullScreenRequestID, pipRestoreCompletion == nil else {
+                storeLog.notice("[PlayerStateStore] PiP didStart ignored — newer full-screen request or restoration")
+                pipController?.stopPictureInPicture()
+                return
+            }
             vm.updateNowPlayingInfo()
-            minimize()
+            minimize(reason: "pip-did-start")
         } else if presentation == .pictureInPicture {
             presentation = .miniPlayer
         }

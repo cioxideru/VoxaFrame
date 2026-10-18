@@ -40,6 +40,7 @@ enum AccessibilityID {
     static func offlineEntry(_ id: String) -> String { "offline.entry.\(id)" }
     static func offlinePlay(_ id: String) -> String { "offline.play.\(id)" }
     static func offlineDownload(_ id: String) -> String { "offline.download.\(id)" }
+    static func offlineSaved(_ id: String) -> String { "offline.saved.\(id)" }
     static func offlineDownloadTranslation(_ language: String) -> String { "offline.translation.\(language)" }
 
     // System-owned identifiers used only by iPad window-layout UI tests.

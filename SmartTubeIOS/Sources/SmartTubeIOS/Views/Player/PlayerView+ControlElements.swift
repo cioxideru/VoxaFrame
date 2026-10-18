@@ -259,7 +259,11 @@ extension PlayerControlsOverlay {
         HStack(spacing: VFSpace.s8) {
             Button {
                 #if os(iOS)
-                if store.settings.miniPlayerEnabled { playerState.minimize() } else { playerState.stop() }
+                if store.settings.miniPlayerEnabled {
+                    playerState.minimize(reason: "back-controls")
+                } else {
+                    playerState.stop()
+                }
                 #elseif os(macOS)
                 macBackAction()
                 #else

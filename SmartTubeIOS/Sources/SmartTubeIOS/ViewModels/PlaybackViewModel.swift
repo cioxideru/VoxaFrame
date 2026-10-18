@@ -28,7 +28,10 @@ public final class PlaybackViewModel {
     let captionsManager: CaptionsManager
     let audioManager: AudioTrackManager
     let qualityManager: PlaybackQualityManager
-    let voiceOver = VoiceOverTranslationController()
+    var voiceOver: VoiceOverTranslationController
+    @ObservationIgnored lazy var offlineTranslations: any OfflineTranslationFinding = OfflineCoordinator.shared
+    @ObservationIgnored var offlineTranslationTask: Task<Void, Never>?
+    @ObservationIgnored var offlineMedia: any OfflineMediaPreparing = OfflineMediaPreparer()
     /// The player's per-video translation toggle: `nil` follows Settings, `true` translates even
     /// when a matching audio track exists, `false` keeps this video untranslated.
     var voiceOverOverride: Bool?
@@ -268,7 +271,7 @@ public final class PlaybackViewModel {
     // MARK: - AVPlayer
 
     public internal(set) var player: AVPlayer
-    @ObservationIgnored let playbackDemand = PlaybackDemandAdapter()
+    @ObservationIgnored var playbackDemand = PlaybackDemandAdapter()
     @ObservationIgnored var shortsPreloader: ShortsPreloader?
     // Created and replaced on MainActor; nonisolated access is only for cleanup after the last reference is released.
     @ObservationIgnored nonisolated(unsafe) var timeObserver: (player: AVPlayer, token: Any)?
@@ -486,6 +489,7 @@ public final class PlaybackViewModel {
         let player = AVPlayer()
         self.player = player
         self.api = api
+        self.voiceOver = VoiceOverTranslationController(api: api)
         self.tracker = WatchtimeTracker(api: api)
         self.sponsorBlock = sponsorBlock
         self.deArrow = deArrow

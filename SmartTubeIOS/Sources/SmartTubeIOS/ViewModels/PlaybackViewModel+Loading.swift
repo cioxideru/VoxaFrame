@@ -106,7 +106,9 @@ extension PlaybackViewModel {
         // so its PlayerInfo is warm in VideoPreloadCache before it is needed.
         // This fires immediately on load() so the full video duration is
         // available as warm-up time, rather than waiting until playback ends.
-        if video.playlistId == CurrentQueueStore.playlistID,
+        if video.isDownloaded {
+            hasNext = false
+        } else if video.playlistId == CurrentQueueStore.playlistID,
             let nextIndex = video.playlistIndex.map({ $0 + 1 })
         {
             prefetchQueueVideo(at: nextIndex)
@@ -122,6 +124,7 @@ extension PlaybackViewModel {
         else { return false }
         playerLog.notice("[fix12] same-video re-open — reusing parked AVPlayerItem for \(video.id)")
         parkedVideoId = nil
+        logLocalPlaybackStep("parked item reused")
         #if canImport(WebKit)
         cancelEarlyWebViewExtraction()
         #endif
@@ -185,6 +188,8 @@ extension PlaybackViewModel {
         chapters = []
         captionsManager.reset()
         audioManager.reset()
+        offlineTranslationTask?.cancel()
+        offlineTranslationTask = nil
         voiceOver.stop()
         voiceOverOverride = nil
         endCards = []
@@ -379,6 +384,8 @@ extension PlaybackViewModel {
         player.pause()
         // Keep the item briefly for same-video reopen; pressure or idle timeout releases it.
         parkedVideoId = currentVideo?.id
+        offlineTranslationTask?.cancel()
+        offlineTranslationTask = nil
         voiceOver.stop()
         isPlaying = false
         wasPlayingBeforeSuspend = false
@@ -651,7 +658,7 @@ extension PlaybackViewModel {
         }  // end of non-inject related-videos branch
     }
 
-    private func updateNextAvailability(for video: Video) async {
+    func updateNextAvailability(for video: Video) async {
         // A same-source selection can adopt another queue while either the API or queue lookup is suspended.
         for _ in 0..<PlaybackTuning.maxQueueContextAttempts {
             guard !Task.isCancelled, parkedVideoId == nil,

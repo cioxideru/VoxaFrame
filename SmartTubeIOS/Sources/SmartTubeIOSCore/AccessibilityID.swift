@@ -21,6 +21,7 @@ public enum AccessibilityID {
     public static var offlinePlaybackStatus: String { "offline.playbackStatus" }
     public static var offlineFindVariants: String { "offline.findVariants" }
     public static func offlineDownload(_ id: String) -> String { "offline.download.\(id)" }
+    public static func offlineSaved(_ id: String) -> String { "offline.saved.\(id)" }
     public static func offlineDownloadTranslation(_ language: String) -> String { "offline.translation.\(language)" }
     public static var offlineSelectionVideo: String { "offline.selection.video" }
     public static var offlineSelectionAudio: String { "offline.selection.audio" }

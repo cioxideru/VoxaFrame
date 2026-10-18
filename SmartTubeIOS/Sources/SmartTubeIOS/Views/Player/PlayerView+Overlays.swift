@@ -274,10 +274,9 @@ extension PlayerView {
     }
     #endif
 
-    /// The audio picker also holds the Yandex translation toggles, so it is offered whenever
-    /// the default audio language is one Yandex can translate into.
+    /// Local videos need access to the translation language picker even before a language is chosen.
     private var shouldShowAudioTrackInMoreMenu: Bool {
-        let hasChoice = vm.availableAudioTracks.count > 1 || vm.voiceOverTargetLanguage != nil
+        let hasChoice = vm.hasAudioOptions
         #if os(tvOS)
         return hasChoice
         #else

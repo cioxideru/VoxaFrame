@@ -178,11 +178,17 @@ private struct LandscapePresenter<Item: Identifiable & Hashable>: UIViewControll
             let hc = LandscapeAwareHostingController(rootView: contentBuilder(currentItem))
             hc.modalPresentationStyle = .fullScreen
             hc.view.backgroundColor = .black
+            let presentedBinding = latestBinding
             hc.onDismiss = { [weak self, weak hc] in
                 guard let self, let hc, self.hostedVC === hc else { return }
                 self.presentationGeneration += 1
                 self.clearPresentation()
-                self.latestBinding?.wrappedValue = nil
+                // A later offline/online open may already own the live binding.
+                presentedBinding?.wrappedValue = nil
+                Task { @MainActor [weak self, weak root] in
+                    guard let root else { return }
+                    self?.sync(root: root)
+                }
             }
             hostedVC = hc
             presentedID = AnyHashable(currentItem.id)

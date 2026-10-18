@@ -1,5 +1,8 @@
 import SmartTubeIOSCore
 import SwiftUI
+import os
+
+private let offlineDetailLog = Logger(subsystem: appSubsystem, category: "OfflinePlayback")
 
 /// Saved-video page: pick saved audio and translation, play a saved file, add variants online.
 struct OfflineVideoDetail: View {
@@ -139,10 +142,11 @@ struct OfflineVideoDetail: View {
                         Button {
                             enqueue(track, of: entry)
                         } label: {
-                            variantRow(track.label, saved: saved, loading: loading)
+                            variantRow(track.label, track: track, saved: saved)
                         }
                         .disabled(saved || loading || isLocked)
-                        .accessibilityIdentifier(AccessibilityID.offlineDownload(track.id))
+                        .accessibilityIdentifier(
+                            saved ? AccessibilityID.offlineSaved(track.id) : AccessibilityID.offlineDownload(track.id))
                     }
                 } header: {
                     Text("Add video quality or audio", bundle: .module)
@@ -155,11 +159,13 @@ struct OfflineVideoDetail: View {
                             enqueue(track, of: entry)
                         } label: {
                             variantRow(
-                                OfflinePresentation.languageName(language), saved: saved, loading: isLoading(track))
+                                OfflinePresentation.languageName(language), track: track, saved: saved)
                         }
-                        // Stays enabled while downloading, as before: a second tap is deduplicated by the store.
-                        .disabled(saved || isLocked)
-                        .accessibilityIdentifier(AccessibilityID.offlineDownloadTranslation(language))
+                        .disabled(saved || isLoading(track) || isLocked)
+                        .accessibilityIdentifier(
+                            saved
+                                ? AccessibilityID.offlineSaved(track.id)
+                                : AccessibilityID.offlineDownloadTranslation(language))
                     }
                 } header: {
                     Text("Add Yandex translation (online)", bundle: .module)
@@ -180,7 +186,15 @@ struct OfflineVideoDetail: View {
     /// Checked again at tap time: a removal may have started in another window.
     private func enqueue(_ track: OfflineTrack, of entry: OfflineEntry) {
         guard !isLocked else { return }
-        coordinator.enqueue(video: entry.video, tracks: [track])
+        if let job = job(for: track), OfflinePresentation.action(job) == .retry {
+            coordinator.retry(job)
+        } else {
+            coordinator.enqueue(video: entry.video, tracks: [track])
+        }
+    }
+
+    private func job(for track: OfflineTrack) -> OfflineJob? {
+        coordinator.snapshot.jobs.last { $0.videoID == videoID && $0.track.id == track.id }
     }
 
     private func isLoading(_ track: OfflineTrack) -> Bool {
@@ -189,14 +203,28 @@ struct OfflineVideoDetail: View {
         }
     }
 
-    private func variantRow(_ name: String, saved: Bool, loading: Bool) -> some View {
-        HStack {
-            Text(name).foregroundStyle(.primary)
+    private func variantRow(_ name: String, track: OfflineTrack, saved: Bool) -> some View {
+        let job = job(for: track)
+        return HStack {
+            VStack(alignment: .leading, spacing: VFSpace.s4) {
+                Text(name).foregroundStyle(.primary)
+                if !saved, let job {
+                    OfflinePresentation.status(job).label
+                    if let reason = job.error {
+                        Text(OfflinePresentation.failureText(reason))
+                            .font(.footnote)
+                            .foregroundStyle(VFColor.danger)
+                    }
+                }
+            }
             Spacer(minLength: VFSpace.s8)
             if saved {
                 Text("Saved", bundle: .module).foregroundStyle(.secondary)
-            } else if loading {
-                Text("Downloading…", bundle: .module).foregroundStyle(.secondary)
+            } else if let job, OfflinePresentation.action(job) == .retry {
+                Text("Retry", bundle: .module)
+            } else if isLoading(track) {
+                ProgressView()
+                    .accessibilityHidden(true)
             } else {
                 // Semantic colour and a symbol: the macOS and tvOS accent has no contrast-safe text variant.
                 HStack(spacing: VFSpace.s4) {
@@ -213,6 +241,7 @@ struct OfflineVideoDetail: View {
         return asset.track.label + " · " + sizes.map { "\($0.width)×\($0.height)" }.joined(separator: ", ")
     }
     private func play(_ entry: OfflineEntry, asset: OfflineAsset) {
+        offlineDetailLog.notice("[offline-start] tap videoId=\(entry.id, privacy: .public)")
         Task {
             do {
                 let audio =

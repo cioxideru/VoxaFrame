@@ -2,6 +2,13 @@ import Foundation
 
 /// Shared timing values for initial playback, fallback attempts and quality changes.
 enum PlaybackTuning {
+    static let voiceAlignmentTolerance: TimeInterval = 0.35
+    static let voiceSeekTolerance: TimeInterval = 0.1
+    static let voiceDriftThreshold: TimeInterval = 1.5
+    static let voiceDriftCorrectionInterval: Duration = .seconds(10)
+    static let voiceDriftCorrectionLimit = 3
+    static let offlineTranslationReuploadPolls = 3
+    static let offlineTranslationUploadLimit = 2
     static let levelFeedbackDuration: Duration = .seconds(1.5)
     static let macControlsHoverThrottle: Duration = .milliseconds(500)
     static let playbackDemandRecovery: Duration = .seconds(1)

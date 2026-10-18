@@ -289,7 +289,7 @@ public final class OfflineCoordinator {
             }
             do {
                 apply(try await store.update(attempt: job.attempt, state: .resolving))
-                let source = try await resolver.resolve(video: entry.video, track: job.track)
+                let source = try await resolver.resolve(video: entry.video, track: job.track, attempt: job.attempt)
                 try Task.checkCancellation()
                 guard snapshot.jobs.contains(where: { $0.attempt == job.attempt && $0.state == .resolving }) else {
                     return
@@ -416,20 +416,30 @@ public final class OfflineCoordinator {
         drainedSessions.remove(identifier)
         completion()
     }
-    func playbackVideo(
-        entry: OfflineEntry, videoAsset: OfflineAsset, audio: OfflineAsset?, translation: OfflineAsset?
-    ) async throws -> Video {
-        guard videoAsset.track.kind != .hls || audio == nil else { throw OfflineLibraryError.unavailable }
-        var video = entry.video
-        video.localFileURL = try await store.fileURL(videoAsset)
-        if let audio { video.localAudioFileURL = try await store.fileURL(audio) }
-        if let translation { video.localTranslationFileURL = try await store.fileURL(translation) }
-        guard videoAsset.track.hasAudio || audio != nil else { throw OfflineLibraryError.missingAudio }
-        return video
-    }
 }
 
 extension OfflineCoordinator {
+    func playbackVideo(
+        entry: OfflineEntry, videoAsset: OfflineAsset, audio: OfflineAsset?, translation: OfflineAsset?
+    ) async throws -> Video {
+        let started = Date()
+        defer {
+            offlineLibraryLog.notice(
+                "[offline-start] file lookup elapsedMs=\(Int(Date().timeIntervalSince(started) * 1_000)) videoId=\(entry.id, privacy: .public)"
+            )
+        }
+        guard videoAsset.track.kind != .hls || audio == nil else { throw OfflineLibraryError.unavailable }
+        var video = entry.video
+        video.localFileURL = try await store.fileURL(videoAsset)
+        video.localAudioFileURL = nil
+        video.localTranslationFileURL = nil
+        if let audio { video.localAudioFileURL = try await store.fileURL(audio) }
+        if let translation { video.localTranslationFileURL = try await store.fileURL(translation) }
+        video.localTranslationLanguage = translation?.track.language
+        guard videoAsset.track.hasAudio || audio != nil else { throw OfflineLibraryError.missingAudio }
+        return video
+    }
+
     func remove(videoID: String?, jobID: UUID? = nil) {
         guard !persistenceBlocked else { return }
         Task {

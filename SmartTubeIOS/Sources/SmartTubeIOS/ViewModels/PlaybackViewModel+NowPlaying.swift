@@ -184,7 +184,13 @@ extension PlaybackViewModel {
         // never captures self. MediaPlayer calls the closure on its private serial queue;
         // capturing self (a @MainActor-isolated type) causes Swift 6 to assert actor
         // isolation via dispatch_assert_queue and throw EXC_BREAKPOINT (fix238).
-        if let thumbURL = video.thumbnailURL {
+        // OfflineLibraryStore saves the remote thumbnail URL, not image bytes (OQ-0019).
+        // Clear the identity too, so an earlier online fetch cannot publish artwork after this local start.
+        if video.isDownloaded {
+            cachedArtwork = nil
+            cachedArtworkVideoID = nil
+        }
+        if !video.isDownloaded, let thumbURL = video.thumbnailURL {
             let snapshot: UIImage = cachedArtwork ?? UIImage()
             let artwork = MPMediaItemArtwork(
                 boundsSize: CGSize(width: 600, height: 600),

@@ -15,12 +15,12 @@ extension PlaybackViewModel {
 
     func loadAsync(video: Video, prepared: PreparedShort? = nil) async {
         guard await activatePlaybackAudioSession(), currentVideo?.id == video.id else { return }
+        logLocalPlaybackStep("audio session active")
         prepareStreamLoading(video: video)
 
+        if await startLocalPlayback(video: video) { return }
         if let prepared, await startPreparedShort(prepared, video: video) { return }
         guard !Task.isCancelled, currentVideo?.id == video.id else { return }
-
-        if startLocalPlayback(video: video) { return }
 
         do {
             try await loadPrimaryStream(video: video)

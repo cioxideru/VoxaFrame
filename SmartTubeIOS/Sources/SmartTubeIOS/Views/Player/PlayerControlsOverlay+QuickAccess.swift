@@ -64,7 +64,7 @@ extension PlayerControlsOverlay {
                 .playerOptionPanelTrigger(.quality)
             }
 
-            if vm.availableAudioTracks.count > 1 || vm.voiceOverTargetLanguage != nil {
+            if vm.hasAudioOptions {
                 quickAccessButton(
                     systemImage: AppSymbol.audioTrack,
                     label: audioTrackLabel,

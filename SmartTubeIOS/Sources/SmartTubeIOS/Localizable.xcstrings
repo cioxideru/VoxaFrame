@@ -1,6 +1,74 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "A new translation needs internet. Connect and retry, or choose a saved translation in Offline videos." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A new translation needs internet. Connect and retry, or choose a saved translation in Offline videos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для нового перевода нужен интернет. Подключитесь и повторите попытку или выберите сохранённый перевод в офлайн-библиотеке."
+          }
+        }
+      }
+    },
+    "The saved translation is unavailable. Download it again in Offline videos." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The saved translation is unavailable. Download it again in Offline videos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранённый перевод недоступен. Скачайте его заново в офлайн-библиотеке."
+          }
+        }
+      }
+    },
+    "Translation is unavailable for this video duration." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Translation is unavailable for this video duration."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевод недоступен для видео такой длительности."
+          }
+        }
+      }
+    },
+    "Saved translations play without internet. A new live translation needs internet and is not saved; download it in Offline videos for later." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved translations play without internet. A new live translation needs internet and is not saved; download it in Offline videos for later."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранённый перевод работает без интернета. Новый перевод требует интернета и не сохраняется; для просмотра позже скачайте его в офлайн-библиотеке."
+          }
+        }
+      }
+    },
     "" : {
 
     },
@@ -28633,6 +28701,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Без перевода"
+          }
+        }
+      }
+    },
+    "Yandex did not accept the source audio. Retry the translation download." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yandex did not accept the source audio. Retry the translation download."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Яндекс не принял исходное аудио. Повторите загрузку перевода."
           }
         }
       }

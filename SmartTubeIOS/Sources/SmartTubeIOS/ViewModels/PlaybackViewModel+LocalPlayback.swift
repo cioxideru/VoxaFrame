@@ -13,23 +13,26 @@ private let playerLog = ViewModelLogger(category: "Player")
 
 extension PlaybackViewModel {
 
-    func startLocalPlayback(video: Video) -> Bool {
+    func startLocalPlayback(video: Video) async -> Bool {
         guard video.localFileURL != nil else { return false }
         relatedVideos = []
         hasNext = false
         itemObserverTask?.cancel()
-        itemObserverTask = Task { [weak self] in
+        itemObserverTask = Task { [weak self, offlineMedia] in
             do {
-                let item = try await OfflineMedia.item(video: video)
-                let localDuration = try await item.asset.load(.duration).seconds
+                let item = try await offlineMedia.item(video: video)
                 guard let self, !Task.isCancelled, currentVideo?.hasSamePlaybackSource(as: video) == true else {
                     return
                 }
-                if localDuration.isFinite, localDuration > 0 { duration = localDuration }
+                logLocalPlaybackStep("asset prepared")
+                if let knownDuration = video.duration, knownDuration.isFinite, knownDuration > 0 {
+                    duration = knownDuration
+                }
                 item.audioTimePitchAlgorithm = .spectral
                 itemObserverTask = nil
-                observeLocalPlayerItem(item, video: video)
+                observeLocalPlayerItem(item)
                 player.replaceCurrentItem(with: item)
+                logLocalPlaybackStep("item installed")
                 observePlaybackEndAndStalls(for: item)
                 #if canImport(UIKit)
                 setupRemoteCommandCenter()
@@ -45,27 +48,37 @@ extension PlaybackViewModel {
                 isLoading = false
             }
         }
+        // Queue availability must not delay local item preparation or use pre-activation context.
+        await updateNextAvailability(for: video)
+        #if canImport(UIKit)
+        if !Task.isCancelled, parkedVideoId == nil, currentVideo?.hasSamePlaybackSource(as: video) == true {
+            updateNowPlayingInfo()
+        }
+        #endif
         // A local request never falls through to a remote stream, even if its file is gone.
         return true
     }
 
-    private func observeLocalPlayerItem(_ item: AVPlayerItem, video: Video) {
+    func logLocalPlaybackStep(_ step: String) {
+        guard let video = currentVideo, video.isDownloaded else { return }
+        let elapsed = Int(Date().timeIntervalSince(videoLoadStartedAt) * 1_000)
+        playerLog.notice("[offline-start] \(step) elapsedMs=\(elapsed) videoId=\(video.id)")
+    }
+
+    private func observeLocalPlayerItem(_ item: AVPlayerItem) {
         itemObserverTask?.cancel()
         itemObserverTask = Task { [weak self] in
             for await status in item.statusStream(timeout: PlaybackTuning.itemReadinessTimeout) {
                 guard let self, !Task.isCancelled, self.player.currentItem === item else { return }
                 switch status {
                 case .readyToPlay:
-                    playerLog.notice(
-                        "[benchmark] readyToPlay — local-file — videoId=\(video.id) title=\(video.title)")
+                    self.timeToPlayMs = Int(Date().timeIntervalSince(self.videoLoadStartedAt) * 1_000)
+                    self.lastSuccessfulStreamType = "local-file"
+                    self.logLocalPlaybackStep("readyToPlay")
+                    self.updateInitialItemDuration(item)
                     // OfflineMedia already selected the saved audio; online language preferences must not replace it.
-                    if let translation = video.localTranslationFileURL {
-                        self.voiceOver.keepsOriginalAudio = self.settings.yandexVOTKeepOriginalAudio
-                        self.voiceOver.startLocal(
-                            url: translation, videoID: video.id, mainPlayer: self.player,
-                            setVideoPlaying: { [weak self] playing in self?.setPlayingForVoiceOver(playing) })
-                    }
                     self.isLoading = false
+                    self.applyOfflineTranslation()
                 case .failed:
                     playerLog.error("❌ local-file AVPlayerItem failed: \(ViewModelLogger.errorSummary(item.error))")
                     self.error = item.error

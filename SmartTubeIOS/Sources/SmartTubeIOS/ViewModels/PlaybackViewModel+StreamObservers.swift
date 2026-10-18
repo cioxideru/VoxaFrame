@@ -104,7 +104,7 @@ extension PlaybackViewModel {
         }
     }
 
-    private func updateInitialItemDuration(_ item: AVPlayerItem) {
+    func updateInitialItemDuration(_ item: AVPlayerItem) {
         let itemDur = item.duration.seconds
         if itemDur.isFinite && itemDur > 0 {
             let prevDur = self.duration

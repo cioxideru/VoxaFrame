@@ -46,7 +46,11 @@ extension PlayerView {
                 playerLifecycleLog.notice(
                     "[PlayerView] backButton tapped — miniPlayerEnabled=\(store.settings.miniPlayerEnabled) presentation=\(String(describing: playerState.presentation))"
                 )
-                if store.settings.miniPlayerEnabled { playerState.minimize() } else { playerState.stop() }
+                if store.settings.miniPlayerEnabled {
+                    playerState.minimize(reason: "back-overlay")
+                } else {
+                    playerState.stop()
+                }
                 playerLifecycleLog.notice(
                     "[PlayerView] backButton — done, presentation=\(String(describing: playerState.presentation))")
                 #else
@@ -207,7 +211,7 @@ extension PlayerView {
                     onLongPressEnd: { vm.endHoldSpeed() },
                     onSwipeDown: {
                         if store.settings.miniPlayerEnabled {
-                            playerState.minimize()
+                            playerState.minimize(reason: "swipe-down")
                         } else {
                             playerState.stop()
                         }

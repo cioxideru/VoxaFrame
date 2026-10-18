@@ -2,6 +2,15 @@ import AVFoundation
 import Foundation
 import SmartTubeIOSCore
 
+@MainActor
+protocol OfflineMediaPreparing {
+    func item(video: Video) async throws -> AVPlayerItem
+}
+
+struct OfflineMediaPreparer: OfflineMediaPreparing {
+    func item(video: Video) async throws -> AVPlayerItem { try await OfflineMedia.item(video: video) }
+}
+
 /// AVFoundation loads media metadata asynchronously; no file reads run on the UI actor.
 enum OfflineMedia {
     static func validate(_ url: URL, track: OfflineTrack, systemPackage: Bool) async throws {

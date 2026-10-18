@@ -29,8 +29,8 @@ private final class OfflineFakeTransport: OfflineTransporting, @unchecked Sendab
 }
 private struct OfflineFakeResolver: OfflineResolving {
     let track = OfflineTrack(id: "test-muxed", kind: .video, label: "360p H.264", hasAudio: true)
-    func catalog(video: Video) throws -> [OfflineSource] { [try resolve(video: video, track: track)] }
-    func resolve(video: Video, track: OfflineTrack) throws -> OfflineSource {
+    func catalog(video: Video) throws -> [OfflineSource] { [try resolve(video: video, track: track, attempt: UUID())] }
+    func resolve(video: Video, track: OfflineTrack, attempt: UUID) throws -> OfflineSource {
         OfflineSource(
             track: track.id == "automatic" ? self.track : track,
             url: try #require(URL(string: "https://example.invalid/media")),
@@ -49,6 +49,44 @@ struct OfflineCoordinatorTests {
         let deadline = ContinuousClock.now.advanced(by: .seconds(3))
         while !predicate(), ContinuousClock.now < deadline { await Task.yield() }
         return predicate()
+    }
+
+    @Test func playbackSelectionKeepsYouTubeIdentityAndFindsOnlyTheSavedLanguage() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = OfflineLibraryStore(directory: directory)
+        let video = Video(id: "saved-identity", title: "Saved", channelTitle: "Test", duration: 60)
+        let tracks = [OfflineTrack(id: "muxed", kind: .video, label: "Video", hasAudio: true), .translation("ru")]
+        let jobs = try await store.enqueue(video: video, tracks: tracks).jobs
+        for job in jobs {
+            try await store.update(attempt: job.attempt, state: .downloading)
+            let staged = directory.appendingPathComponent(job.attempt.uuidString + ".mp4")
+            try Data([1]).write(to: staged)
+            try await store.finish(attempt: job.attempt, staged: staged)
+        }
+        let entry = try #require(try await store.snapshot().entries.first)
+        let media = try #require(entry.assets.first { $0.track.kind == .video })
+        let translation = try #require(entry.assets.first { $0.track.kind == .translation })
+        let transport = OfflineFakeTransport()
+        defer { transport.continuation.finish() }
+        let coordinator = OfflineCoordinator(
+            store: store, transport: transport, resolver: OfflineFakeResolver(),
+            notifications: OfflineFakeNotifications(),
+            demand: PlaybackDemandCoordinator(waitForRecovery: {}, waitForBudget: {}))
+        let selected = try await coordinator.playbackVideo(
+            entry: entry, videoAsset: media, audio: nil, translation: translation)
+        #expect(selected.id == video.id)
+        #expect(selected.localFileURL?.isFileURL == true)
+        #expect(selected.localTranslationLanguage == "ru")
+        #expect(
+            try await coordinator.savedTranslation(videoID: video.id, language: "ru")
+                == selected.localTranslationFileURL)
+        #expect(try await coordinator.savedTranslation(videoID: video.id, language: "en") == nil)
+        var stale = entry
+        stale.video = selected
+        let without = try await coordinator.playbackVideo(entry: stale, videoAsset: media, audio: nil, translation: nil)
+        #expect(without.localTranslationFileURL == nil)
+        #expect(without.localTranslationLanguage == nil)
     }
     @Test func cancelRetryRejectsOldCompletionAndNotifiesNewAttempt() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -149,7 +187,8 @@ struct OfflineCoordinatorTests {
         #expect(await wait { coordinator.snapshot.jobs.count == 2 })
         let attempts = coordinator.snapshot.jobs.map(\.attempt)
         let orphan = UUID()
-        try transport.start(resolver.resolve(video: first, track: .automatic), attempt: orphan, yielding: false)
+        try transport.start(
+            resolver.resolve(video: first, track: .automatic, attempt: orphan), attempt: orphan, yielding: false)
         coordinator.remove(videoID: nil)
         #expect(await wait { coordinator.snapshot.jobs.isEmpty })
         #expect(coordinator.snapshot.entries.isEmpty)
@@ -358,9 +397,9 @@ struct OfflineCoordinatorTests {
 
 private struct OfflineDeferredResolver: OfflineResolving {
     func catalog(video: Video) throws -> [OfflineSource] { try OfflineFakeResolver().catalog(video: video) }
-    func resolve(video: Video, track: OfflineTrack) throws -> OfflineSource {
+    func resolve(video: Video, track: OfflineTrack, attempt: UUID) throws -> OfflineSource {
         if track.kind == .translation { throw OfflineResolutionDeferred(delay: 30) }
-        return try OfflineFakeResolver().resolve(video: video, track: track)
+        return try OfflineFakeResolver().resolve(video: video, track: track, attempt: attempt)
     }
 }
 /// The lock owns both the simulated time and its independent timer subscribers.
@@ -430,7 +469,7 @@ private actor OfflineCatalogGate: OfflineResolving {
                 url: try #require(URL(string: "https://example.invalid/audio")), userAgent: "Test")
         ]
     }
-    func resolve(video: Video, track: OfflineTrack) throws -> OfflineSource {
+    func resolve(video: Video, track: OfflineTrack, attempt: UUID) throws -> OfflineSource {
         OfflineSource(
             track: OfflineTrack(id: "video", kind: .video, label: "Video"),
             url: try #require(URL(string: "https://example.invalid/video")), userAgent: "Test")
@@ -446,12 +485,12 @@ private actor OfflineUncooperativeResolver: OfflineResolving {
         gate = nil
     }
     func catalog(video: Video) throws -> [OfflineSource] { try OfflineFakeResolver().catalog(video: video) }
-    func resolve(video: Video, track: OfflineTrack) async throws -> OfflineSource {
+    func resolve(video: Video, track: OfflineTrack, attempt: UUID) async throws -> OfflineSource {
         if !entered {
             entered = true
             await withCheckedContinuation { gate = $0 }
             returned = true
         }
-        return try OfflineFakeResolver().resolve(video: video, track: track)
+        return try OfflineFakeResolver().resolve(video: video, track: track, attempt: attempt)
     }
 }

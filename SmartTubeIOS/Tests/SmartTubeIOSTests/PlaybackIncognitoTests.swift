@@ -137,7 +137,7 @@ struct PlaybackIncognitoTests {
         store.vm.resetPlaybackForLoad(video: video, incognito: !incognito)
         store.vm.player.replaceCurrentItem(with: AVPlayerItem(asset: AVMutableComposition()))
         store.vm.isPlaying = true
-        store.minimize()
+        store.minimize(reason: "test-incognito")
 
         store.play(video: video, settings: store.vm.settings, incognito: incognito)
         store.vm.loadTask?.cancel()

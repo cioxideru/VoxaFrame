@@ -32,7 +32,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         reveal(translation)
         XCTAssertTrue(translation.waitForExistence(timeout: 5))
         translation.tap()
-        waitUntilDisabled(translation)
+        waitForSavedTrack("vot-ru", downloading: AccessibilityID.offlineDownloadTranslation("ru"))
         waitForSavedVideo("fixture-720")
         let before = try await requestCount(videoID: id)
 
@@ -80,7 +80,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         reveal(translation)
         XCTAssertTrue(translation.waitForExistence(timeout: 5))
         translation.tap()
-        waitUntilDisabled(translation)
+        waitForSavedTrack("vot-ru", downloading: AccessibilityID.offlineDownloadTranslation("ru"))
         let before = try await requestCount(videoID: id)
         offlineList(AccessibilityID.offlineDetailList).swipeDown()
         offlineList(AccessibilityID.offlineDetailList).swipeDown()
@@ -101,10 +101,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         saveFromPlayer(selectTracks: true)
         openEntry(id)
         waitForSavedVideo("fixture-720")
-        let translation = app.buttons[AccessibilityID.offlineDownloadTranslation("ru")]
-        reveal(translation)
-        XCTAssertTrue(translation.waitForExistence(timeout: 5))
-        waitUntilDisabled(translation)
+        waitForSavedTrack("vot-ru", downloading: AccessibilityID.offlineDownloadTranslation("ru"))
         XCTAssertFalse(app.buttons[AccessibilityID.offlinePlay("fixture-360")].exists)
         let metricsURL = try XCTUnwrap(URL(string: mediaURL + "/metrics"))
         let (data, _) = try await URLSession.shared.data(from: metricsURL)
@@ -203,10 +200,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         saveFromPlayer(selectTracks: true)
         openEntry(second)
         waitForSavedVideo("fixture-720")
-        let translation = app.buttons[AccessibilityID.offlineDownloadTranslation("ru")]
-        reveal(translation)
-        XCTAssertTrue(translation.waitForExistence(timeout: 5))
-        waitUntilDisabled(translation)
+        waitForSavedTrack("vot-ru", downloading: AccessibilityID.offlineDownloadTranslation("ru"))
         returnToLibrary()
 
         let remove = app.buttons[AccessibilityID.offlineDeleteAll]
@@ -346,17 +340,22 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertTrue(button.waitForExistence(timeout: 10))
         reveal(button)
         button.tap()
-        // A disabled "Downloading" row is not completion; the saved-video button below is authoritative.
+        // A disabled downloading row is not completion; only the saved state has this identifier.
         if id == "fixture-audio" {
-            let saved = XCTNSPredicateExpectation(
-                predicate: NSPredicate(format: "label CONTAINS 'Saved'"), object: button)
-            XCTAssertEqual(XCTWaiter().wait(for: [saved], timeout: 45), .completed)
+            waitForSavedTrack(id)
         }
     }
 
-    private func waitUntilDisabled(_ element: XCUIElement) {
-        let completed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == false"), object: element)
-        XCTAssertEqual(XCTWaiter().wait(for: [completed], timeout: 45), .completed)
+    private func waitForSavedTrack(_ id: String, downloading: String? = nil) {
+        let row = app.buttons.matching(
+            NSPredicate(
+                format: "identifier IN %@",
+                [AccessibilityID.offlineSaved(id), downloading ?? AccessibilityID.offlineDownload(id)])
+        ).firstMatch
+        reveal(row)
+        let saved = app.buttons[AccessibilityID.offlineSaved(id)].firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 45))
+        XCTAssertFalse(saved.isEnabled)
     }
 
     private func waitForSavedVideo(_ id: String) {
@@ -387,6 +386,8 @@ final class DownloadsPlaybackUITests: XCTestCase {
     }
 
     private func expectPlayback(translated: Bool) {
+        XCTAssertTrue(app.buttons[AccessibilityID.playerBackButton].waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons[AccessibilityID.miniPlayerClose].exists)
         let probe = app.staticTexts[AccessibilityID.offlinePlaybackStatus]
         XCTAssertTrue(probe.waitForExistence(timeout: 15))
         let expectation = XCTNSPredicateExpectation(

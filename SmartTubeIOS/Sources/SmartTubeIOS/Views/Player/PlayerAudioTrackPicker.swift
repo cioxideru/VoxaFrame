@@ -115,6 +115,14 @@ struct PlayerAudioTrackPicker: View {
                 )
             )
             .accessibilityIdentifier(AccessibilityID.playerAudioTrackPickerVoiceOverToggle)
+            if vm.currentVideo?.isDownloaded == true {
+                Text(
+                    "Saved translations play without internet. A new live translation needs internet and is not saved; download it in Offline videos for later.",
+                    bundle: .module
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
             if target == "ru" {
                 Toggle(
                     "Lively Voices",

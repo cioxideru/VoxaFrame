@@ -552,7 +552,7 @@ private struct OfflineEntryLabel: View {
 }
 
 /// Symbol and text; the colour is never the only signal.
-private struct OfflineStatusLabel: View {
+struct OfflineStatusLabel: View {
     let text: Text
     let symbol: String
     let style: AnyShapeStyle
@@ -569,7 +569,7 @@ private struct OfflineStatusLabel: View {
 }
 
 extension OfflinePresentation.JobStatus {
-    fileprivate var label: OfflineStatusLabel {
+    var label: OfflineStatusLabel {
         switch self {
         case .queued:
             OfflineStatusLabel(

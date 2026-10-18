@@ -48,6 +48,7 @@ public struct Video: Identifiable, Hashable, Codable, Sendable {
     public var localFileURL: URL? = nil
     public var localAudioFileURL: URL?
     public var localTranslationFileURL: URL?
+    public var localTranslationLanguage: String?
     /// `true` when this video refers to a local downloaded file rather than a remote stream.
     public var isDownloaded: Bool { localFileURL != nil }
     public func hasSamePlaybackSource(as other: Video) -> Bool {

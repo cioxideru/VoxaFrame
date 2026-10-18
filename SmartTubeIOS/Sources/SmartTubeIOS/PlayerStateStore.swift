@@ -6,7 +6,7 @@ import Observation
 import SmartTubeIOSCore
 import OSLog
 
-private let storeLog = Logger(subsystem: "com.void.smarttube.app", category: "PlayerStateStore")
+let storeLog = Logger(subsystem: appSubsystem, category: "PlayerStateStore")
 
 // MARK: - PersistentPlayerHostView
 
@@ -63,6 +63,8 @@ public final class PlayerStateStore {
     }
 
     public internal(set) var presentation: Presentation = .hidden
+    /// A dismissal from an older cover must not collapse a newly opened video.
+    private(set) var fullScreenRequestID = UUID()
 
     /// The active playback request; stop keeps the item parked but ends its presentation.
     var currentVideo: Video? {
@@ -90,11 +92,14 @@ public final class PlayerStateStore {
     /// The UIView that owns the AVPlayerLayer. Never deallocated; transplanted
     /// between full-screen and mini-player containers via UIView.addSubview.
     let playerHostView: PersistentPlayerHostView
+    @ObservationIgnored private var firstFrameObserver: NSKeyValueObservation?
+    @ObservationIgnored private weak var firstDisplayedItem: AVPlayerItem?
 
     var pipController: AVPictureInPictureController?
     var isPiPActive = false
     @ObservationIgnored var pipDelegate: PiPDelegate?
     @ObservationIgnored var pipRestoreCompletion: ((Bool) -> Void)?
+    @ObservationIgnored var pipStartRequestID: UUID?
 
     // MARK: - Init
 
@@ -104,6 +109,18 @@ public final class PlayerStateStore {
         let hostView = PersistentPlayerHostView()
         hostView.playerLayer.player = vm.player
         self.playerHostView = hostView
+        firstFrameObserver = hostView.playerLayer.observe(
+            \.isReadyForDisplay, options: [.new]
+        ) { [weak self] layer, _ in
+            guard layer.isReadyForDisplay, let item = layer.player?.currentItem else { return }
+            Task { @MainActor [weak self] in
+                guard let self, self.playerHostView.playerLayer.isReadyForDisplay,
+                    self.vm.player.currentItem === item, self.firstDisplayedItem !== item
+                else { return }
+                self.firstDisplayedItem = item
+                self.vm.logLocalPlaybackStep("first frame displayable")
+            }
+        }
     }
 
     // MARK: - Actions
@@ -129,6 +146,11 @@ public final class PlayerStateStore {
         if sameSource { adoptQueueContext(of: video) }
         if !sameSource || vm.isIncognito != incognito || vm.player.currentItem == nil || !vm.isPlaying {
             vm.load(video: video, incognito: incognito)
+        }
+        if sameSource, video.isDownloaded {
+            // A library tap explicitly chooses its saved track (including Without translation).
+            vm.voiceOverOverride = nil
+            vm.restartVoiceOver()
         }
         expand()
         storeLog.notice("[PlayerStateStore] play — presentation set to .fullScreen")
@@ -169,13 +191,16 @@ public final class PlayerStateStore {
     @ObservationIgnored private(set) var successorCheck: Task<Void, Never>?
 
     /// Collapse the full-screen player to the mini-player bar. Playback continues.
-    public func minimize() {
-        storeLog.notice("[PlayerStateStore] minimize — currentPresentation=\(String(describing: self.presentation))")
+    public func minimize(reason: String) {
+        storeLog.notice(
+            "[PlayerStateStore] minimize reason=\(reason, privacy: .public) videoId=\(self.currentVideo?.id ?? "nil", privacy: .public) from=\(String(describing: self.presentation), privacy: .public) pip=\(self.isPiPActive)"
+        )
         presentation = isPiPActive ? .pictureInPicture : .miniPlayer
         let action = dismissPlayerAction
         dismissPlayerAction = nil
         storeLog.notice(
-            "[PlayerStateStore] minimize — presentation set to .miniPlayer, dismissPlayerAction=\(action != nil)")
+            "[PlayerStateStore] minimize — presentation=\(String(describing: self.presentation), privacy: .public), dismissPlayerAction=\(action != nil)"
+        )
         action?()
     }
 
@@ -187,8 +212,16 @@ public final class PlayerStateStore {
                 if restored { controller?.stopPictureInPicture() }
             }
         }
+        if presentation != .fullScreen {
+            fullScreenRequestID = UUID()
+        }
         presentation = .fullScreen
         storeLog.notice("[PlayerStateStore] expand — presentation set to .fullScreen")
+    }
+
+    func fullScreenCoverDismissed(requestID: UUID) {
+        guard requestID == fullScreenRequestID, presentation == .fullScreen else { return }
+        minimize(reason: "cover-dismissed")
     }
 
     /// Stop playback completely and hide the player UI.

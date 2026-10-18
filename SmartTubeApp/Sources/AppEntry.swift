@@ -457,7 +457,7 @@ extension AppEntry {
     @MainActor
     private func leaveFullScreenPlayer() {
         #if os(iOS)
-        if playerStateStore.presentation == .fullScreen { playerStateStore.minimize() }
+        if playerStateStore.presentation == .fullScreen { playerStateStore.minimize(reason: "external-navigation") }
         #endif
     }
 

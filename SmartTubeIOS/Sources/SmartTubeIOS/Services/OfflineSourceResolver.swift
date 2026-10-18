@@ -1,5 +1,8 @@
 import Foundation
 import SmartTubeIOSCore
+import os
+
+private let offlineSourceLog = Logger(subsystem: appSubsystem, category: "OfflineSource")
 
 struct OfflineSource: Sendable {
     let track: OfflineTrack
@@ -10,15 +13,30 @@ struct OfflineSource: Sendable {
 
 struct OfflineResolutionDeferred: Error { let delay: TimeInterval }
 
+struct OfflineTranslationUploadError: LocalizedError {
+    var errorDescription: String? {
+        String(localized: "Yandex did not accept the source audio. Retry the translation download.", bundle: .module)
+    }
+}
+
 protocol OfflineResolving: Sendable {
     func catalog(video: Video) async throws -> [OfflineSource]
-    func resolve(video: Video, track: OfflineTrack) async throws -> OfflineSource
+    func resolve(video: Video, track: OfflineTrack, attempt: UUID) async throws -> OfflineSource
 }
 
 actor OfflineSourceResolver: OfflineResolving {
     let api: InnerTubeAPI
-    let vot = YandexVOTClient()
-    init(api: InnerTubeAPI) { self.api = api }
+    let vot: any YandexVOTServing
+    private struct AudioUpload {
+        let translationID: String
+        var attempts = 0
+        var polls = 0
+    }
+    private var uploadedTranslations: [UUID: AudioUpload] = [:]
+    init(api: InnerTubeAPI, vot: any YandexVOTServing = YandexVOTClient()) {
+        self.api = api
+        self.vot = vot
+    }
 
     func catalog(video: Video) async throws -> [OfflineSource] {
         var sources: [OfflineSource] = []
@@ -59,8 +77,21 @@ actor OfflineSourceResolver: OfflineResolving {
         return sources
     }
 
-    func resolve(video: Video, track: OfflineTrack) async throws -> OfflineSource {
-        if track.kind == .translation { return try await translation(video: video, track: track) }
+    func resolve(video: Video, track: OfflineTrack, attempt: UUID) async throws -> OfflineSource {
+        let started = Date()
+        defer {
+            offlineSourceLog.notice(
+                "Source attempt videoId=\(video.id, privacy: .public) kind=\(track.kind.rawValue, privacy: .public) elapsedMs=\(Int(Date().timeIntervalSince(started) * 1_000))"
+            )
+        }
+        if track.kind == .translation {
+            do {
+                return try await translation(video: video, track: track, attempt: attempt)
+            } catch {
+                if !(error is OfflineResolutionDeferred) { uploadedTranslations[attempt] = nil }
+                throw error
+            }
+        }
         let sources = try await catalog(video: video)
         if track.id == OfflineTrack.automatic.id {
             guard
@@ -75,7 +106,8 @@ actor OfflineSourceResolver: OfflineResolving {
         return source
     }
 
-    private func translation(video: Video, track: OfflineTrack) async throws -> OfflineSource {
+    private func translation(video: Video, track: OfflineTrack, attempt: UUID) async throws -> OfflineSource {
+        try Task.checkCancellation()
         guard let language = track.language, YandexVOTClient.targetLanguages.contains(language) else {
             throw OfflineLibraryError.unavailable
         }
@@ -89,17 +121,35 @@ actor OfflineSourceResolver: OfflineResolving {
         let result = try await vot.translate(
             videoId: video.id, duration: duration, sourceLanguage: "auto",
             targetLanguage: language, livelyVoiceToken: nil)
+        try Task.checkCancellation()
         switch result.status {
         case .finished:
+            uploadedTranslations[attempt] = nil
             guard let url = result.audioURL, url.scheme == "https" else { throw OfflineLibraryError.unavailable }
             return OfflineSource(track: track, url: url, userAgent: InnerTubeClients.iOS.userAgent)
-        case .failed, .sessionRequired: throw OfflineLibraryError.unavailable
+        case .failed, .sessionRequired:
+            throw OfflineLibraryError.unavailable
         case .audioRequested:
-            let info = try await api.fetchPlayerInfoVisionOS(videoId: video.id)
-            try await vot.uploadOriginalAudio(
-                videoId: video.id, translationId: result.translationId,
-                directURL: info.bestAdaptiveAudioURL, hlsURL: info.hlsURL,
-                userAgent: InnerTubeClients.VisionOS.userAgent)
+            guard !result.translationId.isEmpty else { throw YandexVOTClient.VOTError.malformedResponse }
+            var upload = uploadedTranslations[attempt] ?? AudioUpload(translationID: result.translationId)
+            if upload.translationID != result.translationId {
+                upload = AudioUpload(translationID: result.translationId)
+            }
+            if upload.attempts > 0 { upload.polls += 1 }
+            if upload.attempts == 0 || upload.polls >= PlaybackTuning.offlineTranslationReuploadPolls {
+                guard upload.attempts < PlaybackTuning.offlineTranslationUploadLimit else {
+                    throw OfflineTranslationUploadError()
+                }
+                let info = try await api.fetchPlayerInfoVisionOS(videoId: video.id)
+                try await vot.uploadOriginalAudio(
+                    videoId: video.id, translationId: result.translationId,
+                    directURL: info.bestAdaptiveAudioURL, hlsURL: info.hlsURL,
+                    userAgent: InnerTubeClients.VisionOS.userAgent)
+                try Task.checkCancellation()
+                upload.attempts += 1
+                upload.polls = 0
+            }
+            uploadedTranslations[attempt] = upload
         default: break  // PART_CONTENT is not a complete offline track.
         }
         throw OfflineResolutionDeferred(delay: TimeInterval(min(30, max(5, result.remainingTime ?? 5))))

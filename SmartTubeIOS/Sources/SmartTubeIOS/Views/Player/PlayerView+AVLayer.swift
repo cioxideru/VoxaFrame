@@ -125,12 +125,21 @@ struct PlayerAVLayerView: UIViewRepresentable {
 /// PiP starts or stops, and implements the restore callback required for a
 /// smooth transition back to full-screen without rebuffering.
 final class PiPDelegate: NSObject, AVPictureInPictureControllerDelegate {
+    private let onWillStart: () -> Void
     private let onActiveChange: (Bool) -> Void
     private let onRestore: (@escaping (Bool) -> Void) -> Void
 
-    init(onActiveChange: @escaping (Bool) -> Void, onRestore: @escaping (@escaping (Bool) -> Void) -> Void) {
+    init(
+        onWillStart: @escaping () -> Void, onActiveChange: @escaping (Bool) -> Void,
+        onRestore: @escaping (@escaping (Bool) -> Void) -> Void
+    ) {
+        self.onWillStart = onWillStart
         self.onActiveChange = onActiveChange
         self.onRestore = onRestore
+    }
+
+    func pictureInPictureControllerWillStartPictureInPicture(_ controller: AVPictureInPictureController) {
+        onWillStart()
     }
 
     func pictureInPictureControllerDidStartPictureInPicture(_ controller: AVPictureInPictureController) {

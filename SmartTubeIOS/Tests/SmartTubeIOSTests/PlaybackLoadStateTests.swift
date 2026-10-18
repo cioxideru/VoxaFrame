@@ -88,7 +88,7 @@ struct PlaybackLoadStateTests {
         #expect(store.playingVideo == nil)
         store.vm.player.replaceCurrentItem(with: ReadyIdentityPlayerItem(asset: AVMutableComposition()))
         store.vm.isLoading = false
-        store.minimize()
+        store.minimize(reason: "test-navigation")
         #expect(store.currentVideo?.id == "next")
         #expect(store.playingVideo?.id == "next")
         store.expand()

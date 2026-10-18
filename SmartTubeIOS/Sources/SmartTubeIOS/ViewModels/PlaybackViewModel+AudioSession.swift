@@ -77,6 +77,8 @@ extension PlaybackViewModel {
             guard await activatePlaybackAudioSession(force: true), player.currentItem != nil else { return }
             player.rate = Float(settings.playbackSpeed)
             isPlaying = true
+            audioPlaybackTask = nil
+            if currentVideo?.isDownloaded == true { applyOfflineTranslation() }
             #if canImport(UIKit)
             updateNowPlayingPlayback()
             #endif
