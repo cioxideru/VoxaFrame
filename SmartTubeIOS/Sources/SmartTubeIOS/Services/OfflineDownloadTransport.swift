@@ -133,6 +133,7 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         let track = source.track.id
         let matches = variants.filter { matchesVariant($0, source: source) }
         guard matches.count == 1, let variant = matches.first else {
+            if matches.isEmpty { logVariantMismatch(variants, source: source) }
             throw unavailable("HLS variant matches=\(matches.count) of \(variants.count) track=\(track)")
         }
         guard let selection = preferred.mutableCopy() as? AVMutableMediaSelection else {
@@ -179,6 +180,30 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         configuration.primaryContentConfiguration.mediaSelections = [selection]
         return configuration
     }
+    /// Lists what each variant offers against the catalog choice; no URLs, only whether they match.
+    private static func logVariantMismatch(_ variants: [AVAssetVariant], source: OfflineSource) {
+        let expected = source.track
+        offlineTransportLog.error(
+            "HLS expected size=\(expected.videoSize.map { "\($0.width)x\($0.height)" } ?? "-", privacy: .public) codec=\(expected.codec?.rawValue ?? "-", privacy: .public) fps=\(expected.fps ?? 0, privacy: .public) peak=\(expected.hlsPeakBitRate ?? 0, privacy: .public) hasURL=\(source.hlsVariantURL != nil, privacy: .public)"
+        )
+        for variant in variants {
+            var sameURL = "n/a"
+            if let url = source.hlsVariantURL, #available(iOS 26, *) {
+                sameURL = variant.url.absoluteURL == url.absoluteURL ? "yes" : "no"
+                if sameURL == "no", variant.url.path == url.path { sameURL = "path-only" }
+            }
+            let video = variant.videoAttributes
+            let size = video.map { "\(Int($0.presentationSize.width))x\(Int($0.presentationSize.height))" } ?? "-"
+            let codecs =
+                video?.codecTypes.map { code in
+                    String(bytes: (0..<4).map { UInt8((code >> (24 - $0 * 8)) & 0xFF) }, encoding: .ascii) ?? "?"
+                } ?? []
+            offlineTransportLog.error(
+                "HLS variant size=\(size, privacy: .public) codecs=\(codecs, privacy: .public) fps=\(video?.nominalFrameRate ?? 0, privacy: .public) peak=\(variant.peakBitRate ?? 0, privacy: .public) url=\(sameURL, privacy: .public)"
+            )
+        }
+    }
+
     private static func matchesVariant(_ variant: AVAssetVariant, source: OfflineSource) -> Bool {
         let matchesURL: Bool
         if let url = source.hlsVariantURL, #available(iOS 26, *) {
