@@ -159,13 +159,8 @@ final class MacWKHLSReplayRegressionUITests: XCTestCase {
                 "Cycle \(cycle): player.errorBanner appeared after 3 s of playback"
             )
 
-            // Tap back — on macOS this calls vm.stop() + dismiss(), no mini-player.
-            let backButton = app.buttons[AccessibilityID.playerBackButton].firstMatch
-            XCTAssertTrue(
-                backButton.waitForExistence(timeout: 5),
-                "Cycle \(cycle): player.backButton not found"
-            )
-            backButton.click()
+            // The persistent AX Back does not intercept mouse clicks; reveal and click the visible control.
+            guard clickVisibleBack(cycle: cycle) else { return }
 
             // Wait for player to disappear (titleLabel gone = NavigationStack popped).
             let playerGone = NSPredicate(format: "exists == false")
@@ -236,6 +231,26 @@ private extension XCUIElement {
             swipeUp()
             swipes += 1
         }
+    }
+
+    /// Hovers the player so the auto-hiding controls appear, then clicks the hittable Back.
+    private func clickVisibleBack(cycle: Int) -> Bool {
+        let backButtons = app.buttons.matching(identifier: AccessibilityID.playerBackButton)
+        let backButton = backButtons.firstMatch
+        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Cycle \(cycle): player.backButton not found")
+        backButton.hover()
+        let backIsHittable = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in
+                backButtons.allElementsBoundByIndex.contains { $0.isHittable }
+            }, object: nil)
+        guard XCTWaiter().wait(for: [backIsHittable], timeout: 5) == .completed,
+            let visibleBack = backButtons.allElementsBoundByIndex.first(where: { $0.isHittable })
+        else {
+            XCTFail("Cycle \(cycle): player.backButton did not become clickable after hover")
+            return false
+        }
+        visibleBack.click()
+        return true
     }
 }
 #endif

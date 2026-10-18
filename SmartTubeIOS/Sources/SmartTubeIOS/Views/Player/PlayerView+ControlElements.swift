@@ -52,6 +52,11 @@ struct PlayerControlsOverlay: View {
     #endif
     @Environment(SettingsStore.self) var store
     @Environment(\.dismiss) var dismiss
+    #if os(macOS)
+    @Environment(MacWindowState.self) var macWindow
+    let macPlayerFocused: FocusState<Bool>.Binding
+    let macBackAction: () -> Void
+    #endif
 
     #if os(tvOS)
     var body: some View {
@@ -237,12 +242,7 @@ struct PlayerControlsOverlay: View {
     /// macOS: a click on the video outside the controls hides them. iOS uses the player's own tap gesture.
     @ViewBuilder private var tapSurface: some View {
         #if os(macOS)
-        Color.clear
-            .contentShape(Rectangle())
-            .onTapGesture {
-                controlsLog.notice("[menu] background tap — controlsVisible=\(vm.controlsVisible)")
-                vm.toggleControls()
-            }
+        MacPlayerClickSurface(vm: vm, focused: macPlayerFocused)
         #endif
     }
     #endif
@@ -260,6 +260,8 @@ extension PlayerControlsOverlay {
             Button {
                 #if os(iOS)
                 if store.settings.miniPlayerEnabled { playerState.minimize() } else { playerState.stop() }
+                #elseif os(macOS)
+                macBackAction()
                 #else
                 vm.stop()
                 withAnimation(.none) { dismiss() }
@@ -274,6 +276,9 @@ extension PlayerControlsOverlay {
             .accessibilityIdentifier(AccessibilityID.playerBackButton)
             titleBlock
             Spacer(minLength: VFSpace.s8)
+            #if os(macOS)
+            macFullScreenButton
+            #endif
             videoScaleButton
             #if os(iOS)
             // Picture-in-Picture button — shown when PiP is enabled in settings and supported on this device
@@ -320,6 +325,8 @@ extension PlayerControlsOverlay {
     private var backSymbol: String {
         #if os(iOS)
         store.settings.miniPlayerEnabled ? AppSymbol.chevronDown : AppSymbol.xmark
+        #elseif os(macOS)
+        macWindow.isFullScreen ? AppSymbol.exitFullScreen : AppSymbol.chevronLeft
         #else
         AppSymbol.chevronLeft
         #endif
@@ -329,6 +336,8 @@ extension PlayerControlsOverlay {
         #if os(iOS)
         if store.settings.miniPlayerEnabled { return Text("Minimize", bundle: .module) }
         return Text("Close", bundle: .module)
+        #elseif os(macOS)
+        return macWindow.isFullScreen ? Text("Exit Full Screen", bundle: .module) : Text("Back", bundle: .module)
         #else
         return Text("Back", bundle: .module)
         #endif

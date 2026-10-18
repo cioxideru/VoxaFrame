@@ -27,6 +27,20 @@ extension PlayerView {
     @ViewBuilder
     var titleAndBackButtonOverlay: some View {
         HStack(spacing: 0) {
+            #if os(macOS)
+            Button(action: macBackAction) {
+                Color.clear.frame(width: VFTarget.touch, height: VFTarget.touch)
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .accessibilityIdentifier(AccessibilityID.playerBackButton)
+            .accessibilityLabel(
+                macWindow.isFullScreen ? Text("Exit Full Screen", bundle: .module) : Text("Back", bundle: .module)
+            )
+            .accessibilityHidden(false)
+            // Keep AXPress available when controls hide without taking clicks from the video surface.
+            .allowsHitTesting(false)
+            #else
             Button {
                 #if os(iOS)
                 playerLifecycleLog.notice(
@@ -38,9 +52,6 @@ extension PlayerView {
                 #else
                 vm.stop()
                 withAnimation(.none) { dismiss() }
-                #if os(macOS)
-                browseVM.deepLinkedVideo = nil
-                #endif
                 #endif
             } label: {
                 Color.clear.frame(width: 60, height: 60)
@@ -49,6 +60,7 @@ extension PlayerView {
             #if os(tvOS)
             .buttonStyle(.plain)
             .focusable(false)
+            #endif
             #endif
             Text(vm.playerInfo?.video.title ?? video.title)
                 .font(.caption)
@@ -76,6 +88,18 @@ extension PlayerView {
         .padding(.top, 60)
         #endif
     }
+
+    #if os(macOS)
+    func macBackAction() {
+        if macWindow.isFullScreen {
+            macWindow.exitFullScreen()
+        } else {
+            vm.stop()
+            withAnimation(.none) { dismiss() }
+            browseVM.deepLinkedVideo = nil
+        }
+    }
+    #endif
 
     // MARK: - Player content base view
     //
@@ -200,10 +224,7 @@ extension PlayerView {
                 #endif
 
                 #if os(macOS)
-                // Transparent click layer for macOS — toggles controls overlay on click.
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture { if !vm.hasVisibleEndCards { vm.toggleControls() } }
+                MacPlayerClickSurface(vm: vm, focused: $macPlayerFocused)
                     .ignoresSafeArea()
                 #endif
 

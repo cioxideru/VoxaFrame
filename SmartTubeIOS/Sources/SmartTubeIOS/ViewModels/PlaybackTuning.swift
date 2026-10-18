@@ -3,6 +3,7 @@ import Foundation
 /// Shared timing values for initial playback, fallback attempts and quality changes.
 enum PlaybackTuning {
     static let levelFeedbackDuration: Duration = .seconds(1.5)
+    static let macControlsHoverThrottle: Duration = .milliseconds(500)
     static let playbackDemandRecovery: Duration = .seconds(1)
     static let playbackDemandBufferBudget: Duration = .seconds(10)
     static let shortsPreparationSeconds: TimeInterval = 30

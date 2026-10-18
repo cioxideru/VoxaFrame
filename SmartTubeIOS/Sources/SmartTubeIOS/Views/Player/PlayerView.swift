@@ -27,9 +27,10 @@ public struct PlayerView: View {
     @Environment(SettingsStore.self) var store
     @Environment(AuthService.self) var authService
     #if os(macOS)
+    @Environment(MacWindowState.self) var macWindow
     @Environment(BrowseViewModel.self) var browseVM
-    @Environment(\.isNarrowWindow) var isNarrowWindow
-    /// Inspector (or, in a narrow window, the panel under the video). Hiding it never stops playback.
+    @FocusState var macPlayerFocused: Bool
+    /// Windowed preference, retained while a narrow window or full screen temporarily hides the inspector.
     @State var showInspector = true
     @State var inspectorTab = PlayerInspectorTab.upNext
     /// Remaining Current Queue items after the playing one; empty when the video is not from the queue.

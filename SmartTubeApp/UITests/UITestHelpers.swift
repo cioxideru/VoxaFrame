@@ -200,6 +200,8 @@ enum AccessibilityID {
     static var shortsErrorBanner: String { "shorts.errorBanner" }
     static var playerBackButton: String { "player.backButton" }
     static var playerPiPButton: String { "player.pipButton" }
+    static var playerFullScreenButton: String { "player.fullScreenButton" }
+    static var playerInspectorToggle: String { "player.inspectorToggle" }
     static var playerAirPlayButton: String { "player.airPlayButton" }
     static var playerChannelName: String { "player.channelName" }
     static var playerDurationLabel: String { "player.durationLabel" }

@@ -7,9 +7,6 @@ enum PlayerInspectorTab: Hashable {
     case upNext, description, comments
 }
 
-/// Height of the panel under the video in a narrow window; the video takes the rest.
-private let narrowInspectorHeight: CGFloat = 260
-
 /// What the Up next list depends on: the playing video and, for a Current Queue item, its position,
 /// so consecutive duplicates ([A, A, B]) still refresh. Mirrors the queue check in `playNext()`.
 struct UpNextSource: Hashable {
@@ -28,7 +25,7 @@ struct UpNextSource: Hashable {
     }
 }
 
-/// Visibility of the focused window's player panel (beside or under the video); set by `PlayerView`,
+/// Visibility of the focused window's player inspector; set by `PlayerView`,
 /// read by the View menu item in `MacWindowCommands`, so menu and toolbar share one state.
 private struct PlayerInspectorVisibleKey: FocusedValueKey {
     typealias Value = Binding<Bool>
@@ -51,45 +48,50 @@ func playerInspectorToggleTitle(isVisible: Bool) -> String {
 // MARK: - Mac player layout
 //
 // The player sits in the window's content area with "Up next", "Description" and "Comments" in an
-// inspector beside it. In a narrow window (`isNarrowWindow`) the same panel moves under the video.
-// `showInspector` is the only visibility state for both places. Hiding the panel never closes the
-// window and never touches playback.
+// inspector beside it. Width and full screen only suppress presentation, preserving `showInspector`.
 
 extension PlayerView {
     /// The playing video, which changes on Next/Previous and Up next while `video` stays the opened one.
     private var activeVideoID: String { vm.currentVideo?.id ?? video.id }
 
     var macPlayerLayout: some View {
-        VStack(spacing: 0) {
-            playerContentView
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            if isNarrowWindow && showInspector {
-                Divider()
+        playerContentView
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .modifier(MacPlayerInteraction(vm: vm, hasOpenPanel: macHasOpenPanel, focused: $macPlayerFocused))
+            .inspector(
+                isPresented: inspectorPresentation
+            ) {
                 inspectorPanel
-                    .frame(height: narrowInspectorHeight)
+                    .inspectorColumnWidth(ideal: VFMacWindow.inspectorWidth)
+                    .toolbar {
+                        ToolbarItem {
+                            let title = playerInspectorToggleTitle(isVisible: inspectorPresentation.wrappedValue)
+                            Button {
+                                showInspector.toggle()
+                            } label: {
+                                Label(title, systemImage: AppSymbol.inspector)
+                            }
+                            .disabled(!macWindow.allowsInspector)
+                            .help(title)
+                            .accessibilityIdentifier(AccessibilityID.playerInspectorToggle)
+                        }
+                    }
             }
-        }
-        .inspector(
-            isPresented: Binding(
-                get: { showInspector && !isNarrowWindow },
-                set: { showInspector = $0 }
-            )
-        ) {
-            inspectorPanel
-                .inspectorColumnWidth(ideal: 340)
-        }
-        .toolbar {
-            ToolbarItem {
-                let title = playerInspectorToggleTitle(isVisible: showInspector)
-                Button {
-                    showInspector.toggle()
-                } label: {
-                    Label(title, systemImage: AppSymbol.inspector)
-                }
-                .help(title)
-            }
-        }
-        .focusedSceneValue(\.playerInspectorVisible, $showInspector)
+            .focusedSceneValue(\.playerInspectorVisible, macWindow.allowsInspector ? inspectorPresentation : nil)
+            .onAppear { macWindow.setPlayer(ObjectIdentifier(vm), visible: true) }
+            .onDisappear { macWindow.setPlayer(ObjectIdentifier(vm), visible: false) }
+    }
+
+    private var inspectorPresentation: Binding<Bool> {
+        Binding(
+            get: { showInspector && macWindow.allowsInspector },
+            set: { if macWindow.allowsInspector { showInspector = $0 } }
+        )
+    }
+
+    private var macHasOpenPanel: Bool {
+        showMoreMenu || showSpeedPicker || showQualityPicker || showCaptionPicker || showAudioTrackPicker
+            || showSleepTimerPicker || showDescriptionSheet || showCommentsSheet || offlineDownloadVideo != nil
     }
 
     private var inspectorPanel: some View {

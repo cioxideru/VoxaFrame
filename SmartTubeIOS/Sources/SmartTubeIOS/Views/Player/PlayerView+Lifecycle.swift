@@ -580,7 +580,9 @@ extension PlayerView {
             showSpeedPicker: $showSpeedPicker,
             showAudioTrackPicker: $showAudioTrackPicker,
             showSleepTimerPicker: $showSleepTimerPicker,
-            bottomBarHeight: $controlsBottomBarHeight
+            bottomBarHeight: $controlsBottomBarHeight,
+            macPlayerFocused: $macPlayerFocused,
+            macBackAction: macBackAction
         )
         #endif
     }

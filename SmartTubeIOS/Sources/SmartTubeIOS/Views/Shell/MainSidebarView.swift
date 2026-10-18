@@ -10,21 +10,18 @@ import SwiftUI
 // Three separate states: the selected section (`selection`), the selected item (each section's
 // own navigation state) and the active video (a pushed `PlayerView`, e.g. `browseVM.deepLinkedVideo`).
 
-/// Below this window width the player inspector moves under the video and the sidebar collapses.
-private let narrowWindowWidth: CGFloat = 1000
-
 struct MainSidebarView: View {
     @Environment(AuthService.self) private var auth
     @Environment(BrowseViewModel.self) private var browseVM
     @Environment(\.innerTubeAPI) private var api
     @State private var searchVM = SearchViewModel()
     @State private var selection: ShellItem? = .section(.home)
-    @State private var columnVisibility = NavigationSplitViewVisibility.automatic
-    @State private var isNarrowWindow = false
+    @State private var windowState = MacWindowState()
 
     var body: some View {
         @Bindable var browseVM = browseVM
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+        @Bindable var windowState = windowState
+        NavigationSplitView(columnVisibility: $windowState.sidebarVisibility) {
             List(selection: $selection) {
                 ForEach(AppSection.allCases) { section in
                     sidebarRow(.section(section))
@@ -47,18 +44,11 @@ struct MainSidebarView: View {
             }
         }
         .environment(searchVM)
+        .environment(windowState)
+        .frame(minWidth: VFMacWindow.minimumSize.width, minHeight: VFMacWindow.minimumSize.height)
+        .background { MacWindowAttachment(state: windowState) }
         .onReceive(NotificationCenter.default.publisher(for: .navigateToSearch)) { _ in
             selection = .section(.search)
-        }
-        .environment(\.isNarrowWindow, isNarrowWindow)
-        .onGeometryChange(for: Bool.self) {
-            $0.size.width < narrowWindowWidth
-        } action: {
-            isNarrowWindow = $0
-        }
-        // Only on crossing the width, so View > Show Sidebar still works in a narrow window.
-        .onChange(of: isNarrowWindow) { _, narrow in
-            columnVisibility = narrow ? .detailOnly : .automatic
         }
     }
 
@@ -97,17 +87,4 @@ struct MainSidebarView: View {
     }
 }
 
-// MARK: - Narrow window
-
-private struct IsNarrowWindowKey: EnvironmentKey {
-    static let defaultValue = false
-}
-
-extension EnvironmentValues {
-    /// `true` while the Mac window is narrower than 1000 pt; set by `MainSidebarView`.
-    var isNarrowWindow: Bool {
-        get { self[IsNarrowWindowKey.self] }
-        set { self[IsNarrowWindowKey.self] = newValue }
-    }
-}
 #endif

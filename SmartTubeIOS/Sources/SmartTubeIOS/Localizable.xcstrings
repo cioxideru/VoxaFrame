@@ -8751,6 +8751,24 @@
         }
       }
     },
+    "Enter Full Screen" : {
+      "comment" : "Mac player control: enter the system window full-screen mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter Full Screen"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На весь экран"
+          }
+        }
+      }
+    },
     "Enter New PIN" : {
       "comment" : "Set or change PIN: new PIN step",
       "extractionState" : "manual",
@@ -9197,6 +9215,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已排除的频道（%lld）"
+          }
+        }
+      }
+    },
+    "Exit Full Screen" : {
+      "comment" : "Mac player control: exit the system window full-screen mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit Full Screen"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти из полноэкранного режима"
           }
         }
       }
@@ -22137,6 +22173,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показать инспектор"
+          }
+        }
+      }
+    },
+    "Show Search Filters…" : {
+      "comment" : "Mac View menu: open search filters without a toolbar anchor",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Search Filters…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать фильтры поиска…"
           }
         }
       }

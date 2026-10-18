@@ -14,6 +14,10 @@ public struct SearchView: View {
     @State private var selectedVideo: Video?
     @State private var channelDestination: ChannelDestination?
     @State private var showFilters = false
+    #if os(macOS)
+    @State private var showFiltersSheet = false
+    @State private var isSearchVisible = false
+    #endif
     @FocusState private var isSearchFocused: Bool
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
@@ -23,6 +27,28 @@ public struct SearchView: View {
     public init() {}
 
     public var body: some View {
+        searchPresentation
+            #if !os(iOS)
+        // tvOS and macOS push the player in this stack, like a card click; iOS presents it through PlayerRouter.
+        .navigationDestination(item: $selectedVideo) { video in
+            PlayerView(video: video, api: api)
+        }
+            #endif
+            .navigationDestination(item: $channelDestination) { dest in
+                ChannelView(channelId: dest.channelId, api: api)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
+                guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
+                channelDestination = ChannelDestination(channelId: channelId)
+            }
+            .task(id: vm.query) { await vm.updateSuggestions(for: vm.query) }
+            // Clearing the field (its clear button, Cancel, or the search tab's close) returns to recent searches.
+            .onChange(of: vm.query) { _, query in
+                if query.isEmpty { vm.clearResults() }
+            }
+    }
+
+    private var searchContent: some View {
         VStack(spacing: 0) {
             #if os(tvOS)
             tvSearchBar
@@ -37,33 +63,33 @@ public struct SearchView: View {
             }
         }
         .navigationTitle(Text("Search", bundle: .module))
+    }
+
+    private var searchControls: some View {
         #if os(tvOS)
-        .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $showFilters) { filterSheet }
+        searchContent
+            .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showFilters) { filterSheet }
         #else
-        .modifier(SearchField(isFocused: $isSearchFocused) { suggestionRows })
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) { filterButton }
-        }
+        searchContent
+            .modifier(SearchField(isFocused: $isSearchFocused) { suggestionRows })
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) { filterButton }
+            }
         #endif
-        #if !os(iOS)
-        // tvOS and macOS push the player in this stack, like a card click; iOS presents it through PlayerRouter.
-        .navigationDestination(item: $selectedVideo) { video in
-            PlayerView(video: video, api: api)
-        }
+    }
+
+    private var searchPresentation: some View {
+        #if os(macOS)
+        searchControls
+            // Menu actions have no stable toolbar anchor (the toolbar may be hidden or the item in overflow).
+            .focusedSceneValue(\.searchFiltersAction, filtersMenuAction)
+            .sheet(isPresented: $showFiltersSheet) { filterSheet }
+            .onAppear { isSearchVisible = true }
+            .onDisappear { isSearchVisible = false }
+        #else
+        searchControls
         #endif
-        .navigationDestination(item: $channelDestination) { dest in
-            ChannelView(channelId: dest.channelId, api: api)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
-            guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
-            channelDestination = ChannelDestination(channelId: channelId)
-        }
-        .task(id: vm.query) { await vm.updateSuggestions(for: vm.query) }
-        // Clearing the field (its clear button, Cancel, or the search tab's close) returns to recent searches.
-        .onChange(of: vm.query) { _, query in
-            if query.isEmpty { vm.clearResults() }
-        }
     }
 
     private func run(_ query: String) {
@@ -73,6 +99,20 @@ public struct SearchView: View {
     }
 
     // MARK: - Filters
+
+    #if os(macOS)
+    private var filtersMenuAction: (() -> Void)? {
+        // Swift 6.4 fails to type-check the actor-isolated method reference in a method-or-nil ternary.
+        guard isSearchVisible else { return nil }
+        return { presentFiltersFromMenu() }
+    }
+
+    private func presentFiltersFromMenu() {
+        // An open popover already exposes the filters and may contain an unapplied draft.
+        guard !showFilters, !showFiltersSheet else { return }
+        showFiltersSheet = true
+    }
+    #endif
 
     #if !os(tvOS)
     private var filterButton: some View {

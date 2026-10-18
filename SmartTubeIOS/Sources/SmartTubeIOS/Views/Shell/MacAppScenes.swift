@@ -6,22 +6,38 @@ import SwiftUI
 //
 // Used by AppEntry's macOS branch. Kept in the package so the native macOS compile of the package covers them.
 
-/// View menu for the main window: the standard sidebar and toolbar groups, plus Show/Hide Inspector. No custom shortcuts.
+private struct SearchFiltersActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
+
+extension FocusedValues {
+    var searchFiltersAction: (() -> Void)? {
+        get { self[SearchFiltersActionKey.self] }
+        set { self[SearchFiltersActionKey.self] = newValue }
+    }
+}
+
+/// View menu additions. AppKit supplies Enter/Exit Full Screen and its standard Control-Command-F command.
 public struct MacWindowCommands: Commands {
     @FocusedBinding(\.playerInspectorVisible) private var inspectorVisible
+    @FocusedValue(\.searchFiltersAction) private var searchFiltersAction
 
     public init() {}
 
     public var body: some Commands {
         SidebarCommands()
         ToolbarCommands()
-        // Not `InspectorCommands()`: that drives only the trailing inspector, while below 1000 pt the player shows
-        // the same panel under the video. This item toggles the player's single visibility state in both layouts.
         CommandGroup(after: .sidebar) {
             Button(playerInspectorToggleTitle(isVisible: inspectorVisible == true)) {
                 inspectorVisible?.toggle()
             }
             .disabled(inspectorVisible == nil)
+            Button {
+                searchFiltersAction?()
+            } label: {
+                Text("Show Search Filters…", bundle: .module)
+            }
+            .disabled(searchFiltersAction == nil)
         }
     }
 }

@@ -262,6 +262,8 @@ enum AppSymbol {
     static let verticalAdjustment = "arrow.up.and.down"
     static let videoFill = "arrow.up.left.and.arrow.down.right"
     static let videoFit = "arrow.down.right.and.arrow.up.left"
+    static let enterFullScreen = "arrow.up.left.and.arrow.down.right.circle"
+    static let exitFullScreen = "arrow.down.right.and.arrow.up.left.circle"
     static let previousTrack = "backward.end.fill"
     static let nextTrack = "forward.end.fill"
     static let previousChapter = "backward.end.alt.fill"

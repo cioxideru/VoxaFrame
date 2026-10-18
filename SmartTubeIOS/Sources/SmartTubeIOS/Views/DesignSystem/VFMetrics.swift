@@ -61,6 +61,15 @@ enum VFColumn {
     }
 }
 
+#if os(macOS)
+enum VFMacWindow {
+    static let minimumSize = CGSize(width: 720, height: 480)
+    static let inspectorCollapseWidth: CGFloat = 1000
+    static let sidebarCollapseWidth: CGFloat = 800
+    static let inspectorWidth: CGFloat = 340
+}
+#endif
+
 // MARK: - Motion
 
 enum VFMotion {

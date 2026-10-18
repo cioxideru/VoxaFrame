@@ -35,7 +35,10 @@ struct OfflineVideoDetail: View {
                     .toolbarTitleDisplayMode(.inline)
             }
         }
-        #if !os(iOS)
+        #if os(macOS)
+        // Use the main window's player surface so system full screen is available for saved videos too.
+        .navigationDestination(item: $selectedVideo) { video in PlayerView(video: video, api: api) }
+        #elseif !os(iOS)
         .sheet(item: $selectedVideo) { video in PlayerView(video: video, api: api) }
         #endif
     }
