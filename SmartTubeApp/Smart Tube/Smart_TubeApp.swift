@@ -13,6 +13,7 @@ struct SmartTubeTVApp: App {
     @State private var homeViewModel: HomeViewModel
     @State private var browseViewModel: BrowseViewModel
     @State private var settingsStore: SettingsStore
+    @Environment(\.scenePhase) private var scenePhase
     /// Shared download service — required by RootView and VideoCardView even on
     /// tvOS (where downloads are disabled in UI). Must be present in the environment
     /// or SwiftUI throws a fatal "No Observable object of type VideoDownloadService"
@@ -70,6 +71,11 @@ struct SmartTubeTVApp: App {
                 }
                 .onChange(of: settingsStore.settings.historyState, initial: true) { _, newState in
                     browseViewModel.updateHistoryEnabled(newState == .enabled)
+                }
+                .onChange(of: scenePhase, initial: true) { _, phase in
+                    if phase == .active {
+                        OfflineCoordinator.shared.appBecameActive(settingsStore.settings)
+                    }
                 }
             #if ENABLE_DOWNLOADS
             root.environment(cardDownloadService)

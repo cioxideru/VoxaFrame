@@ -29481,6 +29481,105 @@
           }
         }
       }
+    },
+    "Update SponsorBlock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update SponsorBlock"
+          }
+        }
+      }
+    },
+    "Updating SponsorBlock %lld/%lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updating SponsorBlock %lld/%lld"
+          }
+        }
+      }
+    },
+    "SponsorBlock updated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SponsorBlock updated"
+          }
+        }
+      }
+    },
+    "Updated %lld videos, failed %lld." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated %lld videos, failed %lld."
+          }
+        }
+      }
+    },
+    "Update SponsorBlock for offline videos automatically" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update SponsorBlock for offline videos automatically"
+          }
+        }
+      }
+    },
+    "Refreshes saved videos once a day while the app is open." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshes saved videos once a day while the app is open."
+          }
+        }
+      }
+    },
+    "Could not update. Check your connection and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not update. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "%lld segments · updated %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld segments · updated %@"
+          }
+        }
+      }
+    },
+    "No SponsorBlock segments saved yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No SponsorBlock segments saved yet."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

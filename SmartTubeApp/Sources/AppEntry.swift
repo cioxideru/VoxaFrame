@@ -167,6 +167,7 @@ struct AppEntry: App {
                         authService.handleForeground()
                         homeViewModel.refreshIfStale()
                         if browseViewModel.currentSection.type != .home { browseViewModel.refreshIfStale() }
+                        OfflineCoordinator.shared.appBecameActive(settingsStore.settings)
                     }
                 }
                 .onAppear {
@@ -288,6 +289,7 @@ struct AppEntry: App {
                             consumeQueueInjectFromLaunchArgs()
                             consumeBotGuardProbeFromLaunchArgs()
                             authService.handleForeground()
+                            OfflineCoordinator.shared.appBecameActive(settingsStore.settings)
                             homeViewModel.refreshIfStale()
                             if browseViewModel.currentSection.type != .home { browseViewModel.refreshIfStale() }
                             consumePendingRSSFeedURL()

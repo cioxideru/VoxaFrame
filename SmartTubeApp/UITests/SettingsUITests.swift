@@ -69,6 +69,30 @@ final class SettingsUITests: XCTestCase {
             "'Sign in with Google' button must be visible when the session is cleared via --uitesting-sign-out")
     }
 
+    func testOfflineSponsorBlockAutoUpdateDefaultsOnAndPersists() {
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("sponsorBlock", in: app)
+        let form = UITestHelpers.settingsForm(in: app)
+        let toggle = app.switches[AccessibilityID.settingsOfflineSponsorBlockToggle]
+        UITestHelpers.scrollUntilVisible(toggle, in: form, maxSwipes: 14)
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        XCTAssertEqual(toggle.value as? String, "1", "Automatic offline SponsorBlock updates default to on")
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Offline SponsorBlock auto-update setting"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        XCTAssertEqual(toggle.value as? String, "0")
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
+        app.launch()
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("sponsorBlock", in: app)
+        UITestHelpers.scrollUntilVisible(toggle, in: form, maxSwipes: 14)
+        XCTAssertEqual(toggle.value as? String, "0")
+    }
+
     func testShortsTranslationDefaultsAreIndependentAndPersist() {
         UITestHelpers.tapTab(named: "Settings", in: app)
         UITestHelpers.selectSettingsCategory("languages", in: app)

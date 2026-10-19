@@ -252,6 +252,7 @@ enum AppSymbol {
     static let stats = "chart.bar.xaxis"
     static let shuffle = "shuffle"
     static let skipForward = "forward.fill"
+    static let updateSponsorBlock = "arrow.triangle.2.circlepath"
     static let undo = "arrow.uturn.backward"
     static let reportFlag = "flag"
     static let removeCircle = "minus.circle.fill"

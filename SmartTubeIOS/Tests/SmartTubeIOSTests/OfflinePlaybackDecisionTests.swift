@@ -39,6 +39,12 @@ final class OfflineDecisionURLProtocol: URLProtocol {
     override func stopLoading() {}
 }
 
+/// Keeps saved-video playback away from the shared coordinator and its network source.
+private struct NoStoredSponsorSegments: OfflineSponsorSegmentProviding {
+    // swiftlint:disable:next async_without_await
+    func sponsorSegmentsForPlayback(videoID: String) async -> OfflineSponsorSegments? { nil }
+}
+
 private actor OfflineVOTProbe: YandexVOTServing {
     struct Request: Sendable {
         let videoID: String
@@ -155,6 +161,7 @@ struct OfflinePlaybackDecisionTests {
             settings: settings)
         let media = LocalMediaProbe()
         media.fails = fails
+        model.offlineSponsor = NoStoredSponsorSegments()
         let vot = OfflineVOTProbe()
         model.voiceOver = VoiceOverTranslationController(api: api, client: vot)
         model.offlineMedia = media

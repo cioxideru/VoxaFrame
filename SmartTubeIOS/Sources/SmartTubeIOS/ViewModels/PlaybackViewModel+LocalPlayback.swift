@@ -48,6 +48,7 @@ extension PlaybackViewModel {
                 isLoading = false
             }
         }
+        Task { [weak self] in await self?.applyOfflineSponsorSegments(for: video) }
         // Queue availability must not delay local item preparation or use pre-activation context.
         await updateNextAvailability(for: video)
         #if canImport(UIKit)

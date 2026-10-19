@@ -37,6 +37,7 @@ struct OfflineVideosView: View {
     @State private var coordinator = OfflineCoordinator.shared
     @State private var showsProgress = false
     @State private var showsDeleteAll = false
+    @State private var showsSponsorResult = false
     @State private var deletion: Deletion?
     @State private var selectedVideoID: String?
     /// Set once a video has filled the detail column; from then on only the person's choice is kept.
@@ -122,6 +123,11 @@ struct OfflineVideosView: View {
                     }
                 }
             }
+            .toolbar { ToolbarItem(placement: sponsorPlacement) { updateSponsorBlockButton } }
+            .alert(
+                Text("SponsorBlock updated", bundle: .module), isPresented: $showsSponsorResult,
+                actions: {}, message: { Text(sponsorResultText) }
+            )
             .task { coordinator.start() }
             .navigationDestination(item: $openedVideoID) { OfflineVideoDetail(videoID: $0) }
             .confirmationDialog(
@@ -463,6 +469,14 @@ struct OfflineVideosView: View {
 // MARK: - Empty states
 
 extension OfflineVideosView {
+    var sponsorPlacement: ToolbarItemPlacement {
+        #if os(tvOS)
+        .primaryAction
+        #else
+        .secondaryAction
+        #endif
+    }
+
     fileprivate var emptyLibrary: some View {
         ContentUnavailableView {
             Label {
@@ -487,5 +501,36 @@ extension OfflineVideosView {
         } description: {
             Text("Downloads you start with Offline watch appear here until you delete them.", bundle: .module)
         }
+    }
+}
+
+extension OfflineVideosView {
+    var sponsorResultText: String {
+        guard case .finished(let updated, let failed) = coordinator.sponsor.update else { return "" }
+        return String(localized: "Updated \(updated) videos, failed \(failed).", bundle: .module)
+    }
+
+    var updateSponsorBlockButton: some View {
+        let running = if case .running = coordinator.sponsor.update { true } else { false }
+        return Button {
+            Task {
+                await coordinator.refreshAllSponsorSegments()
+                showsSponsorResult = true
+            }
+        } label: {
+            Label {
+                if case .running(let done, let total) = coordinator.sponsor.update {
+                    Text("Updating SponsorBlock \(done)/\(total)", bundle: .module)
+                } else {
+                    Text("Update SponsorBlock", bundle: .module)
+                }
+            } icon: {
+                Image(systemName: AppSymbol.updateSponsorBlock)
+            }
+        }
+        .accessibilityIdentifier(AccessibilityID.offlineUpdateSponsorBlockAll)
+        .disabled(
+            !coordinator.ready || isLocked || running || !coordinator.sponsor.isEnabled()
+                || snapshot.entries.allSatisfy { $0.assets.isEmpty })
     }
 }

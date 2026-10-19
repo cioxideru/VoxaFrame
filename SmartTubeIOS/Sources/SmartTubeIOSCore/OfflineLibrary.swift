@@ -45,10 +45,32 @@ public struct OfflineAsset: Codable, Sendable, Identifiable {
     public var systemNoFollow: Bool?
     public var attempt: UUID?
 }
+/// SponsorBlock segments saved with a video. All supported categories are kept; the user's
+/// current category settings are applied at playback, so changing them needs no refetch.
+public struct OfflineSponsorSegments: Codable, Sendable, Equatable {
+    public var segments: [SponsorSegment]
+    public var fetchedAt: Date
+    public init(segments: [SponsorSegment], fetchedAt: Date) {
+        self.segments = segments
+        self.fetchedAt = fetchedAt
+    }
+    /// Segments of the enabled categories that are at least `minDuration` seconds long.
+    public func active(categories: Set<SponsorSegment.Category>, minDuration: Double) -> [SponsorSegment] {
+        segments.filter { categories.contains($0.category) && ($0.end - $0.start) >= minDuration }
+    }
+    /// Automatic refresh runs at most once per day.
+    public static let refreshInterval: TimeInterval = 24 * 60 * 60
+    public static func isRefreshDue(lastRefresh: Date?, now: Date) -> Bool {
+        guard let lastRefresh else { return true }
+        return now.timeIntervalSince(lastRefresh) >= refreshInterval || lastRefresh > now
+    }
+}
 public struct OfflineEntry: Codable, Sendable, Identifiable {
     public var id: String { video.id }
     public var video: Video
     public var assets: [OfflineAsset] = []
+    /// Absent in manifests written before offline SponsorBlock support.
+    public var sponsor: OfflineSponsorSegments?
 }
 public struct OfflineJob: Codable, Sendable, Identifiable {
     public enum State: String, Codable, Sendable { case queued, resolving, downloading, completed, failed, cancelled }
@@ -74,6 +96,8 @@ public struct OfflineSnapshot: Codable, Sendable {
     public var jobs: [OfflineJob] = []
     public var notifiedBatches: Set<UUID> = []
     public var pendingRemovals: [OfflineRemoval]?
+    /// When the automatic SponsorBlock refresh last completed; nil in manifests written before it existed.
+    public var sponsorRefreshedAt: Date?
     public init() {}
 }
 public struct OfflineTransferReceipt: Codable, Sendable {
@@ -155,7 +179,7 @@ public actor OfflineLibraryStore {
         }
         if !next.entries.contains(where: { $0.id == video.id }) {
             let metadata = Video(
-                id: video.id, title: video.title, channelTitle: video.channelTitle,
+                id: video.id, title: video.title, channelTitle: video.channelTitle, channelId: video.channelId,
                 thumbnailURL: video.thumbnailURL, duration: video.duration)
             next.entries.append(OfflineEntry(video: metadata))
         }
@@ -173,6 +197,20 @@ public actor OfflineLibraryStore {
                     id: UUID(), batch: batch, attempt: UUID(), videoID: video.id,
                     track: track, state: .queued, progress: 0))
         }
+        return try commit(next)
+    }
+    /// No-op when the video was removed meanwhile.
+    @discardableResult public func setSponsorSegments(
+        videoID: String, segments: [SponsorSegment], fetchedAt: Date
+    ) throws -> OfflineSnapshot {
+        var next = try snapshot()
+        guard let index = next.entries.firstIndex(where: { $0.id == videoID }) else { return next }
+        next.entries[index].sponsor = OfflineSponsorSegments(segments: segments, fetchedAt: fetchedAt)
+        return try commit(next)
+    }
+    @discardableResult public func markSponsorRefresh(at date: Date) throws -> OfflineSnapshot {
+        var next = try snapshot()
+        next.sponsorRefreshedAt = date
         return try commit(next)
     }
     @discardableResult public func update(

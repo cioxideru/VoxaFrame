@@ -59,6 +59,9 @@ public enum AccessibilityID {
     public static var offlineJobsList: String { "offline.jobsList" }
     public static var offlineDetailList: String { "offline.detailList" }
     public static var offlineDeleteAll: String { "offline.deleteAll" }
+    public static var offlineUpdateSponsorBlockAll: String { "offline.updateSponsorBlockAll" }
+    public static var offlineUpdateSponsorBlock: String { "offline.updateSponsorBlock" }
+    public static var offlineSponsorBlockStatus: String { "offline.sponsorBlockStatus" }
     public static var offlineAudioPicker: String { "offline.audioPicker" }
     public static var offlineTranslationPicker: String { "offline.translationPicker" }
     public static var offlineVideoPicker: String { "offline.videoPicker" }
@@ -146,6 +149,7 @@ public enum AccessibilityID {
     public static var settingsResetAllCancel: String { "settings.resetAll.cancel" }
     public static var settingsSetPINButton: String { "settings.setPINButton" }
     public static var settingsSponsorBlockToggle: String { "settings.sponsorBlockToggle" }
+    public static var settingsOfflineSponsorBlockToggle: String { "settings.offlineSponsorBlockToggle" }
     public static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }
     public static var settingsVp9Toggle: String { "settings.vp9Toggle" }
     public static var settingsVisibleSectionsLink: String { "settings.visibleSectionsLink" }

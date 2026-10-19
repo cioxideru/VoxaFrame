@@ -55,6 +55,9 @@ enum AccessibilityID {
     static var offlineJobsList: String { "offline.jobsList" }
     static var offlineDetailList: String { "offline.detailList" }
     static var offlineDeleteAll: String { "offline.deleteAll" }
+    static var offlineUpdateSponsorBlockAll: String { "offline.updateSponsorBlockAll" }
+    static var offlineUpdateSponsorBlock: String { "offline.updateSponsorBlock" }
+    static var offlineSponsorBlockStatus: String { "offline.sponsorBlockStatus" }
     static var offlineAudioPicker: String { "offline.audioPicker" }
     static var offlineTranslationPicker: String { "offline.translationPicker" }
     static var offlineVideoPicker: String { "offline.videoPicker" }
@@ -153,6 +156,7 @@ enum AccessibilityID {
     static var settingsResetAllCancel: String { "settings.resetAll.cancel" }
     static var settingsSetPINButton: String { "settings.setPINButton" }
     static var settingsSponsorBlockToggle: String { "settings.sponsorBlockToggle" }
+    static var settingsOfflineSponsorBlockToggle: String { "settings.offlineSponsorBlockToggle" }
     static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }
     static var settingsVp9Toggle: String { "settings.vp9Toggle" }
     static var settingsYandexVOTKeepOriginalAudioToggle: String { "settings.yandexVOTKeepOriginalAudioToggle" }

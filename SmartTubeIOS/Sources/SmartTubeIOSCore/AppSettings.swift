@@ -132,6 +132,8 @@ public struct AppSettings: Codable {
     /// Channels where SponsorBlock is disabled. Key = channelId, value = display title.
     /// Mirrors Android's `SponsorBlockData.excludedChannels`.
     public var sponsorBlockExcludedChannels: [String: String]
+    /// Refresh SponsorBlock segments of saved offline videos in the background, at most once a day.
+    public var offlineSponsorBlockAutoUpdate: Bool
     /// Channels hidden from the feed via "Don't Recommend Channel". Key = channelId, value = channel title.
     /// Persists across sessions and syncs via iCloud when `iCloudSyncEnabled` is true.
     public var blockedChannels: [String: String]
@@ -342,6 +344,7 @@ public struct AppSettings: Codable {
         ]
         sponsorBlockMinSegmentDuration = 0
         sponsorBlockExcludedChannels = [:]
+        offlineSponsorBlockAutoUpdate = true
         blockedChannels = [:]
         preferredAudioLanguage = nil
         yandexVOTEnabled = false
@@ -426,6 +429,7 @@ extension AppSettings {
         case sponsorBlockActions
         case sponsorBlockMinSegmentDuration
         case sponsorBlockExcludedChannels
+        case offlineSponsorBlockAutoUpdate
         case blockedChannels
         case preferredAudioLanguage
         case yandexVOTEnabled
@@ -507,6 +511,8 @@ extension AppSettings {
             Double.self, forKey: .sponsorBlockMinSegmentDuration, default: d.sponsorBlockMinSegmentDuration)
         sponsorBlockExcludedChannels = c.safeDecode(
             [String: String].self, forKey: .sponsorBlockExcludedChannels, default: d.sponsorBlockExcludedChannels)
+        offlineSponsorBlockAutoUpdate = c.safeDecode(
+            Bool.self, forKey: .offlineSponsorBlockAutoUpdate, default: d.offlineSponsorBlockAutoUpdate)
         blockedChannels = c.safeDecode([String: String].self, forKey: .blockedChannels, default: d.blockedChannels)
         preferredAudioLanguage = c.safeDecode(
             String?.self, forKey: .preferredAudioLanguage, default: d.preferredAudioLanguage)

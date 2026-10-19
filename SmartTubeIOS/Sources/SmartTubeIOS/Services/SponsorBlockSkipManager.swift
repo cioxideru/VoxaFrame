@@ -140,6 +140,10 @@ public final class SponsorBlockSkipManager {
     public func skipToastSegment() {
         guard let seg = currentToastSegment else { return }
         currentToastSegment = nil
+        // Settings may have changed since the toast appeared (category, minimum length, enable switch).
+        guard sponsorSegments.contains(where: { $0.id == seg.id }),
+            delegate?.settings.sponsorAction(for: seg.category) != AppSettings.SponsorBlockAction.nothing
+        else { return }
         let effectiveDuration = player?.sponsorBlockDuration ?? delegate?.duration ?? 0
         if effectiveDuration > 0 && seg.end >= effectiveDuration - 2.0 {
             delegate?.handlePlaybackEnd()

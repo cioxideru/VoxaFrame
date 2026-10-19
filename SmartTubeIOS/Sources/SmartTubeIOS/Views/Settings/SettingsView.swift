@@ -501,6 +501,12 @@ extension SettingsView {
                     Text("10s").tag(10.0)
                 }
 
+                Toggle(isOn: $store.settings.offlineSponsorBlockAutoUpdate) {
+                    Text("Update SponsorBlock for offline videos automatically", bundle: .module)
+                    Text("Refreshes saved videos once a day while the app is open.", bundle: .module)
+                }
+                .accessibilityIdentifier(AccessibilityID.settingsOfflineSponsorBlockToggle)
+
                 // Excluded channels
                 NavigationLink("Excluded Channels (\(store.settings.sponsorBlockExcludedChannels.count))") {
                     SponsorBlockExcludedChannelsView()

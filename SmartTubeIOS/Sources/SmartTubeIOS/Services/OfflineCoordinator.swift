@@ -45,11 +45,12 @@ public final class OfflineCoordinator {
     @ObservationIgnored private let validate: @Sendable (URL, OfflineTrack, Bool) async throws -> Void
     @ObservationIgnored private(set) var persistenceBlocked = false
     @ObservationIgnored private let demand: PlaybackDemandCoordinator
-    @ObservationIgnored private let now: @Sendable () -> Date
+    @ObservationIgnored let now: @Sendable () -> Date
+    let sponsor = OfflineSponsorState()
     @ObservationIgnored private let waitUntil: @Sendable (Date) async throws -> Void
     @ObservationIgnored private var wakeTask: Task<Void, Never>?
     @ObservationIgnored private var deferredEvents: [OfflineTransferEvent] = []
-    @ObservationIgnored private var startup: Task<Void, Never>?
+    @ObservationIgnored var startup: Task<Void, Never>?
     @ObservationIgnored private var eventTask: Task<Void, Never>?
     @ObservationIgnored private var demandTask: Task<Void, Never>?
     @ObservationIgnored private var resolverTasks: [UUID: Task<Void, Never>] = [:]
@@ -96,6 +97,7 @@ public final class OfflineCoordinator {
         #else
         resolver = OfflineSourceResolver(api: api)
         #endif
+        configureSponsor(settings: settings)
         start()
     }
     private func observeDownloadLimit(_ settings: SettingsStore) {
@@ -159,7 +161,7 @@ public final class OfflineCoordinator {
         guard next.revision >= snapshot.revision else { return }
         accept(next)
     }
-    private func blockPersistence(_ failure: Error) {
+    func blockPersistence(_ failure: Error) {
         let failureInfo = failure as NSError
         let underlying = failureInfo.userInfo[NSUnderlyingErrorKey] as? NSError
         offlineLibraryLog.error(
@@ -268,9 +270,6 @@ public final class OfflineCoordinator {
                 pump()
             } catch { blockPersistence(error) }
         }
-    }
-    func catalog(video: Video) async throws -> [OfflineTrack] {
-        try await resolver.catalog(video: video).map(\.track)
     }
     private func pump() {
         guard ready, !persistenceBlocked, !isYielding, (snapshot.pendingRemovals ?? []).isEmpty
@@ -399,6 +398,7 @@ public final class OfflineCoordinator {
                     try await store.finish(
                         attempt: attempt, staged: url, systemPackage: systemPackage, savedVideoSizes: savedVideoSizes))
                 transport.acknowledge(attempt)
+                fetchSponsorSegmentsIfMissing(videoID: job.videoID)
                 for (batch, title) in try await store.takeCompletedBatches() {
                     await notifications.completed(id: batch, title: title)
                 }
@@ -438,13 +438,16 @@ extension OfflineCoordinator {
     fileprivate var activeIDs: Set<UUID> {
         Set(snapshot.jobs.filter { [.resolving, .downloading].contains($0.state) }.map(\.attempt))
     }
+    func catalog(video: Video) async throws -> [OfflineTrack] {
+        try await resolver.catalog(video: video).map(\.track)
+    }
     func playbackVideo(
         entry: OfflineEntry, videoAsset: OfflineAsset, audio: OfflineAsset?, translation: OfflineAsset?
     ) async throws -> Video {
         let started = Date()
         defer {
             offlineLibraryLog.notice(
-                "[offline-start] file lookup elapsedMs=\(Int(Date().timeIntervalSince(started) * 1_000)) videoId=\(entry.id, privacy: .public)"
+                "[offline-start] file lookup elapsedMs=\(Int(Date().timeIntervalSince(started) * 1_000))"
             )
         }
         guard videoAsset.track.kind != .hls || audio == nil else { throw OfflineLibraryError.unavailable }
