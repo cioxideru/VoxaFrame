@@ -514,7 +514,7 @@ extension HomeView {
                 eager: true,
                 columns: feedColumns
             )
-            .feedBlockGroup(AccessibilityID.feedVideoBlock(.home, segment.index), cards: segment.items.count)
+            .feedBlockGroup(AccessibilityID.feedVideoBlock(.home, segment.index))
             .contentShape(Rectangle())
             .onAppear {
                 homeLayout.markLaidOut(block: segment.index, in: segments)
@@ -562,9 +562,7 @@ extension HomeView {
                         eager: true,
                         columns: feedColumns
                     )
-                    .feedBlockGroup(
-                        AccessibilityID.feedVideoBlock(selectedSection.type, segment.index), cards: segment.items.count
-                    )
+                    .feedBlockGroup(AccessibilityID.feedVideoBlock(selectedSection.type, segment.index))
                     .onAppear { sectionLayout.markLaidOut(block: segment.index, in: segments) }
                     #if os(iOS)
                     .modifier(sectionSwipe)
