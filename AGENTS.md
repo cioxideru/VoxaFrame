@@ -14,8 +14,10 @@ text and IDs; put unresolved work in the register, and closed outcomes in the ch
 
 ## Repository
 - Canonical repository: [cioxideru/VoxaFrame](https://github.com/cioxideru/VoxaFrame); upstream: [milika/SmartTubeIOS](https://github.com/milika/SmartTubeIOS).
-- In the maintained local checkout, `fork` points to `https://github.com/cioxideru/VoxaFrame.git` and `origin` points to upstream. Check `git remote -v` before remote operations: a fresh clone uses `origin` for VoxaFrame.
+- In the maintained local checkout, `fork` points to `https://github.com/cioxideru/VoxaFrame.git`. Check `git remote -v` before remote operations: a fresh clone uses `origin` for VoxaFrame.
 - The GitHub rename does not rename the Swift package, targets, workspace or existing local checkout (`SmartTubeIOS`). Keep their existing names and paths.
+- Users see "VoxaFrame" (`CFBundleName`/`CFBundleDisplayName` in the app Info.plists), but the product, executable and bundle ID stay `SmartTube` / `com.ibaranov.smarttube.app` so sign-in and saved data survive. Device logs therefore still name the process `SmartTube`.
+- Releases are a tag plus notes. Never commit a Team ID or attach a binary signed with a personal key.
 
 ## Commands (scripts in `scripts/`, safe from any cwd)
 - `scripts/ci.sh` — secrets + doc links + swift-format check + package unit tests. Run before every commit, with SwiftLint:
@@ -43,6 +45,7 @@ text and IDs; put unresolved work in the register, and closed outcomes in the ch
 - WKWebView `evaluateJavaScript` has no user activation: PiP/fullscreen cannot be triggered from Swift.
 - Authenticated InnerTube calls use the TVHTML5 client on youtubei.googleapis.com with a Bearer token and no API key; the WEB client rejects Bearer tokens. Never call `/oauth2/v3/userinfo` for account info (the TV OAuth client isn't Data-API-v3-enabled) — use `account/accounts` with the TVHTML5 context instead.
 - The 16 GB build Mac stalls with > 3 parallel simulator clones; the scripts cap UI workers at 3.
+- YouTube HLS variant URLs carry per-request tokens: a second load of the same master returns new URLs. Offline downloads match a variant by URL first, then by size, codec, frame rate and peak bit rate.
 - Playback fallback code (`PlaybackViewModel+Fallback.swift`) is under active decomposition (WS4). Do not add branches to the legacy cascade; the proposed adapter boundary is [ADR-0005](docs/adr/0005-stream-source-pipeline.md) and is not implemented yet.
 - Package tests run on native macOS: code under `#if !os(tvOS)` must also compile for AppKit (`NSImage.pngData()` is a local shim).
 - `swift test --parallel` runs suites concurrently. Tests touching a shared static (`CurrentQueueStore.shared`, a test `URLProtocol`'s routes) must be `.serialized` — nest suites sharing the same global under one serialized parent (e.g. `CurrentQueueStoreSuites`). Poll for the expected state with a deadline instead of a fixed sleep.

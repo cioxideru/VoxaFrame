@@ -20,7 +20,7 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 <table>
   <tr>
     <td><img src="docs/screenshots/home.png" width="160"/></td>
-    <td><img src="docs/screenshots/subscriptions.png" width="160"/></td>
+    <td><img src="docs/screenshots/search.png" width="160"/></td>
     <td><img src="docs/screenshots/player.png" width="160"/></td>
     <td><img src="docs/screenshots/player-menu.png" width="160"/></td>
     <td><img src="docs/screenshots/settings.png" width="160"/></td>
@@ -40,6 +40,7 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 - Picture-in-Picture (iOS)
 - Mini-player with background audio
 - Adjustable playback speed, seek interval, and sleep timer
+- Player controls hide after a few seconds and toggle with a tap — in the regular player and in Shorts
 - Previous / next video navigation
 - Now Playing metadata on lock screen and Dynamic Island
 
@@ -57,6 +58,8 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 - RSS channel feeds with background refresh and deduplication
 - iCloud sync for subscriptions, watch state, queue, and RSS feeds
 - Video publish date shown in search results and feed cards
+- Grid columns per orientation: up to 4 in iPad landscape, up to 5 on Mac
+- Signed-in Shorts come from your subscriptions and the Shorts on YouTube's TV Home page; YouTube does not offer personal Shorts recommendations to the TV sign-in
 
 ### Ad & Sponsor Blocking
 - Zero ads, no tracking
@@ -69,6 +72,7 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 - Share Extension — share YouTube links from any app directly into VoxaFrame
 - Offline videos with a persistent download queue, progress page and completion notifications
 - Save additional video qualities, original/dubbed audio and Yandex voice-over tracks; play downloaded media locally
+- Variants grouped by type (video, audio, voice-over) and parallel downloads with a configurable limit
 - Downloads and speculative preloading yield while active playback prepares or buffers
 - WatchTime reporting and Like / Dislike support
 - VPN / IP-block detection with a clear, non-retrying error banner

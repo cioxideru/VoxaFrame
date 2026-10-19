@@ -6,6 +6,27 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+## [5.17] – 2026-10-19
+
+VoxaFrame 5.17 (39). Source release; no signed binaries are attached.
+
+### Added
+- **Mac:** full-screen playback, window size limits and a search filters menu.
+- **iPad:** sidebar in landscape, offline list and detail side by side, settings categories on wide layouts.
+- **Grid columns:** up to 4 in iPad landscape and up to 5 on Mac.
+- **Offline:** parallel downloads with a simultaneous-downloads setting; variants grouped by video, audio and voice-over; a clearer saved-video page; compact list rows.
+- **Shorts:** controls hide after a few seconds and toggle with a tap, like the regular player.
+
+### Changed
+- Minimum OS raised to iOS/iPadOS 18, macOS 15 and tvOS 18.
+- The app shows its name as VoxaFrame; the bundle ID is unchanged, so sign-in and saved data stay.
+- Redesigned player More menu; option panels stay on screen on iPad.
+
+### Fixed
+- Offline HLS downloads from the Offline section: variants are matched by size, codec, frame rate and peak bit rate when YouTube renews their URLs; dubbed variants and a single unnamed audio track are accepted; every refusal is logged with its reason.
+- Saved Yandex voice-over plays back in sync; Next keeps the current queue position after re-selection.
+
+
 ### Fixed — 2026-10-17
 
 - **VoxaFrame 5.16 (37), background offline transfers (PLAN-0028):** on iOS, a direct download
