@@ -276,42 +276,56 @@ final class TVPlayerControlsUITests: XCTestCase {
     /// Regression test for #150: pressing Menu/Back while the description panel is open
     /// must close the panel, not exit the app.
     func testDescriptionPanelClosesWithMenu() throws {
-        try waitForMoreMenu()
-        let descriptionRow = element(identifier: AccessibilityID.playerMoreMenuDescriptionRow)
-        guard descriptionRow.waitForExistence(timeout: 5) else {
-            try captureAndSkip("player.moreMenu.descriptionRow not found", in: app)
-        }
-        // Navigate down to find the description row (position varies).
-        var reached = false
-        for _ in 0..<8 {
+        try assertPanelClosesWithMenu(
+            row: AccessibilityID.playerMoreMenuDescriptionRow, panel: AccessibilityID.playerDescriptionPanel)
+    }
+
+    /// The same Back behaviour for the comments panel.
+    func testCommentsPanelClosesWithMenu() throws {
+        try assertPanelClosesWithMenu(
+            row: AccessibilityID.playerMoreMenuCommentsRow, panel: AccessibilityID.playerCommentsPanel)
+    }
+
+    /// Moves focus down until `target` has it, waiting for each focus change; fails at the deadline.
+    private func moveFocusDown(to target: XCUIElement, timeout: TimeInterval = 40) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        let focused = NSPredicate(format: "hasFocus == true")
+        while Date() < deadline {
+            if target.hasFocus { return true }
             remote.press(.down)
-            Thread.sleep(forTimeInterval: 0.35)
-            if descriptionRow.hasFocus {
-                reached = true
-                break
-            }
+            let wait = XCTWaiter().wait(
+                for: [XCTNSPredicateExpectation(predicate: focused, object: target)], timeout: 1.5)
+            if wait == .completed { return true }
         }
-        guard reached else {
-            try captureAndSkip("#150 regression: description row did not receive focus", in: app)
-        }
+        return target.hasFocus
+    }
+
+    /// Opens the panel from its More menu row, presses Menu, and checks that exactly that panel went away
+    /// while the player stayed and still takes remote input.
+    private func assertPanelClosesWithMenu(row rowID: String, panel panelID: String) throws {
+        try waitForMoreMenu()
+        let row = element(identifier: rowID)
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "\(rowID) must be in the More menu")
+        XCTAssertTrue(moveFocusDown(to: row), "\(rowID) must receive focus")
         remote.press(.select)
-        Thread.sleep(forTimeInterval: 1.0)
-        // Description overlay must be visible.
-        let xButton = app.descendants(matching: .any)
-            .matching(
-                NSPredicate(format: "identifier BEGINSWITH 'player.descriptionOverlay' OR label == 'Description'")
-            )
-            .firstMatch
-        guard xButton.waitForExistence(timeout: 6) else {
-            try captureAndSkip("#150 regression: description panel did not open", in: app)
-        }
+        let panel = element(identifier: panelID)
+        XCTAssertTrue(panel.waitForExistence(timeout: 6), "\(panelID) must open")
         // Press Menu (Back) — must dismiss the panel, not exit the app.
         remote.press(.menu)
-        Thread.sleep(forTimeInterval: 1.0)
-        // Player title must still be present — app must not have exited.
+        let gone = NSPredicate(format: "exists == false")
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: gone, object: panel)], timeout: 5),
+            .completed, "\(panelID) must be dismissed by Menu")
         XCTAssertTrue(
             titleLabel.waitForExistence(timeout: 5),
-            "#150 regression: player.titleLabel must still exist after pressing Menu to close description panel")
+            "player.titleLabel must still exist after pressing Menu to close \(panelID)")
+        // Focus is back on the player: Select shows its controls, Up reaches More, Select reopens the menu.
+        remote.press(.select)
+        remote.press(.up)
+        remote.press(.select)
+        XCTAssertTrue(moreMenuSpeedRow.waitForExistence(timeout: 8), "remote input must reach the player")
+        XCTAssertFalse(panel.exists, "\(panelID) must not come back")
     }
+
 }
 #endif

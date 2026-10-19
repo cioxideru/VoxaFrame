@@ -1,97 +1,55 @@
 import SmartTubeIOSCore
 import SwiftUI
 
-// MARK: - Comments overlay
+// MARK: - Comments panel
 //
-// Rendered by PlayerView (including tvOS) as a dim-backdrop bottom sheet
-// listing `CommentRowView`s. tvOS-only focus handling stays behind `#if os(tvOS)`.
+// The same container as the More menu (VF/Sheet): a sheet on iPhone, a popover on iPad and Mac
+// (`playerOptionPanel(isPresented:)`), a trailing menu over the dimmed video on tvOS.
 
-/// Dim-backdrop bottom sheet listing video comments, or a loading/empty state.
-struct CommentsOverlayView: View {
+/// Header (Cancel, Comments) above the comments, drawn as one grouped card.
+struct CommentsPanel: View {
     let comments: [Comment]
     let isLoading: Bool
-    let onDismiss: () -> Void
-    #if os(tvOS)
-    var focusNamespace: Namespace.ID
-    #endif
-    var accessibilityId: String? = nil
+    @Binding var isPresented: Bool
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { onDismiss() }
-
-            VStack(spacing: 0) {
-                HStack {
-                    Button {
-                        onDismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .semibold))
-                            .padding(12)
-                    }
-                    .buttonStyle(.plain)
-                    Spacer()
-                    Text("Comments")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Color.clear.frame(width: 44, height: 44)
-                }
-                .padding(.horizontal, 4)
-                Divider()
-                CommentsList(comments: comments, isLoading: isLoading, maxScrollHeight: 400)
-            }
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            #if os(tvOS)
-            .focusScope(focusNamespace)
-            .onExitCommand { onDismiss() }
-            #endif
-            .padding(.horizontal, 8)
-            .safeAreaPadding(.horizontal)
-            .padding(.bottom, 8)
+        PlayerOptionPanel(
+            title: Text("Comments", bundle: .module), isPresented: $isPresented,
+            cancelAccessibilityIdentifier: AccessibilityID.playerCommentsPanelCancel
+        ) {
+            ScrollView { CommentsList(comments: comments, isLoading: isLoading) }
+                .background(VFColor.surface)
         }
-        .ignoresSafeArea()
-        .accessibilityIdentifier(accessibilityId)
+        .accessibilityIdentifier(AccessibilityID.playerCommentsPanel)
     }
 }
 
-/// Loading, empty or scrolling list of comments; shared by the overlay and the Mac inspector.
+/// Loading, empty or grouped list of comments; shared by the panel and the Mac inspector. Put it in a `ScrollView`.
 struct CommentsList: View {
     let comments: [Comment]
     let isLoading: Bool
-    var maxScrollHeight: CGFloat?
 
     var body: some View {
         if isLoading {
             ProgressView()
-                .padding(40)
+                .frame(maxWidth: .infinity)
+                .padding(VFSpace.s32)
         } else if comments.isEmpty {
-            Text("No comments available.")
+            Text("No comments available.", bundle: .module)
                 .foregroundStyle(.secondary)
-                .padding(40)
+                .frame(maxWidth: .infinity)
+                .padding(VFSpace.s32)
         } else {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
-                    ForEach(comments) { comment in
-                        CommentRowView(comment: comment)
-                    }
+            LazyVStack(spacing: 0) {
+                ForEach(comments) { comment in
+                    if comment.id != comments.first?.id { Divider() }
+                    CommentRowView(comment: comment)
                 }
-                .padding()
             }
-            .frame(maxHeight: maxScrollHeight)
-        }
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func accessibilityIdentifier(_ id: String?) -> some View {
-        if let id {
-            self.accessibilityIdentifier(id)
-        } else {
-            self
+            .background(VFColor.elevated, in: RoundedRectangle(cornerRadius: VFRadius.card, style: .continuous))
+            .padding(VFSpace.s16)
+            .frame(maxWidth: VFColumn.readableMaximum)
+            .frame(maxWidth: .infinity)
         }
     }
 }

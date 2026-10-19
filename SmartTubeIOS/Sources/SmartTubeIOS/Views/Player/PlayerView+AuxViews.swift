@@ -215,39 +215,61 @@ struct RelatedVideosView: View {
 
 struct CommentRowView: View {
     let comment: Comment
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: VFSpace.s12) {
             AsyncImage(url: comment.authorAvatarURL) { image in
                 image.resizable().scaledToFill()
             } placeholder: {
-                Circle().fill(Color.secondary.opacity(0.3))
+                Circle().fill(VFColor.placeholder)
             }
-            .frame(width: 36, height: 36)
+            .frame(width: VFSize.commentAvatar, height: VFSize.commentAvatar)
             .clipShape(Circle())
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: VFSpace.s4) {
+                HStack(spacing: VFSpace.s8) {
                     Text(comment.author)
-                        .font(.caption)
+                        .font(.footnote)
                         .fontWeight(.semibold)
                     Text(comment.publishedTime)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
                 Text(timestampLinkedAttributedString(comment.text))
                     .font(.callout)
                 if !comment.likeCount.isEmpty {
-                    HStack(spacing: 4) {
-                        Image(systemName: "hand.thumbsup")
-                            .font(.caption2)
+                    HStack(spacing: VFSpace.s4) {
+                        Image(systemName: AppSymbol.thumbsUp)
                         Text(comment.likeCount)
-                            .font(.caption2)
                     }
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                 }
             }
+            Spacer(minLength: 0)
         }
+        .padding(VFSpace.s12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // One VoiceOver element per comment; each timestamp stays reachable as an action.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spokenSummary)
+        .accessibilityActions {
+            // By position, not by time: the same timestamp can appear twice in one comment.
+            ForEach(Array(findTimestamps(in: comment.text).enumerated()), id: \.offset) { _, stamp in
+                Button(String(comment.text[stamp.range])) {
+                    if let url = URL(string: "smarttube://seek/\(Int(stamp.seconds))") { openURL(url) }
+                }
+            }
+        }
+    }
+
+    private var spokenSummary: String {
+        var parts = [comment.author, comment.publishedTime, comment.text]
+        if !comment.likeCount.isEmpty {
+            parts.append(String(localized: "\(comment.likeCount) likes", bundle: .module))
+        }
+        return parts.filter { !$0.isEmpty }.joined(separator: ", ")
     }
 
     private func timestampLinkedAttributedString(_ text: String) -> AttributedString {

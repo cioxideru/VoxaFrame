@@ -66,6 +66,8 @@ enum VFColor {
     /// Fill of destructive swipe actions under the system's white label. `danger` is a text colour and too light
     /// as a fill in dark mode, so this stays the system red.
     static let destructiveFill = Color.red
+    /// Stand-in under an image that has not loaded yet, such as a comment author's avatar.
+    static let placeholder = Color.secondary.opacity(0.3)
 
     /// Black at 72 %: only under white controls drawn over an arbitrary video frame.
     /// Over glass and video use `onMedia` or system label styles, not the colours above.

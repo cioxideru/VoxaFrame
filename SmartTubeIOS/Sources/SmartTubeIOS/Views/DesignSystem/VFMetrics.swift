@@ -33,6 +33,11 @@ enum VFTarget {
     static let tv: CGFloat = 66
 }
 
+/// Fixed sizes of content images.
+enum VFSize {
+    static let commentAvatar: CGFloat = 36
+}
+
 enum VFMargin {
     static let iphone: CGFloat = 16
     static let ipad: CGFloat = 20
@@ -55,6 +60,8 @@ enum VFColumn {
     static let offlineListMinimum: CGFloat = 320
     static let offlineListFraction: CGFloat = 0.45
     static let offlineListMaximum: CGFloat = 420
+    /// Longest line of running text (description, comments) before it stops being comfortable to read.
+    static let readableMaximum: CGFloat = 640
     static let settingsCategoriesMaximum: CGFloat = 320
     static let settingsCategoriesTVMaximum: CGFloat = 620
 

@@ -36,6 +36,8 @@ extension PlayerView {
             .playerOptionPanel(isPresented: $showCaptionPicker, trigger: nil) { captionPickerOverlay }
             .playerOptionPanel(isPresented: $showAudioTrackPicker, trigger: .audio) { audioTrackPickerOverlay }
             .playerOptionPanel(isPresented: $showSleepTimerPicker, trigger: .sleepTimer) { sleepTimerPickerOverlay }
+            .playerOptionPanel(isPresented: $showDescriptionSheet, trigger: nil) { descriptionPanel }
+            .playerOptionPanel(isPresented: $showCommentsSheet, trigger: nil) { commentsPanel }
             // The controls stay while a panel is open, so its popover keeps pointing at the button that opened it;
             // closing the last panel starts the hide timer again.
             .onChange(of: isOptionPanelOpen) { _, open in
@@ -75,6 +77,7 @@ extension PlayerView {
     private var isOptionPanelOpen: Bool {
         let pickerOpen =
             showSpeedPicker || showQualityPicker || showCaptionPicker || showAudioTrackPicker || showSleepTimerPicker
+            || showDescriptionSheet || showCommentsSheet
         #if os(iOS)
         return pickerOpen || showMoreMenu || moreMenuDestination != nil
         #else
@@ -92,6 +95,8 @@ extension PlayerView {
         showCaptionPicker = false
         showAudioTrackPicker = false
         showSleepTimerPicker = false
+        showDescriptionSheet = false
+        showCommentsSheet = false
     }
     #endif
 

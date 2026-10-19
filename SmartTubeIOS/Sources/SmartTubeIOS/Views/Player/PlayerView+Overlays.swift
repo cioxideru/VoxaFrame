@@ -24,8 +24,6 @@ private struct MoreMenuContentHeightKey: PreferenceKey {
 //
 // Includes:
 //   • moreMenuOverlay      — all top-bar actions + share/download
-//   • descriptionOverlay   — scrollable video description
-//   • commentsOverlay      — video comments list
 //   • loadComments()       — async comment fetching
 //   • descriptionAttributedString(_:) — URL linkification helper
 
@@ -48,16 +46,6 @@ extension PlayerView {
         #if os(tvOS)
         tvOptionPanels
         #endif
-        if showDescriptionSheet {
-            descriptionOverlay
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeOut(duration: 0.2), value: showDescriptionSheet)
-        }
-        if showCommentsSheet {
-            commentsOverlay
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeOut(duration: 0.2), value: showCommentsSheet)
-        }
     }
 
     // MARK: - More menu overlay

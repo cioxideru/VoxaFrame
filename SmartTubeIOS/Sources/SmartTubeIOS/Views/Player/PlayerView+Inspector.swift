@@ -112,10 +112,12 @@ extension PlayerView {
                 case .comments:
                     // Never show another video's list while this one's request is pending.
                     let isCurrent = vm.comments.videoId == activeVideoID
-                    CommentsList(
-                        comments: isCurrent ? vm.comments.comments : [],
-                        isLoading: !isCurrent || vm.comments.isLoading
-                    )
+                    ScrollView {
+                        CommentsList(
+                            comments: isCurrent ? vm.comments.comments : [],
+                            isLoading: !isCurrent || vm.comments.isLoading
+                        )
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

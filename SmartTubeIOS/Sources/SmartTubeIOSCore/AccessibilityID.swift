@@ -9,6 +9,10 @@ public enum AccessibilityID {
     public static var playerMoreMenu: String { "player.moreMenu" }
     public static var playerMoreMenuOpenChannel: String { "player.more.openChannel" }
     public static var playerOptionPanelCancel: String { "player.optionPanel.cancel" }
+    public static var playerDescriptionPanel: String { "player.descriptionOverlay" }
+    public static var playerDescriptionPanelCancel: String { "player.descriptionOverlay.cancel" }
+    public static var playerCommentsPanel: String { "player.commentsOverlay" }
+    public static var playerCommentsPanelCancel: String { "player.commentsOverlay.cancel" }
     public static var playerMoreMenuScrollView: String { "player.moreMenu.scrollView" }
     public static var playerMoreMenuLikeRow: String { "player.moreMenu.likeRow" }
     public static var playerMoreMenuDislikeRow: String { "player.moreMenu.dislikeRow" }

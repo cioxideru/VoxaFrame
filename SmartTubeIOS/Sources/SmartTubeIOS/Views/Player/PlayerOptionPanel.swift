@@ -21,18 +21,7 @@ struct PlayerOptionPanel<Content: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                cancelButton
-                    .padding()
-                Spacer()
-                title
-                    .font(.headline)
-                    .multilineTextAlignment(.center)
-                    .accessibilityAddTraits(.isHeader)
-                Spacer()
-                // Balances Cancel so the title stays centred.
-                Color.clear.frame(width: 70, height: VFTarget.touch)
-            }
+            header
             Divider()
             #if os(iOS)
             content
@@ -52,17 +41,58 @@ struct PlayerOptionPanel<Content: View>: View {
         #endif
     }
 
+    private var titleView: some View {
+        title
+            .font(.headline)
+            .multilineTextAlignment(.center)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    /// Cancel and the centred title. A hidden copy of Cancel on the other side keeps the title centred at every
+    /// text size; when the three do not fit on one line (large Dynamic Type), Cancel goes above the title.
+    private var header: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack {
+                cancelButton
+                Spacer()
+                titleView.fixedSize(horizontal: true, vertical: false)
+                Spacer()
+                cancelButton
+                    .hidden()
+                    .accessibilityHidden(true)
+            }
+            VStack(alignment: .leading, spacing: 0) {
+                cancelButton
+                titleView
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal)
+                    .padding(.bottom, VFSpace.s8)
+            }
+        }
+    }
+
     @ViewBuilder private var cancelButton: some View {
-        let button = Button {
+        #if os(tvOS)
+        Button {
             isPresented = false
         } label: {
             Text("Cancel", bundle: .module)
         }
         .accessibilityIdentifier(cancelAccessibilityIdentifier)
-        #if os(tvOS)
-        button.buttonStyle(PickerHeaderButtonStyle())
+        .buttonStyle(PickerHeaderButtonStyle())
+        .padding()
         #else
-        button
+        // The target and hit area are inside the label, so the whole minimum-size area is the button.
+        Button {
+            isPresented = false
+        } label: {
+            Text("Cancel", bundle: .module)
+                .frame(minWidth: playerActionTarget, minHeight: playerActionTarget, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .accessibilityIdentifier(cancelAccessibilityIdentifier)
+        .padding(.horizontal)
+        .padding(.vertical, VFSpace.s4)
         #endif
     }
 }

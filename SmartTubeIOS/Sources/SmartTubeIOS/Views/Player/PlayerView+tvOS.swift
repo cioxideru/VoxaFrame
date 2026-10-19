@@ -206,6 +206,16 @@ extension PlayerView {
                 .transition(transition)
                 .vfAnimation(value: showSleepTimerPicker)
         }
+        if showDescriptionSheet {
+            descriptionPanel
+                .transition(transition)
+                .vfAnimation(value: showDescriptionSheet)
+        }
+        if showCommentsSheet {
+            commentsPanel
+                .transition(transition)
+                .vfAnimation(value: showCommentsSheet)
+        }
     }
 }
 

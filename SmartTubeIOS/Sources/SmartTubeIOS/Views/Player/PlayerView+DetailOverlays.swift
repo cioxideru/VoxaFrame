@@ -2,71 +2,57 @@ import SmartTubeIOSCore
 import SwiftUI
 
 extension PlayerView {
-    // MARK: - Description overlay
+    // MARK: - Description panel
 
-    var descriptionOverlay: some View {
-        ZStack(alignment: .bottom) {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture { showDescriptionSheet = false }
-
-            VStack(spacing: 0) {
-                HStack {
-                    Button {
-                        showDescriptionSheet = false
-                    } label: {
-                        Image(systemName: AppSymbol.xmark)
-                            .font(.system(size: 16, weight: .semibold))
-                            .padding(12)
-                    }
-                    .buttonStyle(.plain)
-                    Spacer()
-                    Text("Description")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Color.clear.frame(width: 44, height: 44)
-                }
-                .padding(.horizontal, 4)
-                Divider()
-                ScrollView { descriptionContent }
-                    .frame(maxHeight: 400)
-            }
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            #if os(tvOS)
+    /// Same container and header as the More menu; see `playerOptionPanel`.
+    var descriptionPanel: some View {
+        let panel = PlayerOptionPanel(
+            title: Text("Description", bundle: .module), isPresented: $showDescriptionSheet,
+            cancelAccessibilityIdentifier: AccessibilityID.playerDescriptionPanelCancel
+        ) {
+            ScrollView { descriptionContent }
+                .background(VFColor.surface)
+        }
+        .accessibilityIdentifier(AccessibilityID.playerDescriptionPanel)
+        #if os(tvOS)
+        return
+            panel
             .focusScope(descriptionOverlayNamespace)
             .onExitCommand { showDescriptionSheet = false }
-            #endif
-            .padding(.horizontal, 8)
-            .safeAreaPadding(.horizontal)
-            .padding(.bottom, 8)
-        }
-        .ignoresSafeArea()
+        #else
+        return panel
+        #endif
     }
 
-    /// Title, channel and linkified description of the current video; shared with the Mac inspector.
+    /// Title and channel, then the linkified description, each in a grouped card; shared with the Mac inspector.
     var descriptionContent: some View {
         let currentVideo = vm.playerInfo?.video ?? video
         let description = currentVideo.description ?? ""
-        return VStack(alignment: .leading, spacing: 12) {
-            Text(currentVideo.title)
-                .font(.headline)
-            if !currentVideo.channelTitle.isEmpty {
-                Text(currentVideo.channelTitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        return VStack(alignment: .leading, spacing: VFSpace.s12) {
+            VStack(alignment: .leading, spacing: VFSpace.s4) {
+                Text(currentVideo.title)
+                    .font(.headline)
+                if !currentVideo.channelTitle.isEmpty {
+                    Text(currentVideo.channelTitle)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
             }
-            if !description.isEmpty {
-                Text(descriptionAttributedString(description))
-                    .font(.body)
-            } else {
-                Text("No description available.")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
+            .descriptionCard()
+            Group {
+                if !description.isEmpty {
+                    Text(descriptionAttributedString(description))
+                } else {
+                    Text("No description available.", bundle: .module)
+                        .foregroundStyle(.secondary)
+                }
             }
+            .font(.body)
+            .descriptionCard()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
+        .padding(VFSpace.s16)
+        .frame(maxWidth: VFColumn.readableMaximum)
+        .frame(maxWidth: .infinity)
     }
 
     func descriptionAttributedString(_ string: String) -> AttributedString {
@@ -94,22 +80,18 @@ extension PlayerView {
         return attributed
     }
 
-    // MARK: - Comments overlay
+    // MARK: - Comments panel
 
-    var commentsOverlay: some View {
+    var commentsPanel: some View {
+        let panel = CommentsPanel(
+            comments: vm.comments.comments, isLoading: vm.comments.isLoading, isPresented: $showCommentsSheet)
         #if os(tvOS)
-        CommentsOverlayView(
-            comments: vm.comments.comments,
-            isLoading: vm.comments.isLoading,
-            onDismiss: { showCommentsSheet = false },
-            focusNamespace: commentsOverlayNamespace
-        )
+        return
+            panel
+            .focusScope(commentsOverlayNamespace)
+            .onExitCommand { showCommentsSheet = false }
         #else
-        CommentsOverlayView(
-            comments: vm.comments.comments,
-            isLoading: vm.comments.isLoading,
-            onDismiss: { showCommentsSheet = false }
-        )
+        return panel
         #endif
     }
 
@@ -120,4 +102,13 @@ extension PlayerView {
         vm.comments.load(videoId: videoId)
     }
 
+}
+
+extension View {
+    /// A rounded grouped card, like the More menu's groups.
+    fileprivate func descriptionCard() -> some View {
+        padding(VFSpace.s16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(VFColor.elevated, in: RoundedRectangle(cornerRadius: VFRadius.card, style: .continuous))
+    }
 }
