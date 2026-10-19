@@ -158,6 +158,9 @@ extension PlayerView {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             Divider()
+            #if os(macOS)
+            moreMenuChannelRow
+            #endif
             #if os(tvOS)
             moreMenuSpeedRow
             moreMenuQualityRow

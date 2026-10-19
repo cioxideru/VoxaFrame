@@ -7,6 +7,7 @@ enum AccessibilityID {
     static var playerMoreMenuCancelButton: String { "player.moreMenu.cancel" }
     static var playerMoreMenuDescriptionRow: String { "player.moreMenu.descriptionRow" }
     static var playerMoreMenu: String { "player.moreMenu" }
+    static var playerMoreMenuOpenChannel: String { "player.more.openChannel" }
     static var playerOptionPanelCancel: String { "player.optionPanel.cancel" }
     static var playerMoreMenuScrollView: String { "player.moreMenu.scrollView" }
     static var playerMoreMenuLikeRow: String { "player.moreMenu.likeRow" }

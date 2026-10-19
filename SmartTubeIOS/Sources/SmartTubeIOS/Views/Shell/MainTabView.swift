@@ -40,6 +40,8 @@ struct MainTabView: View {
 
     @State private var searchVM = SearchViewModel()
     @State private var selectedTab: ShellItem = .section(.home)
+    /// The channel page the player asked for, pushed on `channelPushTab`'s stack (any tab, Settings included).
+    @State private var channelPushes: [ShellItem: ChannelDestination] = [:]
     @State private var libraryQueueRequested = false
     @State private var tabContentFrame = TabContentFrame()
     @State private var shellFrame: CGRect = .zero
@@ -93,6 +95,10 @@ struct MainTabView: View {
             .onReceive(NotificationCenter.default.publisher(for: .navigateToSearch)) { _ in
                 selectedTab = .section(.search)
             }
+            // "Open Channel" from the player: wait until the full-screen player is gone, then push the page on
+            // the selected tab, unless that channel page is already showing.
+            .onChange(of: playerState.presentation) { applyPendingChannel() }
+            .onChange(of: playerState.pendingChannelId) { applyPendingChannel() }
             // App Intents / Spotlight (see AppEntry.handleOpenURL).
             .onReceive(NotificationCenter.default.publisher(for: .smartTubeOpenSearch)) { note in
                 guard let query = note.userInfo?["query"] as? String else { return }
@@ -161,6 +167,13 @@ struct MainTabView: View {
             }
     }
 
+    private func applyPendingChannel() {
+        guard let id = playerState.pendingChannelId, playerState.presentation != .fullScreen else { return }
+        playerState.pendingChannelId = nil
+        guard channelPushes[selectedTab]?.channelId != id else { return }
+        channelPushes[selectedTab] = ChannelDestination(channelId: id)
+    }
+
     private var columnInsets: (leading: CGFloat, trailing: CGFloat) {
         MiniPlayerColumn.insets(
             shell: shellFrame,
@@ -219,26 +232,35 @@ struct MainTabView: View {
 
     /// One NavigationStack per tab; the tab container never adds another.
     private func tabContent(_ item: ShellItem) -> some View {
-        NavigationStack { item.destination(api: api) }
-            .background {
-                // Reserve the mini player's measured height (it grows with Dynamic Type) at the bottom
-                // of the root and every pushed screen, without a second MiniPlayerView and so without
-                // duplicating the PersistentPlayerHostView layer across tabs.
-                NavigationBottomReserve(height: playerState.presentation == .miniPlayer ? miniPlayerHeight : 0)
-                // Only the selected tab reports, so an off-screen tab cannot leave a stale frame.
-                GeometryReader { geo in
-                    let frame = geo.frame(in: .global)
-                    let isLaidOut = geo.safeAreaInsets != EdgeInsets()
-                    Color.clear.preference(
-                        key: TabContentFrameKey.self,
-                        value: item == selectedTab && isLaidOut
-                            ? TabContentFrame(
-                                bottomInset: geo.safeAreaInsets.bottom, minX: frame.minX, maxX: frame.maxX)
-                            : nil
-                    )
+        NavigationStack {
+            item.destination(api: api)
+                .navigationDestination(
+                    item: Binding(
+                        get: { channelPushes[item] },
+                        set: { channelPushes[item] = $0 })
+                ) { dest in
+                    ChannelView(channelId: dest.channelId, api: api)
                 }
+        }
+        .background {
+            // Reserve the mini player's measured height (it grows with Dynamic Type) at the bottom
+            // of the root and every pushed screen, without a second MiniPlayerView and so without
+            // duplicating the PersistentPlayerHostView layer across tabs.
+            NavigationBottomReserve(height: playerState.presentation == .miniPlayer ? miniPlayerHeight : 0)
+            // Only the selected tab reports, so an off-screen tab cannot leave a stale frame.
+            GeometryReader { geo in
+                let frame = geo.frame(in: .global)
+                let isLaidOut = geo.safeAreaInsets != EdgeInsets()
+                Color.clear.preference(
+                    key: TabContentFrameKey.self,
+                    value: item == selectedTab && isLaidOut
+                        ? TabContentFrame(
+                            bottomInset: geo.safeAreaInsets.bottom, minX: frame.minX, maxX: frame.maxX)
+                        : nil
+                )
             }
-            .accessibilityIdentifier(AccessibilityID.tab(item.id))
+        }
+        .accessibilityIdentifier(AccessibilityID.tab(item.id))
     }
 }
 

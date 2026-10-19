@@ -241,6 +241,7 @@ enum AppSymbol {
     static let rssManage = "list.bullet.indent"
     static let add = "plus"
     static let chevronRight = "chevron.right"
+    static let chevronForward = "chevron.forward"
     static let speedometer = "speedometer"
     static let videoQuality = "film.stack"
     static let audioTrack = "waveform"

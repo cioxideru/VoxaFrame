@@ -349,25 +349,17 @@ extension PlayerControlsOverlay {
         VStack(alignment: .leading, spacing: 2) {
             PlayerTitleRow(
                 title: vm.playerInfo?.video.title ?? video.title, videoID: vm.playerInfo?.video.id ?? video.id)
-            let channelId = vm.playerInfo?.video.channelId ?? video.channelId
+            let shown = vm.channelVideo
+            let channelId = shown?.channelId
             Button {
                 guard let cid = channelId, !cid.isEmpty else { return }
                 #if os(iOS)
-                // PlayerView is presented via fullScreenCover — there is no
-                // NavigationStack, so setting channelDestination is a no-op.
-                // Post the shared notification instead (same path as VideoCardView),
-                // then dismiss the player so the parent can push ChannelView.
-                NotificationCenter.default.post(
-                    name: .openChannel,
-                    object: nil,
-                    userInfo: ["channelId": cid]
-                )
-                dismiss()
+                playerState.openChannel(cid, miniPlayerEnabled: store.settings.miniPlayerEnabled)
                 #else
                 channelDestination = ChannelDestination(channelId: cid)
                 #endif
             } label: {
-                Text(vm.playerInfo?.video.channelTitle ?? video.channelTitle)
+                Text(shown?.channelTitle ?? "")
                     .font(.subheadline)
                     .foregroundStyle(VFColor.onMedia.opacity(0.8))
                     .lineLimit(1)

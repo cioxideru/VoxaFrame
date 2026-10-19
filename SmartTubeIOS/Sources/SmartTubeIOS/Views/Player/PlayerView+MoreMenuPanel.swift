@@ -63,6 +63,7 @@ extension PlayerView {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, VFSpace.s8)
 
+                    moreMenuGroup { moreMenuChannelRow }
                     moreMenuGroup {
                         moreMenuLikeDislikeRow
                         moreMenuShareRow

@@ -221,3 +221,28 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
     }
 
 }
+
+/// The More menu's "Open Channel" row opens the channel page (the same `ChannelView` as the Subscriptions section).
+final class PlayerMoreMenuOpenChannelUITests: XCTestCase {
+    private let app = XCUIApplication()
+
+    override func setUp() {
+        continueAfterFailure = false
+        app.launchArguments = ["--uitesting", "--uitesting-deeplink-video=dQw4w9WgXcQ", "--uitesting-open-more-menu"]
+        app.launchArguments.append("--uitesting-video-channel=UCuAXFkgsw1L7xaCfnd5JJOw")
+        #if os(iOS)
+        XCUIDevice.shared.orientation = .portrait
+        #endif
+        app.launch()
+    }
+
+    override func tearDown() { app.terminate() }
+
+    func testOpenChannelRowShowsChannelScreen() throws {
+        let row = app.buttons[AccessibilityID.playerMoreMenuOpenChannel].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 30), "Open Channel row is missing from the More menu")
+        row.tap()
+        let header = app.descendants(matching: .any)[AccessibilityID.channelHeader].firstMatch
+        XCTAssertTrue(header.waitForExistence(timeout: 20), "Channel screen did not open")
+    }
+}

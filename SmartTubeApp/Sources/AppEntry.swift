@@ -586,7 +586,15 @@ extension AppEntry {
                 // Use the video ID as the placeholder title so player.titleLabel has
                 // non-empty text immediately (empty Text is pruned from the AX tree).
                 try? await Task.sleep(nanoseconds: 500_000_000)  // 0.5 s
-                browseViewModel.deepLinkedVideo = Video(id: videoID, title: videoID, channelTitle: "")
+                var placeholder = Video(id: videoID, title: videoID, channelTitle: "")
+                #if DEBUG
+                // `--uitesting-video-channel=<id>` gives the placeholder a channel, so channel entry points
+                // work without waiting for the live player info.
+                let channelPrefix = "--uitesting-video-channel="
+                placeholder.channelId = args.first { $0.hasPrefix(channelPrefix) }
+                    .map { String($0.dropFirst(channelPrefix.count)) }
+                #endif
+                browseViewModel.deepLinkedVideo = placeholder
             } else {
                 await UIApplication.shared.open(deepLink)
             }

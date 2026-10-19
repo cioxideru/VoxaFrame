@@ -190,6 +190,20 @@ public final class PlayerStateStore {
 
     @ObservationIgnored private(set) var successorCheck: Task<Void, Never>?
 
+    /// A channel the shell should push once the full-screen player is gone (see `MainTabView`).
+    var pendingChannelId: String?
+
+    /// Leaves the full-screen player the way Back does (mini-player when enabled, otherwise stop) and asks the
+    /// shell to open the channel page.
+    func openChannel(_ channelId: String, miniPlayerEnabled: Bool) {
+        pendingChannelId = channelId
+        if miniPlayerEnabled {
+            minimize(reason: "open-channel")
+        } else {
+            stop()
+        }
+    }
+
     /// Collapse the full-screen player to the mini-player bar. Playback continues.
     public func minimize(reason: String) {
         storeLog.notice(

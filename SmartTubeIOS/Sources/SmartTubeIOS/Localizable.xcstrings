@@ -1,6 +1,39 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Opens the channel page and stops the video." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the channel page and stops the video."
+          }
+        }
+      }
+    },
+    "Opens the channel page. The video keeps playing in the mini-player." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the channel page. The video keeps playing in the mini-player."
+          }
+        }
+      }
+    },
+    "Opens the channel page. The video keeps playing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the channel page. The video keeps playing."
+          }
+        }
+      }
+    },
     "Sound in video file" : {
       "extractionState" : "manual",
       "localizations" : {
