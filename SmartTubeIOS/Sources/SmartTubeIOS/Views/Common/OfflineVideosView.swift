@@ -4,11 +4,12 @@ import SwiftUI
 struct OfflineWatchButton: View {
     let video: Video
     let action: () -> Void
-    private var isQueued: Bool {
+    static func isQueued(_ video: Video) -> Bool {
         OfflineCoordinator.shared.snapshot.jobs.contains {
             $0.videoID == video.id && [.queued, .resolving, .downloading].contains($0.state)
         }
     }
+    private var isQueued: Bool { Self.isQueued(video) }
     var body: some View {
         Button(action: action) {
             Label {

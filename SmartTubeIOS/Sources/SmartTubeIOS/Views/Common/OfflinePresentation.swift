@@ -103,6 +103,20 @@ enum OfflinePresentation {
         isYielding && jobs.contains { [.queued, .resolving, .downloading].contains($0.state) }
     }
 
+    /// The player's Offline quick button: saved wins (library entry or a local playback source), then queued;
+    /// live and upcoming videos cannot be saved.
+    enum QuickAction: Equatable {
+        case offline, queued, saved, unavailable
+        var isEnabled: Bool { self == .offline || self == .queued }
+    }
+
+    static func quickAction(video: Video, entries: [OfflineEntry], jobs: [OfflineJob]) -> QuickAction {
+        if video.isLive || video.isUpcoming { return .unavailable }
+        if video.isDownloaded || entries.contains(where: { $0.id == video.id && isPlayable($0) }) { return .saved }
+        let active: [OfflineJob.State] = [.queued, .resolving, .downloading]
+        return jobs.contains { $0.videoID == video.id && active.contains($0.state) } ? .queued : .offline
+    }
+
     static func entryStatus(_ entry: OfflineEntry, jobs: [OfflineJob]) -> EntryStatus {
         let own = jobs.filter { $0.videoID == entry.id }
         if let job = own.first(where: { $0.state == .downloading }) { return .downloading(job.progress) }

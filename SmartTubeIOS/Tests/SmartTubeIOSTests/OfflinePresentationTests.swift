@@ -67,6 +67,28 @@ struct OfflinePresentationTests {
         expect(job("a", picture, .cancelled), .cancelled, .retry)
     }
 
+    @Test func quickButtonStatesFollowTheLibraryNotThePlaybackSource() {
+        func action(
+            _ video: Video = Video(id: "a", title: "T", channelTitle: "C"), entries: [OfflineEntry] = [],
+            jobs: [OfflineJob] = []
+        ) -> OfflinePresentation.QuickAction {
+            OfflinePresentation.quickAction(video: video, entries: entries, jobs: jobs)
+        }
+        #expect(action() == .offline)
+        #expect(action(jobs: [job("a", picture, .downloading)]) == .queued)
+        #expect(action(jobs: [job("b", picture, .queued)]) == .offline)
+        #expect(action(jobs: [job("a", picture, .completed)]) == .offline)
+        // Streamed playback of a video already saved: Saved and disabled.
+        #expect(action(entries: [entry("a", [muxed])]) == .saved)
+        #expect(action(entries: [entry("a", [muxed])], jobs: [job("a", picture, .queued)]) == .saved)
+        // An entry that cannot play yet is not Saved.
+        #expect(action(entries: [entry("a", [picture])]) == .offline)
+        #expect(action(Video(id: "a", title: "T", channelTitle: "C", isLive: true)) == .unavailable)
+        #expect(action(Video(id: "a", title: "T", channelTitle: "C", isUpcoming: true)) == .unavailable)
+        #expect(OfflinePresentation.QuickAction.saved.isEnabled == false)
+        #expect(OfflinePresentation.QuickAction.queued.isEnabled)
+    }
+
     @Test func jobsStayUnderTheirVideoInQueueOrder() {
         let jobs = [
             job("b", picture, .downloading), job("a", sound, .queued), job("b", sound, .queued),

@@ -553,7 +553,7 @@ extension PlayerView {
             showQualityPicker: $showQualityPicker,
             showSpeedPicker: $showSpeedPicker,
             showAudioTrackPicker: $showAudioTrackPicker,
-            showSleepTimerPicker: $showSleepTimerPicker,
+            offlineDownloadVideo: $offlineDownloadVideo,
             bottomBarHeight: $controlsBottomBarHeight
         )
         #elseif os(tvOS)
@@ -579,7 +579,7 @@ extension PlayerView {
             showQualityPicker: $showQualityPicker,
             showSpeedPicker: $showSpeedPicker,
             showAudioTrackPicker: $showAudioTrackPicker,
-            showSleepTimerPicker: $showSleepTimerPicker,
+            offlineDownloadVideo: $offlineDownloadVideo,
             bottomBarHeight: $controlsBottomBarHeight,
             macPlayerFocused: $macPlayerFocused,
             macBackAction: macBackAction

@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - Quick-access row (iOS and macOS)
 //
-// Glass capsules with the current value — speed, quality, audio, sleep timer — that open their option panel
+// Glass capsules with the current value — speed, quality, audio, offline — that open their option panel
 // without the 3-dot more menu (GitHub issue #52). On TV these live in the menu.
 extension PlayerControlsOverlay {
     @ViewBuilder var videoScaleButton: some View {
@@ -74,13 +74,7 @@ extension PlayerControlsOverlay {
                 .playerOptionPanelTrigger(.audio)
             }
 
-            quickAccessButton(
-                systemImage: AppSymbol.sleepTimer,
-                label: sleepTimerLabel,
-                accessibilityLabel: Text("Sleep Timer", bundle: .module),
-                accessibilityId: "player.quickAccess.sleepTimer"
-            ) { showSleepTimerPicker = true }
-            .playerOptionPanelTrigger(.sleepTimer)
+            offlineQuickButton
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityID.playerQuickAccessRow)
@@ -100,9 +94,25 @@ extension PlayerControlsOverlay {
         return "\(track) → \(target) (Yandex)"
     }
 
-    private var sleepTimerLabel: String {
-        vm.sleepTimerMinutes.map { String(localized: "\($0) min", bundle: .module) }
-            ?? String(localized: "Off", bundle: .module)
+    /// Same action and sheet as the former More-menu row; disabled when the video cannot be saved or already is.
+    private var offlineQuickButton: some View {
+        let current = vm.currentVideo ?? video
+        let snapshot = OfflineCoordinator.shared.snapshot
+        let action = OfflinePresentation.quickAction(video: current, entries: snapshot.entries, jobs: snapshot.jobs)
+        let label =
+            switch action {
+            case .saved: String(localized: "Saved", bundle: .module)
+            case .queued: String(localized: "Queued", bundle: .module)
+            case .offline, .unavailable: String(localized: "Offline", bundle: .module)
+            }
+        return quickAccessButton(
+            systemImage: AppSymbol.download,
+            label: label,
+            accessibilityLabel: Text("Offline watch", bundle: .module),
+            accessibilityId: AccessibilityID.playerQuickOfflineButton
+        ) { offlineDownloadVideo = current }
+        .disabled(!action.isEnabled)
+        .opacity(action.isEnabled ? 1 : 0.4)
     }
 
     // MARK: - Single pill button

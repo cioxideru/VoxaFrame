@@ -167,8 +167,8 @@ extension PlayerView {
             #endif
             moreMenuLikeDislikeRow
             moreMenuShareRow
-            #if os(tvOS)
             moreMenuSleepTimerRow
+            #if os(tvOS)
             moreMenuAudioOnlyRow
             #endif
             moreMenuQueueShuffleRow
@@ -362,20 +362,23 @@ extension PlayerView {
         #endif
     }
 
-    @ViewBuilder private var moreMenuSleepTimerRow: some View {
+    @ViewBuilder var moreMenuSleepTimerRow: some View {
         Button {
             playerMenuLog.notice("[moreMenu] Sleep Timer row tapped — closing moreMenu, opening sleepTimerPicker")
-            showMoreMenu = false
-            showSleepTimerPicker = true
+            openMoreMenuDestination(.sleepTimer)
         } label: {
             HStack {
-                Label("Sleep Timer", systemImage: "moon.zzz")
+                Label {
+                    Text("Sleep Timer", bundle: .module)
+                } icon: {
+                    Image(systemName: AppSymbol.sleepTimer)
+                }
                 Spacer()
                 if let mins = vm.sleepTimerMinutes {
-                    Text("\(mins) min")
+                    Text("\(mins) min", bundle: .module)
                         .foregroundStyle(.secondary)
                 } else {
-                    Text("Off")
+                    Text("Off", bundle: .module)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -390,7 +393,9 @@ extension PlayerView {
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .focused($moreMenuFocusedRow, equals: .sleepTimer)
         #endif
+        #if !os(iOS)
         Divider()
+        #endif
     }
 
     @ViewBuilder private var moreMenuAudioOnlyRow: some View {
@@ -469,16 +474,13 @@ extension PlayerView {
     }
 
     @ViewBuilder var moreMenuDownloadRow: some View {
+        // iOS and macOS show Offline in the quick-access row; tvOS has no such row.
+        #if os(tvOS)
         OfflineWatchButton(video: vm.currentVideo ?? video) {
             openMoreMenuDestination(.offline(vm.currentVideo ?? video))
         }
-        #if os(iOS)
-        .buttonStyle(.plain)
-        .foregroundStyle(.primary)
-        #endif
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        #if !os(iOS)
         Divider()
         #endif
         #if !os(tvOS) && ENABLE_DOWNLOADS

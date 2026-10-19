@@ -145,14 +145,14 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
             scrollView.waitForExistence(timeout: 10),
             "More menu scroll view must be accessible in landscape")
 
-        let downloadButton = app.buttons[AccessibilityID.offlineWatch].firstMatch
+        let downloadButton = app.buttons[AccessibilityID.playerMoreMenuSleepTimerRow].firstMatch
         XCTAssertTrue(
             downloadButton.waitForExistence(timeout: 5),
-            "Download button should be accessible in landscape more menu")
+            "Sleep Timer row should be accessible in landscape more menu")
         for _ in 0..<6 where !downloadButton.isHittable { scrollView.swipeUp() }
         XCTAssertTrue(
             downloadButton.isHittable,
-            "Download button should be tappable in landscape")
+            "Sleep Timer row should be tappable in landscape")
 
         let cancelButton = app.buttons[AccessibilityID.playerMoreMenuCancelButton].firstMatch
         let deadline = Date().addingTimeInterval(5)
@@ -197,14 +197,14 @@ final class PlayerMenuAndPickerLayoutUITests: XCTestCase {
             menuWidth, screenWidth * 0.5,
             "More menu width (\(menuWidth)pt) must be reasonable (> 50 % of screen)")
         #endif
-        let downloadButton = app.buttons[AccessibilityID.offlineWatch].firstMatch
+        let downloadButton = app.buttons[AccessibilityID.playerMoreMenuSleepTimerRow].firstMatch
         for _ in 0..<6 where !downloadButton.isHittable { scrollView.swipeUp() }
         let hittable = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "hittable == true"), object: downloadButton)
         _ = XCTWaiter().wait(for: [hittable], timeout: 12)
         XCTAssertTrue(
             downloadButton.isHittable,
-            "Download button must be tappable in portrait — confirms menu items are accessible")
+            "Sleep Timer row must be tappable in portrait — confirms menu items are accessible")
     }
 
     /// Cancel stays outside the scrolling actions in the native panel header.

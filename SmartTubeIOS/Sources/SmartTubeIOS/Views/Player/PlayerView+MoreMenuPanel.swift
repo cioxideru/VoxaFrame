@@ -2,7 +2,7 @@ import SmartTubeIOSCore
 import SwiftUI
 
 enum PlayerMoreMenuDestination {
-    case offline(Video), captions, audioTrack, description, comments
+    case offline(Video), sleepTimer, captions, audioTrack, description, comments
     #if os(iOS)
     case share(URL)
     #endif
@@ -23,6 +23,7 @@ extension PlayerView {
     private func presentMoreMenuDestination(_ destination: PlayerMoreMenuDestination) {
         switch destination {
         case .offline(let video): offlineDownloadVideo = video
+        case .sleepTimer: showSleepTimerPicker = true
         case .captions: showCaptionPicker = true
         case .audioTrack: showAudioTrackPicker = true
         case .description: showDescriptionSheet = true
@@ -71,6 +72,7 @@ extension PlayerView {
                         moreMenuQueueShuffleRow
                     }
                     moreMenuGroup {
+                        moreMenuSleepTimerRow
                         moreMenuCaptionsRow
                         moreMenuAudioTrackRow
                     }

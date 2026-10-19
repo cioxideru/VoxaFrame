@@ -123,12 +123,15 @@ final class QuickAccessRowUITests: XCTestCase {
             "Quick-access row should have accessibility identifier 'player.quickAccessRow'")
     }
 
-    func testQuickAccessSleepTimerButtonVisible() throws {
+    func testQuickAccessOfflineButtonReplacesSleepTimer() throws {
         try openPlayerFromHome()
         showControls()
         XCTAssertTrue(
-            app.buttons["player.quickAccess.sleepTimer"].waitForExistence(timeout: 10),
-            "Quick-access sleep timer button should be visible")
+            app.buttons[AccessibilityID.playerQuickOfflineButton].waitForExistence(timeout: 10),
+            "Quick-access offline button should be visible")
+        XCTAssertFalse(
+            app.buttons["player.quickAccess.sleepTimer"].exists,
+            "Sleep timer lives in the More menu, not the quick-access row")
     }
 
     // MARK: - #186 regression: quality button always visible

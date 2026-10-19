@@ -211,6 +211,7 @@ enum AccessibilityID {
     static var shortsSpeedButton: String { "shorts.speedButton" }
     static var playerSpeedPicker: String { "player.speedPicker" }
     static var playerQuickSpeedButton: String { "player.quickAccess.speed" }
+    static var playerQuickOfflineButton: String { "player.quickAccess.offline" }
     static func playerSpeed(_ speed: Double) -> String { "player.speed.\(speed)" }
     static var shortsVideoScaleButton: String { "shorts.videoScaleButton" }
     static var shortsLoadMoreButton: String { "shorts.loadMoreButton" }

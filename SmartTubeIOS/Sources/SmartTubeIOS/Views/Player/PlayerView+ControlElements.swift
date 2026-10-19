@@ -42,7 +42,7 @@ struct PlayerControlsOverlay: View {
     @Binding var showQualityPicker: Bool
     @Binding var showSpeedPicker: Bool
     @Binding var showAudioTrackPicker: Bool
-    @Binding var showSleepTimerPicker: Bool
+    @Binding var offlineDownloadVideo: Video?
     /// The bottom bar's height, which the captions keep clear of.
     @Binding var bottomBarHeight: CGFloat
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize

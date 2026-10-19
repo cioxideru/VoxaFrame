@@ -71,6 +71,40 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertEqual(after, before, "Saved playback must not fetch its original network stream or translation")
     }
 
+    func testQuickOfflineButtonGoesQueuedThenSavedAndStaysSavedWhenStreaming() {
+        let id = "offline-ui-" + UUID().uuidString
+        launch(videoID: id)
+        let quick = app.buttons[AccessibilityID.playerQuickOfflineButton].firstMatch
+        XCTAssertTrue(quick.waitForExistence(timeout: 25))
+        XCTAssertTrue(quick.label.contains("Offline"), quick.label)
+        XCTAssertTrue(quick.isEnabled)
+        quick.tap()
+        let original = app.buttons[AccessibilityID.offlineSelectionDownload].firstMatch
+        XCTAssertTrue(original.waitForExistence(timeout: 15))
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: original)
+        XCTAssertEqual(XCTWaiter().wait(for: [ready], timeout: 15), .completed)
+        app.buttons[AccessibilityID.offlineSelectionVideo].tap()
+        app.buttons["360p · H.264 · MP4"].firstMatch.tap()
+        original.tap()
+        let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Allow"].firstMatch
+        if allow.waitForExistence(timeout: 3) { allow.tap() }
+        let progressed = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label CONTAINS 'Queued' OR label CONTAINS 'Saved'"), object: quick)
+        XCTAssertEqual(XCTWaiter().wait(for: [progressed], timeout: 15), .completed, quick.label)
+        let saved = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label CONTAINS 'Saved' AND enabled == false"), object: quick)
+        XCTAssertEqual(XCTWaiter().wait(for: [saved], timeout: 90), .completed, quick.label)
+
+        // Reopen the saved video; whatever source plays, the library entry keeps it Saved.
+        app.terminate()
+        launch(videoID: id)
+        let again = app.buttons[AccessibilityID.playerQuickOfflineButton].firstMatch
+        XCTAssertTrue(again.waitForExistence(timeout: 25))
+        let stillSaved = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label CONTAINS 'Saved' AND enabled == false"), object: again)
+        XCTAssertEqual(XCTWaiter().wait(for: [stillSaved], timeout: 15), .completed, again.label)
+    }
+
     func testHLSIsStoredAsPlayableOfflinePackage() async throws {
         let id = "offline-ui-hls-" + UUID().uuidString
         launch(videoID: id)
@@ -298,13 +332,8 @@ extension DownloadsPlaybackUITests {
     }
 
     private func saveFromPlayer(selectTracks: Bool = false) {
-        let more = app.buttons["player.moreButton"].firstMatch
-        XCTAssertTrue(more.waitForExistence(timeout: 25))
-        more.tap()
-        let save = app.buttons[AccessibilityID.offlineWatch].firstMatch
-        XCTAssertTrue(save.waitForExistence(timeout: 5))
-        let menu = app.scrollViews["player.moreMenu.scrollView"]
-        for _ in 0..<3 where !save.isHittable { menu.swipeUp() }
+        let save = app.buttons[AccessibilityID.playerQuickOfflineButton].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 25))
         save.tap()
         let original = app.buttons[AccessibilityID.offlineSelectionDownload].firstMatch
         XCTAssertTrue(original.waitForExistence(timeout: 15))

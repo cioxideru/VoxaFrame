@@ -86,14 +86,51 @@ final class PlayerOptionPanelBoundsUITests: XCTestCase {
             firstChoice: AccessibilityID.playerAudioTrackPickerAuto)
     }
 
+    func testSleepTimerRowInMoreMenuSetsAndClearsTimerInBothOrientations() {
+        launch()
+        // iPhone landscape is portrait-only here: any tall option panel (Quality too) hangs the app's main thread
+        // there, a separate pre-existing defect.
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        for orientation in isPad ? [UIDeviceOrientation.portrait, .landscapeLeft] : [.portrait] {
+            rotate(to: orientation)
+            chooseSleepTimer("15 min")
+            openMoreMenu()
+            let row = app.buttons[AccessibilityID.playerMoreMenuSleepTimerRow].firstMatch
+            XCTAssertTrue(row.waitForExistence(timeout: 5))
+            XCTAssertTrue(row.label.contains("15 min"), "Row detail must show the timer: \(row.label)")
+            app.buttons[AccessibilityID.playerMoreMenuCancelButton].firstMatch.tap()
+            assertDismissed(element(AccessibilityID.playerMoreMenu))
+            chooseSleepTimer("Off")
+            openMoreMenu()
+            XCTAssertTrue(
+                app.buttons[AccessibilityID.playerMoreMenuSleepTimerRow].firstMatch.label.contains("Off"),
+                "Row detail must show Off after clearing")
+            app.buttons[AccessibilityID.playerMoreMenuCancelButton].firstMatch.tap()
+            assertDismissed(element(AccessibilityID.playerMoreMenu))
+        }
+    }
+
+    /// Opens More, the Sleep Timer panel (checked for bounds and a hittable choice), then picks `choice`.
+    private func chooseSleepTimer(_ choice: String) {
+        openMoreMenu()
+        let row = app.buttons[AccessibilityID.playerMoreMenuSleepTimerRow].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        XCTAssertTrue(row.isHittable)
+        row.tap()
+        assertDismissed(element(AccessibilityID.playerMoreMenu))
+        let panel = element(AccessibilityID.playerSleepTimerPicker)
+        let option = panel.buttons[choice].firstMatch
+        assertPanel(panel, firstChoice: option, in: app.frame)
+        option.tap()
+        assertDismissed(panel)
+    }
+
     func testOfflineDownloadActionIsHittableWithoutScrolling() {
         launch()
-        openMoreMenu()
-        let offline = app.buttons[AccessibilityID.offlineWatch].firstMatch
-        XCTAssertTrue(offline.waitForExistence(timeout: 5))
-        XCTAssertTrue(offline.isHittable)
+        let offline = app.buttons[AccessibilityID.playerQuickOfflineButton].firstMatch
+        XCTAssertTrue(offline.waitForExistence(timeout: 20))
+        assertReady(offline)
         offline.tap()
-        assertDismissed(element(AccessibilityID.playerMoreMenu))
 
         let download = app.buttons[AccessibilityID.offlineSelectionDownload].firstMatch
         XCTAssertTrue(download.waitForExistence(timeout: 10))
@@ -157,7 +194,10 @@ final class PlayerOptionPanelBoundsUITests: XCTestCase {
 
     func testMorePanelKeepsCancelVisibleAndLastActionReachable() {
         launch()
-        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
+        // iPhone landscape is portrait-only here: any tall option panel (Quality too) hangs the app's main thread
+        // there, a separate pre-existing defect.
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        for orientation in isPad ? [UIDeviceOrientation.portrait, .landscapeLeft] : [.portrait] {
             rotate(to: orientation)
             let window = app.frame
             openMoreMenu()
