@@ -51,6 +51,7 @@ public struct VideoCardView: View {
     #if os(iOS)
     @Environment(PlayerRouter.self) var playerRouter
     #endif
+    @State private var isSavedOffline = false
     @State private var localProgress: Double?
     @State private var isVisibleForPrefetch = false
     @State var watchLaterAlert: DownloadAlertItem?
@@ -115,6 +116,7 @@ public struct VideoCardView: View {
 
     private var cardContent: some View {
         summary
+            .background { OfflineSavedObserver(videoID: video.id) { isSavedOffline = $0 } }
             .onScrollVisibilityChange { isVisibleForPrefetch = $0 }
             .task {
                 localProgress = await VideoStateStore.shared.state(for: video.id)?.watchedFraction
@@ -384,6 +386,7 @@ extension VideoCardView {
         if WatchLaterMembershipStore.shared.contains(video.id) {
             parts.append(String(localized: "Saved to Watch Later", bundle: .module))
         }
+        if isSavedOffline { parts.append(String(localized: "Saved offline", bundle: .module)) }
         if let progress = effectiveProgress, progress > 0 {
             let percent = progress.formatted(.percent.precision(.fractionLength(0)))
             parts.append(String(localized: "\(percent) watched", bundle: .module))
@@ -421,6 +424,8 @@ extension VideoCardView {
                     }
                 } else if video.isUpcoming {
                     MediaBadge { Text("Upcoming", bundle: .module).textCase(.uppercase) }
+                } else if isSavedOffline {
+                    MediaBadge { Image(systemName: AppSymbol.offlineSaved) }
                 }
             }
             .overlay(alignment: .topTrailing) {

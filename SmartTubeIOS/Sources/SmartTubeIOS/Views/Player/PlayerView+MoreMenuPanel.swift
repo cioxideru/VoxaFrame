@@ -51,7 +51,7 @@ extension PlayerView {
             ScrollView {
                 VStack(spacing: VFSpace.s12) {
                     VStack(spacing: VFSpace.s4) {
-                        Text(currentVideo.title)
+                        OfflineSavedTitle(title: currentVideo.title, videoID: currentVideo.id, spacing: VFSpace.s8)
                             .font(.headline)
                         if !currentVideo.channelTitle.isEmpty {
                             Text(currentVideo.channelTitle)

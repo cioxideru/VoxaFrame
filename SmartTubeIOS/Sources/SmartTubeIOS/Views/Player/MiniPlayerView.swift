@@ -63,6 +63,10 @@ struct MiniPlayerView: View {
             .accessibilityHidden(true)
     }
 
+    private var isSavedOffline: Bool {
+        playerState.playingVideo.map { OfflineCoordinator.shared.savedIDs.ids.contains($0.id) } ?? false
+    }
+
     /// Title and channel; at accessibility sizes the title gets a third line (the full title is in the expanded
     /// player's More → Description, and in the expand button's VoiceOver label).
     private var titles: some View {
@@ -72,10 +76,13 @@ struct MiniPlayerView: View {
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 2)
                 .foregroundStyle(.primary)
                 .accessibilityIdentifier(AccessibilityID.miniPlayerTitle)
-            Text(playerState.playingVideo?.channelTitle ?? "")
-                .font(.footnote)
-                .lineLimit(1)
-                .foregroundStyle(.secondary)
+            HStack(spacing: VFSpace.s4) {
+                if isSavedOffline { OfflineSavedMark() }
+                Text(playerState.playingVideo?.channelTitle ?? "")
+                    .font(.footnote)
+                    .lineLimit(1)
+            }
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -95,6 +102,7 @@ struct MiniPlayerView: View {
         for part in [playerState.playingVideo?.title, playerState.playingVideo?.channelTitle] {
             if let part, !part.isEmpty { label += ", \(part)" }
         }
+        if isSavedOffline { label += ", " + String(localized: "Saved offline", bundle: .module) }
         return label
     }
 

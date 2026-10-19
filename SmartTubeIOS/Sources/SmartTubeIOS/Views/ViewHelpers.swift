@@ -227,6 +227,7 @@ enum AppSymbol {
     static let notInterested = "hand.raised"
     static let dontRecommendChannel = "person.slash"
     static let savedToWatchLater = "bookmark.fill"
+    static let offlineSaved = "arrow.down.circle.fill"
     static let liveDot = "circle.fill"
     static let noCover = "play.rectangle"
     static let watchLaterPlaylist = "clock.fill"

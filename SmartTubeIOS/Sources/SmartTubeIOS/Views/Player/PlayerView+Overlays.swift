@@ -142,7 +142,7 @@ extension PlayerView {
         VStack(spacing: 0) {
             // Centered title header
             VStack(spacing: 2) {
-                Text(currentVideo.title)
+                OfflineSavedTitle(title: currentVideo.title, videoID: currentVideo.id)
                     .font(.subheadline).fontWeight(.semibold)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)

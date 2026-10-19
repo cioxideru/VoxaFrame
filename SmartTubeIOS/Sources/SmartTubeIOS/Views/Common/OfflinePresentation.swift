@@ -112,6 +112,10 @@ enum OfflinePresentation {
         return isPlayable(entry) ? .ready : .notReady
     }
 
+    static func savedVideoIDs(_ entries: [OfflineEntry]) -> Set<String> {
+        Set(entries.filter(isPlayable).map(\.id))
+    }
+
     /// Mirrors `OfflineCoordinator.playbackVideo`: a package, a file with sound, or a file plus a saved audio track.
     static func isPlayable(_ entry: OfflineEntry) -> Bool {
         let hasAudio = entry.assets.contains { $0.track.kind == .audio }

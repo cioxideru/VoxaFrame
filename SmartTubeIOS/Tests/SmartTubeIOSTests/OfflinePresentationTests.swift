@@ -156,3 +156,19 @@ struct OfflinePresentationTests {
         }
     }
 }
+
+@Suite struct OfflineSavedIDTests {
+    @Test func onlyPlayableEntriesAreSaved() {
+        func entry(_ id: String, _ kind: OfflineTrack.Kind, audio: Bool = true) -> OfflineEntry {
+            let track = OfflineTrack(id: id, kind: kind, label: id, hasAudio: audio)
+            return OfflineEntry(
+                video: Video(id: id, title: id, channelTitle: "c"),
+                assets: [OfflineAsset(track: track, filename: id, systemRelativePath: nil)])
+        }
+        let ids = OfflinePresentation.savedVideoIDs([
+            entry("hls", .hls), entry("video", .video), entry("silent", .video, audio: false),
+            OfflineEntry(video: Video(id: "empty", title: "e", channelTitle: "c")),
+        ])
+        #expect(ids == ["hls", "video"])
+    }
+}

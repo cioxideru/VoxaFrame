@@ -34,6 +34,7 @@ struct OfflineNotifications: OfflineNotifying {
 public final class OfflineCoordinator {
     public static let shared = OfflineCoordinator()
     public private(set) var snapshot = OfflineSnapshot()
+    let savedIDs = OfflineSavedIDs()
     public private(set) var error: String?
     public private(set) var isYielding = false
     public private(set) var ready = false
@@ -156,7 +157,7 @@ public final class OfflineCoordinator {
     }
     func apply(_ next: OfflineSnapshot) {
         guard next.revision >= snapshot.revision else { return }
-        snapshot = next
+        accept(next)
     }
     private func blockPersistence(_ failure: Error) {
         let failureInfo = failure as NSError
@@ -229,9 +230,6 @@ public final class OfflineCoordinator {
                 }
             } catch { blockPersistence(error) }
         }
-    }
-    private var activeIDs: Set<UUID> {
-        Set(snapshot.jobs.filter { [.resolving, .downloading].contains($0.state) }.map(\.attempt))
     }
     public func enqueue(video: Video, translationLanguage: String? = nil) {
         var tracks: [OfflineTrack] = [.automatic]
@@ -437,6 +435,9 @@ public final class OfflineCoordinator {
 }
 
 extension OfflineCoordinator {
+    fileprivate var activeIDs: Set<UUID> {
+        Set(snapshot.jobs.filter { [.resolving, .downloading].contains($0.state) }.map(\.attempt))
+    }
     func playbackVideo(
         entry: OfflineEntry, videoAsset: OfflineAsset, audio: OfflineAsset?, translation: OfflineAsset?
     ) async throws -> Video {
@@ -482,5 +483,12 @@ extension OfflineCoordinator {
             await transport.cancel(attempt)
         }
         apply(try await store.completeRemovals())
+    }
+}
+
+extension OfflineCoordinator {
+    fileprivate func accept(_ next: OfflineSnapshot) {
+        snapshot = next
+        savedIDs.update(next.entries)
     }
 }

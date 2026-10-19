@@ -76,11 +76,9 @@ struct PlayerControlsOverlay: View {
                         .foregroundStyle(VFColor.onMedia)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(vm.playerInfo?.video.title ?? video.title)
-                        .font(.headline)
-                        .foregroundStyle(VFColor.onMedia)
-                        .lineLimit(1)
-                        .accessibilityIdentifier(AccessibilityID.playerTitleLabel)
+                    PlayerTitleRow(
+                        title: vm.playerInfo?.video.title ?? video.title, videoID: vm.playerInfo?.video.id ?? video.id,
+                        spacing: VFSpace.s8)
                     let channelId = vm.playerInfo?.video.channelId ?? video.channelId
                     tvOverlayControl(
                         highlighted: highlightedControl == .channel,
@@ -349,11 +347,8 @@ extension PlayerControlsOverlay {
 
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(vm.playerInfo?.video.title ?? video.title)
-                .font(.headline)
-                .foregroundStyle(VFColor.onMedia)
-                .lineLimit(1)
-                .accessibilityIdentifier(AccessibilityID.playerTitleLabel)
+            PlayerTitleRow(
+                title: vm.playerInfo?.video.title ?? video.title, videoID: vm.playerInfo?.video.id ?? video.id)
             let channelId = vm.playerInfo?.video.channelId ?? video.channelId
             Button {
                 guard let cid = channelId, !cid.isEmpty else { return }

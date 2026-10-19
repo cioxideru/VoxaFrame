@@ -64,6 +64,34 @@ struct OfflineCoordinatorTests {
         return predicate()
     }
 
+    @Test func savedIDsFollowRestoreAndDeletionAndIgnoreTranslationOnlyEntries() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = OfflineLibraryStore(directory: directory)
+        func save(_ id: String, _ tracks: [OfflineTrack]) async throws {
+            let jobs = try await store.enqueue(video: Video(id: id, title: id, channelTitle: "T"), tracks: tracks).jobs
+            for job in jobs {
+                try await store.update(attempt: job.attempt, state: .downloading)
+                let staged = directory.appendingPathComponent(job.attempt.uuidString + ".mp4")
+                try Data([1]).write(to: staged)
+                try await store.finish(attempt: job.attempt, staged: staged)
+            }
+        }
+        try await save("playable", [OfflineTrack(id: "muxed", kind: .video, label: "V", hasAudio: true)])
+        try await save("voice-only", [.translation("ru")])
+        let transport = OfflineFakeTransport()
+        defer { transport.continuation.finish() }
+        let coordinator = OfflineCoordinator(
+            store: store, transport: transport, resolver: OfflineFakeResolver(),
+            notifications: OfflineFakeNotifications(),
+            demand: PlaybackDemandCoordinator(waitForRecovery: {}, waitForBudget: {}), validate: { _, _, _ in })
+        #expect(coordinator.savedIDs.ids.isEmpty)
+        coordinator.start()
+        #expect(await wait { coordinator.savedIDs.ids == ["playable"] })
+        coordinator.remove(videoID: "playable")
+        #expect(await wait { coordinator.savedIDs.ids.isEmpty })
+    }
+
     @Test func playbackSelectionKeepsYouTubeIdentityAndFindsOnlyTheSavedLanguage() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

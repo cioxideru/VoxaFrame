@@ -41,6 +41,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
 
         selectAudioAndTranslation()
         play("fixture-360", translated: true)
+        expectSavedStatus(saved: true)
         let probe = app.staticTexts[AccessibilityID.offlinePlaybackStatus]
         let timeBeforeRotation = value("time", in: probe.label)
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -211,6 +212,17 @@ final class DownloadsPlaybackUITests: XCTestCase {
         confirm.tap()
         let deleted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: entry)
         XCTAssertEqual(XCTWaiter().wait(for: [deleted], timeout: 10), .completed)
+        app.terminate()
+        launch(videoID: id)
+        expectSavedStatus(saved: false)
+    }
+
+    /// The player title speaks the saved status exactly once, and only while the video is saved.
+    private func expectSavedStatus(saved: Bool) {
+        let title = app.staticTexts[AccessibilityID.playerTitleLabel].firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 25))
+        let count = title.label.components(separatedBy: "Saved offline").count - 1
+        XCTAssertEqual(count, saved ? 1 : 0, title.label)
     }
 
     func testDeleteAllConfirmsAndClearsBothPagesAfterRelaunch() {
