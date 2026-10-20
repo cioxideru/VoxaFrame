@@ -19,6 +19,14 @@ struct OfflineTranslationUploadError: LocalizedError {
     }
 }
 
+struct OfflineTranslationError: LocalizedError {
+    let message: String?
+    var errorDescription: String? {
+        if let message, !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return message }
+        return String(localized: "Yandex couldn't translate this video. Try again later.", bundle: .module)
+    }
+}
+
 protocol OfflineResolving: Sendable {
     func catalog(video: Video) async throws -> [OfflineSource]
     func resolve(video: Video, track: OfflineTrack, attempt: UUID) async throws -> OfflineSource
@@ -120,18 +128,15 @@ actor OfflineSourceResolver: OfflineResolving {
         guard let language = track.language, YandexVOTClient.targetLanguages.contains(language) else {
             throw OfflineDownloadTransport.unavailable("translation language=\(track.language ?? "-") is not supported")
         }
-        let duration: TimeInterval
-        if let known = video.duration, known > 0 {
-            duration = known
-        } else {
-            duration = try await api.fetchPlayerInfoVisionOS(videoId: video.id).video.duration ?? 0
-        }
+        let info = try await api.fetchPlayerInfoVisionOS(videoId: video.id)
+        try Task.checkCancellation()
+        let duration = video.duration.flatMap { $0 > 0 ? $0 : nil } ?? info.video.duration ?? 0
         guard duration > 0, duration <= YandexVOTClient.maximumDuration else {
             throw OfflineDownloadTransport.unavailable(
                 "translation duration=\(Int(duration))s is out of range videoId=\(video.id)")
         }
         let result = try await vot.translate(
-            videoId: video.id, duration: duration, sourceLanguage: "auto",
+            videoId: video.id, duration: duration, sourceLanguage: info.voiceOverSourceLanguage,
             targetLanguage: language, livelyVoiceToken: nil)
         try Task.checkCancellation()
         switch result.status {
@@ -143,7 +148,10 @@ actor OfflineSourceResolver: OfflineResolving {
             }
             return OfflineSource(track: track, url: url, userAgent: InnerTubeClients.iOS.userAgent)
         case .failed, .sessionRequired:
-            throw OfflineDownloadTransport.unavailable("translation status=\(result.status) videoId=\(video.id)")
+            offlineSourceLog.error(
+                "Translation refused videoId=\(video.id, privacy: .public) status=\(result.status.rawValue) message=\(result.message ?? "", privacy: .private)"
+            )
+            throw OfflineTranslationError(message: result.message)
         case .audioRequested:
             guard !result.translationId.isEmpty else { throw YandexVOTClient.VOTError.malformedResponse }
             var upload = uploadedTranslations[attempt] ?? AudioUpload(translationID: result.translationId)
@@ -155,7 +163,6 @@ actor OfflineSourceResolver: OfflineResolving {
                 guard upload.attempts < PlaybackTuning.offlineTranslationUploadLimit else {
                     throw OfflineTranslationUploadError()
                 }
-                let info = try await api.fetchPlayerInfoVisionOS(videoId: video.id)
                 try await vot.uploadOriginalAudio(
                     videoId: video.id, translationId: result.translationId,
                     directURL: info.bestAdaptiveAudioURL, hlsURL: info.hlsURL,

@@ -33,6 +33,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0019) | current | 2026-10-17 |
 | [exec-plans/completed/offline-ipad-cleanup.md](exec-plans/completed/offline-ipad-cleanup.md) | PLAN-0028: physical iPad offline download and cleanup | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/completed/offline-yandex-translation.md](exec-plans/completed/offline-yandex-translation.md) | PLAN-0031: verified Russian translation fix; Kazakh service refusal remains open | current | 2026-10-20 |
 | [exec-plans/completed/worktree-release-5-18.md](exec-plans/completed/worktree-release-5-18.md) | PLAN-0030: worktree integration and source release 5.18 | completed | 2026-10-20 |
 | [exec-plans/active/voxaframe-redesign.md](exec-plans/active/voxaframe-redesign.md) | PLAN-0027: VoxaFrame redesign in SwiftUI, staged | current | 2026-10-17 |
 | [exec-plans/completed/offline-delete-all.md](exec-plans/completed/offline-delete-all.md) | PLAN-0026: delete all offline videos, tasks and cache | current | 2026-10-17 |

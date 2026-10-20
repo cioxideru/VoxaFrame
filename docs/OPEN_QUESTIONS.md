@@ -271,6 +271,15 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 
 - Status: partial physical acceptance; owner: playback maintainer.
   Basis: PLAN-0020, PLAN-0021 and [PLAN-0028](exec-plans/completed/offline-ipad-cleanup.md).
+- On 2026-10-20, [PLAN-0031](exec-plans/completed/offline-yandex-translation.md) fixed
+  discarded original-language metadata and hidden Yandex refusal reasons. The same failed
+  English video's Russian translation completed on iPad (10,208,279 bytes); the user
+  confirmed audible saved playback, pause and seeking. CI passed 1,351 tests / 181 suites,
+  strict lint had no violations, and physical iOS / tvOS Simulator builds passed.
+  The subsequent English-to-Kazakh request still returned a Yandex FAILED response before
+  any audio URL, reproduced independently on the Mac. Explicit language, auto detection
+  and diagnostic cache bypass did not resolve it; the internal service cause is unknown.
+  Kazakh acceptance, airplane-mode listening and long-duration synchronization remain open.
 - On 2026-10-17, the physical iPad completed an explicitly selected 720p H.264 video,
   original Russian audio and Yandex English translation. The video played with Wi-Fi off;
   the saved translation attached locally. The user confirmed audible English after explicitly

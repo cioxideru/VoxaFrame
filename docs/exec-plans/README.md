@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0031: Offline Yandex translation](completed/offline-yandex-translation.md) — original-language fix verified on iPad; Kazakh service refusal tracked in OQ-0018.
+
 - [PLAN-0030: Resume worktrees and release 5.18](completed/worktree-release-5-18.md) — four pending tasks integrated; 1,347 unit tests, 16 iPad UI tests and all platform builds passed; v5.18 published.
 
 - [PLAN-0028: Physical iPad offline cleanup](completed/offline-ipad-cleanup.md) — protected-package deletion, foreground transfers and background video completion; remaining hardware acceptance in OQ-0018.

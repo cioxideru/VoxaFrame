@@ -26,7 +26,7 @@ final class OfflineDecisionURLProtocol: URLProtocol {
     override func startLoading() {
         Self.log.record(request)
         let data = Data(
-            #"{"responseContext":{"visitorData":"fixture"},"playabilityStatus":{"status":"OK"},"videoDetails":{"videoId":"online-id","title":"Fixture","author":"Test","lengthSeconds":"60"},"streamingData":{"hlsManifestUrl":"https://example.invalid/original.m3u8"}}"#
+            #"{"responseContext":{"visitorData":"fixture"},"playabilityStatus":{"status":"OK"},"videoDetails":{"videoId":"online-id","title":"Fixture","author":"Test","lengthSeconds":"60"},"streamingData":{"hlsManifestUrl":"https://example.invalid/original.m3u8"},"captions":{"playerCaptionsTracklistRenderer":{"captionTracks":[{"baseUrl":"https://example.invalid/captions","languageCode":"en-US","kind":"asr"}]}}}"#
                 .utf8)
         guard let url = request.url,
             let response = HTTPURLResponse(
@@ -45,29 +45,38 @@ private struct NoStoredSponsorSegments: OfflineSponsorSegmentProviding {
     func sponsorSegmentsForPlayback(videoID: String) async -> OfflineSponsorSegments? { nil }
 }
 
-private actor OfflineVOTProbe: YandexVOTServing {
+actor OfflineVOTProbe: YandexVOTServing {
     struct Request: Sendable {
         let videoID: String
         let language: String
+        let sourceLanguage: String
         let lively: Bool
     }
     var requests: [Request] = []
     var uploads: [String] = []
     var responses: [YandexVOTClient.Status]
     let networkError: URLError.Code?
-    init(_ responses: [YandexVOTClient.Status] = [.failed], networkError: URLError.Code? = nil) {
+    let audioURL: URL?
+    init(
+        _ responses: [YandexVOTClient.Status] = [.failed], networkError: URLError.Code? = nil,
+        audioURL: URL? = URL(string: "https://example.invalid/translation.mp3")
+    ) {
         self.responses = responses
         self.networkError = networkError
+        self.audioURL = audioURL
     }
     func translate(
         videoId: String, duration: TimeInterval, sourceLanguage: String, targetLanguage: String,
         livelyVoiceToken: String?
     ) throws -> YandexVOTClient.Translation {
-        requests.append(Request(videoID: videoId, language: targetLanguage, lively: livelyVoiceToken != nil))
+        requests.append(
+            Request(
+                videoID: videoId, language: targetLanguage, sourceLanguage: sourceLanguage,
+                lively: livelyVoiceToken != nil))
         if let networkError { throw URLError(networkError) }
         let status = responses.isEmpty ? .failed : responses.removeFirst()
         return .init(
-            status: status, audioURL: URL(string: "https://example.invalid/translation.mp3"),
+            status: status, audioURL: audioURL,
             remainingTime: 5, translationId: "translation-session", isLivelyVoice: false, message: "Fixture failure")
     }
     func uploadOriginalAudio(
@@ -139,7 +148,7 @@ struct OfflinePlaybackDecisionTests {
         return condition()
     }
 
-    private func voiceFile() throws -> URL {
+    func voiceFile() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).wav")
         let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 8_000, channels: 1))
         let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 8_000))
@@ -282,7 +291,7 @@ struct OfflinePlaybackDecisionTests {
         model.setVoiceOverForCurrentVideo(true)
         #expect(await eventually { if case .failed = model.voiceOver.state { true } else { false } })
         #expect(await vot.uploads == ["online-id"])
-        #expect(OfflineDecisionURLProtocol.log.count == 2)
+        #expect(OfflineDecisionURLProtocol.log.count == 3)  // Source upload, then language recovery after refusal.
     }
 
     @Test("An online translation with no audio URLs does not acquire extra VISIONOS metadata")
@@ -396,7 +405,8 @@ struct OfflinePlaybackDecisionTests {
         #expect(await vot.uploads == ["online-id"])
         #expect(await vot.requests.count == 4)
         #expect(await vot.requests.allSatisfy { $0.videoID == "online-id" && !$0.lively })
-        #expect(OfflineDecisionURLProtocol.log.count == 2)  // visitor_id and player, only for the first upload.
+        #expect(await vot.requests.allSatisfy { $0.sourceLanguage == "en" })
+        #expect(OfflineDecisionURLProtocol.log.count == 5)  // visitor_id and fresh source metadata for each poll.
     }
 
     @Test("Repeated AUDIO_REQUESTED re-uploads once, then fails visibly; an explicit retry can start again")

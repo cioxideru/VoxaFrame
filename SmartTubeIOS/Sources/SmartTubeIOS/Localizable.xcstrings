@@ -29135,6 +29135,23 @@
         }
       }
     },
+    "Yandex couldn't translate this video. Try again later." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yandex couldn't translate this video. Try again later."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Яндекс не смог перевести это видео. Попробуйте позже."
+          }
+        }
+      }
+    },
     "Yandex did not accept the source audio. Retry the translation download." : {
       "extractionState" : "manual",
       "localizations" : {

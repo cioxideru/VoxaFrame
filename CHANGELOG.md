@@ -6,6 +6,10 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Fixed
+
+- Offline Yandex translation uses the original audio or auto-generated caption language instead of relying on failed language detection. Live translation of a saved video retries a refused automatic-language request once with the known original language. Download errors preserve Yandex's explanation.
+
 ## [5.18] – 2026-10-20
 
 VoxaFrame 5.18 (40). Source release; no signed binaries are attached.

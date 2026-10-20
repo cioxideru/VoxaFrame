@@ -173,6 +173,7 @@ final class VoiceOverTranslationController {
         }
         #endif
         var token = request.livelyVoiceToken
+        var sourceLanguage = request.sourceLanguage
         var uploadedAudio = false
         var playingURL: URL?
         var requestErrors = 0
@@ -181,8 +182,16 @@ final class VoiceOverTranslationController {
             do {
                 translation = try await client.translate(
                     videoId: request.videoId, duration: request.duration,
-                    sourceLanguage: request.sourceLanguage, targetLanguage: request.targetLanguage,
+                    sourceLanguage: sourceLanguage, targetLanguage: request.targetLanguage,
                     livelyVoiceToken: token)
+                try Task.checkCancellation()
+                if let original = try await originalLanguageAfterRefusal(
+                    translation.status, request: request, sourceLanguage: sourceLanguage)
+                {
+                    sourceLanguage = original
+                    uploadedAudio = false
+                    continue
+                }
                 requestErrors = 0
             } catch {
                 // Cancelled by stop()/restart: a newer translation may own the state now.
@@ -239,6 +248,18 @@ final class VoiceOverTranslationController {
                 .clamped(to: Self.pollInterval)
             try? await Task.sleep(for: .seconds(delay))
         }
+    }
+
+    private func originalLanguageAfterRefusal(
+        _ status: YandexVOTClient.Status, request: Request, sourceLanguage: String
+    ) async throws -> String? {
+        guard status == .failed, request.isOfflineVideo, sourceLanguage == "auto", let api else { return nil }
+        let info = try await api.fetchPlayerInfoVisionOS(videoId: request.videoId)
+        try Task.checkCancellation()
+        let original = info.voiceOverSourceLanguage
+        guard original != "auto" else { return nil }
+        votLog.notice("Auto language refused; retrying with original language \(original, privacy: .public)")
+        return original
     }
 
     private func fail(_ message: String, error: (any Error)? = nil) {
