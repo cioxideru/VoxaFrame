@@ -1,566 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Active" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Active"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Активные"
-          }
-        }
-      }
-    },
-    "Failed downloads: %lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed downloads: %lld"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ошибок загрузки: %lld"
-          }
-        }
-      }
-    },
-    "Playback options" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Playback options"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Параметры воспроизведения"
-          }
-        }
-      }
-    },
-    "Show Queue in sidebar" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show Queue in sidebar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показывать очередь в боковой панели"
-          }
-        }
-      }
-    },
-    "Opens the channel page and stops the video." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens the channel page and stops the video."
-          }
-        }
-      }
-    },
-    "Opens the channel page. The video keeps playing in the mini-player." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens the channel page. The video keeps playing in the mini-player."
-          }
-        }
-      }
-    },
-    "Opens the channel page. The video keeps playing." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens the channel page. The video keeps playing."
-          }
-        }
-      }
-    },
-    "Sound in video file" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sound in video file"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Звук в видеофайле"
-          }
-        }
-      }
-    },
-    "%@ · In video file" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · In video file"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · В видеофайле"
-          }
-        }
-      }
-    },
-    "Expanded" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Expanded"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Развёрнуто"
-          }
-        }
-      }
-    },
-    "Collapsed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Collapsed"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Свёрнуто"
-          }
-        }
-      }
-    },
-    "Original audio" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Original audio"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Исходный звук"
-          }
-        }
-      }
-    },
-    "%@ audio" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ audio"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Звук: %@"
-          }
-        }
-      }
-    },
-    "%@ voice-over" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ voice-over"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Перевод: %@"
-          }
-        }
-      }
-    },
-    "Audio not downloaded" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Audio not downloaded"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Звук не скачан"
-          }
-        }
-      }
-    },
-    "Other formats" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other formats"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Другие видеоформаты"
-          }
-        }
-      }
-    },
-    "Unknown language" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown language"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Неизвестный язык"
-          }
-        }
-      }
-    },
-    "%@ · Original" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · Original"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · Оригинал"
-          }
-        }
-      }
-    },
-    "%@ · Dubbed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · Dubbed"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ · Дубляж"
-          }
-        }
-      }
-    },
-    "%lld fps" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld fps"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld кадр/с"
-          }
-        }
-      }
-    },
-    "Approx. %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Approx. %@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Около %@"
-          }
-        }
-      }
-    },
-    "HLS uses the audio saved inside the video." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HLS uses the audio saved inside the video."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HLS использует звук, сохранённый внутри видео."
-          }
-        }
-      }
-    },
-    "Voice-over (Yandex)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voice-over (Yandex)"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Закадровый перевод (Яндекс)"
-          }
-        }
-      }
-    },
-    "Watch with" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Watch with"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Смотреть с"
-          }
-        }
-      }
-    },
-    "May not play on this device" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "May not play on this device"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Может не воспроизводиться на этом устройстве"
-          }
-        }
-      }
-    },
-    "Audio tracks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Audio tracks"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Аудиодорожки"
-          }
-        }
-      }
-    },
-    "Voice-over in another language" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voice-over in another language"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Закадровый перевод на другой язык"
-          }
-        }
-      }
-    },
-    "Download more" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download more"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скачать ещё"
-          }
-        }
-      }
-    },
-    "Internet required" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Internet required"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нужен интернет"
-          }
-        }
-      }
-    },
-    "Other quality or audio…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other quality or audio…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Другое качество или звук…"
-          }
-        }
-      }
-    },
-    "A new translation needs internet. Connect and retry, or choose a saved translation in Offline videos." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A new translation needs internet. Connect and retry, or choose a saved translation in Offline videos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Для нового перевода нужен интернет. Подключитесь и повторите попытку или выберите сохранённый перевод в офлайн-библиотеке."
-          }
-        }
-      }
-    },
-    "The saved translation is unavailable. Download it again in Offline videos." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The saved translation is unavailable. Download it again in Offline videos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сохранённый перевод недоступен. Скачайте его заново в офлайн-библиотеке."
-          }
-        }
-      }
-    },
-    "Translation is unavailable for this video duration." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Translation is unavailable for this video duration."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Перевод недоступен для видео такой длительности."
-          }
-        }
-      }
-    },
-    "Saved translations play without internet. A new live translation needs internet and is not saved; download it in Offline videos for later." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saved translations play without internet. A new live translation needs internet and is not saved; download it in Offline videos for later."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сохранённый перевод работает без интернета. Новый перевод требует интернета и не сохраняется; для просмотра позже скачайте его в офлайн-библиотеке."
-          }
-        }
-      }
-    },
     "" : {
 
     },
@@ -952,6 +392,137 @@
         }
       }
     },
+    "%@ · %@" : {
+      "comment" : "The label of the track, followed by \"Saved\" if the track is already saved, or \"Downloading\" if the track is being downloaded.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · Dubbed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Dubbed"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Дубляж"
+          }
+        }
+      }
+    },
+    "%@ · In video file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · In video file"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · В видеофайле"
+          }
+        }
+      }
+    },
+    "%@ · Original" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Original"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Оригинал"
+          }
+        }
+      }
+    },
+    "%@ / %@" : {
+      "comment" : "Displays the current playback time and the total duration of the video. The first argument is the current playback time. The second argument is the total duration of the video.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@"
+          }
+        }
+      }
+    },
+    "%@ audio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ audio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звук: %@"
+          }
+        }
+      }
+    },
+    "%@ likes" : {
+      "comment" : "Text describing the number of likes on a comment.",
+      "isCommentAutoGenerated" : true
+    },
+    "%@ of %@" : {
+      "comment" : "Player timeline VoiceOver value: elapsed of total time",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ of %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ из %2$@"
+          }
+        }
+      }
+    },
+    "%@ voice-over" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ voice-over"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевод: %@"
+          }
+        }
+      }
+    },
     "%@ watched" : {
       "comment" : "VoiceOver part of a video card. %@ = share of the video already watched, e.g. 40%.",
       "extractionState" : "manual",
@@ -966,30 +537,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Просмотрено: %@"
-          }
-        }
-      }
-    },
-    "%@ · %@" : {
-      "comment" : "The label of the track, followed by \"Saved\" if the track is already saved, or \"Downloading\" if the track is being downloaded.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@"
-          }
-        }
-      }
-    },
-    "%@ / %@" : {
-      "comment" : "Displays the current playback time and the total duration of the video. The first argument is the current playback time. The second argument is the total duration of the video.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ / %2$@"
           }
         }
       }
@@ -1030,20 +577,14 @@
         }
       }
     },
-    "%@ of %@" : {
-      "comment" : "Player timeline VoiceOver value: elapsed of total time",
-      "extractionState" : "manual",
+    "%@, %@" : {
+      "comment" : "A label that reads \"Saved offline\" The argument is the string “Saved offline”.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ of %@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ из %2$@"
+            "state" : "new",
+            "value" : "%1$@, %2$@"
           }
         }
       }
@@ -1242,6 +783,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld / %lld"
+          }
+        }
+      }
+    },
+    "%lld fps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld fps"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld кадр/с"
           }
         }
       }
@@ -1549,9 +1107,16 @@
         }
       }
     },
-    "%lld saved variants and audio tracks" : {
-      "comment" : "A caption below a video title in the offline videos list, showing the number of saved variants and audio tracks for that video.",
-      "isCommentAutoGenerated" : true
+    "%lld segments · updated %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld segments · updated %@"
+          }
+        }
+      }
     },
     "%lld video%@" : {
       "localizations" : {
@@ -1683,132 +1248,6 @@
         }
       }
     },
-    "Couldn't load this section" : {
-      "comment" : "Title of the Home section state when loading failed and nothing is shown.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't load this section"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не удалось загрузить раздел"
-          }
-        }
-      }
-    },
-    "Couldn't refresh. Showing the videos loaded earlier." : {
-      "comment" : "Banner above a Home section whose refresh or next page failed.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't refresh. Showing the videos loaded earlier."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не удалось обновить. Показаны загруженные ранее."
-          }
-        }
-      }
-    },
-    "Loading your feed…" : {
-      "comment" : "Status line while a Home section loads for the first time.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading your feed…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Загружаем вашу ленту…"
-          }
-        }
-      }
-    },
-    "More: %@" : {
-      "comment" : "VoiceOver label of a video card's More button. %@ = video title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More: %@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ещё: %@"
-          }
-        }
-      }
-    },
-    "Open search" : {
-      "comment" : "Guest action on the signed-out Home screen; opens the Search tab.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open search"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Открыть поиск"
-          }
-        }
-      }
-    },
-    "Sign in with a code from your phone or computer. You don't enter your password in VoxaFrame." : {
-      "comment" : "Explains sign-in on the signed-out Home screen.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign in with a code from your phone or computer. You don't enter your password in VoxaFrame."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вход по коду с телефона или компьютера. Пароль в VoxaFrame вводить не нужно."
-          }
-        }
-      }
-    },
-    "Upcoming" : {
-      "comment" : "Tag on the cover of a scheduled stream or premiere; also read by VoiceOver.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Upcoming"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скоро"
-          }
-        }
-      }
-    },
     "%lld videos will be removed from the watch history on this device." : {
       "comment" : "Clear history confirmation; %lld = number of on-device history entries",
       "extractionState" : "manual",
@@ -1859,40 +1298,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "Yandex translation · %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yandex translation · %@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Перевод Яндекс · %@"
-          }
-        }
-      }
-    },
-    "offline.partCount %@ %lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@: %2$lld"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@: %2$lld"
           }
         }
       }
@@ -2782,6 +2187,23 @@
         }
       }
     },
+    "A new translation needs internet. Connect and retry, or choose a saved translation in Offline videos." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A new translation needs internet. Connect and retry, or choose a saved translation in Offline videos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для нового перевода нужен интернет. Подключитесь и повторите попытку или выберите сохранённый перевод в офлайн-библиотеке."
+          }
+        }
+      }
+    },
     "About" : {
       "comment" : "Settings section header",
       "extractionState" : "manual",
@@ -3082,6 +2504,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "激活 VoxaFrame"
+          }
+        }
+      }
+    },
+    "Active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активные"
           }
         }
       }
@@ -4172,6 +3611,23 @@
         }
       }
     },
+    "Approx. %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approx. %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Около %@"
+          }
+        }
+      }
+    },
     "Audio" : {
       "comment" : "Kind of saved offline file: audio track",
       "extractionState" : "manual",
@@ -4193,6 +3649,23 @@
     "Audio Language" : {
       "comment" : "A section header for the audio language settings.",
       "isCommentAutoGenerated" : true
+    },
+    "Audio not downloaded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio not downloaded"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звук не скачан"
+          }
+        }
+      }
     },
     "Audio only — thumbnail" : {
       "localizations" : {
@@ -4392,6 +3865,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "音轨"
+          }
+        }
+      }
+    },
+    "Audio tracks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio tracks"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудиодорожки"
           }
         }
       }
@@ -6128,6 +5618,23 @@
         }
       }
     },
+    "Collapsed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapsed"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свёрнуто"
+          }
+        }
+      }
+    },
     "Columns (Landscape)" : {
       "comment" : "A label for the number of columns in the grid when the device is in landscape mode.",
       "isCommentAutoGenerated" : true
@@ -6332,24 +5839,6 @@
         }
       }
     },
-    "Confirm New PIN" : {
-      "comment" : "Set or change PIN: confirmation step",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirm New PIN"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подтвердите новый PIN"
-          }
-        }
-      }
-    },
     "Completed" : {
       "comment" : "Offline download task status: the file is saved",
       "extractionState" : "manual",
@@ -6364,6 +5853,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завершено"
+          }
+        }
+      }
+    },
+    "Confirm New PIN" : {
+      "comment" : "Set or change PIN: confirmation step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm New PIN"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтвердите новый PIN"
           }
         }
       }
@@ -6764,6 +6271,17 @@
     "Could Not Update Playlist" : {
 
     },
+    "Could not update. Check your connection and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not update. Check your connection and try again."
+          }
+        }
+      }
+    },
     "Couldn't load more results." : {
       "comment" : "Search: the next page of results failed; the results above stay",
       "extractionState" : "manual",
@@ -6778,6 +6296,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не удалось загрузить ещё результаты."
+          }
+        }
+      }
+    },
+    "Couldn't load this section" : {
+      "comment" : "Title of the Home section state when loading failed and nothing is shown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load this section"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить раздел"
+          }
+        }
+      }
+    },
+    "Couldn't refresh. Showing the videos loaded earlier." : {
+      "comment" : "Banner above a Home section whose refresh or next page failed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't refresh. Showing the videos loaded earlier."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось обновить. Показаны загруженные ранее."
           }
         }
       }
@@ -7258,10 +6812,6 @@
           }
         }
       }
-    },
-    "Delete downloaded files?" : {
-      "comment" : "A confirmation dialog that asks the user to delete downloaded files.",
-      "isCommentAutoGenerated" : true
     },
     "Delete task and files" : {
       "comment" : "A button that deletes a task and its files from the list of tasks.",
@@ -8268,6 +7818,23 @@
         }
       }
     },
+    "Download more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download more"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скачать ещё"
+          }
+        }
+      }
+    },
     "Download to Gallery" : {
       "comment" : "Player download button label",
       "extractionState" : "manual",
@@ -8571,10 +8138,6 @@
           }
         }
       }
-    },
-    "Downloads are paused while playback needs the connection." : {
-      "comment" : "A message displayed when the user is watching a video while a download is in progress.",
-      "isCommentAutoGenerated" : true
     },
     "Downloads only the selected video and audio. You can add other tracks later in Library." : {
       "comment" : "Footer text under the download button in the offline download sheet.",
@@ -9830,6 +9393,23 @@
         }
       }
     },
+    "Expanded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expanded"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Развёрнуто"
+          }
+        }
+      }
+    },
     "Failed" : {
       "comment" : "Offline download task status: the file was not saved",
       "extractionState" : "manual",
@@ -9844,6 +9424,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ошибка"
+          }
+        }
+      }
+    },
+    "Failed downloads: %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed downloads: %lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ошибок загрузки: %lld"
           }
         }
       }
@@ -11783,6 +11380,23 @@
         }
       }
     },
+    "HLS uses the audio saved inside the video." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HLS uses the audio saved inside the video."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HLS использует звук, сохранённый внутри видео."
+          }
+        }
+      }
+    },
     "Home" : {
       "comment" : "Root tab bar label",
       "extractionState" : "manual",
@@ -12254,6 +11868,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "界面"
+          }
+        }
+      }
+    },
+    "Internet required" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internet required"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужен интернет"
           }
         }
       }
@@ -13389,6 +13020,24 @@
         }
       }
     },
+    "Loading your feed…" : {
+      "comment" : "Status line while a Home section loads for the first time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading your feed…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружаем вашу ленту…"
+          }
+        }
+      }
+    },
     "Loading…" : {
       "comment" : "Generic loading progress indicator label",
       "extractionState" : "manual",
@@ -13771,6 +13420,23 @@
         }
       }
     },
+    "May not play on this device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "May not play on this device"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Может не воспроизводиться на этом устройстве"
+          }
+        }
+      }
+    },
     "Min. Segment Length" : {
       "comment" : "SponsorBlock settings picker for minimum segment duration to skip",
       "extractionState" : "manual",
@@ -13982,6 +13648,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更多"
+          }
+        }
+      }
+    },
+    "More: %@" : {
+      "comment" : "VoiceOver label of a video card's More button. %@ = video title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ещё: %@"
           }
         }
       }
@@ -14909,6 +14593,17 @@
         }
       }
     },
+    "No SponsorBlock segments saved yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No SponsorBlock segments saved yet."
+          }
+        }
+      }
+    },
     "No Subscriptions Yet" : {
       "comment" : "Library › Subscriptions empty state for a guest",
       "extractionState" : "manual",
@@ -15120,6 +14815,7 @@
       }
     },
     "Normal (1×)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -15703,6 +15399,18 @@
         }
       }
     },
+    "Offline storage used: %@" : {
+      "comment" : "Accessibility label of the total size of saved offline videos",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline storage used: %@"
+          }
+        }
+      }
+    },
     "Offline video" : {
       "comment" : "Saved offline video page title when the video is gone",
       "extractionState" : "manual",
@@ -15793,18 +15501,6 @@
         }
       }
     },
-    "offline.transfer %@ %@" : {
-      "comment" : "Offline download progress in bytes. %1 = fetched, %2 = expected, e.g. 112 MB of 412 MB",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ of %2$@"
-          }
-        }
-      }
-    },
     "offline.estimated %@" : {
       "comment" : "Offline size estimated from the variant list. %@ = size, e.g. ~412 MB",
       "extractionState" : "manual",
@@ -15817,6 +15513,23 @@
         }
       }
     },
+    "offline.partCount %@ %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$lld"
+          }
+        }
+      }
+    },
     "offline.partSize %@ %@" : {
       "comment" : "Offline saved part and its size, e.g. Video 412 MB",
       "extractionState" : "manual",
@@ -15825,18 +15538,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ %2$@"
-          }
-        }
-      }
-    },
-    "Offline storage used: %@" : {
-      "comment" : "Accessibility label of the total size of saved offline videos",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Offline storage used: %@"
           }
         }
       }
@@ -15855,6 +15556,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "offline.transfer %@ %@" : {
+      "comment" : "Offline download progress in bytes. %1 = fetched, %2 = expected, e.g. 112 MB of 412 MB",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ of %2$@"
           }
         }
       }
@@ -16600,6 +16313,57 @@
         }
       }
     },
+    "Open search" : {
+      "comment" : "Guest action on the signed-out Home screen; opens the Search tab.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open search"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть поиск"
+          }
+        }
+      }
+    },
+    "Opens the channel page and stops the video." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the channel page and stops the video."
+          }
+        }
+      }
+    },
+    "Opens the channel page. The video keeps playing in the mini-player." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the channel page. The video keeps playing in the mini-player."
+          }
+        }
+      }
+    },
+    "Opens the channel page. The video keeps playing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the channel page. The video keeps playing."
+          }
+        }
+      }
+    },
     "Or scan from another device" : {
       "comment" : "Sign-in activation screen divider label separating the primary link button from the QR code",
       "extractionState" : "manual",
@@ -16796,6 +16560,23 @@
         }
       }
     },
+    "Original audio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original audio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Исходный звук"
+          }
+        }
+      }
+    },
     "Original Audio in Background" : {
       "comment" : "A toggle that lets the user choose whether to keep the original audio in the background while using Yandex voice-over.",
       "isCommentAutoGenerated" : true
@@ -16890,6 +16671,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "仅原始音轨"
+          }
+        }
+      }
+    },
+    "Other formats" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other formats"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другие видеоформаты"
+          }
+        }
+      }
+    },
+    "Other quality or audio…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other quality or audio…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другое качество или звук…"
           }
         }
       }
@@ -17304,7 +17119,6 @@
       }
     },
     "Picture in Picture" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -17550,6 +17364,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Воспроизведение"
+          }
+        }
+      }
+    },
+    "Playback options" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback options"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметры воспроизведения"
           }
         }
       }
@@ -18441,24 +18272,6 @@
         }
       }
     },
-    "Preparing translation · %@" : {
-      "comment" : "Player status while Yandex prepares a voice-over; %@ = target language",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preparing translation · %@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Готовим перевод · %@"
-          }
-        }
-      }
-    },
     "Preparing" : {
       "comment" : "Offline download task status: getting the source addresses",
       "extractionState" : "manual",
@@ -18473,6 +18286,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Подготовка"
+          }
+        }
+      }
+    },
+    "Preparing translation · %@" : {
+      "comment" : "Player status while Yandex prepares a voice-over; %@ = target language",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing translation · %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готовим перевод · %@"
           }
         }
       }
@@ -19199,6 +19030,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "刷新"
+          }
+        }
+      }
+    },
+    "Refreshes saved videos once a day while the app is open." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshes saved videos once a day while the app is open."
           }
         }
       }
@@ -20136,10 +19978,6 @@
         }
       }
     },
-    "Retry library storage" : {
-      "comment" : "A button that retries loading the library storage.",
-      "isCommentAutoGenerated" : true
-    },
     "RSS" : {
       "comment" : "Library segment: RSS feeds (short, the segmented control is narrow)",
       "extractionState" : "manual",
@@ -20462,6 +20300,9 @@
         }
       }
     },
+    "Saved offline" : {
+
+    },
     "Saved to Gallery" : {
       "comment" : "Download success alert title",
       "extractionState" : "manual",
@@ -20558,9 +20399,6 @@
         }
       }
     },
-    "Saved offline" : {
-
-    },
     "Saved to Watch Later" : {
       "localizations" : {
         "ar" : {
@@ -20651,6 +20489,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已保存到稍后观看"
+          }
+        }
+      }
+    },
+    "Saved translations play without internet. A new live translation needs internet and is not saved; download it in Offline videos for later." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved translations play without internet. A new live translation needs internet and is not saved; download it in Offline videos for later."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранённый перевод работает без интернета. Новый перевод требует интернета и не сохраняется; для просмотра позже скачайте его в офлайн-библиотеке."
           }
         }
       }
@@ -22755,6 +22610,23 @@
         }
       }
     },
+    "Show Queue in sidebar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Queue in sidebar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать очередь в боковой панели"
+          }
+        }
+      }
+    },
     "Show Search Filters…" : {
       "comment" : "Mac View menu: open search filters without a toolbar anchor",
       "extractionState" : "manual",
@@ -23919,6 +23791,24 @@
         }
       }
     },
+    "Sign in with a code from your phone or computer. You don't enter your password in VoxaFrame." : {
+      "comment" : "Explains sign-in on the signed-out Home screen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with a code from your phone or computer. You don't enter your password in VoxaFrame."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход по коду с телефона или компьютера. Пароль в VoxaFrame вводить не нужно."
+          }
+        }
+      }
+    },
     "Sign in with Google" : {
       "comment" : "Settings button when user is not signed in",
       "extractionState" : "manual",
@@ -24800,6 +24690,23 @@
         }
       }
     },
+    "Sound in video file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound in video file"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звук в видеофайле"
+          }
+        }
+      }
+    },
     "Sound on" : {
       "comment" : "A description of the sound being on.",
       "isCommentAutoGenerated" : true
@@ -25090,6 +24997,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SponsorBlock"
+          }
+        }
+      }
+    },
+    "SponsorBlock updated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SponsorBlock updated"
           }
         }
       }
@@ -26043,6 +25961,23 @@
       "comment" : "Display name for the teal accent color.",
       "isCommentAutoGenerated" : true
     },
+    "The saved translation is unavailable. Download it again in Offline videos." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The saved translation is unavailable. Download it again in Offline videos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранённый перевод недоступен. Скачайте его заново в офлайн-библиотеке."
+          }
+        }
+      }
+    },
     "The service didn't respond. Your query and filters are kept." : {
       "comment" : "Search error screen explanation",
       "extractionState" : "manual",
@@ -26218,10 +26153,6 @@
           }
         }
       }
-    },
-    "This cancels all offline downloads and deletes every saved video, audio track, translation, and their cache. This cannot be undone." : {
-      "comment" : "The body of a confirmation dialog that asks the user to delete all of their offline videos.",
-      "isCommentAutoGenerated" : true
     },
     "This Device" : {
       "comment" : "Settings section header: data kept on this device",
@@ -26751,6 +26682,24 @@
         }
       }
     },
+    "Translation" : {
+      "comment" : "Kind of saved offline file: Yandex voice-over translation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Translation"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевод"
+          }
+        }
+      }
+    },
     "Translation · Yandex" : {
       "comment" : "Audio panel section header above the Yandex voice-over toggles",
       "extractionState" : "manual",
@@ -26769,20 +26718,19 @@
         }
       }
     },
-    "Translation" : {
-      "comment" : "Kind of saved offline file: Yandex voice-over translation",
+    "Translation is unavailable for this video duration." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Translation"
+            "value" : "Translation is unavailable for this video duration."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Перевод"
+            "value" : "Перевод недоступен для видео такой длительности."
           }
         }
       }
@@ -27475,6 +27423,23 @@
         }
       }
     },
+    "Unknown language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown language"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неизвестный язык"
+          }
+        }
+      }
+    },
     "Unmute" : {
       "comment" : "A button that unmutes the player.",
       "isCommentAutoGenerated" : true
@@ -27622,6 +27587,68 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Далее"
+          }
+        }
+      }
+    },
+    "Upcoming" : {
+      "comment" : "Tag on the cover of a scheduled stream or premiere; also read by VoiceOver.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upcoming"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скоро"
+          }
+        }
+      }
+    },
+    "Update SponsorBlock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update SponsorBlock"
+          }
+        }
+      }
+    },
+    "Update SponsorBlock for offline videos automatically" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update SponsorBlock for offline videos automatically"
+          }
+        }
+      }
+    },
+    "Updated %lld videos, failed %lld." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated %lld videos, failed %lld."
+          }
+        }
+      }
+    },
+    "Updating SponsorBlock %lld/%lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updating SponsorBlock %lld/%lld"
           }
         }
       }
@@ -28301,6 +28328,7 @@
     },
     "Video is not downloaded yet. Open Downloads to see progress." : {
       "comment" : "A message displayed when a video is not downloaded yet.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "ru" : {
@@ -28763,6 +28791,40 @@
         }
       }
     },
+    "Voice-over (Yandex)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voice-over (Yandex)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закадровый перевод (Яндекс)"
+          }
+        }
+      }
+    },
+    "Voice-over in another language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voice-over in another language"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закадровый перевод на другой язык"
+          }
+        }
+      }
+    },
     "Volume" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -29193,6 +29255,23 @@
     "Watch history is saved on this device. VoxaFrame also tries to report watches to your YouTube account, but YouTube may not always record them." : {
 
     },
+    "Watch with" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch with"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смотреть с"
+          }
+        }
+      }
+    },
     "Watch Without Translation" : {
 
     },
@@ -29278,9 +29357,6 @@
         }
       }
     },
-    "Yandex translating" : {
-
-    },
     "Yandex translation" : {
       "comment" : "A section for adding Yandex translation to an offline video.",
       "isCommentAutoGenerated" : true,
@@ -29289,6 +29365,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перевод Yandex"
+          }
+        }
+      }
+    },
+    "Yandex translation · %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yandex translation · %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевод Яндекс · %@"
           }
         }
       }
@@ -29515,24 +29608,6 @@
         }
       }
     },
-    "Your YouTube playlists and Watch Later. History and the queue work without signing in." : {
-      "comment" : "Library › Playlists sign-in prompt",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your YouTube playlists and Watch Later. History and the queue work without signing in."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ваши плейлисты YouTube и «Смотреть позже». История и очередь работают без входа."
-          }
-        }
-      }
-    },
     "Your YouTube history, search history, saved playback positions, offline videos and queue are not affected." : {
       "comment" : "Clear history confirmation: what stays",
       "extractionState" : "manual",
@@ -29547,6 +29622,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "История YouTube, история поиска, сохранённые позиции просмотра, офлайн-видео и очередь не изменятся."
+          }
+        }
+      }
+    },
+    "Your YouTube playlists and Watch Later. History and the queue work without signing in." : {
+      "comment" : "Library › Playlists sign-in prompt",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your YouTube playlists and Watch Later. History and the queue work without signing in."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваши плейлисты YouTube и «Смотреть позже». История и очередь работают без входа."
           }
         }
       }
@@ -29645,105 +29738,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "YouTube RSS 订阅 URL 格式如下：\n**youtube.com/feeds/videos.xml?channel_id=…**\n\n您也可以通过频道页面 URL 找到频道的 RSS 订阅。"
-          }
-        }
-      }
-    },
-    "Update SponsorBlock" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Update SponsorBlock"
-          }
-        }
-      }
-    },
-    "Updating SponsorBlock %lld/%lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Updating SponsorBlock %lld/%lld"
-          }
-        }
-      }
-    },
-    "SponsorBlock updated" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SponsorBlock updated"
-          }
-        }
-      }
-    },
-    "Updated %lld videos, failed %lld." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Updated %lld videos, failed %lld."
-          }
-        }
-      }
-    },
-    "Update SponsorBlock for offline videos automatically" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Update SponsorBlock for offline videos automatically"
-          }
-        }
-      }
-    },
-    "Refreshes saved videos once a day while the app is open." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refreshes saved videos once a day while the app is open."
-          }
-        }
-      }
-    },
-    "Could not update. Check your connection and try again." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not update. Check your connection and try again."
-          }
-        }
-      }
-    },
-    "%lld segments · updated %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld segments · updated %@"
-          }
-        }
-      }
-    },
-    "No SponsorBlock segments saved yet." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No SponsorBlock segments saved yet."
           }
         }
       }
