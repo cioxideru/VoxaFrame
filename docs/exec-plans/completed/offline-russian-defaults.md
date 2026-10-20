@@ -1,6 +1,6 @@
 # PLAN-0034: Language and bitrate defaults in the offline download dialog
 
-Status: active
+Status: completed
 Owner: Codex
 Date: 2026-10-20
 
@@ -39,7 +39,7 @@ selection and download validation.
 
 | Check | Evidence | Result |
 |---|---|---|
-| Callers and data flow | One shared sheet used by video cards and player; current audio preference selects original, translation starts off | inspected |
+| Callers and data flow | One shared sheet used by video cards and player; initial behavior selected original audio and started with translation off | inspected |
 | Language and bitrate defaults | 17 focused tests covered by full CI: settings/system language, regional tags, lowest known rate, original fallback, compatible HLS choice, bitrate propagation, legacy decoding and unlabeled audio | passed |
 | Manual choice | Simulator UI test covers Russian/English settings, enabled translation, manual target and toggle retained across quality changes | passed |
 | Physical iPad | Fresh manifest proves completed AAC 50,704 bps plus Yandex `ru`; after `827baeb0`, the user confirmed the language is displayed and duplicate choices are absent on a Vert Dider video | passed |
@@ -48,7 +48,7 @@ selection and download validation.
 | Platform acceptance | Earlier defaults UI run: 2 passed / 0 failed; current tvOS Debug simulator build exit 0; Xcode rebuilt and reports Running SmartTube on iPad (Ivan) | passed |
 | Library-label follow-up | Regression failed before the fix; CI now passes 1,357 tests / 181 suites, strict lint has zero violations; iPad rebuilt and launched | code verified |
 | Original-language follow-up | Regression covers ASR versus manual captions, direct duplicates, muxed/video-only formats, ambiguous/multilingual audio and stable HLS selection identities; included in full CI | code verified |
-| Player-label follow-up | Real manager regression covers missing-language markers, original versus dubbed audio, unchanged rendition IDs and no inferred-language carryover to manual-caption metadata; full CI and tvOS build pass, device build is running | code verified; physical acceptance pending |
+| Player-label follow-up | Real manager regression, full CI and tvOS build pass; after `cf5e7a71`, the user confirmed correct player labels and working audio after selecting the original | passed |
 
 ## Evidence and limits
 
@@ -93,8 +93,8 @@ remain untouched. Unknown-language rows use Audio, and the quick-access button
 uses that label instead of a raw sentinel. Quality reloads retain the selected
 ID while adopting refreshed labels; asynchronous group loading cannot apply an
 old item's tracks to the current item. The live translation policy uses the same
-source metadata. This follow-up keeps the plan active; the accepted download
-dialog result remains valid.
+source metadata. Both the download dialog and this separate player surface are
+now accepted on the physical iPad.
 
 Focused verification: 31 tests in two suites passed, including four missing-code
 cases exercised through the real `PlaybackViewModel` / `AudioTrackManager`.
@@ -102,10 +102,12 @@ Full CI passes 1,361 tests in 181 suites; strict SwiftLint reports zero violatio
 in 492 files; the tvOS simulator build exits 0. Evidence:
 `player-language-focused.log`, `player-language-ci.log`, `player-language-lint.log`
 and `player-language-tvos.log` in the diagnostics folder. Xcode rebuilt the device
-binary at 19:22 and reported Running SmartTube on iPad (Ivan). The user has been
-asked to verify Russian in the player audio menu, `ru` on its quick-access button
-and continued audio playback after selection. This separate player's physical
-confirmation is still pending.
+binary at 19:22 and reported Running SmartTube on iPad (Ivan). On 2026-10-20,
+after `cf5e7a71`, the user verified Russian in the player audio menu, `ru` on its
+quick-access button and continued audio playback after selecting the original:
+"Да, подписи правильные и звук работает" ("Yes, the labels are correct and audio
+works"). Together with the earlier download-dialog confirmation, this completes
+physical acceptance and closes PLAN-0034.
 
 Follow-up after `2aab6fe2`: the user reported "labels or selection are still
 incorrect". LLDB
@@ -124,8 +126,8 @@ Follow-up evidence: `library-label-before.log`, `library-label-ci.log`,
 `library-label-lint.log`, and `followup-manifest.json` in the diagnostics folder.
 Xcode rebuilt the physical app at 18:45 and reported Running. The two simulator
 UI tests and tvOS build below belong to the first commit; they were not repeated
-for this label-only correction. The final physical confirmation applies to the
-new-download dialog; old saved-track metadata was not rewritten or revalidated.
+for this label-only correction. Physical confirmation covers the new-download
+dialog and online player; old saved-track metadata was not rewritten or revalidated.
 
 Local diagnostics: `/private/tmp/voxaframe-offline-defaults-20261020`.
 `ci-final.log`, `lint-final.log` and the sanitized `reported-audio-metadata.log`

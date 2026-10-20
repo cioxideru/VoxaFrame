@@ -19,8 +19,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0034: Offline language defaults](active/offline-russian-defaults.md) — download dialog accepted on iPad; follow-up fixes the same missing language in the player's audio picker.
-
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
@@ -30,6 +28,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0034: Offline language defaults](completed/offline-russian-defaults.md) — settings-based audio/Yandex defaults and lower bitrate; download and player labels, absent duplicate choices and working audio confirmed on iPad.
 
 - [PLAN-0032: Saved translation language](completed/offline-translation-language.md) — original-language selection fixed; repaired saved Russian audio, pause and seeking confirmed on iPad.
 
