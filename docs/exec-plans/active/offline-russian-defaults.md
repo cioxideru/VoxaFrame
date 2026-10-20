@@ -28,6 +28,9 @@ selection and download validation.
 - Update selection tests and affected UI fixture expectations.
 - Omit the misleading "Unknown language" prefix when YouTube provides no audio
   language; retain codec/bitrate and leave the language metadata unset.
+- Reuse original-track and auto-generated-caption language evidence in the
+  catalog. Preserve explicit dubbed-track languages and HLS selection names.
+- Collapse direct variants with the same saved-track ID (normal/DRC duplicates).
 - Record the changed defaults and acceptance evidence.
 
 ## Acceptance and checkpoints
@@ -37,13 +40,40 @@ selection and download validation.
 | Callers and data flow | One shared sheet used by video cards and player; current audio preference selects original, translation starts off | inspected |
 | Language and bitrate defaults | 17 focused tests covered by full CI: settings/system language, regional tags, lowest known rate, original fallback, compatible HLS choice, bitrate propagation, legacy decoding and unlabeled audio | passed |
 | Manual choice | Simulator UI test covers Russian/English settings, enabled translation, manual target and toggle retained across quality changes | passed |
-| Physical iPad | Fresh manifest proves completed AAC 50,704 bps plus Yandex `ru`; follow-up library label correction is installed | label confirmation pending |
-| Missing language | Live VisionOS response for the reported video has no `audioTrack`, `LANGUAGE` or video language metadata; AAC options are 50,704 and 131,413 bps. Regression preserves nil language and labels them by codec/rate | fixed |
-| Required checks | Final CI: 1,356 tests / 181 suites; strict SwiftLint: zero violations / 492 files | passed |
-| Platform acceptance | Final iOS UI run: 2 passed / 0 failed; tvOS Debug simulator build exit 0; Xcode rebuilt and reports Running SmartTube on iPad (Ivan) | passed |
+| Physical iPad | Fresh manifest proves completed AAC 50,704 bps plus Yandex `ru`; the original-language/deduplication build is now installed and running | label confirmation pending |
+| Missing language | Initial investigation found no `audioTrack` or HLS `LANGUAGE`; the caption metadata follow-up below found original-speech `ru`. Generic labels alone did not satisfy the request | superseded |
+| Required checks | Current CI: 1,360 tests / 181 suites; strict SwiftLint: zero violations / 492 files | passed |
+| Platform acceptance | Earlier defaults UI run: 2 passed / 0 failed; current tvOS Debug simulator build exit 0; Xcode rebuilt and reports Running SmartTube on iPad (Ivan) | passed |
 | Library-label follow-up | Regression failed before the fix; CI now passes 1,357 tests / 181 suites, strict lint has zero violations; iPad rebuilt and launched | code verified |
+| Original-language follow-up | Regression covers ASR versus manual captions, direct duplicates, muxed/video-only formats, ambiguous/multilingual audio and stable HLS selection identities; included in full CI | code verified |
 
 ## Evidence and limits
+
+The user's 18:56 screenshot shows a new-download dialog for a Vert Dider
+Sapolsky lecture, with two identical AAC 53 kbps choices and two AAC 134 kbps
+choices. The user clarified that the issue affects Vert Dider videos generally;
+already-downloaded videos cannot reopen that dialog. This corrects the earlier
+assumption that the remaining screenshot problem was in the saved library.
+
+A new sanitized VisionOS metadata probe of `X-v5XyT1XwU` found a Russian
+auto-generated caption track (`languageCode=ru`, `kind=asr`, `vssId=a.ru`).
+The first investigation omitted this source of language evidence. Direct audio
+has no `audioTrack` and HLS audio is named `Default` without `LANGUAGE`; repeated
+AAC entries are normal/DRC versions sharing an itag. The translator already used
+original/ASR language evidence. The catalog now shares that policy: direct audio
+without per-track identities and original HLS renditions can use the source
+language. Manual captions and explicitly dubbed tracks cannot relabel audio.
+Direct saved-track identities stay unchanged and duplicate choices collapse.
+HLS display names can show the resolved language while `hlsAudioName` retains the
+exact manifest selection name. Saved files and their old metadata are not rewritten.
+Evidence: `source-language-metadata.log`, `source-language-focused.log`,
+`source-language-ci.log`, `source-language-lint.log` and `source-language-tvos.log`
+in the diagnostics folder. Full CI passes 1,360 tests in 181 suites; strict lint
+reports zero violations in 492 files; the tvOS simulator build exits 0. Xcode
+rebuilt the physical device binary at 19:10 and reported Running SmartTube on
+iPad (Ivan). The user has been asked to check the language and duplicate choices
+on an undownloaded Vert Dider video; that result remains pending. No new UI-test
+run is claimed for this metadata correction.
 
 Follow-up after `2aab6fe2`: the user reported "labels or selection are still
 incorrect". LLDB
@@ -88,6 +118,8 @@ explicit audio/translation values fixed it, and the same UI test passed.
 An earlier CLI run was terminated after hanging during diagnostic collection;
 it is not counted as a passing test.
 
-No Kazakh service fix, new automatic language detection or saved-file migration
-is included. HLS uses its published peak bitrate; if the source supplies no
-bitrate, that option follows known positive rates.
+No Kazakh service fix, local speech recognition or saved-file migration is
+included. When YouTube supplies neither a usable track language nor original
+speech-caption metadata, the catalog retains a generic label. HLS uses its
+published peak bitrate; if the source supplies no bitrate, that option follows
+known positive rates.

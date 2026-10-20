@@ -2,7 +2,7 @@ import Foundation
 
 /// Each choice binds one video rendition and, when present, one member of its external audio group.
 public func offlineHLSVariants(
-    _ manifest: String, baseURL: URL, duration: TimeInterval? = nil
+    _ manifest: String, baseURL: URL, duration: TimeInterval? = nil, originalLanguage: String? = nil
 ) -> [(OfflineTrack, URL)] {
     let languages = parseHLSAudioLanguages(from: manifest)
     let audioLines = manifest.components(separatedBy: .newlines).filter {
@@ -29,10 +29,12 @@ public func offlineHLSVariants(
         else { continue }
         let contentID = extractQuotedHLSAttribute("YT-EXT-AUDIO-CONTENT-ID", from: attributes)
         let language = languages.first { $0.contentID == contentID }
+        let isOriginal = language?.isOriginal ?? (contentID == nil)
         var track = OfflineTrack(
             id: "hls-\(format.height)-\(format.codecShortLabel)-\(format.fps)-\(contentID ?? "default")",
             kind: .hls, label: "\(format.qualityLabel) · \(format.codecShortLabel)",
-            language: language?.languageCode, hasAudio: true)
+            language: contentID == nil ? originalLanguage ?? language?.languageCode : language?.languageCode,
+            hasAudio: true)
         track.videoSize = OfflineVideoSize(width: format.width, height: format.height)
         track.fps = format.fps
         track.codec = format.videoCodec
@@ -47,10 +49,18 @@ public func offlineHLSVariants(
                     let uri = extractQuotedHLSAttribute("URI", from: audio),
                     URL(string: uri, relativeTo: baseURL)?.absoluteURL.scheme == "https"
                 else { continue }
-                let language = extractQuotedHLSAttribute("LANGUAGE", from: audio)
                 let id = extractQuotedHLSAttribute("YT-EXT-AUDIO-CONTENT-ID", from: audio) ?? name
+                let metadata = groupedLanguages.first { $0.contentID == id }
+                let isOriginal = metadata?.isOriginal ?? audio.contains("DEFAULT=YES")
+                let language =
+                    extractQuotedHLSAttribute("LANGUAGE", from: audio) ?? metadata?.languageCode
+                    ?? (isOriginal ? originalLanguage : nil)
+                let displayName =
+                    name == "Default"
+                    ? language.flatMap { Locale.current.localizedString(forIdentifier: $0) } ?? name : name
                 let audioLabel =
-                    name + " · " + (codecs.contains("mp4a.40.5") ? "HE-AAC" : codecs.contains("mp4a") ? "AAC" : "Dolby")
+                    displayName + " · "
+                    + (codecs.contains("mp4a.40.5") ? "HE-AAC" : codecs.contains("mp4a") ? "AAC" : "Dolby")
                 var choice = OfflineTrack(
                     id: track.id + "-\(group)-\(id)", kind: .hls,
                     label: track.label + " · " + audioLabel, language: language, hasAudio: true)
@@ -60,21 +70,25 @@ public func offlineHLSVariants(
                 choice.estimatedBytes = track.estimatedBytes
                 choice.hlsPeakBitRate = track.hlsPeakBitRate
                 choice.audioLabel = audioLabel
-                choice.isOriginalAudio =
-                    groupedLanguages.first { $0.contentID == id }?.isOriginal
-                    ?? audio.contains("DEFAULT=YES")
+                choice.isOriginalAudio = isOriginal
                 choice.hlsAudioName = name
                 if !result.contains(where: { $0.0.id == choice.id }) { result.append((choice, url)) }
             }
         } else {
-            let audioLabel =
-                language.map { "\($0.name) · \($0.isOriginal ? "Original" : "Dubbed")" } ?? "Original · included audio"
+            track.isOriginalAudio = isOriginal
+            let audioLabel = offlineMuxedAudioLabel(track, language: language)
             track.audioLabel = audioLabel
-            track.isOriginalAudio = language?.isOriginal ?? true
             // Keep the pre-selection catalog label and ID compatible with saved muxed variants.
             track.label += " · " + audioLabel
             if !result.contains(where: { $0.0.id == track.id }) { result.append((track, url)) }
         }
     }
     return result
+}
+
+private func offlineMuxedAudioLabel(_ track: OfflineTrack, language: AudioTrack?) -> String {
+    if track.isOriginalAudio == true, let code = track.language, code != "original" {
+        return "\(Locale.current.localizedString(forIdentifier: code) ?? code) · Original"
+    }
+    return language.map { "\($0.name) · \($0.isOriginal ? "Original" : "Dubbed")" } ?? "Original · included audio"
 }

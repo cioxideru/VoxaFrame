@@ -63,7 +63,10 @@ actor OfflineSourceResolver: OfflineResolving {
                     throw OfflineDownloadTransport.unavailable(
                         "HLS master status=\((response as? HTTPURLResponse)?.statusCode ?? 0) videoId=\(video.id)")
                 }
-                sources += offlineHLSVariants(manifest, baseURL: playlistURL, duration: info.video.duration).map {
+                sources += offlineHLSVariants(
+                    manifest, baseURL: playlistURL, duration: info.video.duration,
+                    originalLanguage: info.originalAudioLanguageCandidates.first
+                ).map {
                     OfflineSource(track: $0.0, url: playlistURL, userAgent: agent, hlsVariantURL: $0.1)
                 }
             }
@@ -182,30 +185,41 @@ actor OfflineSourceResolver: OfflineResolving {
     }
 
     static func directSources(_ info: PlayerInfo, userAgent: String) -> [OfflineSource] {
-        info.formats.compactMap { format in
+        // A catalog without audio-track IDs contains encodings of the video's source audio.
+        let originalLanguage =
+            info.formats.contains { $0.audioTrackID != nil } ? nil : info.originalAudioLanguageCandidates.first
+        var seen = Set<String>()
+        return info.formats.compactMap { format in
             guard let url = format.url, url.scheme == "https", !url.absoluteString.contains("c=TVHTML5"),
                 format.mimeType.hasPrefix("video/mp4") || format.mimeType.hasPrefix("audio/mp4")
             else { return nil }
             let audio = format.mimeType.hasPrefix("audio/")
-            let language = format.audioLanguage
-            let role =
-                format.isOriginalAudio == true ? "Original" : format.isOriginalAudio == false ? "Dubbed" : "Audio"
+            let hasAudio = !audio && format.mimeType.contains(",")
+            let fallback =
+                (audio || hasAudio) && format.audioLanguage == nil && format.isOriginalAudio != false
+                ? originalLanguage : nil
+            let language = format.audioLanguage ?? fallback
+            let isOriginal = format.isOriginalAudio ?? (fallback == nil ? nil : true)
+            let role = isOriginal == true ? "Original" : isOriginal == false ? "Dubbed" : "Audio"
+            let languageName = language.map { Locale.current.localizedString(forIdentifier: $0) ?? $0 }
             let audioLabel = [
-                language, role,
+                languageName, role,
                 "\(format.mimeType.contains("mp4a") ? "AAC" : "MP4 audio") \(format.bitrate.map { "\($0 / 1000) kbps" } ?? "")",
             ].compactMap { $0 }.joined(separator: " · ")
             let itag = query("itag", url: url) ?? "\(format.height)-\(format.fps)-\(format.codecShortLabel)"
             var track = OfflineTrack(
                 id: "direct-\(itag)-\(format.audioTrackID ?? "original")", kind: audio ? .audio : .video,
                 label: audio ? audioLabel : "\(format.qualityLabel) · \(format.codecShortLabel)", language: language,
-                hasAudio: !audio && format.mimeType.contains(","))
-            track.isOriginalAudio = format.isOriginalAudio
+                hasAudio: hasAudio)
+            // YouTube repeats an itag for dynamic-range processing; both map to the same saved-track ID.
+            guard seen.insert(track.id).inserted else { return nil }
+            track.isOriginalAudio = isOriginal
             track.bitrate = format.bitrate
             if !audio {
                 track.videoSize = OfflineVideoSize(width: format.width, height: format.height)
                 track.fps = format.fps
                 track.codec = format.videoCodec
-                track.audioLabel = "Included audio"
+                track.audioLabel = languageName.map { "\($0) · \(role) · Included audio" } ?? "Included audio"
             }
             track.estimatedBytes =
                 query("clen", url: url).flatMap(Int64.init).flatMap { $0 > 0 ? $0 : nil }
