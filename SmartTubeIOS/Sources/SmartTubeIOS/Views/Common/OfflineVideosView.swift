@@ -66,105 +66,106 @@ struct OfflineVideosView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            OfflineTransferSummary(jobs: snapshot.jobs) {
-                downloads = .active
-            }
-            adaptiveContent
-        }
-        .navigationTitle(Text("Offline videos", bundle: .module))
-        .onGeometryChange(for: CGFloat.self, of: \.size.width) { contentWidth = $0 }
-        .onAppear(perform: syncSelection)
-        .onChange(of: snapshot.entries.map(\.id)) { _, _ in syncSelection() }
-        .onChange(of: showsColumns) { _, _ in syncSelection() }
-        .onChange(of: selectedVideoID) { _, videoID in
-            if videoID != nil { hasShownVideo = true }
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    downloads = .all
-                } label: {
-                    Label {
-                        Text("Downloads", bundle: .module)
-                    } icon: {
-                        Image(systemName: AppSymbol.download)
-                    }
+        adaptiveContent
+            .clipped()
+            .safeAreaInset(edge: .top, spacing: 0) {
+                OfflineTransferSummary(jobs: snapshot.jobs) {
+                    downloads = .active
                 }
-                .accessibilityIdentifier(AccessibilityID.offlineDownloads)
             }
-            ToolbarItem(placement: .primaryAction) {
-                OfflineTotalsLabel(entries: snapshot.entries, jobs: snapshot.jobs, sizes: assetSizes)
+            .navigationTitle(Text("Offline videos", bundle: .module))
+            .onGeometryChange(for: CGFloat.self, of: \.size.width) { contentWidth = $0 }
+            .onAppear(perform: syncSelection)
+            .onChange(of: snapshot.entries.map(\.id)) { _, _ in syncSelection() }
+            .onChange(of: showsColumns) { _, _ in syncSelection() }
+            .onChange(of: selectedVideoID) { _, videoID in
+                if videoID != nil { hasShownVideo = true }
             }
-            ToolbarItem(placement: .primaryAction) {
-                Button(role: .destructive) {
-                    showsDeleteAll = true
-                } label: {
-                    Label {
-                        Text("Delete all offline videos", bundle: .module)
-                    } icon: {
-                        Image(systemName: AppSymbol.trash)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        downloads = .all
+                    } label: {
+                        Label {
+                            Text("Downloads", bundle: .module)
+                        } icon: {
+                            Image(systemName: AppSymbol.download)
+                        }
                     }
+                    .accessibilityIdentifier(AccessibilityID.offlineDownloads)
                 }
-                .accessibilityIdentifier(AccessibilityID.offlineDeleteAll)
-                .disabled(!coordinator.ready || isLocked)
-                .confirmationDialog(
-                    Text("Delete all offline videos?", bundle: .module), isPresented: $showsDeleteAll,
-                    titleVisibility: .visible
-                ) {
+                ToolbarItem(placement: .primaryAction) {
+                    OfflineTotalsLabel(entries: snapshot.entries, jobs: snapshot.jobs, sizes: assetSizes)
+                }
+                ToolbarItem(placement: .primaryAction) {
                     Button(role: .destructive) {
-                        guard coordinator.ready, !isLocked else { return }
-                        coordinator.remove(videoID: nil)
+                        showsDeleteAll = true
                     } label: {
-                        Text("Delete all", bundle: .module)
+                        Label {
+                            Text("Delete all offline videos", bundle: .module)
+                        } icon: {
+                            Image(systemName: AppSymbol.trash)
+                        }
                     }
+                    .accessibilityIdentifier(AccessibilityID.offlineDeleteAll)
                     .disabled(!coordinator.ready || isLocked)
-                    Button(role: .cancel) {
-                    } label: {
-                        Text("Cancel", bundle: .module)
+                    .confirmationDialog(
+                        Text("Delete all offline videos?", bundle: .module), isPresented: $showsDeleteAll,
+                        titleVisibility: .visible
+                    ) {
+                        Button(role: .destructive) {
+                            guard coordinator.ready, !isLocked else { return }
+                            coordinator.remove(videoID: nil)
+                        } label: {
+                            Text("Delete all", bundle: .module)
+                        }
+                        .disabled(!coordinator.ready || isLocked)
+                        Button(role: .cancel) {
+                        } label: {
+                            Text("Cancel", bundle: .module)
+                        }
+                    } message: {
+                        Text(
+                            "This cancels all offline downloads and deletes every saved video, audio track, translation and their cache. Watch history, your Google account and settings stay as they are. This cannot be undone.",
+                            bundle: .module)
                     }
-                } message: {
-                    Text(
-                        "This cancels all offline downloads and deletes every saved video, audio track, translation and their cache. Watch history, your Google account and settings stay as they are. This cannot be undone.",
-                        bundle: .module)
                 }
             }
-        }
-        .toolbar { ToolbarItem(placement: sponsorPlacement) { updateSponsorBlockButton } }
-        .alert(
-            Text("SponsorBlock updated", bundle: .module), isPresented: $showsSponsorResult,
-            actions: {}, message: { Text(sponsorResultText) }
-        )
-        .task { coordinator.start() }
-        .offlineSizes($assetSizes, store: coordinator.store, snapshot: snapshot)
-        .sheet(item: $downloads) { filter in OfflineDownloadsSheet(filter: filter) }
-        #if os(macOS)
+            .toolbar { ToolbarItem(placement: sponsorPlacement) { updateSponsorBlockButton } }
+            .alert(
+                Text("SponsorBlock updated", bundle: .module), isPresented: $showsSponsorResult,
+                actions: {}, message: { Text(sponsorResultText) }
+            )
+            .task { coordinator.start() }
+            .offlineSizes($assetSizes, store: coordinator.store, snapshot: snapshot)
+            .sheet(item: $downloads) { filter in OfflineDownloadsSheet(filter: filter) }
+            #if os(macOS)
         .navigationDestination(item: $playbackVideo) { video in PlayerView(video: video, api: api) }
-        #elseif os(tvOS)
+            #elseif os(tvOS)
         .sheet(item: $playbackVideo) { video in PlayerView(video: video, api: api) }
-        #endif
-        .confirmationDialog(
-            Text("Delete “\(deletion?.video.title ?? "")”?", bundle: .module),
-            isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }),
-            titleVisibility: .visible, presenting: deletion
-        ) { item in
-            Button(role: .destructive) {
-                defer { deletion = nil }
-                guard !isLocked else { return }
-                coordinator.remove(videoID: item.id)
-            } label: {
-                Text("Delete", bundle: .module)
+            #endif
+            .confirmationDialog(
+                Text("Delete “\(deletion?.video.title ?? "")”?", bundle: .module),
+                isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }),
+                titleVisibility: .visible, presenting: deletion
+            ) { item in
+                Button(role: .destructive) {
+                    defer { deletion = nil }
+                    guard !isLocked else { return }
+                    coordinator.remove(videoID: item.id)
+                } label: {
+                    Text("Delete", bundle: .module)
+                }
+                .disabled(isLocked)
+                Button(role: .cancel) {
+                } label: {
+                    Text("Cancel", bundle: .module)
+                }
+            } message: { _ in
+                Text(
+                    "This removes the video, all downloaded audio and translations, and its pending downloads.",
+                    bundle: .module)
             }
-            .disabled(isLocked)
-            Button(role: .cancel) {
-            } label: {
-                Text("Cancel", bundle: .module)
-            }
-        } message: { _ in
-            Text(
-                "This removes the video, all downloaded audio and translations, and its pending downloads.",
-                bundle: .module)
-        }
     }
 
     private func syncSelection() {

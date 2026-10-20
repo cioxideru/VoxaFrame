@@ -170,31 +170,48 @@ struct OfflineTransferSummary: View {
         if summary.isVisible {
             Button(action: action) {
                 VStack(alignment: .leading, spacing: VFSpace.s8) {
-                    HStack {
+                    HStack(spacing: VFSpace.s12) {
                         Label {
-                            Text("Downloads", bundle: .module).font(.headline)
+                            Text("Downloads", bundle: .module).font(.subheadline.weight(.semibold))
                         } icon: {
-                            Image(systemName: AppSymbol.download)
+                            Image(systemName: AppSymbol.download).foregroundStyle(.tint)
                         }
                         Spacer()
                         if let progress = summary.progress {
                             Text(progress, format: .percent.precision(.fractionLength(0)))
+                                .font(.subheadline.weight(.semibold))
                                 .monospacedDigit()
                         }
-                        Image(systemName: AppSymbol.chevronRight).accessibilityHidden(true)
+                        Image(systemName: AppSymbol.chevronRight)
+                            .font(.caption.weight(.semibold)).foregroundStyle(.secondary).accessibilityHidden(true)
                     }
-                    if summary.activeCount > 0 { Text(summary.countText).font(.subheadline) }
+                    VStack(alignment: .leading, spacing: VFSpace.s4) {
+                        if summary.activeCount > 0 {
+                            Text(summary.countText).foregroundStyle(.secondary)
+                        }
+                        if summary.failures > 0 {
+                            Text("Failed downloads: \(summary.failures)", bundle: .module)
+                                .foregroundStyle(VFColor.danger)
+                        }
+                    }
+                    .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
                     if let progress = summary.progress { ProgressView(value: progress) }
-                    if summary.failures > 0 {
-                        Text("Failed downloads: \(summary.failures)", bundle: .module)
-                            .font(.footnote).foregroundStyle(VFColor.danger)
-                    }
                 }
-                .padding()
-                .contentShape(Rectangle())
+                .padding(.horizontal, VFSpace.s16)
+                .padding(.vertical, VFSpace.s12)
+                .frame(maxWidth: VFColumn.readableMaximum)
+                .background(VFColor.elevated, in: RoundedRectangle(cornerRadius: VFRadius.card))
+                .overlay {
+                    RoundedRectangle(cornerRadius: VFRadius.card).strokeBorder(.quaternary)
+                }
+                .shadow(color: .black.opacity(0.12), radius: VFSpace.s8, y: VFSpace.s4)
+                .contentShape(RoundedRectangle(cornerRadius: VFRadius.card))
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier(AccessibilityID.offlineTransferSummary)
+            .padding(.horizontal, VFSpace.s16)
+            .padding(.vertical, VFSpace.s12)
         }
     }
 }

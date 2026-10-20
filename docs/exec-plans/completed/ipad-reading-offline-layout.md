@@ -24,7 +24,7 @@ Integrate verified task commits into local master; no remote push.
   choices and starts that selection. SponsorBlock is the last detail section.
 - File tasks are a third level under a video, shown in a dialog. Completed
   file rows no longer open the entire video-management page.
-- A header summary shows active video/audio/translation counts and progress.
+- A compact floating header card shows active video/audio/translation counts and progress.
   Opening it shows only active and failed file tasks, with existing cancellation,
   retry and confirmed deletion. An always-visible global Downloads button opens all
   tasks newest first. Global/per-video dialogs offer All / Active / Error / Video / Audio;
@@ -81,3 +81,21 @@ The user's final Error-filter request is included; it was checked in Simulator
 and installed on the iPad, but no separate physical Error-filter acceptance was
 requested. iPhone and tvOS interaction were not exercised; tvOS was compiled and
 native macOS package checks passed.
+
+## Follow-up: floating download summary
+
+The summary now sits in the top safe area as a rounded, raised card, bounded by
+the existing readable-width metric. It stays visible while either column scrolls;
+the library is clipped to its viewport so rows cannot paint over the title.
+Counts, percentage, errors, the Active dialog and the hidden idle state keep
+their existing policy. No persistence, scheduling or localization changes.
+
+Verified in iPad Simulator in portrait and landscape, including library scrolling
+and selection updating the detail column. The existing Downloads UI journey passed with all
+filters and cancel/retry/delete actions (`test_sim_2026-10-20T18-27-19-415Z_pid52182_800018c2.xcresult`).
+CI passed 1,368 tests in 182 suites; strict SwiftLint reported zero violations;
+iOS and tvOS builds passed. Xcode reports Running SmartTube on iPad (Ivan), with
+the updated executable built at 21:28:24 local time on 2026-10-20.
+Logs and screenshots: `/private/tmp/voxaframe-floating-downloads-20261020`.
+The physical layout awaits user observation; iPhone and tvOS interaction were
+not exercised.
