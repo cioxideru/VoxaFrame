@@ -19,8 +19,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0030: Resume worktrees and release 5.18](active/worktree-release-5-18.md) — finish PLAN-0029 branches, validate and publish the next source release.
-
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
@@ -30,6 +28,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0030: Resume worktrees and release 5.18](completed/worktree-release-5-18.md) — four pending tasks integrated; 1,347 unit tests, 16 iPad UI tests and all platform builds passed; v5.18 published.
 
 - [PLAN-0028: Physical iPad offline cleanup](completed/offline-ipad-cleanup.md) — protected-package deletion, foreground transfers and background video completion; remaining hardware acceptance in OQ-0018.
 

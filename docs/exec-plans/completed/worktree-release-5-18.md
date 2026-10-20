@@ -1,6 +1,10 @@
 # PLAN-0030: Resume worktrees and release VoxaFrame 5.18
 
-Status: active
+Status: completed
+
+Resolution: four unfinished feature worktrees integrated, required acceptance passed,
+and [VoxaFrame 5.18 (40)](https://github.com/cioxideru/VoxaFrame/releases/tag/v5.18)
+published on 2026-10-20. Release commit: `a90174c3`; annotated tag: `v5.18`.
 
 Owner: Codex for Ivan Baranov. Started 2026-10-20.
 Git boundary: `mac/release-5.18` in the existing `p29-release` worktree, based on
@@ -44,7 +48,7 @@ Existing broader design and device acceptance remains in the open-question regis
 | Download sizes | Integrated; byte counters, saved/partial files, cancellation and measurement cache covered; UI verifies storage display and deletion |
 | Versions and builds | Xcode project updated to 5.18 (40); iOS, native macOS and tvOS Release builds passed, including iOS/tvOS UI-test compilation |
 | UI acceptance | All 16 focused iPad tests passed, no failures or skips |
-| Publication | Commit, master integration and source publication pending |
+| Publication | `a90174c3` merged into master; remote master and tag verified; GitHub release published, no binary assets |
 
 ## Validation
 
@@ -82,4 +86,15 @@ and [OQ-0019](../../OPEN_QUESTIONS.md#oq-0019--voxaframe-redesign-follow-ups).
 No tvOS Simulator runtime is installed. Signing, App Store and TestFlight distribution
 remain [OQ-0007](../../OPEN_QUESTIONS.md#oq-0007--release-runbook-and-version-settings).
 
-Next deliverable: commit and merge the accepted change, then publish the source release.
+## Delivery and preserved work
+
+The merge commit retains `177cc69a` as its second parent. It includes the four pending
+tasks and the reviewed fixes, with the five post-5.17 player/Home changes already on master.
+GitHub independently reports `v5.18` as published (not a draft or prerelease), with no
+binary assets. Remote master and the dereferenced tag matched `a90174c3` at publication.
+
+Original worktrees were left intact, including the non-production Shorts probe.
+The main checkout's pre-existing Xcode string-catalog extraction was preserved in stash
+`c0481d2c` (`Preserve Xcode catalog extraction before v5.18 (PLAN-0030)`), as well as
+the recovery copies above. A local signing-filter index refresh was needed before the
+fast-forward; no personal signing identifier entered the commit.
