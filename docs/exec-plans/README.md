@@ -19,8 +19,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0032: Saved translation language](active/offline-translation-language.md) — original-language selection before live requests and repair of a legacy wrong-language track.
-
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
@@ -30,6 +28,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0032: Saved translation language](completed/offline-translation-language.md) — original-language selection fixed; repaired saved Russian audio, pause and seeking confirmed on iPad.
 
 - [PLAN-0033: iPad sidebar launch warning](completed/ipad-sidebar-state-warning.md) — warning and Queue identity regression fixed; five focused iPad UI tests pass, broader Split View acceptance remains in OQ-0019.
 

@@ -280,6 +280,14 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   any audio URL, reproduced independently on the Mac. Explicit language, auto detection
   and diagnostic cache bypass did not resolve it; the internal service cause is unknown.
   Kazakh acceptance, airplane-mode listening and long-duration synchronization remain open.
+- On 2026-10-20, [PLAN-0032](exec-plans/completed/offline-translation-language.md) fixed
+  local live requests ignoring the saved original language. For the reported UPI video,
+  the old Russian-labelled MP3 exactly matched Yandex's `auto→ru` response and contained
+  Ukrainian speech. Explicit `en→ru` returned Russian; the old file was backed up and
+  replaced while the app was stopped, then verified by a round-trip SHA-256 check.
+  Video and both English audio tracks were preserved. The user confirmed Russian
+  playback, pause and seeking; device logs confirm local translation attachment.
+  This legacy-file repair did not repeat an in-app download or verify long playback.
 - On 2026-10-17, the physical iPad completed an explicitly selected 720p H.264 video,
   original Russian audio and Yandex English translation. The video played with Wi-Fi off;
   the saved translation attached locally. The user confirmed audible English after explicitly

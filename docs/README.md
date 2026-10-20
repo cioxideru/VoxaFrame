@@ -33,7 +33,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0019) | current | 2026-10-17 |
 | [exec-plans/completed/offline-ipad-cleanup.md](exec-plans/completed/offline-ipad-cleanup.md) | PLAN-0028: physical iPad offline download and cleanup | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
-| [exec-plans/active/offline-translation-language.md](exec-plans/active/offline-translation-language.md) | PLAN-0032: original-language selection for local live requests and legacy track repair | current | 2026-10-20 |
+| [exec-plans/completed/offline-translation-language.md](exec-plans/completed/offline-translation-language.md) | PLAN-0032: explicit original language and wrong-language saved track repair verified on iPad | completed | 2026-10-20 |
 | [exec-plans/completed/offline-yandex-translation.md](exec-plans/completed/offline-yandex-translation.md) | PLAN-0031: verified Russian translation fix; Kazakh service refusal remains open | current | 2026-10-20 |
 | [exec-plans/completed/worktree-release-5-18.md](exec-plans/completed/worktree-release-5-18.md) | PLAN-0030: worktree integration and source release 5.18 | completed | 2026-10-20 |
 | [exec-plans/completed/ipad-sidebar-state-warning.md](exec-plans/completed/ipad-sidebar-state-warning.md) | PLAN-0033: sidebar warning and Queue identity fix; Split View acceptance remains open | completed | 2026-10-20 |

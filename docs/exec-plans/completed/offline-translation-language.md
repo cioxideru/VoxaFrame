@@ -1,6 +1,6 @@
 # PLAN-0032: Preserve original language for saved-video live translation
 
-Status: blocked
+Status: completed
 Owner: Codex
 Date: 2026-10-20
 
@@ -30,7 +30,7 @@ Do not add a network lookup when local metadata supplies the language.
 
 ## Boundaries and acceptance
 
-Use the current `master` checkout at `020b9474` and installed Xcode 27.0. Preserve
+Started from local `master` at `020b9474` using installed Xcode 27.0. Preserve
 unrelated changes in `project.pbxproj` and `Localizable.xcstrings`. No remote push.
 
 - Reproduce the first live request using `auto` despite a known original language.
@@ -46,13 +46,15 @@ unrelated changes in `project.pbxproj` and `Localizable.xcstrings`. No remote pu
 |---|---|---|
 | Screenshot and device records | Same video ID, original en-US, translation ru | confirmed |
 | File association | Saved file equals fresh auto response, differs from explicit en response | confirmed |
-| Spoken language | Local transcription of the first 30 seconds shows Ukrainian vocabulary in the old file and Russian text in the new file; user sample reply pending | content checked |
+| Spoken language | Local transcription of the first 30 seconds shows Ukrainian vocabulary in the old file and Russian text in the new file; the user confirms the original is accented English and both voice settings played Ukrainian | content checked |
 | Live request regression | New test failed before the fix: initial request auto, stored language unread; passes after the fix | passed |
 | Focused tests | 35 tests / 2 suites, including cancellation at either library read and saved playback without language lookup | passed |
-| Required checks | CI: 1,352 tests / 181 suites; strict SwiftLint: 0 violations / 492 files | passed |
+| Required checks | CI: 1,352 tests / 181 suites; strict SwiftLint: 0 violations / 492 files; both repeated after device repair | passed |
 | Platform builds | Physical iOS Debug and generic tvOS Simulator Debug builds exited 0 | passed |
-| Device deployment | Xcode installed/reran the app; paused on main thread for precise re-enqueue | installed |
-| Device repair | Old MP3 backed up; no saved files changed yet. Xcode UI became unavailable when the Mac locked | blocked |
+| Device deployment | Xcode installed/reran the current app after the Mac was unlocked; debugger confirms Running on the iPad | installed |
+| Device repair | Old MP3 backed up again and hash checked; replaced only that MP3 while the app was stopped; copied it back from the iPad and confirmed the explicit `en→ru` hash and 9,243,629-byte size | passed |
+| Preserved media | The selected entry is identical before/after repair, including 720p video, both original English audio tracks and translation identity | passed |
+| Physical playback | At 16:57 the iPad attached the local translation and reached readyToPlay in 560 ms; the user confirmed Russian speech, working pause and seeking | passed |
 
 ## Implementation and review
 
@@ -70,9 +72,28 @@ The actual transcript contains Ukrainian vocabulary consistent with the user's r
 the new transcript is Russian. Evidence: `language-recognition.jsonl`. These diagnostic
 packages/model are outside the repository and are not application dependencies.
 
-Dependencies: connected iPad and an unlocked Mac for Xcode control.
-Blocker: the UI tool reported that the Mac is locked and requires manual unlocking.
-The app was paused by the debugger. CoreDevice accepted `process resume` for PID 26003,
-but debugger state could not be checked while locked; verify/resume it before the next test.
-Re-enqueue only `vot-ru` for this video using the existing coordinator; preserve video
-and original audio. Verify the resulting file matches the fresh `en→ru` hash above.
+Implementation commit: `5243b681`, on local `master`. No remote push.
+
+After unlocking, Xcode showed that the old debug session had ended. A fresh run
+installed the current checkout, including the unrelated PLAN-0033 commit.
+LLDB found the coordinator's binary symbol, but its Swift expression context could
+not resolve the type; no queue mutation occurred. The one-time legacy-file repair
+therefore used CoreDevice file transfer while the app was stopped. It did not
+exercise a new in-app download or edit the library manifest.
+
+Recovery copy: `upi-pre-repair-backup.mp3` in the private diagnostic directory.
+The round-trip copy `upi-device-repaired.mp3` matches the explicit-English response
+above and probes as a 577.641-second MP3. All four saved asset records are unchanged;
+only normal startup bookkeeping (`revision` and `notifiedBatches`) differs in the
+whole manifest. Xcode then launched the app again and confirmed it was running.
+Saved-file playback takes precedence over the lively-voice setting, explaining why
+both settings replayed the same old wrong-language file.
+
+The user then accepted playback: "Да, русский; пауза и перемотка работают".
+Device evidence is in `upi-playback-events.log`; both task-owned live captures were
+stopped after the check. The app remains running in Xcode. The first live-request
+source selection is covered by the regression test; this physical check verifies
+the repaired saved file, not a fresh in-app translation download. The internal
+reason Yandex returned Ukrainian content for `auto→ru` is not observable.
+Kazakh service refusal and long-duration/offline listening acceptance remain in
+[OQ-0018](../../OPEN_QUESTIONS.md#oq-0018--offline-library-and-playback-priority-on-physical-ipad).
