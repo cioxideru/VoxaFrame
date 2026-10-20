@@ -64,7 +64,7 @@ struct OfflineDownloadSheet: View {
                             Text("Retry", bundle: .module)
                         }
                     } else {
-                        selections
+                        mediaSelections
                         if let tracks {
                             if let size = OfflineSelection.estimatedBytes(for: tracks) {
                                 Text(
@@ -73,12 +73,10 @@ struct OfflineDownloadSheet: View {
                                 )
                                 .font(.caption)
                             }
-                            if translates {
-                                Text("Translation size will be known after it is prepared.", bundle: .module)
-                                    .font(.caption)
-                            }
                         }
                     }
+                } header: {
+                    Text(verbatim: "YouTube")  // verbatim: provider brand
                 } footer: {
                     VStack(alignment: .leading, spacing: VFSpace.s4) {
                         Text(
@@ -90,6 +88,17 @@ struct OfflineDownloadSheet: View {
                             "On this device videos are saved as direct files. HLS packages are saved on iPhone and iPad.",
                             bundle: .module)
                         #endif
+                    }
+                }
+                if !loading && error == nil {
+                    Section {
+                        translationSelections
+                    } header: {
+                        Text("Translation · Yandex", bundle: .module)
+                    } footer: {
+                        if translates {
+                            Text("Translation size will be known after it is prepared.", bundle: .module)
+                        }
                     }
                 }
                 #if !os(iOS)
@@ -176,7 +185,7 @@ struct OfflineDownloadSheet: View {
         }
     }
 
-    private var selections: some View {
+    private var mediaSelections: some View {
         Group {
             Picker(selection: $videoID) {
                 ForEach(videos) { track in
@@ -199,6 +208,11 @@ struct OfflineDownloadSheet: View {
             if audio.isEmpty {
                 Text("No compatible audio track is available for this video stream.", bundle: .module)
             }
+        }
+    }
+
+    private var translationSelections: some View {
+        Group {
             Toggle(isOn: $translates) {
                 Text("Yandex translation", bundle: .module)
             }

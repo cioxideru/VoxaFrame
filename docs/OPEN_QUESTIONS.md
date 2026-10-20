@@ -351,6 +351,9 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   The expanded test verifies navigation in 375×585 and 993×779 floating windows, then fails preparing
   Split View: the system places VoxaFrame on the left but does not pair Settings on the right.
   Repair the two-app scene setup and verify 1/2, 1/3, 2/3 and full-screen restoration; those stages are not accepted.
+- The [PLAN-0035](exec-plans/completed/audio-translation-grouping.md) Shorts audio-panel check passed
+  first-open bounds but timed out in the rotation helper waiting for a landscape-shaped app window.
+  Make that setup account for iPadOS 27 windows before claiming post-rotation panel acceptance.
 - Mini-player: the tab-bar bottom accessory was rejected in stage 2a (`0d446f6`): it re-parented the persistent player
   layer on every tab switch, has a fixed height, no opaque fallback and needs iOS 26.1. The overlay stays on every version.
   Its space is reserved by a UIKit bridge (`NavigationBottomReserve`) that adds the bar height to each tab's navigation

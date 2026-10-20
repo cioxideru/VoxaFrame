@@ -8,6 +8,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Changed
 
+- **Audio controls:** the player and Offline watch dialog separate YouTube source tracks from Yandex translation controls. The player shows a visible Translation language label within the Yandex group.
 - **Offline downloads:** audio and Yandex translation default to Default Audio Language from Settings. Matching audio prefers the lowest known bitrate; original audio is the fallback. Yandex is enabled even when a matching audio track exists, for supported target languages. Later manual choices remain unchanged.
 
 ### Fixed

@@ -2,8 +2,7 @@ import SmartTubeIOSCore
 import SwiftUI
 
 /// One audio and translation surface for the regular player and Shorts.
-/// Translation status first (preparing or failed, each with its way out), then the video's own tracks
-/// (Auto, Original, dubs), then Yandex voice-over: a dubbed track is never presented as a translation.
+/// YouTube's own tracks (Auto, Original, dubs) and Yandex voice-over have separate groups.
 /// The whole panel scrolls, so its toggles stay reachable at the medium detent and at large text sizes.
 struct PlayerAudioTrackPicker: View {
     let vm: PlaybackViewModel
@@ -38,12 +37,16 @@ struct PlayerAudioTrackPicker: View {
         let scroll = ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
-                    PlayerTranslationStatus(vm: vm, overVideo: false)
-                    trackRows
-                    translationLanguagePicker
-                    if let target = vm.voiceOverTargetLanguage {
-                        voiceOverControls(target: target)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(verbatim: "YouTube")  // verbatim: provider brand
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .accessibilityAddTraits(.isHeader)
+                            .padding()
+                        trackRows
                     }
+                    .accessibilityElement(children: .contain)
+                    translationSection
                 }
             }
             .onAppear {
@@ -96,17 +99,34 @@ struct PlayerAudioTrackPicker: View {
 
     // MARK: - Yandex voice-over controls (inside the audio track picker)
 
+    private var translationSection: some View {
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Translation · Yandex", bundle: .module)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .accessibilityAddTraits(.isHeader)
+                LabeledContent {
+                    translationLanguagePicker.labelsHidden()
+                } label: {
+                    Text("Translation language", bundle: .module)
+                }
+                if let target = vm.voiceOverTargetLanguage {
+                    voiceOverControls(target: target)
+                }
+            }
+            .padding()
+            PlayerTranslationStatus(vm: vm, overVideo: false)
+        }
+        .accessibilityElement(children: .contain)
+    }
+
     /// Per-video translation into the default audio language from Settings, plus lively voices.
     @ViewBuilder private func voiceOverControls(target: String) -> some View {
         let livelyVoiceKey = vm.isShortsPlayer ? \AppSettings.shortsYandexVOTLivelyVoice : \.yandexVOTLivelyVoice
         let originalAudioKey =
             vm.isShortsPlayer ? \AppSettings.shortsYandexVOTKeepOriginalAudio : \.yandexVOTKeepOriginalAudio
-        Divider()
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Translation · Yandex", bundle: .module)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .accessibilityAddTraits(.isHeader)
+        Group {
             Toggle(
                 "Yandex Translation → \(Locale.current.localizedString(forLanguageCode: target) ?? target)",
                 isOn: Binding(
@@ -155,10 +175,9 @@ struct PlayerAudioTrackPicker: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding()
     }
 
-    /// The playing voice; preparing and failed are shown with their actions at the top of the panel.
+    /// The playing voice; preparing and failed have their own actions in the translation section.
     private var playingStatus: String? {
         guard vm.voiceOver.videoId == vm.currentVideoId, case .playing(let livelyVoice) = vm.voiceOver.state else {
             return nil
@@ -170,7 +189,6 @@ struct PlayerAudioTrackPicker: View {
     private var translationLanguagePicker: some View {
         let languageKey = vm.isShortsPlayer ? \AppSettings.shortsPreferredAudioLanguage : \.preferredAudioLanguage
         return Picker(
-            "Default Audio Language",
             selection: Binding(
                 get: { store.settings[keyPath: languageKey] },
                 set: { language in
@@ -192,9 +210,10 @@ struct PlayerAudioTrackPicker: View {
                 Text(Locale.current.localizedString(forLanguageCode: language) ?? language)
                     .tag(language as String?)
             }
+        } label: {
+            Text("Translation language", bundle: .module)
         }
         .accessibilityIdentifier(AccessibilityID.playerTranslationLanguagePicker)
-        .padding(.horizontal)
         .frame(minHeight: VFTarget.touch)
     }
 }
