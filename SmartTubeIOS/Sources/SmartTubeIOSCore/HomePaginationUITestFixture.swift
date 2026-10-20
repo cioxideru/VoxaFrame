@@ -20,6 +20,16 @@ enum HomePaginationUITestFixture {
         return arguments.contains("--uitesting") && arguments.contains("--uitesting-watched-feed")
     }
 
+    /// `--uitesting-inject-recommended-ids=<id,id,…>`: these videos are the whole Home
+    /// recommendations feed (no continuation), so playback tests need no account feed.
+    static var injectedRecommendationIDs: [String] {
+        let arguments = ProcessInfo.processInfo.arguments
+        let prefix = "--uitesting-inject-recommended-ids="
+        guard arguments.contains("--uitesting"), let argument = arguments.first(where: { $0.hasPrefix(prefix) })
+        else { return [] }
+        return argument.dropFirst(prefix.count).split(separator: ",").map(String.init)
+    }
+
     private static var isWatchedPageEnabled: Bool {
         isWatchedFeedEnabled && ProcessInfo.processInfo.arguments.contains("--uitesting-watched-page")
     }
@@ -121,12 +131,13 @@ enum HomePaginationUITestFixture {
     static func regularPage(subscriptions: Bool, continuationToken: String?) -> VideoGroup {
         let prefix = subscriptions ? "subscription" : "recommended"
         if isWatchedFeedEnabled, continuationToken != nil {
+            // One card: a lone card in its feed block must keep its `video.card.<id>` identifier.
             return VideoGroup(
                 title: prefix,
-                videos: [
-                    Video(
-                        id: "\(prefix)-next", title: "Next unwatched video", channelTitle: "Fixture")
-                ])
+                videos: [Video(id: "\(prefix)-next", title: "Next unwatched video", channelTitle: "Fixture")])
+        }
+        if !subscriptions, !isWatchedFeedEnabled {
+            return recommendationsPage(continuationToken: continuationToken)
         }
         var videos =
             continuationToken == nil
@@ -149,6 +160,24 @@ enum HomePaginationUITestFixture {
             return VideoGroup(title: prefix, videos: videos + shorts.videos, nextPageToken: shorts.nextPageToken)
         }
         return VideoGroup(title: prefix, videos: videos, nextPageToken: isWatchedFeedEnabled ? "watched-next" : nil)
+    }
+
+    /// An initial page and two continuation pages of `maxVideoResults` recommendations, the Home page size after its first-page cap,
+    /// so scrolling Home reaches a third video block only by paging the feed.
+    private static func recommendationsPage(continuationToken: String?) -> VideoGroup {
+        let tokenPrefix = "recommended-page-"
+        let page = continuationToken.flatMap { Int($0.dropFirst(tokenPrefix.count)) } ?? 0
+        let size = InnerTubeClients.maxVideoResults
+        var videos = (page * size..<(page + 1) * size).map {
+            Video(id: "recommended-\($0)", title: "recommended video \($0)", channelTitle: "Fixture")
+        }
+        if isMixedFeedEnabled, page == 0 {
+            videos += (0..<30).map {
+                Video(id: "recommended-short-\($0)", title: "Short \($0)", channelTitle: "Fixture", isShort: true)
+            }
+        }
+        return VideoGroup(
+            title: "recommended", videos: videos, nextPageToken: page < 2 ? "\(tokenPrefix)\(page + 1)" : nil)
     }
 
     static func shortsPage(continuationToken: String?) -> VideoGroup {

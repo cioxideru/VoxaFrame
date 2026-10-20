@@ -150,6 +150,37 @@ enum OfflinePresentation {
         }
     }
 
+    /// The one place bytes become text: localized file-size units ("412 MB").
+    static func bytesText(_ bytes: Int64) -> String { bytes.formatted(.byteCount(style: .file)) }
+
+    /// Size shown on a job row: the saved file once completed; while active "fetched of total" (a "~" marks a size
+    /// estimated from the variant list) or just the total. Nil when nothing is known, so the row shows no size.
+    static func jobSizeText(_ job: OfflineJob, sizes: OfflineDiskSizes) -> String? {
+        if job.state == .completed { return OfflineSizes.savedBytes(of: job, sizes: sizes).map(bytesText) }
+        guard OfflineSizes.isActive(job), let transfer = OfflineSizes.transfer(of: job, sizes: sizes) else {
+            return nil
+        }
+        let total =
+            transfer.isEstimate
+            ? String(localized: "offline.estimated \(bytesText(transfer.expected))", bundle: .module)
+            : bytesText(transfer.expected)
+        guard job.state == .downloading, let done = transfer.done, done > 0 else { return total }
+        return String(
+            localized: "offline.transfer \(bytesText(min(done, transfer.expected))) \(total)", bundle: .module)
+    }
+
+    /// "Video 412 MB · Audio 8 MB" for the saved files of one video; nil when none has a known size.
+    static func videoSizeText(_ videoID: String, entries: [OfflineEntry], sizes: OfflineDiskSizes) -> String? {
+        guard let entry = entries.first(where: { $0.id == videoID }) else { return nil }
+        let lines = Part.allCases.compactMap { part -> String? in
+            let bytes = entry.assets.filter { self.part(of: $0.track) == part }
+                .reduce(Int64(0)) { $0 + (sizes.assets[OfflineSizes.key(videoID: videoID, trackID: $1.track.id)] ?? 0) }
+            guard bytes > 0 else { return nil }
+            return String(localized: "offline.partSize \(part.title) \(bytesText(bytes))", bundle: .module)
+        }
+        return lines.isEmpty ? nil : lines.formatted(.list(type: .and, width: .narrow))
+    }
+
     static func languageName(_ code: String) -> String {
         Locale.current.localizedString(forLanguageCode: code) ?? code
     }

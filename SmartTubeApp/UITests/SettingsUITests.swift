@@ -69,6 +69,30 @@ final class SettingsUITests: XCTestCase {
             "'Sign in with Google' button must be visible when the session is cleared via --uitesting-sign-out")
     }
 
+    func testOfflineSponsorBlockAutoUpdateDefaultsOnAndPersists() {
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("sponsorBlock", in: app)
+        let form = UITestHelpers.settingsForm(in: app)
+        let toggle = app.switches[AccessibilityID.settingsOfflineSponsorBlockToggle]
+        UITestHelpers.scrollUntilVisible(toggle, in: form, maxSwipes: 14)
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        XCTAssertEqual(toggle.value as? String, "1", "Automatic offline SponsorBlock updates default to on")
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Offline SponsorBlock auto-update setting"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        XCTAssertEqual(toggle.value as? String, "0")
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
+        app.launch()
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("sponsorBlock", in: app)
+        UITestHelpers.scrollUntilVisible(toggle, in: form, maxSwipes: 14)
+        XCTAssertEqual(toggle.value as? String, "0")
+    }
+
     func testShortsTranslationDefaultsAreIndependentAndPersist() {
         UITestHelpers.tapTab(named: "Settings", in: app)
         UITestHelpers.selectSettingsCategory("languages", in: app)
@@ -174,6 +198,7 @@ final class IPadMenuLayoutUITests: XCTestCase {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Requires iPad adaptive navigation")
         app.launchArguments = [
             "--uitesting", "--uitesting-subscriptions", "--uitesting-mixed-feed",
+            "--uitesting-show-queue-tab",
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
         ]
         #if targetEnvironment(simulator)
@@ -508,9 +533,7 @@ final class HideWatchedSettingsUITests: XCTestCase {
         XCTAssertTrue(stepper.label.contains("25%"))
         UITestHelpers.tapTab(named: "Home", in: app)
 
-        for (title, prefix) in [
-            ("Home", "recommended"), ("Recommended", "recommended"), ("Subscriptions", "subscription"),
-        ] {
+        for (title, prefix) in [("Home", "recommended"), ("Subscriptions", "subscription")] {
             selectSection(title)
             assertFilteredCards(prefix: prefix, shorts: false)
             assertFilteredCards(prefix: "\(prefix)-short", shorts: true)
@@ -535,7 +558,7 @@ final class HideWatchedSettingsUITests: XCTestCase {
         app.launchArguments.append("--uitesting-watched-page")
         app.launch()
         UITestHelpers.tapTab(named: "Home", in: app)
-        for title in ["Home", "Recommended", "Subscriptions"] {
+        for title in ["Home", "Subscriptions"] {
             selectSection(title)
             let more = app.buttons[AccessibilityID.homeFilteredLoadMoreButton]
             XCTAssertTrue(more.waitForExistence(timeout: 10))
@@ -580,5 +603,55 @@ final class HideWatchedSettingsUITests: XCTestCase {
         XCTAssertTrue(card("\(prefix)-3", shorts: shorts).exists, "Unknown progress remains visible")
         XCTAssertFalse(card("\(prefix)-0", shorts: shorts).exists, "90% is above the 25% threshold")
         XCTAssertFalse(card("\(prefix)-1", shorts: shorts).exists, "Exact threshold must be hidden")
+    }
+}
+
+/// The Queue sidebar item is off by default: absent from the sidebar, still reachable through Library, and
+/// shown after the Settings toggle is turned on. No `--uitesting-show-queue-tab` override here.
+final class IPadQueueSidebarDefaultUITests: XCTestCase {
+    private let app = XCUIApplication()
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Requires the iPad sidebar")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        app.launchArguments = [
+            "--uitesting", "--uitesting-reset-settings", "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+        app.launch()
+    }
+
+    override func tearDown() {
+        app.terminate()
+        XCUIDevice.shared.orientation = .portrait
+        super.tearDown()
+    }
+
+    func testQueueIsHiddenByDefaultReachableThroughLibraryAndShownByTheToggle() {
+        let sidebar = UITestHelpers.sidebarItems(in: app)
+        XCTAssertTrue(sidebar[AccessibilityID.tab("Library")].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertFalse(sidebar[AccessibilityID.tab("Queue")].firstMatch.exists, "Queue is hidden by default")
+
+        UITestHelpers.tapTab(named: "Library", in: app)
+        let picker = app.segmentedControls[AccessibilityID.librarySectionPicker]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        picker.buttons["Queue"].tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)[AccessibilityID.queueView].firstMatch.waitForExistence(timeout: 5))
+
+        UITestHelpers.tapTab(named: "Settings", in: app)
+        UITestHelpers.selectSettingsCategory("appearance", in: app)
+        let form = UITestHelpers.settingsForm(in: app)
+        let toggle = app.switches[AccessibilityID.settingsShowQueueTabToggle]
+        UITestHelpers.scrollUntilVisible(toggle, in: form, maxSwipes: 16)
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        // The row can still sit on the bottom edge when it first counts as hittable: bring it into the middle.
+        for _ in 0..<2 where toggle.frame.maxY > form.frame.maxY - 80 { form.swipeUp() }
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        let isOn = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
+        XCTAssertEqual(XCTWaiter().wait(for: [isOn], timeout: 5), .completed, "The toggle must turn on")
+        XCTAssertTrue(
+            sidebar[AccessibilityID.tab("Queue")].firstMatch.waitForExistence(timeout: 5),
+            "Queue appears in the sidebar after enabling the setting")
     }
 }

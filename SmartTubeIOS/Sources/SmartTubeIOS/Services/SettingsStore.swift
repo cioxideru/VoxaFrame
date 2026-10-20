@@ -49,6 +49,18 @@ public final class SettingsStore {
         if ProcessInfo.processInfo.arguments.contains("--uitesting-hide-shorts") {
             self.settings.hideShorts = true
         }
+        #if DEBUG
+        // Shared by every app entry point, including tvOS.
+        if ProcessInfo.processInfo.arguments.contains("--uitesting-enable-shorts") {
+            self.settings.hideShorts = false
+            self.settings.enabledSections = BrowseSection.allSections
+                .filter { self.settings.enabledSections.contains($0.type) || $0.type == .shorts }
+                .map(\.type)
+        }
+        if ProcessInfo.processInfo.arguments.contains("--uitesting-show-queue-tab") {
+            self.settings.showQueueTab = true
+        }
+        #endif
     }
 
     private func save() {

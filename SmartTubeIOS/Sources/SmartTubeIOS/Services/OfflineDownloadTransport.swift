@@ -6,7 +6,7 @@ import os
 private let offlineTransportLog = Logger(subsystem: appSubsystem, category: "OfflineTransport")
 
 enum OfflineTransferEvent: Sendable {
-    case progress(UUID, Double)
+    case progress(UUID, Double, bytes: OfflineByteCounts? = nil)
     case finished(UUID, URL, systemPackage: Bool, savedVideoSizes: [OfflineVideoSize]? = nil)
     case failed(UUID, String)
     case drained(String)
@@ -306,7 +306,10 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
             let progress = OfflineDownloadChunk.progress(
                 request: downloadTask.originalRequest, written: totalBytesWritten, expected: totalBytesExpectedToWrite)
         else { return }
-        publishProgress(id, progress)
+        publishProgress(
+            id, progress,
+            bytes: OfflineDownloadChunk.bytes(
+                request: downloadTask.originalRequest, written: totalBytesWritten, expected: totalBytesExpectedToWrite))
     }
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
@@ -419,12 +422,12 @@ final class OfflineDownloadTransport: NSObject, OfflineTransporting, URLSessionD
         }
     }
 
-    private func publishProgress(_ id: UUID, _ progress: Double) {
+    private func publishProgress(_ id: UUID, _ progress: Double, bytes: OfflineByteCounts? = nil) {
         guard progress.isFinite else { return }
         let percent = Int(min(1, max(0, progress)) * 100)
         guard percent > (lastProgress[id] ?? -1) else { return }
         lastProgress[id] = percent
-        continuation.yield(.progress(id, Double(percent) / 100))
+        continuation.yield(.progress(id, Double(percent) / 100, bytes: bytes))
     }
 
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {

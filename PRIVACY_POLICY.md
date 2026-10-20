@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: October 17, 2026
+Last updated: October 20, 2026
 
 This Privacy Policy describes Our policies and procedures regarding Your use of the Service and tells You about Your privacy rights and how the law protects You.
 
@@ -39,7 +39,7 @@ For the purposes of this Privacy Policy:
 To browse and play videos, the app sends requests directly from Your Device to these third parties. Their own privacy policies apply to those requests:
 
 - **YouTube / Google** — pages, streams, thumbnails, search suggestions and, if You sign in, Google sign-in and Your account's subscriptions, history and playlists.
-- **SponsorBlock** (sponsor.ajay.app) — the ID of the video You open, to fetch skip segments and community titles, when these features are on.
+- **SponsorBlock** (sponsor.ajay.app) — video IDs, to fetch skip segments and community titles when these features are on. When SponsorBlock is enabled, saving an offline video also fetches its skip segments. Saved-library video IDs are sent again when You request a manual update or when automatic offline updates are due after opening the app (at most once a day after a successful update). Automatic offline updates are on by default and can be turned off in Settings → SponsorBlock. Failed updates may be retried on a later activation. Previously saved videos without segments may request them on first playback; playback with stored segments uses the local copy.
 - **Yandex** — the video's address, only when You use voice-over translation. If Yandex requests the original audio to prepare the translation, the app downloads that audio and uploads it directly from Your Device to Yandex's audio translation service (`api.browser.yandex.ru/video-translation/audio`). The app also connects to Yandex sign-in if You connect a Yandex account.
 - **A PO-token server You configure yourself**, only if You enter one in Settings.
 - **Apple iCloud** — if You turn on iCloud sync, Your subscriptions, watch state, queue and RSS feeds are stored in Your own iCloud account.

@@ -21,7 +21,6 @@ final class CategoryChipHTTP400UITests: XCTestCase {
     // "Home" is always first; the test skips it (already loaded on launch).
     private static let allChipNames: [String] = [
         "Home",
-        "Recommended",
         "Subscriptions",
         "History",
         "Playlists",

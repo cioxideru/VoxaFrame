@@ -1,6 +1,23 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Show Queue in sidebar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Queue in sidebar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать очередь в боковой панели"
+          }
+        }
+      }
+    },
     "Opens the channel page and stops the video." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15691,6 +15708,54 @@
         }
       }
     },
+    "offline.transfer %@ %@" : {
+      "comment" : "Offline download progress in bytes. %1 = fetched, %2 = expected, e.g. 112 MB of 412 MB",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ of %2$@"
+          }
+        }
+      }
+    },
+    "offline.estimated %@" : {
+      "comment" : "Offline size estimated from the variant list. %@ = size, e.g. ~412 MB",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~%@"
+          }
+        }
+      }
+    },
+    "offline.partSize %@ %@" : {
+      "comment" : "Offline saved part and its size, e.g. Video 412 MB",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Offline storage used: %@" : {
+      "comment" : "Accessibility label of the total size of saved offline videos",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline storage used: %@"
+          }
+        }
+      }
+    },
     "offline.statusLine %@ %@" : {
       "comment" : "Offline library row: the video's status, then the saved parts (e.g. Video, Audio)",
       "extractionState" : "manual",
@@ -29478,6 +29543,105 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "YouTube RSS 订阅 URL 格式如下：\n**youtube.com/feeds/videos.xml?channel_id=…**\n\n您也可以通过频道页面 URL 找到频道的 RSS 订阅。"
+          }
+        }
+      }
+    },
+    "Update SponsorBlock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update SponsorBlock"
+          }
+        }
+      }
+    },
+    "Updating SponsorBlock %lld/%lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updating SponsorBlock %lld/%lld"
+          }
+        }
+      }
+    },
+    "SponsorBlock updated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SponsorBlock updated"
+          }
+        }
+      }
+    },
+    "Updated %lld videos, failed %lld." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated %lld videos, failed %lld."
+          }
+        }
+      }
+    },
+    "Update SponsorBlock for offline videos automatically" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update SponsorBlock for offline videos automatically"
+          }
+        }
+      }
+    },
+    "Refreshes saved videos once a day while the app is open." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshes saved videos once a day while the app is open."
+          }
+        }
+      }
+    },
+    "Could not update. Check your connection and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not update. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "%lld segments · updated %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld segments · updated %@"
+          }
+        }
+      }
+    },
+    "No SponsorBlock segments saved yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No SponsorBlock segments saved yet."
           }
         }
       }

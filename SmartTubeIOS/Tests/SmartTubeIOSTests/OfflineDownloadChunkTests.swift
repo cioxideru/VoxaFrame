@@ -37,6 +37,17 @@ struct OfflineDownloadChunkTests {
         translation.setValue("Test agent", forHTTPHeaderField: "User-Agent")
         #expect(OfflineDownloadChunk.prepare(translation) == translation)
     }
+    @Test func byteCountsIncludeEarlierRangesAndHandleUnrangedAudio() throws {
+        let resumed = try request(total: 100, start: 40)
+        #expect(
+            OfflineDownloadChunk.bytes(request: resumed, written: 10, expected: 60)
+                == OfflineByteCounts(done: 50, total: 100))
+        let audio = URLRequest(url: try #require(URL(string: "https://example.invalid/voice.mp3")))
+        #expect(
+            OfflineDownloadChunk.bytes(request: audio, written: 10, expected: 50)
+                == OfflineByteCounts(done: 10, total: 50))
+        #expect(OfflineDownloadChunk.bytes(request: audio, written: 10, expected: -1) == nil)
+    }
     @Test func backgroundContinuationKeepsOffsetAndFinishesWithoutMoreChunks() throws {
         let total = OfflineDownloadChunk.maximumBytes * 3 + 7
         let first = OfflineDownloadChunk.prepare(try request(total: total))

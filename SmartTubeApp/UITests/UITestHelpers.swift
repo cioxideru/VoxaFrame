@@ -55,6 +55,10 @@ enum AccessibilityID {
     static var offlineJobsList: String { "offline.jobsList" }
     static var offlineDetailList: String { "offline.detailList" }
     static var offlineDeleteAll: String { "offline.deleteAll" }
+    static var offlineUpdateSponsorBlockAll: String { "offline.updateSponsorBlockAll" }
+    static var offlineUpdateSponsorBlock: String { "offline.updateSponsorBlock" }
+    static var offlineSponsorBlockStatus: String { "offline.sponsorBlockStatus" }
+    static var offlineTotals: String { "offline.totals" }
     static var offlineAudioPicker: String { "offline.audioPicker" }
     static var offlineTranslationPicker: String { "offline.translationPicker" }
     static var offlineVideoPicker: String { "offline.videoPicker" }
@@ -130,6 +134,7 @@ enum AccessibilityID {
     static func settingsCategory(_ group: String) -> String { "settings.category.\(group)" }
     static var settingsSignInButton: String { "settings.signInButton" }
     static var settingsHideShortsToggle: String { "settings.hideShortsToggle" }
+    static var settingsShowQueueTabToggle: String { "settings.showQueueTabToggle" }
     static var settingsPreferredQualityPicker: String { "settings.preferredQualityPicker" }
     static var settingsConcurrentDownloadsPicker: String { "settings.concurrentDownloadsPicker" }
     static var settingsSeekBackRow: String { "settings.seekBackRow" }
@@ -153,6 +158,7 @@ enum AccessibilityID {
     static var settingsResetAllCancel: String { "settings.resetAll.cancel" }
     static var settingsSetPINButton: String { "settings.setPINButton" }
     static var settingsSponsorBlockToggle: String { "settings.sponsorBlockToggle" }
+    static var settingsOfflineSponsorBlockToggle: String { "settings.offlineSponsorBlockToggle" }
     static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }
     static var settingsVp9Toggle: String { "settings.vp9Toggle" }
     static var settingsYandexVOTKeepOriginalAudioToggle: String { "settings.yandexVOTKeepOriginalAudioToggle" }
@@ -181,9 +187,8 @@ enum AccessibilityID {
         index == 0 ? "home.shortsRow" : "home.shortsRow.\(index)"
     }
 
-    static func sectionShortsRow(_ section: String, _ index: Int) -> String {
-        let prefix = section == "recommended" ? "recommended.shortsRow" : "browse.shortsRow"
-        return index == 0 ? prefix : "\(prefix).\(index)"
+    static func sectionShortsRow(_ index: Int) -> String {
+        index == 0 ? "browse.shortsRow" : "browse.shortsRow.\(index)"
     }
 
     static func feedVideoBlock(_ section: String, _ index: Int) -> String {

@@ -3,8 +3,8 @@ import XCTest
 // MARK: - ShortsVerticalSwipeUITests
 //
 // Regression tests for the Shorts player vertical-swipe navigation.
-// Verifies that swiping up 6 times in the Shorts player (from either the Home
-// or Recommended tab Shorts row) always advances to a new Short each time.
+// Verifies that swiping up 6 times in the Shorts player (from the Home
+// Shorts row) always advances to a new Short each time.
 //
 // These tests catch the regression where FEshorts deprecation left only 1–2
 // Shorts in the playlist, making it impossible to swipe past index 2.
@@ -19,7 +19,9 @@ final class ShortsVerticalSwipeUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--uitesting-signed-in", "--uitesting-show-controls"]
+        app.launchArguments = [
+            "--uitesting", "--uitesting-signed-in", "--uitesting-show-controls", "--uitesting-enable-shorts",
+        ]
         app.launch()
         UITestHelpers.tapTab(named: "Home", in: app)
     }
@@ -123,24 +125,5 @@ final class ShortsVerticalSwipeUITests: XCTestCase {
     func testHomeTabShortsAdvanceSixSwipes() throws {
         try openFirstShort(in: "home.shortsRow")
         assertSwipesAdvance(count: 6, context: "Home")
-    }
-
-    /// Opens the first Short from the Recommended tab Shorts row and swipes up 6 times,
-    /// asserting that each swipe advances to a new Short.
-    func testRecommendedTabShortsAdvanceSixSwipes() throws {
-        // Navigate to the Recommended chip.
-        let chipBar = app.scrollViews["home.chipBar"]
-        guard chipBar.waitForExistence(timeout: 10) else {
-            try captureAndSkip("home.chipBar not found", in: app)
-        }
-        let rec = chipBar.buttons["Recommended"]
-        guard rec.waitForExistence(timeout: 5) else {
-            try captureAndSkip("Recommended chip not found in chip bar", in: app)
-        }
-        UITestHelpers.scrollChipIntoView(rec, in: chipBar, app: app)
-        rec.tap()
-
-        try openFirstShort(in: "recommended.shortsRow", timeout: 30)
-        assertSwipesAdvance(count: 6, context: "Recommended")
     }
 }

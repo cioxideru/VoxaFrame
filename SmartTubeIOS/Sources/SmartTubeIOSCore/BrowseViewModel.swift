@@ -41,9 +41,6 @@ public final class BrowseViewModel {
     public var error: Error?
     /// True when the current section requires authentication and the user is not signed in.
     public internal(set) var isAuthRequired: Bool = false
-    /// Account Shorts reused from Home and subscriptions for the Recommended section.
-    /// Always empty for all other sections.
-    public internal(set) var recommendedShortsVideos: [Video] = []
     /// Timestamp of the last successful content fetch for the current section.
     /// Used to detect stale feeds after the app returns from background.
     public private(set) var loadedAt: Date? = nil
@@ -61,10 +58,6 @@ public final class BrowseViewModel {
     internal var enrichTask: Task<Void, Never>?
     /// When `false`, the History section returns empty content rather than fetching from YouTube.
     private var historyEnabled: Bool = true
-    /// True when the Recommended section fell back to a `/search?q=popular` result
-    /// because the unauthenticated `/browse` home feed returned 0 videos.
-    /// In this mode, pagination must also go through `/search` (not `/browse`).
-    internal var recommendedUsesSearchFallback: Bool = false
     /// True when a non-nil auth token has been set via updateAuthToken(_:).
     /// Used to select between the authenticated YouTube endpoints and the local RSS feed path.
     internal var hasAuthToken: Bool = false
@@ -229,44 +222,9 @@ public final class BrowseViewModel {
         if refresh {
             videoGroups = []
             subscribedChannels = []
-            recommendedShortsVideos = []
             loadedAt = nil
             enrichTask?.cancel()
             enrichTask = nil
-        }
-        // UI-testing synchronous inject: when `--uitesting-inject-recommended-ids=<ids>`
-        // is present and the target section is `.recommended`, populate videoGroups
-        // immediately on the main actor without an async fetch. This avoids race
-        // conditions between the Task scheduling / cancellation and the view update.
-        if target.type == .recommended,
-            let arg = ProcessInfo.processInfo.arguments.first(where: {
-                $0.hasPrefix("--uitesting-inject-recommended-ids=")
-            })
-        {
-            let raw = String(arg.dropFirst("--uitesting-inject-recommended-ids=".count))
-            let ids = raw.split(separator: ",").map(String.init).filter { !$0.isEmpty }
-            if !ids.isEmpty {
-                isAuthRequired = false
-                recommendedUsesSearchFallback = false
-                isLoading = false
-                // Use .row layout (eager HStack inside ScrollView(.horizontal)) so all cards
-                // are always rendered in the accessibility tree on iOS 26. LazyVGrid (.grid)
-                // uses lazy rendering and its items do not appear in the XCTest accessibility tree.
-                // Create 5 rows so the vertical scroll view has enough content for scroll-position
-                // tests to swipe and move rows off-screen.
-                videoGroups = (0..<5).map { rowIdx in
-                    let rowVideos = ids.enumerated().map { i, id in
-                        Video(
-                            id: rowIdx == 0 ? id : "\(id)-\(rowIdx)",
-                            title: id, channelTitle: "Test Channel")
-                    }
-                    return VideoGroup(
-                        title: rowIdx == 0 ? "Recommended" : nil,
-                        videos: rowVideos, layout: .row)
-                }
-                browseLog.notice("UI-testing inject: populated \(ids.count) recommended videos synchronously")
-                return
-            }
         }
         fetchTask?.cancel()
         isLoading = true
@@ -356,7 +314,7 @@ public final class BrowseViewModel {
             // Signed out — reload account sections to show local content instead. This also cancels their
             // account requests and drops the account's records (History, playlists) before a guest sees them.
             let authSections: Set<BrowseSection.SectionType> = [
-                .subscriptions, .channels, .shorts, .recommended, .history, .playlists, .watchLater,
+                .subscriptions, .channels, .shorts, .history, .playlists, .watchLater,
             ]
             if authSections.contains(currentSection.type) {
                 loadContent(refresh: true, source: "updateAuthToken.signOut")
@@ -415,11 +373,8 @@ extension BrowseViewModel {
     private func fetchSectionBody(_ section: BrowseSection) async throws {
         switch section.type {
 
-        case .home:
+        case .home, .recommended:
             try await fetchHomeSection()
-
-        case .recommended:
-            try await fetchRecommendedSection()
 
         case .subscriptions:
             try await fetchSubscriptionsSection()
@@ -483,7 +438,7 @@ extension BrowseViewModel {
         nextPageFailed = false
         defer { isLoadingMore = false }
         do {
-            if section.type == .home {
+            if section.type == .home || section.type == .recommended {
                 try await fetchNextHomePage(token: token)
                 return
             }
@@ -511,11 +466,6 @@ extension BrowseViewModel {
     private func fetchContinuationGroup(for type: BrowseSection.SectionType, token: String) async throws -> VideoGroup?
     {
         switch type {
-        case .recommended:
-            if recommendedUsesSearchFallback {
-                return try await api.search(query: "popular", continuationToken: token, filter: .default)
-            }
-            return try await api.fetchHome(continuationToken: token)
         case .subscriptions:
             return try await api.fetchSubscriptions(continuationToken: token)
         case .history:

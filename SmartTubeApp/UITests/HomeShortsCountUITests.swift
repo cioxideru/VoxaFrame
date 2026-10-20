@@ -5,7 +5,7 @@ import XCTest
 // Regression tests for task #91: Home Shorts row must show ≥ 6 cards after
 // initial load, and new cards must appear when the row is scrolled.
 //
-// Launch args (per-test launch, matching RecommendedChipUITests pattern):
+// Launch args (per-test launch):
 //   --uitesting                        standard test guard
 //   --uitesting-signed-in              forces auth.isSignedIn = true
 //
@@ -24,6 +24,7 @@ final class HomeShortsCountUITests: XCTestCase {
         app.launchArguments += [
             "--uitesting",
             "--uitesting-signed-in",
+            "--uitesting-enable-shorts",
         ]
         app.launch()
         UITestHelpers.tapTab(named: "Home", in: app)
@@ -232,7 +233,7 @@ final class HomeShortsCountUITests: XCTestCase {
 // MARK: - HomeShortsEndlessUITests
 
 /// The fixture supplies ten initial Shorts and two disjoint continuation pages.
-/// Regular shelves have no continuations, so only Shorts demand can fetch the new cards.
+/// Recommendations page through their own continuations; only Shorts demand can fetch the new Shorts.
 /// Unselected tabs and nested shelf cursors must not enter later Shorts rows (PLAN-0014).
 final class HomeShortsEndlessUITests: XCTestCase {
 
@@ -246,6 +247,7 @@ final class HomeShortsEndlessUITests: XCTestCase {
             "--uitesting-signed-in",
             "--uitesting-reset-settings",
             "--uitesting-home-pagination",
+            "--uitesting-enable-shorts",
         ]
         app.launch()
         UITestHelpers.tapTab(named: "Home", in: app)
@@ -315,6 +317,7 @@ final class MixedFeedLayoutUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments += [
             "--uitesting", "--uitesting-signed-in", "--uitesting-reset-settings", "--uitesting-mixed-feed",
+            "--uitesting-enable-shorts",
         ]
         app.launch()
         UITestHelpers.tapTab(named: "Home", in: app)
@@ -379,15 +382,31 @@ final class MixedFeedLayoutUITests: XCTestCase {
 
     func testHomeSpacing() { assertSpacing(section: "home", title: "Home") }
     func testSubscriptionsSpacing() { assertSpacing(section: "subscriptions", title: "Subscriptions") }
-    func testRecommendedSpacing() { assertSpacing(section: "recommended", title: "Recommended") }
 
-    func testRecommendedShelvesUseTheSameGridAsHome() {
+    /// Home is the recommendations feed only: subscription videos keep to their own chip.
+    func testHomeShowsRecommendationsWithoutSubscriptions() {
+        let block = app.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.feedVideoBlock("home", 0)).firstMatch
+        XCTAssertTrue(block.waitForExistence(timeout: 10))
+        // The old interleave put the first subscription right after the fourth recommendation.
+        for id in ["recommended-0", "recommended-4"] {
+            let card = block.descendants(matching: .any).matching(identifier: AccessibilityID.videoCard(id)).firstMatch
+            XCTAssertTrue(card.waitForExistence(timeout: 10), "\(id) must be on Home")
+        }
+        let subscription = app.descendants(matching: .any)
+            .matching(identifier: AccessibilityID.videoCard("subscription-0")).firstMatch
+        XCTAssertFalse(subscription.exists, "Subscription videos must not be mixed into Home")
+        selectSection("subscriptions", title: "Subscriptions")
+        XCTAssertTrue(subscription.waitForExistence(timeout: 10), "Subscriptions still shows subscription videos")
+    }
+
+    func testHomeShelvesUseTheVideoGrid() {
         app.terminate()
         app.launchArguments += ["--uitesting-inject-recommended-ids=one,two,three,four,five,six"]
         app.launch()
-        selectSection("recommended", title: "Recommended")
+        UITestHelpers.tapTab(named: "Home", in: app)
         let block = app.descendants(matching: .any)
-            .matching(identifier: AccessibilityID.feedVideoBlock("recommended", 0)).firstMatch
+            .matching(identifier: AccessibilityID.feedVideoBlock("home", 0)).firstMatch
         XCTAssertTrue(block.waitForExistence(timeout: 10), "Shelf responses must use the mixed feed grid")
         let cards = block.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier BEGINSWITH 'video.card.'")).allElementsBoundByIndex
@@ -397,7 +416,7 @@ final class MixedFeedLayoutUITests: XCTestCase {
     }
 
     func testVerticalSwipesOnVideoBlocksScrollEachMixedFeed() {
-        for (section, title) in [("home", "Home"), ("recommended", "Recommended"), ("subscriptions", "Subscriptions")] {
+        for (section, title) in [("home", "Home"), ("subscriptions", "Subscriptions")] {
             selectSection(section, title: title)
             let block = app.descendants(matching: .any)
                 .matching(identifier: AccessibilityID.feedVideoBlock(section, 0)).firstMatch
@@ -430,10 +449,10 @@ final class MixedFeedLayoutUITests: XCTestCase {
         origin.withOffset(CGVector(dx: window.width * 0.8, dy: y)).press(
             forDuration: 0, thenDragTo: origin.withOffset(CGVector(dx: window.width * 0.2, dy: y)),
             withVelocity: .fast, thenHoldForDuration: 0)
-        let recommended = app.scrollViews["home.chipBar"].buttons["Recommended"]
+        let subscriptions = app.scrollViews["home.chipBar"].buttons["Subscriptions"]
         let selected = NSPredicate(format: "selected == true")
         XCTAssertEqual(
-            XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: selected, object: recommended)], timeout: 5),
+            XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: selected, object: subscriptions)], timeout: 5),
             .completed)
     }
 
@@ -450,7 +469,7 @@ final class MixedFeedLayoutUITests: XCTestCase {
     private func assertSpacing(section: String, title: String) {
         selectSection(section, title: title)
         let firstID =
-            section == "home" ? AccessibilityID.homeShortsRow(0) : AccessibilityID.sectionShortsRow(section, 0)
+            section == "home" ? AccessibilityID.homeShortsRow(0) : AccessibilityID.sectionShortsRow(0)
         let first = app.scrollViews[firstID]
         XCTAssertTrue(first.waitForExistence(timeout: 10))
         XCTAssertEqual(uniqueCards(in: first, prefix: "shorts.card.").count, 10)
@@ -465,7 +484,7 @@ final class MixedFeedLayoutUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(block.frame.minY, first.frame.maxY - 1)
 
         let secondID =
-            section == "home" ? AccessibilityID.homeShortsRow(1) : AccessibilityID.sectionShortsRow(section, 1)
+            section == "home" ? AccessibilityID.homeShortsRow(1) : AccessibilityID.sectionShortsRow(1)
         let second = app.scrollViews[secondID]
         for _ in 0..<30 {
             if second.exists, second.isHittable,

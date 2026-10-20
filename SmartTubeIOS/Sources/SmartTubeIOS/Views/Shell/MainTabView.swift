@@ -85,9 +85,10 @@ struct MainTabView: View {
             }
             .background(TabBarLiquidGlassConfigurator(disableLiquidGlass: store.settings.disableLiquidGlass))
             .environment(searchVM)
-            // A compact width has no Queue tab: keep the user on the queue, as Library › Queue.
-            .onChange(of: horizontalSizeClass) { _, sizeClass in
-                guard sizeClass != .regular, selectedTab == .queue else { return }
+            // A compact width, or the setting turned off, removes the Queue tab: keep the user on the queue,
+            // as Library › Queue.
+            .onChange(of: horizontalSizeClass == .regular && store.settings.showQueueTab) { _, queueTabShown in
+                guard !queueTabShown, selectedTab == .queue else { return }
                 libraryQueueRequested = true
                 selectedTab = .section(.library)
             }
@@ -192,7 +193,7 @@ struct MainTabView: View {
             // A1: the Queue under Library in the sidebar of a regular-width window only. A compact width
             // shows `.sidebarOnly` tabs in the tab bar too (a sixth tab pushes Search into More), so there
             // the queue stays in Library › Queue.
-            if horizontalSizeClass == .regular {
+            if horizontalSizeClass == .regular, store.settings.showQueueTab {
                 Tab(
                     String(localized: "Queue", bundle: .module), systemImage: ShellItem.queue.icon,
                     value: ShellItem.queue

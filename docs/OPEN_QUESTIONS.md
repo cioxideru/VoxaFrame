@@ -328,6 +328,10 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 ## OQ-0019 — VoxaFrame redesign follow-ups
 
 - Status: open; owner: UI maintainer; basis: [PLAN-0027](exec-plans/active/voxaframe-redesign.md), [ADR-0012](adr/0012-redesign-availability-and-tokens.md), [ADR-0013](adr/0013-minimum-os-18.md).
+- iPadOS 27 landscape launch emits SwiftUI's "Modifying state during view update" warning before sidebar
+  interaction. PLAN-0030 reproduced it on the unchanged pre-release `master` (`dfc06e62`) as well as
+  the 5.18 candidate; the sidebar navigation and Queue toggle assertions pass. The source of the
+  write remains to be located; do not treat passing navigation tests as proof the warning is harmless.
 - Mini-player: the tab-bar bottom accessory was rejected in stage 2a (`0d446f6`): it re-parented the persistent player
   layer on every tab switch, has a fixed height, no opaque fallback and needs iOS 26.1. The overlay stays on every version.
   Its space is reserved by a UIKit bridge (`NavigationBottomReserve`) that adds the bar height to each tab's navigation
@@ -384,9 +388,10 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Assumption to confirm: the iPhone/iPad tab order puts Search last on every OS version, not only where the search role renders apart.
 - The design package now includes its own copy of the functional brief (`278111b`); DESIGN-0002 stays the maintained source,
   so a brief change must update both files or drop the copy.
-- Offline boards drawn before PLAN-0028 show things the code does not do (PLAN-0027, "Stage 6 basis"). Logic that stage 6 will not add:
-  sizes and storage totals, deleting one saved track apart from its job, audio-only listening, re-download of a saved variant,
-  saved date, queue position, byte progress, cached covers for offline use, remembering the translation choice.
+- Offline boards drawn before PLAN-0028 show things the code does not do (PLAN-0027, "Stage 6 basis").
+  PLAN-0030 adds sizes, storage totals and byte progress. Remaining gaps include deleting one saved track apart
+  from its job, audio-only listening, re-download of a saved variant, saved date, queue position,
+  cached covers for offline use and remembering the translation choice.
   Design docs to correct: `02-feature-coverage.md` §14 (storage error board, re-download status, notification not drawn),
   `05-developer-notes.md` offline notes (one transfer at a time, yield only on start/rebuffer, HTTP status, restart from zero),
   component READMEs DownloadRow (`cancelled`, `hls`, percent), OfflineAssetRow (`hls`, size only when known), ConfirmDeletion (job/video/library).

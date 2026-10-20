@@ -110,7 +110,8 @@ picker writes only the active player's preferences. Both reuse the same Yandex s
 and Keychain token, and read the same persisted Fit/Fill setting.
 Account Shorts come from authenticated subscription
 pages plus Shorts present in Home recommendations; signed-out discovery uses search.
-Home and Recommended reuse their subscription response instead of loading it twice.
+Home is the recommendations feed only (TV home browse and its continuations); the
+subscription shelf it loads feeds the Shorts rows and never adds regular videos to Home.
 The Shorts player retains source-tagged continuation tokens and discards them when
 the account changes. Empty/duplicate page scanning is bounded per request; the
 Shorts section preserves its continuation for the user to request more. This is

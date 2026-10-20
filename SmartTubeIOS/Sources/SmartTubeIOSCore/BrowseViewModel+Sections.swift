@@ -64,54 +64,6 @@ extension BrowseViewModel {
         videoGroups.append(contentsOf: filteredRows)
     }
 
-    func fetchRecommendedSection() async throws {
-        // UI-testing injection: bypass the network fetch when
-        // `--uitesting-inject-recommended-ids=<id1,id2,...>` is present.
-        // Allows Recommended chip tests to run on unauthenticated parallel
-        // simulator clones without auth or visitor-session dependency.
-        if let arg = ProcessInfo.processInfo.arguments.first(where: {
-            $0.hasPrefix("--uitesting-inject-recommended-ids=")
-        }) {
-            let raw = String(arg.dropFirst("--uitesting-inject-recommended-ids=".count))
-            let ids = raw.split(separator: ",").map(String.init).filter { !$0.isEmpty }
-            guard !ids.isEmpty, !Task.isCancelled else { return }
-            let videos = ids.map { Video(id: $0, title: $0, channelTitle: "Test Channel") }
-            isAuthRequired = false
-            recommendedUsesSearchFallback = false
-            videoGroups = [VideoGroup(title: "Recommended", videos: videos)]
-            return
-        }
-        let group = try await api.fetchHome()
-        // Reuse subscriptions for account Shorts; global discovery belongs to signed-out browsing.
-        async let shortsFetch: VideoGroup? = hasAuthToken ? nil : try? api.fetchShorts()
-        async let subsFetch: VideoGroup? = try? api.fetchSubscriptions()
-        let (shortsGroup, subsGroup) = await (shortsFetch, subsFetch)
-        if !Task.isCancelled {
-            let subsShorts = (subsGroup?.videos ?? []).filter(\.isShort)
-            let homeShorts = group.videos.filter(\.isShort)
-            var seen = Set<String>()
-            recommendedShortsVideos = (homeShorts + subsShorts + (shortsGroup?.videos ?? []))
-                .filter { seen.insert($0.id).inserted }
-            if group.videos.isEmpty {
-                isAuthRequired = true
-                recommendedUsesSearchFallback = true
-                let popular = try await api.search(query: "popular")
-                browseLog.notice(
-                    "Recommended: home feed empty, using search fallback (nextToken=\(popular.nextPageToken != nil))"
-                )
-                var deduped = popular
-                deduped.videos = deduplicated(popular.videos)
-                videoGroups = [deduped]
-            } else {
-                isAuthRequired = false
-                recommendedUsesSearchFallback = false
-                var deduped = group
-                deduped.videos = deduplicated(group.videos)
-                videoGroups = [deduped]
-            }
-        }
-    }
-
     func fetchSubscriptionsSection() async throws {
         #if DEBUG
         if HomePaginationUITestFixture.isMixedFeedEnabled {

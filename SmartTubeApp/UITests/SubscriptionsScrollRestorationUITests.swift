@@ -17,8 +17,7 @@ import XCTest
 //      scroll position was not reset to the top).
 //
 // Requirements:
-//   • The simulator must have network access.
-//   • A signed-in account is expected so the Subscriptions feed is non-empty.
+//   • No account or network: `--uitesting-mixed-feed` supplies the Subscriptions feed.
 //   • Run on an iOS 18+ simulator with the SmartTubeApp scheme selected.
 
 final class SubscriptionsScrollRestorationUITests: XCTestCase {
@@ -32,7 +31,8 @@ final class SubscriptionsScrollRestorationUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments += [
             "--uitesting",
-            "--uitesting-inject-recommended-ids=dQw4w9WgXcQ,9bZkp7q19f0,MCv4EyEFgVg,pPvd8UxmCGY,fKopy74weus,jNQXAC9IVRw,kJQP7kiw5Fk,OPf0YbXqDm0,RgKAFK5djSk,2vjPBrBU-HM",
+            // Offline fixture: 60 subscription videos; hidden Shorts keep the centre tap on a video card.
+            "--uitesting-signed-in", "--uitesting-reset-settings", "--uitesting-mixed-feed", "--uitesting-hide-shorts",
         ]
         app.launch()
     }
@@ -52,12 +52,10 @@ final class SubscriptionsScrollRestorationUITests: XCTestCase {
         let chipBar = app.scrollViews["home.chipBar"]
         XCTAssertTrue(chipBar.waitForExistence(timeout: 10), "Chip bar must appear")
 
-        // 2. Tap the Recommended chip — uses BrowseViewModel with injected test data,
-        //    so it loads without requiring a signed-in account or visitor session.
-        //    The scroll restoration mechanism under test is section-agnostic.
-        let chip = chipBar.buttons["Recommended"]
+        // 2. Tap the Subscriptions chip (fixture data, no account or network needed).
+        let chip = chipBar.buttons["Subscriptions"]
         guard chip.waitForExistence(timeout: 5) else {
-            try captureAndSkip("Recommended chip not found — section may be disabled in settings", in: app)
+            try captureAndSkip("Subscriptions chip not found — section may be disabled in settings", in: app)
         }
         scrollChipIntoView(chip, in: chipBar)
         chip.tap()

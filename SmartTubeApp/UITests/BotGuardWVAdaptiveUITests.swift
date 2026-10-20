@@ -6,8 +6,8 @@ import XCTest
 // mints a pot= token and uses it to play via WEB client adaptive streaming
 // (bypassing WKWebView HLS fallback) for a range of non-partner video IDs.
 //
-// Single shared app instance — all 9 videos are injected into the Recommended
-// feed via --uitesting-inject-recommended-ids.  The app stays alive across all
+// Single shared app instance — all 9 videos are injected as the Home
+// recommendations feed via --uitesting-inject-recommended-ids.  The app stays alive across all
 // test methods so all logs land in one diagnostics file.
 //
 // AGENT-POST-RUN-CHECK: ui-tests-with-logs
@@ -51,7 +51,7 @@ private let kBGWVTestVideoIDs = [
 final class BotGuardWVAdaptiveUITests: XCTestCase {
 
     private static var sharedApp: XCUIApplication!
-    private static var skipAll = false
+    private static var feedMissing = false
 
     // MARK: - Lifecycle (single shared app)
 
@@ -61,6 +61,7 @@ final class BotGuardWVAdaptiveUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
+            "--uitesting-signed-in",
             "--uitesting-inject-recommended-ids=\(injectedIDs)",
         ]
         app.launch()
@@ -68,7 +69,7 @@ final class BotGuardWVAdaptiveUITests: XCTestCase {
 
         UITestHelpers.tapTab(named: "Home", in: app)
         if UITestHelpers.waitForVideoCards(in: app, timeout: 25) == nil {
-            skipAll = true
+            feedMissing = true
         }
     }
 
@@ -81,12 +82,13 @@ final class BotGuardWVAdaptiveUITests: XCTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
-        try? XCTSkipIf(Self.skipAll, "Home feed unavailable")
+        // The injected feed needs no network: missing cards are a failure, not a skip.
+        XCTAssertFalse(Self.feedMissing, "The injected Home feed showed no video cards")
     }
 
     // MARK: - Helper
 
-    /// Taps the card at `index` in the injected Recommended feed, waits 50 s
+    /// Taps the card at `index` in the injected Home feed, waits 50 s
     /// for BotGuard to complete, then navigates back to Home.
     private func playVideo(at index: Int, id: String) {
         let app = Self.sharedApp!

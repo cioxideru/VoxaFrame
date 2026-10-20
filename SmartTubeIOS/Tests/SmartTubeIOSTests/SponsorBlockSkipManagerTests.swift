@@ -67,6 +67,22 @@ private final class SeekSpy: SponsorBlockSeeking {
 
 @Suite("SponsorBlockSkipManager")
 struct SponsorBlockSkipManagerTests {
+    @Test @MainActor
+    func manualSkipOnlySeeksAnEligibleSegment() {
+        let delegate = SpyDelegate()
+        let manager = SponsorBlockSkipManager()
+        manager.delegate = delegate
+        let segment = SponsorSegment(start: 10, end: 30, category: .sponsor)
+        manager.currentToastSegment = segment
+        manager.skipToastSegment()
+        #expect(delegate.seekCalled == nil && !delegate.playbackEndCalled)
+
+        manager.sponsorSegments = [segment]
+        manager.currentToastSegment = segment
+        manager.skipToastSegment()
+        #expect(delegate.seekCalled == segment.end)
+        #expect(delegate.showControlsCalled)
+    }
 
     // MARK: - 1. .skip category triggers seek
 

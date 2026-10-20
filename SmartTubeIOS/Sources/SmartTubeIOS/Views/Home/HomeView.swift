@@ -9,8 +9,8 @@ import UIKit
 //
 // YouTube-style home tab.  A horizontal chip bar at the top lets the user
 // switch between every available section:
-//   • "Home"  chip  → multi-shelf overview (Subscriptions row,
-//                      Recommended row) driven by HomeViewModel.
+//   • "Home"  chip  → YouTube's recommendations (plus Shorts rows) driven by
+//                      HomeViewModel. Subscriptions have their own chip.
 //   • Any other chip → full-screen video feed for that section driven by a
 //                      dedicated BrowseViewModel instance.
 
@@ -58,17 +58,10 @@ public struct HomeView: View {
     #endif
     private var visibleSections: [BrowseSection] {
         let types = store.settings.enabledSections
-        var all: [BrowseSection] =
+        let all: [BrowseSection] =
             types.isEmpty
             ? BrowseSection.defaultSections
             : types.compactMap { type in BrowseSection.allSections.first { $0.type == type } }
-        // Always keep a "Recommended" chip directly after the "Home" chip so the
-        // user can filter to only recommended videos regardless of settings.
-        if !all.contains(where: { $0.type == .recommended }),
-            let homeIdx = all.firstIndex(where: { $0.type == .home })
-        {
-            all.insert(BrowseSection(type: .recommended), at: homeIdx + 1)
-        }
         if store.settings.hideShorts {
             return all.filter { $0.type != .shorts }
         }
@@ -142,13 +135,15 @@ public struct HomeView: View {
             guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
             channelDestination = ChannelDestination(channelId: channelId)
         }
-        #if os(iOS)
-        // App Intents ("Open Subscriptions in SmartTube"): RootView switches to this tab.
+        #if !os(tvOS)
+        // App Intents ("Open Subscriptions in SmartTube"): the shell switches to Home first.
         // A section hidden in Settings still opens, just without a chip.
         .onReceive(NotificationCenter.default.publisher(for: .smartTubeOpenSection)) { note in
             guard let raw = note.userInfo?["section"] as? String,
-                let type = BrowseSection.SectionType(rawValue: raw)
+                var type = BrowseSection.SectionType(rawValue: raw)
             else { return }
+            // Shortcuts saved before Home became the recommendations feed.
+            if type == .recommended { type = .home }
             selectedSection =
                 visibleSections.first { $0.type == type }
                 ?? BrowseSection(id: type.rawValue, title: type.defaultTitle, type: type)
@@ -411,7 +406,7 @@ extension HomeView {
         #endif
     }
 
-    // MARK: - Home shelves  (unified interleaved feed)
+    // MARK: - Home shelves  (recommendations feed)
 
     /// One vertical feed: ten Shorts, six rows of videos, another Shorts row, and so on
     /// (`HomeFeedLayout`). Each Shorts row scrolls horizontally on its own.
@@ -419,7 +414,9 @@ extension HomeView {
         Group {
             if homeVM.isLoadingAny && homeVM.mergedVideos.isEmpty {
                 HomeLoadingView(columns: feedColumns)
-            } else if homeVM.mergedVideos.isEmpty && homeVM.homeShortsVideos.isEmpty {
+            } else if homeVM.mergedVideos.isEmpty && homeVM.homeShortsVideos.isEmpty
+                && homeVM.recommendations?.nextPageToken == nil
+            {
                 fullArea(
                     ContentUnavailableView {
                         Label {
@@ -450,15 +447,19 @@ extension HomeView {
                     ForEach(segments) {
                         homeFeedSegment($0, in: segments, shorts: shortsVideos, videos: regularVideos)
                     }
-                    if store.settings.hideWatchedVideos, homeVM.sections.contains(where: { $0.nextPageToken != nil }) {
+                    let recommendations = homeVM.recommendations
+                    // Hidden, missing or stalled regular cards cannot trigger the next page by appearing.
+                    if recommendations?.nextPageToken != nil,
+                        store.settings.hideWatchedVideos || regularVideos.isEmpty || homeVM.recommendationsStalled
+                    {
                         Button("More") { homeVM.loadMoreMerged() }
                             .buttonStyle(.bordered)
-                            .disabled(homeVM.sections.contains { $0.isLoading || $0.isLoadingMore })
+                            .disabled(recommendations?.isLoading != false || recommendations?.isLoadingMore != false)
                             .accessibilityIdentifier(AccessibilityID.homeFilteredLoadMoreButton)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, VFSpace.s12)
                     }
-                    if homeVM.sections.contains(where: \.isLoadingMore) {
+                    if recommendations?.isLoadingMore == true {
                         ProgressView().frame(maxWidth: .infinity).padding()
                     }
                 }
@@ -514,7 +515,7 @@ extension HomeView {
                 eager: true,
                 columns: feedColumns
             )
-            .feedBlockGroup(AccessibilityID.feedVideoBlock(.home, segment.index))
+            .feedBlockGroup(AccessibilityID.feedVideoBlock(.home, segment.index), cards: segment.items.count)
             .contentShape(Rectangle())
             .onAppear {
                 homeLayout.markLaidOut(block: segment.index, in: segments)
@@ -550,7 +551,7 @@ extension HomeView {
                         ShortsRowSection(
                             videos: segment.items,
                             onSelect: { selectVideo($0, from: shorts) },
-                            accessibilityID: AccessibilityID.sectionShortsRow(selectedSection.type, segment.index),
+                            accessibilityID: AccessibilityID.sectionShortsRow(segment.index),
                             loadMore: videos.isEmpty ? loadMore : nil)
                     }
                 case .videos:
@@ -562,7 +563,9 @@ extension HomeView {
                         eager: true,
                         columns: feedColumns
                     )
-                    .feedBlockGroup(AccessibilityID.feedVideoBlock(selectedSection.type, segment.index))
+                    .feedBlockGroup(
+                        AccessibilityID.feedVideoBlock(selectedSection.type, segment.index), cards: segment.items.count
+                    )
                     .onAppear { sectionLayout.markLaidOut(block: segment.index, in: segments) }
                     #if os(iOS)
                     .modifier(sectionSwipe)

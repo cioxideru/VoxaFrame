@@ -81,7 +81,11 @@ public struct AppSettings: Codable {
     /// `SettingsPINHasher`). `nil` means no PIN is configured and Settings behaves as
     /// today with no lock. Never stores the raw PIN.
     public var settingsPINHash: String?
+    /// Hide Shorts from feeds; on by default.
     public var hideShorts: Bool
+    /// Show the Queue as its own sidebar item on a regular-width iPad window and on macOS; off by default.
+    /// The queue stays in Library either way.
+    public var showQueueTab: Bool
     public var hideLiveShorts: Bool
     public var hideVideoPremieres: Bool
     /// When `true` (default), a per-device `visitorData` token is included in home-feed
@@ -132,6 +136,8 @@ public struct AppSettings: Codable {
     /// Channels where SponsorBlock is disabled. Key = channelId, value = display title.
     /// Mirrors Android's `SponsorBlockData.excludedChannels`.
     public var sponsorBlockExcludedChannels: [String: String]
+    /// Refresh SponsorBlock segments of saved offline videos in the background, at most once a day.
+    public var offlineSponsorBlockAutoUpdate: Bool
     /// Channels hidden from the feed via "Don't Recommend Channel". Key = channelId, value = channel title.
     /// Persists across sessions and syncs via iCloud when `iCloudSyncEnabled` is true.
     public var blockedChannels: [String: String]
@@ -316,7 +322,8 @@ public struct AppSettings: Codable {
         hideWatchedThreshold = 0.9
         disableLiquidGlass = false
         settingsPINHash = nil
-        hideShorts = false
+        hideShorts = true
+        showQueueTab = false
         hideLiveShorts = false
         hideVideoPremieres = false
         perDeviceRecommendationsEnabled = true
@@ -342,6 +349,7 @@ public struct AppSettings: Codable {
         ]
         sponsorBlockMinSegmentDuration = 0
         sponsorBlockExcludedChannels = [:]
+        offlineSponsorBlockAutoUpdate = true
         blockedChannels = [:]
         preferredAudioLanguage = nil
         yandexVOTEnabled = false
@@ -413,6 +421,7 @@ extension AppSettings {
         case disableLiquidGlass
         case settingsPINHash
         case hideShorts
+        case showQueueTab
         case hideLiveShorts
         case hideVideoPremieres
         case perDeviceRecommendationsEnabled
@@ -426,6 +435,7 @@ extension AppSettings {
         case sponsorBlockActions
         case sponsorBlockMinSegmentDuration
         case sponsorBlockExcludedChannels
+        case offlineSponsorBlockAutoUpdate
         case blockedChannels
         case preferredAudioLanguage
         case yandexVOTEnabled
@@ -479,6 +489,7 @@ extension AppSettings {
         disableLiquidGlass = c.safeDecode(Bool.self, forKey: .disableLiquidGlass, default: d.disableLiquidGlass)
         settingsPINHash = c.safeDecode(String?.self, forKey: .settingsPINHash, default: d.settingsPINHash)
         hideShorts = c.safeDecode(Bool.self, forKey: .hideShorts, default: d.hideShorts)
+        showQueueTab = c.safeDecode(Bool.self, forKey: .showQueueTab, default: d.showQueueTab)
         hideLiveShorts = c.safeDecode(Bool.self, forKey: .hideLiveShorts, default: d.hideLiveShorts)
         hideVideoPremieres = c.safeDecode(Bool.self, forKey: .hideVideoPremieres, default: d.hideVideoPremieres)
         perDeviceRecommendationsEnabled = c.safeDecode(
@@ -496,17 +507,12 @@ extension AppSettings {
                 c.safeDecode(Int.self, forKey: .gridColumnsLandscape, default: d.gridColumnsLandscape),
                 columns.lowerBound),
             columns.upperBound)
+        // Home is the recommendations feed now; drop the retired Recommended chip.
         enabledSections = c.safeDecode(
-            [BrowseSection.SectionType].self, forKey: .enabledSections, default: d.enabledSections)
+            [BrowseSection.SectionType].self, forKey: .enabledSections, default: d.enabledSections
+        ).filter { $0 != .recommended }
         historyState = c.safeDecode(HistoryState.self, forKey: .historyState, default: d.historyState)
-        sponsorBlockEnabled = c.safeDecode(Bool.self, forKey: .sponsorBlockEnabled, default: d.sponsorBlockEnabled)
-        sponsorBlockActions = c.safeDecode(
-            [SponsorSegment.Category: SponsorBlockAction].self, forKey: .sponsorBlockActions,
-            default: d.sponsorBlockActions)
-        sponsorBlockMinSegmentDuration = c.safeDecode(
-            Double.self, forKey: .sponsorBlockMinSegmentDuration, default: d.sponsorBlockMinSegmentDuration)
-        sponsorBlockExcludedChannels = c.safeDecode(
-            [String: String].self, forKey: .sponsorBlockExcludedChannels, default: d.sponsorBlockExcludedChannels)
+        decodeSponsorBlock(from: c, defaults: d)
         blockedChannels = c.safeDecode([String: String].self, forKey: .blockedChannels, default: d.blockedChannels)
         preferredAudioLanguage = c.safeDecode(
             String?.self, forKey: .preferredAudioLanguage, default: d.preferredAudioLanguage)
@@ -526,6 +532,23 @@ extension AppSettings {
         maximumConcurrentDownloads = Self.clampedConcurrentDownloads(
             c.safeDecode(Int.self, forKey: .maximumConcurrentDownloads, default: d.maximumConcurrentDownloads))
         decodeShortsTranslation(from: c)
+    }
+
+    private mutating func decodeSponsorBlock(
+        from container: KeyedDecodingContainer<CodingKeys>, defaults: AppSettings
+    ) {
+        sponsorBlockEnabled = container.safeDecode(
+            Bool.self, forKey: .sponsorBlockEnabled, default: defaults.sponsorBlockEnabled)
+        sponsorBlockActions = container.safeDecode(
+            [SponsorSegment.Category: SponsorBlockAction].self, forKey: .sponsorBlockActions,
+            default: defaults.sponsorBlockActions)
+        sponsorBlockMinSegmentDuration = container.safeDecode(
+            Double.self, forKey: .sponsorBlockMinSegmentDuration, default: defaults.sponsorBlockMinSegmentDuration)
+        sponsorBlockExcludedChannels = container.safeDecode(
+            [String: String].self, forKey: .sponsorBlockExcludedChannels, default: defaults.sponsorBlockExcludedChannels
+        )
+        offlineSponsorBlockAutoUpdate = container.safeDecode(
+            Bool.self, forKey: .offlineSponsorBlockAutoUpdate, default: defaults.offlineSponsorBlockAutoUpdate)
     }
 
     private mutating func decodeShortsTranslation(from container: KeyedDecodingContainer<CodingKeys>) {

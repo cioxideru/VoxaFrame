@@ -6,6 +6,27 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+## [5.18] – 2026-10-20
+
+VoxaFrame 5.18 (40). Source release; no signed binaries are attached.
+
+### Added
+- **Offline SponsorBlock:** segments are saved with downloaded videos, used during offline playback and refreshed from a saved video's page or across the library. Automatic refresh on app activation runs at most once a day after a successful update and has its own setting.
+- **Offline sizes:** saved video, audio and voice-over sizes, transfer byte progress and the total storage used appear in Offline videos. Estimates are marked; unknown sizes are not presented as measured values.
+- **Player:** saved-offline badges, an Offline quick action and a channel link in More.
+
+### Changed
+- **Home:** shows only YouTube's recommendations; subscription videos are no longer mixed in. The separate Recommended chip is removed (saved section lists drop it; Subscriptions keeps its chip).
+- **Home:** an empty account feed stays empty instead of showing a popular-search substitute; pages that add no new videos continue to the next page by themselves (bounded), and More appears when nothing is left to scroll.
+- **Defaults:** Shorts are hidden for new settings, while existing choices are preserved. Queue stays available in Library; its iPad/Mac sidebar shortcut is hidden by default and can be enabled in Appearance.
+- **Player:** redesigned Description and Comments panels; the sleep timer moves to More.
+- The privacy policy describes automatic and manual SponsorBlock requests for saved videos.
+
+### Fixed
+- Home feed blocks stay stable when more videos are appended.
+- Video cards keep their accessibility identifier when a feed block holds a single card.
+- Offline SponsorBlock lookups share pending work and cannot replace the current video's segments with a late result.
+
 ## [5.17] – 2026-10-19
 
 VoxaFrame 5.17 (39). Source release; no signed binaries are attached.

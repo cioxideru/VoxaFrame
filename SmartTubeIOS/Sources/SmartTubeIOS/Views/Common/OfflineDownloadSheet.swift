@@ -63,7 +63,7 @@ struct OfflineDownloadSheet: View {
                         if let tracks {
                             if let size = OfflineSelection.estimatedBytes(for: tracks) {
                                 Text(
-                                    "Estimated media size: \(size.formatted(.byteCount(style: .file)))",
+                                    "Estimated media size: \(OfflinePresentation.bytesText(size))",
                                     bundle: .module
                                 )
                                 .font(.caption)

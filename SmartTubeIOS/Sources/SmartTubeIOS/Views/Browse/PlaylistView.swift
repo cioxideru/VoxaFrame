@@ -88,13 +88,11 @@ public struct PlaylistView: View {
                         )
                         .padding(.horizontal)
                         .padding(.vertical, 6)
-                        .accessibilityIdentifier("video.card.\(video.id)")
                         .onAppear { vm.loadMoreIfNeeded(lastVideo: video) }
                         #else
                         VideoCardView(video: video, compact: true, currentPlaylistId: playlistId)
                             .padding(.horizontal)
                             .padding(.vertical, 6)
-                            .accessibilityIdentifier("video.card.\(video.id)")
                             .onTapGesture {
                                 #if os(iOS)
                                 Task { @MainActor in
@@ -141,7 +139,6 @@ public struct PlaylistView: View {
                                     }
                                 )
                                 .frame(maxWidth: .infinity)
-                                .accessibilityIdentifier("video.card.\(video.id)")
                             }
                             let remainder = columnCount - rowVideos.count
                             if remainder > 0 {
@@ -164,7 +161,6 @@ public struct PlaylistView: View {
                 ) {
                     ForEach(displayVideos) { video in
                         VideoCardView(video: video, compact: false, currentPlaylistId: playlistId)
-                            .accessibilityIdentifier("video.card.\(video.id)")
                             .onTapGesture {
                                 #if os(iOS)
                                 Task { @MainActor in

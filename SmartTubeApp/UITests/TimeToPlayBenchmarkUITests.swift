@@ -183,7 +183,7 @@ private let corpus: [TTPTestCase] = [
 ///
 /// Each test is completely independent:
 ///   • Fresh `XCUIApplication` created and launched in the test body.
-///   • Single video ID injected via `--uitesting-inject-recommended-ids`.
+///   • Single video ID injected as the Home feed via `--uitesting-inject-recommended-ids`.
 ///   • App terminated in `tearDown` so state never leaks between videos.
 ///
 /// Do NOT add `parallelizationMode` or run with `-maximum-parallel-testing-workers > 1` —
@@ -221,7 +221,7 @@ final class TimeToPlayBenchmarkUITests: XCTestCase {
                 do {
                     try runBenchmark(videoId: video.videoId, scenario: video.scenario)
                 } catch let skip as XCTSkip {
-                    // Legitimate skip (network unavailable, injection race) — log and continue.
+                    // Legitimate skip (Home did not load) — log and continue.
                     recordDiagnostic("[bench] SKIP \(video.videoId): \(skip)")
                 } catch {
                     XCTFail("[\(video.videoId)] \(error)")
@@ -247,6 +247,7 @@ final class TimeToPlayBenchmarkUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
+            "--uitesting-signed-in",
             "--uitesting-inject-recommended-ids=\(videoId)",
             "--uitesting-disable-sponsorblock",
             "--uitesting-extended-fetch-timeout",
@@ -258,51 +259,21 @@ final class TimeToPlayBenchmarkUITests: XCTestCase {
             "[bench] \(videoId) launched — pid=\(app.debugDescription.components(separatedBy: "pid=").dropFirst().first?.components(separatedBy: ",").first ?? "?")"
         )
 
-        // ── 2. Navigate to the Recommended chip so injected video is visible ──
-        // `--uitesting-inject-recommended-ids` populates the Recommended chip feed,
-        // not the default Home chip. Tap the chip to surface the injected card.
+        // ── 2. Home shows the injected video as its whole recommendations feed ──
         let chipBar = app.scrollViews["home.chipBar"]
         guard waitForExistenceGuarded(chipBar, in: app, timeout: 20) else {
             recordDiagnostic("[bench] \(videoId) SKIP — home.chipBar not found")
-            try captureAndSkip(
-                "[\(videoId)] home.chipBar not found — home screen did not load",
-                in: app
-            )
+            try captureAndSkip("[\(videoId)] home.chipBar not found — home screen did not load", in: app)
         }
         recordDiagnostic("[bench] \(videoId) home.chipBar visible")
-        let recommendedChip = chipBar.buttons["Recommended"].firstMatch
-        guard waitForExistenceGuarded(recommendedChip, in: app, timeout: 10) else {
-            recordDiagnostic("[bench] \(videoId) SKIP — Recommended chip not found")
-            try captureAndSkip(
-                "[\(videoId)] Recommended chip not found in chip bar",
-                in: app
-            )
-        }
-        // Scroll chip into view if it's clipped by the horizontal chip bar.
-        let screenWidth = app.windows.firstMatch.frame.width
-        let nearEdge = chipBar.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5))
-        let farEdge = chipBar.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5))
-        for _ in 0..<8 {
-            let f = recommendedChip.frame
-            if f.origin.x >= 4 && f.maxX <= screenWidth - 4 { break }
-            if f.origin.x < 4 {
-                nearEdge.press(forDuration: 0.05, thenDragTo: farEdge)
-            } else {
-                farEdge.press(forDuration: 0.05, thenDragTo: nearEdge)
-            }
-        }
-        recordDiagnostic("[bench] \(videoId) tapping Recommended chip")
-        recommendedChip.tap()
 
         // ── 3. Wait for the injected video card specifically ─────────────────
         let cardPredicate = NSPredicate(format: "identifier BEGINSWITH 'video.card.\(videoId)'")
         let specificCard = app.descendants(matching: .any).matching(cardPredicate).firstMatch
+        // The injected card needs no network, so a missing card is a failure, not a skip.
         guard waitForExistenceGuarded(specificCard, in: app, timeout: 20) else {
-            recordDiagnostic("[bench] \(videoId) SKIP — video.card.\(videoId) not found in feed")
-            try captureAndSkip(
-                "[\(videoId)] video.card.\(videoId) not found — injection may have failed or network unavailable",
-                in: app
-            )
+            captureState("missing-card-\(videoId)", in: app)
+            return XCTFail("[\(videoId)] video.card.\(videoId) not found in the injected Home feed")
         }
         let cardId = specificCard.identifier
         recordDiagnostic("[bench] \(videoId) card found — identifier='\(cardId)'")

@@ -19,18 +19,13 @@ extension HomeView {
         let feedShorts: [Video]
         if isShorts || applyHideShorts {
             feedShorts = []
-        } else if selectedSection.type == .recommended {
-            feedShorts = sectionVM.recommendedShortsVideos.filter(showVideo)
-                .filter { !hideLiveShorts || !($0.isLive && $0.isShort) }
         } else {
             feedShorts = sectionVM.videoGroups.flatMap(\.videos).filter(showVideo).filter(\.isShort).filter {
                 !hideLiveShorts || !($0.isLive && $0.isShort)
             }.filter { channelFilter == nil || $0.channelId == channelFilter }
         }
 
-        // Recommended always uses the Home grid, including responses/caches with shelf layout.
-        let isRecommended = selectedSection.type == .recommended
-        let shelves = sectionVM.videoGroups.filter { !isRecommended && $0.layout == .row }
+        let shelves = sectionVM.videoGroups.filter { $0.layout == .row }
         let rowGroups: [VideoGroup] = shelves.map { group in
             var copy = group
             var videos = group.videos.filter(showVideo)
@@ -42,7 +37,7 @@ extension HomeView {
             return copy
         }
         // Shorts have their own portrait rows; preserve separate carousel groups.
-        let gridVideos = sectionVM.videoGroups.filter { isRecommended || $0.layout != .row }
+        let gridVideos = sectionVM.videoGroups.filter { $0.layout != .row }
             .flatMap(\.videos)
             .filter { !applyHideShorts || !$0.isShort }
             .filter { !hideLiveShorts || !($0.isLive && $0.isShort) }

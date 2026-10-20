@@ -57,6 +57,11 @@ extension InnerTubeAPI {
     /// Falls back to a single flat VideoGroup if no shelves are found.
     public func fetchHomeRows(continuationToken: String? = nil) async throws -> [VideoGroup] {
         #if DEBUG
+        let injectedIDs = HomePaginationUITestFixture.injectedRecommendationIDs
+        if !injectedIDs.isEmpty {
+            guard continuationToken == nil else { return [] }
+            return [VideoGroup(videos: injectedIDs.map { Video(id: $0, title: $0, channelTitle: "Test Channel") })]
+        }
         if HomePaginationUITestFixture.isEnabled {
             let group = HomePaginationUITestFixture.regularPage(
                 subscriptions: false, continuationToken: continuationToken)

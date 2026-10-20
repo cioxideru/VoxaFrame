@@ -59,6 +59,10 @@ public enum AccessibilityID {
     public static var offlineJobsList: String { "offline.jobsList" }
     public static var offlineDetailList: String { "offline.detailList" }
     public static var offlineDeleteAll: String { "offline.deleteAll" }
+    public static var offlineUpdateSponsorBlockAll: String { "offline.updateSponsorBlockAll" }
+    public static var offlineUpdateSponsorBlock: String { "offline.updateSponsorBlock" }
+    public static var offlineSponsorBlockStatus: String { "offline.sponsorBlockStatus" }
+    public static var offlineTotals: String { "offline.totals" }
     public static var offlineAudioPicker: String { "offline.audioPicker" }
     public static var offlineTranslationPicker: String { "offline.translationPicker" }
     public static var offlineVideoPicker: String { "offline.videoPicker" }
@@ -123,6 +127,7 @@ public enum AccessibilityID {
     public static func settingsCategory(_ group: String) -> String { "settings.category.\(group)" }
     public static var settingsSignInButton: String { "settings.signInButton" }
     public static var settingsHideShortsToggle: String { "settings.hideShortsToggle" }
+    public static var settingsShowQueueTabToggle: String { "settings.showQueueTabToggle" }
     public static var settingsPreferredQualityPicker: String { "settings.preferredQualityPicker" }
     public static var settingsConcurrentDownloadsPicker: String { "settings.concurrentDownloadsPicker" }
     public static var settingsSeekBackRow: String { "settings.seekBackRow" }
@@ -146,6 +151,7 @@ public enum AccessibilityID {
     public static var settingsResetAllCancel: String { "settings.resetAll.cancel" }
     public static var settingsSetPINButton: String { "settings.setPINButton" }
     public static var settingsSponsorBlockToggle: String { "settings.sponsorBlockToggle" }
+    public static var settingsOfflineSponsorBlockToggle: String { "settings.offlineSponsorBlockToggle" }
     public static var settingsThumbnailStylePicker: String { "settings.thumbnailStylePicker" }
     public static var settingsVp9Toggle: String { "settings.vp9Toggle" }
     public static var settingsVisibleSectionsLink: String { "settings.visibleSectionsLink" }
@@ -182,9 +188,9 @@ public enum AccessibilityID {
         index == 0 ? "home.shortsRow" : "home.shortsRow.\(index)"
     }
 
-    public static func sectionShortsRow(_ section: BrowseSection.SectionType, _ index: Int) -> String {
-        let prefix = section == .recommended ? "recommended.shortsRow" : "browse.shortsRow"
-        return index == 0 ? prefix : "\(prefix).\(index)"
+    /// Shorts rows of the other mixed feeds (Subscriptions, History, …).
+    public static func sectionShortsRow(_ index: Int) -> String {
+        index == 0 ? "browse.shortsRow" : "browse.shortsRow.\(index)"
     }
 
     public static func feedVideoBlock(_ section: BrowseSection.SectionType, _ index: Int) -> String {

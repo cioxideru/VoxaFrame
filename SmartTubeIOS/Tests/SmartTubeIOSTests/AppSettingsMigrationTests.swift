@@ -28,6 +28,15 @@ struct AppSettingsMigrationTests {
         #expect(settings.playbackSpeed == 1.5)
     }
 
+    @Test("A stored Recommended chip is dropped and the rest of the section order survives")
+    func retiredRecommendedSection() throws {
+        let json = #"{"enabledSections":["home","recommended","history","subscriptions"],"playbackSpeed":1.5}"#
+        let settings = try JSONDecoder().decode(AppSettings.self, from: Data(json.utf8))
+        #expect(settings.enabledSections == [.home, .history, .subscriptions])
+        #expect(settings.playbackSpeed == 1.5)
+        #expect(!BrowseSection.allSections.contains { $0.type == .recommended })
+    }
+
     @Test("Simultaneous download limit survives saves", arguments: AppSettings.availableConcurrentDownloadCounts)
     func concurrentDownloadsRoundTrip(limit: Int) throws {
         var settings = AppSettings()

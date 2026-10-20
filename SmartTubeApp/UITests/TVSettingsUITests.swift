@@ -183,16 +183,16 @@ final class TVSettingsUITests: XCTestCase {
             .firstMatch
         XCTAssertTrue(hideShorts.waitForExistence(timeout: 10), "settings.hideShortsToggle not found")
 
-        // Turn Hide Shorts on (its default is off), so a reset that slipped through would show.
+        // Turn Hide Shorts off (it is on by default), so a reset that slipped through would turn it back on.
         let onValues = ["1", "On"]
-        let isOn = NSPredicate(format: "value IN %@", onValues)
+        let isOff = NSPredicate(format: "NOT (value IN %@)", onValues)
         moveFocus(to: hideShorts)
         let original = hideShorts.value as? String
         XCTAssertNotNil(original, "Hide Shorts must report its state")
         let wasOn = onValues.contains(original ?? "")
-        if !wasOn {
+        if wasOn {
             remote.press(.select)
-            waitUntil(hideShorts, matches: isOn, "Select must turn Hide Shorts on")
+            waitUntil(hideShorts, matches: isOff, "Select must turn Hide Shorts off")
         }
 
         selectCategory("about")
@@ -205,11 +205,11 @@ final class TVSettingsUITests: XCTestCase {
         XCTAssertTrue(confirm.waitForNonExistence(timeout: 5), "Back must cancel the confirmation")
         waitUntil(button, matches: NSPredicate(format: "hasFocus == true"), "Back must return the focus to Reset")
 
-        // Return to Appearance: still on. Then restore it, since this class does not reset settings.
+        // Return to Appearance: still off. Then restore it, since this class does not reset settings.
         selectCategory("appearance")
         moveFocus(to: hideShorts)
-        XCTAssertTrue(isOn.evaluate(with: hideShorts), "Cancel must keep Hide Shorts on")
-        if !wasOn {
+        XCTAssertTrue(isOff.evaluate(with: hideShorts), "Cancel must keep Hide Shorts off")
+        if wasOn {
             remote.press(.select)
             waitUntil(hideShorts, matches: NSPredicate(format: "value == %@", original ?? ""), "Restore Hide Shorts")
         }

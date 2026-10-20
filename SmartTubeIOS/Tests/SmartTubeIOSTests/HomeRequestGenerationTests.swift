@@ -66,6 +66,8 @@ struct HomeRequestGenerationTests {
         }
         #expect(pages == InnerTubeClients.maxShortsPagesPerRequest)
         #expect(home.homeShortsVideos.isEmpty)
+        // Subscription pages fetched for Shorts never add their regular videos to Home.
+        #expect(home.mergedVideos.map(\.id) == ["home"])
         home.loadShorts(atLeast: 40)
         await waitForTasks {
             pages >= 2 * InnerTubeClients.maxShortsPagesPerRequest
@@ -230,7 +232,8 @@ struct HomeRequestGenerationTests {
         #expect(vm.mergedVideos.map(\.id) == ["fresh"])
         freshPage.resolve(VideoGroup(title: "Fresh page", videos: [makeVideo("fresh-page")], nextPageToken: "next"))
         await freshTask.value
-        #expect(vm.mergedVideos.map(\.id) == ["fresh", "fresh-page"])
+        // Only recommendation pages extend the Home feed.
+        #expect(vm.mergedVideos.map(\.id) == (subscriptions ? ["fresh"] : ["fresh", "fresh-page"]))
         #expect(vm.sections.first { $0.id == sectionID }?.nextPageToken == "next")
         #expect(vm.sections.first { $0.id == sectionID }?.isLoadingMore == false)
     }
@@ -373,7 +376,8 @@ struct HomeRequestGenerationTests {
         await waitForTasks { vm.homeShortsVideos.contains { $0.id == "from-subs" } }
         #expect(
             mock.calls.filter { $0.method == "fetchSubscriptions" }.map(\.args) == [["nil"], ["subs-1"], ["subs-2"]])
-        #expect(vm.homeRegularVideos.contains { $0.id == "regular-page" })
+        // Subscriptions feed the Shorts rows only; their regular videos stay out of Home.
+        #expect(!vm.homeRegularVideos.contains { $0.id == "regular-page" })
     }
 
     @Test("Empty advancing pages preserve demand and a repeated empty token stops it")
@@ -405,17 +409,26 @@ struct HomeRequestGenerationTests {
         #expect(first.videos.first?.id == "page-1-short-0")
         #expect(second.videos.first?.id == "page-2-short-0")
         #expect(second.nextPageToken == nil)
-        for subscriptions in [false, true] {
-            let regular = HomePaginationUITestFixture.regularPage(subscriptions: subscriptions, continuationToken: nil)
-            #expect(regular.nextPageToken == (subscriptions ? firstToken : nil))
-            #expect(regular.videos.filter(\.isShort).count == (subscriptions ? 10 : 0))
-            if subscriptions {
-                let next = HomePaginationUITestFixture.regularPage(
-                    subscriptions: true, continuationToken: firstToken)
-                #expect(next.videos == first.videos)
-                #expect(next.nextPageToken == secondToken)
-            }
-        }
+        let subscriptions = HomePaginationUITestFixture.regularPage(subscriptions: true, continuationToken: nil)
+        #expect(subscriptions.nextPageToken == firstToken)
+        #expect(subscriptions.videos.filter(\.isShort).count == 10)
+        let next = HomePaginationUITestFixture.regularPage(subscriptions: true, continuationToken: firstToken)
+        #expect(next.videos == first.videos)
+        #expect(next.nextPageToken == secondToken)
+
+        // Recommendations page through their own continuations, never the Shorts ones, and carry no Shorts.
+        var token: String?
+        var recommendations: [Video] = []
+        repeat {
+            let page = HomePaginationUITestFixture.regularPage(subscriptions: false, continuationToken: token)
+            #expect(page.videos.count == InnerTubeClients.maxVideoResults)
+            #expect(![firstToken, secondToken].contains(page.nextPageToken ?? ""))
+            recommendations += page.videos
+            token = page.nextPageToken
+        } while token != nil && recommendations.count < 10 * InnerTubeClients.maxVideoResults
+        #expect(recommendations.count == 3 * InnerTubeClients.maxVideoResults)
+        #expect(Set(recommendations.map(\.id)).count == recommendations.count)
+        #expect(recommendations.allSatisfy { !$0.isShort })
     }
     #endif
 

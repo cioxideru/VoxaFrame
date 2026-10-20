@@ -14,9 +14,11 @@ struct MainSidebarView: View {
     @Environment(AuthService.self) private var auth
     @Environment(BrowseViewModel.self) private var browseVM
     @Environment(\.innerTubeAPI) private var api
+    @Environment(SettingsStore.self) private var store
     @State private var searchVM = SearchViewModel()
     @State private var selection: ShellItem? = .section(.home)
     @State private var windowState = MacWindowState()
+    @State private var libraryQueueRequested = false
 
     var body: some View {
         @Bindable var browseVM = browseVM
@@ -25,7 +27,7 @@ struct MainSidebarView: View {
             List(selection: $selection) {
                 ForEach(AppSection.allCases) { section in
                     sidebarRow(.section(section))
-                    if section == .library { sidebarRow(.queue) }
+                    if section == .library, store.settings.showQueueTab { sidebarRow(.queue) }
                 }
             }
             .navigationTitle("VoxaFrame")
@@ -47,8 +49,21 @@ struct MainSidebarView: View {
         .environment(windowState)
         .frame(minWidth: VFMacWindow.minimumSize.width, minHeight: VFMacWindow.minimumSize.height)
         .background { MacWindowAttachment(state: windowState) }
+        // The Queue row goes away when the setting is turned off: keep the user on the queue, as Library › Queue.
+        .onChange(of: store.settings.showQueueTab) { _, shown in
+            guard !shown, selection == .queue else { return }
+            libraryQueueRequested = true
+            selection = .section(.library)
+        }
+        .environment(\.libraryQueueRequest, $libraryQueueRequested)
         .onReceive(NotificationCenter.default.publisher(for: .navigateToSearch)) { _ in
             selection = .section(.search)
+        }
+        // App Intents and `smarttube://section/…` links: HomeView picks the chip (legacy `recommended` is Home).
+        .task {
+            for await _ in NotificationCenter.default.notifications(named: .smartTubeOpenSection) {
+                selection = .section(.home)
+            }
         }
     }
 

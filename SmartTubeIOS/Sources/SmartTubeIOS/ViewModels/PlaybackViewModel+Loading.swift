@@ -129,6 +129,7 @@ extension PlaybackViewModel {
         cancelEarlyWebViewExtraction()
         #endif
         currentVideo = video
+        reuseOfflineSponsorSegments()
         isLoading = false
         isPlaying = false
         videoEnded = false

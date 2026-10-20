@@ -120,4 +120,62 @@ struct SponsorBlockServiceTests {
 
         #expect(!ok)
     }
+
+    @Test("segments: 404 means no segments; failures and wrong shapes throw instead of reading as empty")
+    func segmentsDistinguishNoSegmentsFromFailure() async throws {
+        let service = makeService()
+        StubURLProtocol.responses = ["skipSegments": (404, Data("Not Found".utf8))]
+        #expect(try await service.segments(videoId: "v", categories: [.sponsor]).isEmpty)
+        StubURLProtocol.responses = ["skipSegments": (200, Data("[]".utf8))]
+        #expect(try await service.segments(videoId: "v", categories: [.sponsor]).isEmpty)
+        let failures: [(Int, String)] = [
+            (500, "[]"), (429, "Too Many Requests"), (200, "not json"), (200, "{}"),
+            (200, #"{"error":"rate limited"}"#),
+        ]
+        for (status, body) in failures {
+            StubURLProtocol.responses = ["skipSegments": (status, Data(body.utf8))]
+            await #expect(throws: (any Error).self) {
+                try await service.segments(videoId: "v", categories: [.sponsor])
+            }
+            // The best-effort online path keeps reading these as "none".
+            #expect(await service.fetchSegments(videoId: "v", categories: [.sponsor]).isEmpty)
+        }
+    }
+
+    @Test("segments: malformed records of supported categories throw; unsupported categories are ignored")
+    func malformedRecordsThrow() async throws {
+        let service = makeService()
+        let bad = [
+            "[{}]", #"[{"category":"sponsor"}]"#, #"[{"category":"sponsor","segment":[1]}]"#,
+            #"[{"category":"sponsor","segment":"x"}]"#, #"[{"category":"sponsor","segment":[5,2]}]"#,
+        ]
+        for body in bad {
+            StubURLProtocol.responses = ["skipSegments": (200, Data(body.utf8))]
+            await #expect(throws: (any Error).self) {
+                try await service.segments(videoId: "v", categories: [.sponsor])
+            }
+        }
+        StubURLProtocol.responses = [
+            "skipSegments": (200, Data(#"[{"category":"future_kind","segment":[1,2]}]"#.utf8))
+        ]
+        #expect(try await service.segments(videoId: "v", categories: [.sponsor]).isEmpty)
+        // A point-in-time highlight has start == end and is valid.
+        StubURLProtocol.responses = [
+            "skipSegments": (200, Data(#"[{"category":"poi_highlight","segment":[7,7]}]"#.utf8))
+        ]
+        #expect(try await service.segments(videoId: "v", categories: [.poiHighlight]).count == 1)
+    }
+
+    #if DEBUG
+    @Test("UI-test fixture launches never reach the live SponsorBlock service")
+    func fixtureEnvironmentMakesNoRequest() async {
+        StubURLProtocol.capturedURLs = [:]
+        StubURLProtocol.responses = ["skipSegments": (200, Data("[]".utf8))]
+        setenv("OFFLINE_TEST_MEDIA_URL", "http://127.0.0.1:1", 1)
+        defer { unsetenv("OFFLINE_TEST_MEDIA_URL") }
+        let service = makeService()
+        #expect(await service.fetchSegments(videoId: "v", categories: [.sponsor]).isEmpty)
+        #expect(StubURLProtocol.capturedURLs["skipSegments"] == nil)
+    }
+    #endif
 }

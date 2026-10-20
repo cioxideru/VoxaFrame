@@ -19,6 +19,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
+- [PLAN-0030: Resume worktrees and release 5.18](active/worktree-release-5-18.md) — finish PLAN-0029 branches, validate and publish the next source release.
+
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.

@@ -145,7 +145,14 @@ extension VideoCardView {
 
     // MARK: - Body
 
-    @ViewBuilder public var body: some View {
+    public var body: some View {
+        // The card's identity for UI automation, set once for every screen that shows cards.
+        cardBody
+            .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
+            .accessibilityValue(video.isShort ? "short" : "")
+    }
+
+    @ViewBuilder private var cardBody: some View {
         #if os(tvOS)
         // Modifier order is critical on tvOS:
         //
@@ -214,8 +221,7 @@ extension VideoCardView {
         #if os(macOS)
         card.onHover { isHovering = $0 }
         #else
-        // A container, so the caller's `video.card.<id>` identifier and value land on the card once instead of
-        // overriding the More button's own identifier. The Mac shows More only on hover, hidden from accessibility.
+        // A container for the summary and the More button. The Mac shows More only on hover, hidden from accessibility.
         card.accessibilityElement(children: .contain)
         #endif
         #endif

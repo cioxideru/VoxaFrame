@@ -260,25 +260,6 @@ struct BrowseViewModelTests {
         #expect(!vm.isAuthRequired)
     }
 
-    @Test("Signed-in Recommended uses account Shorts without a duplicate subscription fetch")
-    func recommendedAccountShorts() async {
-        let api = MockInnerTubeAPI()
-        var homeShort = makeVideo("home-short")
-        homeShort.isShort = true
-        var subscriptionShort = makeVideo("subscription-short")
-        subscriptionShort.isShort = true
-        api.homeResult = VideoGroup(videos: [homeShort])
-        api.subscriptionsResult = VideoGroup(videos: [subscriptionShort, homeShort])
-        api.shortsResult = VideoGroup(videos: [makeVideo("global-search")])
-        let vm = BrowseViewModel(api: api)
-        await vm.updateAuthToken("account", reloadOnSignIn: false)
-        vm.select(section: BrowseSection(id: "recommended", title: "Recommended", type: .recommended))
-        await waitForTasks { !vm.isLoading }
-        #expect(vm.recommendedShortsVideos.map(\.id) == ["home-short", "subscription-short"])
-        #expect(api.calls.filter { $0.method == "fetchSubscriptions" }.count == 1)
-        #expect(!api.calls.contains { $0.method == "fetchShorts" })
-    }
-
     @Test("loadContent for .shorts calls fetchShorts")
     func loadShortsCallsFetch() async {
         let mock = MockInnerTubeAPI()

@@ -24,6 +24,8 @@ struct OfflineVideoDetail: View {
     @State private var selection = OfflineDetailPresentation.Selection()
     @State private var error: String?
     @State private var refreshing = false
+    @State private var sponsorUpdating = false
+    @State private var sponsorFailed = false
     @Environment(\.innerTubeAPI) private var api
     #if os(iOS)
     @Environment(PlayerRouter.self) private var router
@@ -88,6 +90,7 @@ struct OfflineVideoDetail: View {
                 #endif
                 header(entry)
                 watchWith(entry)
+                sponsorBlock(entry)
                 downloadMore(entry)
             }
             if let error {
@@ -117,7 +120,7 @@ struct OfflineVideoDetail: View {
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     if let bytes = video.track.estimatedBytes, bytes > 0 {
-                        Text("Approx. \(bytes.formatted(.byteCount(style: .file)))", bundle: .module)
+                        Text("Approx. \(OfflinePresentation.bytesText(bytes))", bundle: .module)
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     Button {
@@ -216,6 +219,44 @@ struct OfflineVideoDetail: View {
 }
 
 extension OfflineVideoDetail {
+    private func sponsorBlock(_ entry: OfflineEntry) -> some View {
+        Section {
+            Button {
+                sponsorUpdating = true
+                Task {
+                    sponsorFailed = !(await coordinator.refreshSponsorSegments(videoID: entry.id))
+                    sponsorUpdating = false
+                }
+            } label: {
+                HStack(spacing: VFSpace.s4) {
+                    if sponsorUpdating { ProgressView().accessibilityHidden(true) }
+                    Label {
+                        Text("Update SponsorBlock", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.updateSponsorBlock)
+                    }
+                }
+            }
+            .disabled(sponsorUpdating || isLocked || !coordinator.sponsor.isEnabled() || entry.assets.isEmpty)
+            .accessibilityIdentifier(AccessibilityID.offlineUpdateSponsorBlock)
+            Group {
+                if sponsorFailed {
+                    Text("Could not update. Check your connection and try again.", bundle: .module)
+                } else if let sponsor = entry.sponsor {
+                    Text(
+                        "\(sponsor.segments.count) segments · updated \(sponsor.fetchedAt.formatted(date: .abbreviated, time: .omitted))",
+                        bundle: .module)
+                } else {
+                    Text("No SponsorBlock segments saved yet.", bundle: .module)
+                }
+            }
+            .font(.footnote).foregroundStyle(.secondary)
+            .accessibilityIdentifier(AccessibilityID.offlineSponsorBlockStatus)
+        } header: {
+            Text("SponsorBlock", bundle: .module)
+        }
+    }
+
     @ViewBuilder private func downloadMore(_ entry: OfflineEntry) -> some View {
         let catalog = OfflineDetailPresentation.catalog(
             available, saved: entry.assets, targetLanguages: YandexVOTClient.targetLanguages.sorted(),

@@ -80,10 +80,15 @@ struct OfflineDownloadChunk {
     }
 
     static func progress(request: URLRequest?, written: Int64, expected: Int64) -> Double? {
+        bytes(request: request, written: written, expected: expected).map { Double($0.done) / Double($0.total) }
+    }
+
+    /// Bytes fetched of the whole file, counting earlier chunks, and the whole file's size.
+    static func bytes(request: URLRequest?, written: Int64, expected: Int64) -> OfflineByteCounts? {
         guard let request, let range = request.value(forHTTPHeaderField: "Range"), range.hasPrefix("bytes="),
             let start = range.dropFirst("bytes=".count).split(separator: "-").first.flatMap({ Int64($0) }),
             let total = totalBytes(in: request), start >= 0, written >= 0, written <= total - start
-        else { return expected > 0 ? Double(written) / Double(expected) : nil }
-        return Double(start + written) / Double(total)
+        else { return expected > 0 ? OfflineByteCounts(done: written, total: expected) : nil }
+        return OfflineByteCounts(done: start + written, total: total)
     }
 }

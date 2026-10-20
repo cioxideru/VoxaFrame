@@ -36,6 +36,15 @@ public struct OfflineVideoSize: Codable, Hashable, Sendable {
         self.height = height
     }
 }
+/// Bytes the transport has fetched of a download and how many it expects, when it knows.
+public struct OfflineByteCounts: Codable, Hashable, Sendable {
+    public let done: Int64
+    public let total: Int64
+    public init(done: Int64, total: Int64) {
+        self.done = done
+        self.total = total
+    }
+}
 public struct OfflineAsset: Codable, Sendable, Identifiable {
     public var id: String { track.id }
     public let track: OfflineTrack
@@ -45,10 +54,32 @@ public struct OfflineAsset: Codable, Sendable, Identifiable {
     public var systemNoFollow: Bool?
     public var attempt: UUID?
 }
+/// SponsorBlock segments saved with a video. All supported categories are kept; the user's
+/// current category settings are applied at playback, so changing them needs no refetch.
+public struct OfflineSponsorSegments: Codable, Sendable, Equatable {
+    public var segments: [SponsorSegment]
+    public var fetchedAt: Date
+    public init(segments: [SponsorSegment], fetchedAt: Date) {
+        self.segments = segments
+        self.fetchedAt = fetchedAt
+    }
+    /// Segments of the enabled categories that are at least `minDuration` seconds long.
+    public func active(categories: Set<SponsorSegment.Category>, minDuration: Double) -> [SponsorSegment] {
+        segments.filter { categories.contains($0.category) && ($0.end - $0.start) >= minDuration }
+    }
+    /// Automatic refresh runs at most once per day.
+    public static let refreshInterval: TimeInterval = 24 * 60 * 60
+    public static func isRefreshDue(lastRefresh: Date?, now: Date) -> Bool {
+        guard let lastRefresh else { return true }
+        return now.timeIntervalSince(lastRefresh) >= refreshInterval || lastRefresh > now
+    }
+}
 public struct OfflineEntry: Codable, Sendable, Identifiable {
     public var id: String { video.id }
     public var video: Video
     public var assets: [OfflineAsset] = []
+    /// Absent in manifests written before offline SponsorBlock support.
+    public var sponsor: OfflineSponsorSegments?
 }
 public struct OfflineJob: Codable, Sendable, Identifiable {
     public enum State: String, Codable, Sendable { case queued, resolving, downloading, completed, failed, cancelled }
@@ -59,6 +90,7 @@ public struct OfflineJob: Codable, Sendable, Identifiable {
     public var track: OfflineTrack
     public var state: State
     public var progress: Double
+    public var bytes: OfflineByteCounts?
     public var error: String?
     public var nextResolutionAt: Date?
     public var resolutionAttempts: Int = 0
@@ -74,6 +106,8 @@ public struct OfflineSnapshot: Codable, Sendable {
     public var jobs: [OfflineJob] = []
     public var notifiedBatches: Set<UUID> = []
     public var pendingRemovals: [OfflineRemoval]?
+    /// When the automatic SponsorBlock refresh last completed; nil in manifests written before it existed.
+    public var sponsorRefreshedAt: Date?
     public init() {}
 }
 public struct OfflineTransferReceipt: Codable, Sendable {
@@ -155,7 +189,7 @@ public actor OfflineLibraryStore {
         }
         if !next.entries.contains(where: { $0.id == video.id }) {
             let metadata = Video(
-                id: video.id, title: video.title, channelTitle: video.channelTitle,
+                id: video.id, title: video.title, channelTitle: video.channelTitle, channelId: video.channelId,
                 thumbnailURL: video.thumbnailURL, duration: video.duration)
             next.entries.append(OfflineEntry(video: metadata))
         }
@@ -175,9 +209,23 @@ public actor OfflineLibraryStore {
         }
         return try commit(next)
     }
+    /// No-op when the video was removed meanwhile.
+    @discardableResult public func setSponsorSegments(
+        videoID: String, segments: [SponsorSegment], fetchedAt: Date
+    ) throws -> OfflineSnapshot {
+        var next = try snapshot()
+        guard let index = next.entries.firstIndex(where: { $0.id == videoID }) else { return next }
+        next.entries[index].sponsor = OfflineSponsorSegments(segments: segments, fetchedAt: fetchedAt)
+        return try commit(next)
+    }
+    @discardableResult public func markSponsorRefresh(at date: Date) throws -> OfflineSnapshot {
+        var next = try snapshot()
+        next.sponsorRefreshedAt = date
+        return try commit(next)
+    }
     @discardableResult public func update(
         attempt: UUID, state: OfflineJob.State, progress: Double? = nil,
-        track: OfflineTrack? = nil, error: String? = nil
+        track: OfflineTrack? = nil, error: String? = nil, bytes: OfflineByteCounts? = nil
     ) throws -> OfflineSnapshot {
         var next = try snapshot()
         guard let index = next.jobs.firstIndex(where: { $0.attempt == attempt }),
@@ -186,6 +234,7 @@ public actor OfflineLibraryStore {
         next.jobs[index].state = state
         if let progress { next.jobs[index].progress = min(1, max(0, progress)) }
         if let track { next.jobs[index].track = track }
+        if let bytes { next.jobs[index].bytes = bytes }
         next.jobs[index].error = error
         return try commit(next)
     }
@@ -198,6 +247,7 @@ public actor OfflineLibraryStore {
         job.attempt = UUID()
         job.state = .queued
         job.progress = 0
+        job.bytes = nil
         job.error = nil
         job.nextResolutionAt = nil
         job.resolutionAttempts = 0
@@ -295,6 +345,7 @@ public actor OfflineLibraryStore {
                 next.jobs[index].attempt = UUID()
                 next.jobs[index].state = .queued
                 next.jobs[index].progress = 0
+                next.jobs[index].bytes = nil
             }
         }
         return try commit(next)

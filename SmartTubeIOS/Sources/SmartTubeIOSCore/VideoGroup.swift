@@ -53,6 +53,8 @@ public struct BrowseSection: Identifiable, Hashable, Sendable {
 
     public enum SectionType: String, CaseIterable, Codable, Sendable {
         case home = "home"
+        /// Retired chip: Home is the recommendations feed. Kept so stored settings and
+        /// saved shortcuts that name it still decode; they map to Home.
         case recommended = "recommended"
         case subscriptions = "subscriptions"
         case history = "history"
@@ -113,7 +115,6 @@ public struct BrowseSection: Identifiable, Hashable, Sendable {
     /// All known sections including extended categories (music, gaming, etc.).
     public static let allSections: [BrowseSection] =
         defaultSections + [
-            BrowseSection(type: .recommended),
             BrowseSection(type: .shorts),
             BrowseSection(type: .music),
             BrowseSection(type: .gaming),

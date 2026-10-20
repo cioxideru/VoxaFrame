@@ -26,7 +26,7 @@ struct HideShortsFilterTests {
         videos.filter { !hideShorts || !$0.isShort }
     }
 
-    // MARK: - hideShorts == false (default)
+    // MARK: - hideShorts == false
 
     @Test("When hideShorts is false, all videos are returned including Shorts")
     func hideShortsDisabledPassesAll() {
@@ -84,10 +84,10 @@ struct HideShortsFilterTests {
 
     // MARK: - AppSettings default
 
-    @Test("AppSettings default has hideShorts == false")
-    func appSettingsDefaultHideShortsFalse() {
+    @Test("AppSettings default has hideShorts == true")
+    func appSettingsDefaultHideShortsTrue() {
         let settings = AppSettings()
-        #expect(settings.hideShorts == false)
+        #expect(settings.hideShorts == true)
     }
 
     // MARK: - PlaylistView (task #46)

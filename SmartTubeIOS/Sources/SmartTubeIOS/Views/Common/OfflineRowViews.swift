@@ -233,3 +233,92 @@ extension OfflinePresentation.Part {
         }
     }
 }
+
+extension OfflineStatusLabel {
+    func detail(_ text: String?) -> Self {
+        var copy = self
+        copy.detail = text
+        return copy
+    }
+}
+
+/// Total size of the saved offline files, for the toolbar. Hidden until something is saved.
+struct OfflineTotalsLabel: View {
+    let entries: [OfflineEntry]
+    let jobs: [OfflineJob]
+    let sizes: OfflineDiskSizes
+
+    var body: some View {
+        let saved = OfflineSizes.totals(entries: entries, jobs: jobs, sizes: sizes).onDisk
+        if saved > 0 {
+            let text = OfflinePresentation.bytesText(saved)
+            Text(text)
+                .font(.footnote.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .accessibilityLabel(Text("Offline storage used: \(text)", bundle: .module))
+                .accessibilityIdentifier(AccessibilityID.offlineTotals)
+        }
+    }
+}
+
+/// Video title of a Downloads section with the sizes of its saved files below; at accessibility sizes the sizes
+/// wrap without a line limit and the header grows.
+struct OfflineGroupHeader: View {
+    let title: String
+    let sizes: String?
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: VFSpace.s4) {
+            Text(title)
+            if let sizes {
+                Text(sizes).font(.footnote).foregroundStyle(.secondary)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+extension View {
+    /// Keeps `sizes` current: measured again whenever the library changes, and once a second while a download runs.
+    func offlineSizes(
+        _ sizes: Binding<OfflineDiskSizes>, store: OfflineLibraryStore, snapshot: OfflineSnapshot
+    )
+        -> some View
+    {
+        modifier(
+            OfflineSizesModifier(
+                sizes: sizes, store: store, revision: snapshot.revision,
+                isActive: snapshot.jobs.contains(where: OfflineSizes.isActive)))
+    }
+}
+
+private struct OfflineSizesModifier: ViewModifier {
+    private struct Trigger: Hashable {
+        let revision: UInt64
+        let isActive: Bool
+    }
+    @Binding var sizes: OfflineDiskSizes
+    let revision: UInt64
+    let isActive: Bool
+    @State private var scanner: OfflineSizeScanner
+
+    init(sizes: Binding<OfflineDiskSizes>, store: OfflineLibraryStore, revision: UInt64, isActive: Bool) {
+        _sizes = sizes
+        _scanner = State(initialValue: OfflineSizeScanner(store: store))
+        self.revision = revision
+        self.isActive = isActive
+    }
+
+    func body(content: Content) -> some View {
+        content.task(id: Trigger(revision: revision, isActive: isActive)) {
+            while !Task.isCancelled {
+                if let read = try? await scanner.sizes(), !Task.isCancelled, read != sizes { sizes = read }
+                guard isActive else { return }
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+}

@@ -446,12 +446,20 @@ extension SettingsView {
     }
 
     var homeSectionsSection: some View {
-        Section {
+        @Bindable var store = store
+        return Section {
             NavigationLink("Visible Sections") {
                 SectionsSettingsView()
                     .environment(store)
             }
             .accessibilityIdentifier(AccessibilityID.settingsVisibleSectionsLink)
+            #if !os(tvOS)
+            // Only a regular-width iPad window and macOS have a Queue sidebar item; Library › Queue always exists.
+            Toggle(isOn: $store.settings.showQueueTab) {
+                Text("Show Queue in sidebar", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.settingsShowQueueTabToggle)
+            #endif
         } header: {
             Text("Home Sections", bundle: .module)
         }
@@ -500,6 +508,12 @@ extension SettingsView {
                     Text("5s").tag(5.0)
                     Text("10s").tag(10.0)
                 }
+
+                Toggle(isOn: $store.settings.offlineSponsorBlockAutoUpdate) {
+                    Text("Update SponsorBlock for offline videos automatically", bundle: .module)
+                    Text("Refreshes saved videos once a day while the app is open.", bundle: .module)
+                }
+                .accessibilityIdentifier(AccessibilityID.settingsOfflineSponsorBlockToggle)
 
                 // Excluded channels
                 NavigationLink("Excluded Channels (\(store.settings.sponsorBlockExcludedChannels.count))") {

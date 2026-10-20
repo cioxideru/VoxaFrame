@@ -259,6 +259,53 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertEqual(count, saved ? 1 : 0, title.label)
     }
 
+    func testSponsorBlockSegmentsAreStoredAndUpdatedManually() {
+        let id = "offline-ui-sponsor-" + UUID().uuidString
+        launch(videoID: id, sponsorBlock: true)
+        saveFromPlayer()
+        openEntry(id)
+        waitForSaved("fixture-360")
+        let status = app.staticTexts[AccessibilityID.offlineSponsorBlockStatus].firstMatch
+        let update = app.buttons[AccessibilityID.offlineUpdateSponsorBlock].firstMatch
+        reveal(update)
+        XCTAssertTrue(update.waitForExistence(timeout: 5))
+        // The download stored the segments without any action.
+        let stored = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label BEGINSWITH '1 segments'"), object: status)
+        XCTAssertEqual(XCTWaiter().wait(for: [stored], timeout: 20), .completed, status.label)
+        update.tap()
+        // The stub answers with one more segment per request, so only a fresh response changes the label.
+        let refreshed = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label BEGINSWITH '2 segments'"), object: status)
+        XCTAssertEqual(XCTWaiter().wait(for: [refreshed], timeout: 15), .completed, status.label)
+        attachScreenshot("Saved video SponsorBlock update")
+        returnToLibrary()
+        // Overflow menu items drop their identifier, so the label (outside other offline controls) is the fallback.
+        let more = app.buttons["More"].firstMatch
+        if more.waitForExistence(timeout: 5) { more.tap() }
+        let bulk = app.buttons.matching(
+            NSPredicate(
+                format:
+                    "identifier == %@ OR (label BEGINSWITH 'Update SponsorBlock' AND NOT (identifier BEGINSWITH 'offline.'))",
+                AccessibilityID.offlineUpdateSponsorBlockAll)
+        ).firstMatch
+        XCTAssertTrue(bulk.waitForExistence(timeout: 5))
+        attachScreenshot("Library SponsorBlock update action")
+        bulk.tap()
+        let result = app.staticTexts.matching(
+            NSPredicate(format: "label BEGINSWITH 'Updated ' AND label ENDSWITH 'failed 0.'")
+        ).firstMatch
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        attachScreenshot("Library SponsorBlock update result")
+    }
+
+    private func attachScreenshot(_ name: String) {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     func testDeleteAllConfirmsAndClearsBothPagesAfterRelaunch() {
         let first = "offline-ui-bulk-hls-" + UUID().uuidString
         launch(videoID: first)
@@ -278,6 +325,9 @@ final class DownloadsPlaybackUITests: XCTestCase {
         waitForSaved("vot-ru")
         returnToLibrary()
 
+        let storageUsed = app.staticTexts[AccessibilityID.offlineTotals].firstMatch
+        XCTAssertTrue(storageUsed.waitForExistence(timeout: 10))
+        XCTAssertTrue(storageUsed.label.hasPrefix("Offline storage used:"), storageUsed.label)
         let remove = app.buttons[AccessibilityID.offlineDeleteAll]
         XCTAssertTrue(remove.waitForExistence(timeout: 5))
         remove.tap()
@@ -305,6 +355,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         let empty = app.staticTexts[
             "Choose Offline watch from a video's menu. Accepted downloads continue when you leave this page."]
         XCTAssertTrue(empty.waitForExistence(timeout: 15))
+        XCTAssertTrue(storageUsed.waitForNonExistence(timeout: 5))
         app.terminate()
         launch(videoID: nil)
         UITestHelpers.tapTab(named: "Offline videos", in: app)
@@ -319,12 +370,14 @@ final class DownloadsPlaybackUITests: XCTestCase {
 }
 
 extension DownloadsPlaybackUITests {
-    private func launch(videoID: String?) {
+    private func launch(videoID: String?, sponsorBlock: Bool = false) {
         app = XCUIApplication()
         app.launchArguments = [
-            "--uitesting", "--uitesting-disable-sponsorblock", "--uitesting-sign-out",
+            "--uitesting", "--uitesting-sign-out",
             "--uitesting-show-controls", "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
         ]
+        // Earlier launches may have saved SponsorBlock as off; start this one from defaults.
+        app.launchArguments.append(sponsorBlock ? "--uitesting-reset-settings" : "--uitesting-disable-sponsorblock")
         if let videoID { app.launchArguments.append("--uitesting-deeplink-video=\(videoID)") }
         app.launchEnvironment["SHORTS_TEST_MEDIA_URL"] = mediaURL
         app.launchEnvironment["OFFLINE_TEST_MEDIA_URL"] = mediaURL

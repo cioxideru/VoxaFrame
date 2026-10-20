@@ -152,7 +152,6 @@ public struct ChannelView: View {
                         VideoCardView(video: video, compact: true)
                             .padding(.horizontal)
                             .padding(.vertical, 6)
-                            .accessibilityIdentifier("video.card.\(video.id)")
                             .onTapGesture {
                                 #if os(iOS)
                                 playerRouter.open(video: video, api: api)
@@ -176,7 +175,6 @@ public struct ChannelView: View {
                             ForEach(rowVideos) { video in
                                 VideoCardView(video: video, compact: false, onSelect: { selectedVideo = video })
                                     .frame(maxWidth: .infinity)
-                                    .accessibilityIdentifier("video.card.\(video.id)")
                             }
                             let remainder = columnCount - rowVideos.count
                             if remainder > 0 {
@@ -198,7 +196,6 @@ public struct ChannelView: View {
                 ) {
                     ForEach(videos) { video in
                         VideoCardView(video: video, compact: false)
-                            .accessibilityIdentifier("video.card.\(video.id)")
                             .onTapGesture {
                                 #if os(iOS)
                                 playerRouter.open(video: video, api: api)

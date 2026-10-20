@@ -6,8 +6,9 @@ private let homeLog = ViewModelLogger(category: "Home")
 
 // MARK: - HomeViewModel
 //
-// Fetches Subscriptions and Recommended shelves in parallel
-// to populate the Home tab's multi-section feed.
+// Home shows only YouTube's own recommendations (the TV home feed). The subscriptions
+// shelf is still loaded, but only as a source of account Shorts for the Shorts rows;
+// its regular videos never enter the Home feed (the Subscriptions chip shows them).
 
 @MainActor
 @Observable
@@ -44,9 +45,8 @@ public final class HomeViewModel {
     private var isUpdatingAuth = false
     /// Timestamp of the last successful load. Used for staleness checks.
     public private(set) var loadedAt: Date? = nil
-    /// Frozen snapshot of the interleaved home feed. Updated once both sections
-    /// finish loading (avoiding mid-load rearrangement). Appended to during
-    /// pagination without ever reordering existing items.
+    /// The recommendations feed shown on Home. Replaced once a load completes and
+    /// appended to during pagination without ever reordering existing items.
     public private(set) var mergedVideos: [Video] = []
     /// Bumped whenever `mergedVideos` is replaced rather than appended to, so the view can
     /// reset layout state tied to positions in the old feed.
@@ -60,81 +60,31 @@ public final class HomeViewModel {
             id: BrowseSection.SectionType.subscriptions.rawValue, title: "Subscriptions", type: .subscriptions),
     ]
 
-    /// Number of recommended videos inserted between each subscription video
-    /// in the interleaved home feed.
-    private static let interleaveRatio = 4
-
-    /// `true` while either the recommended or subscriptions section is still on
-    /// its initial load (no videos yet).  Used by the view to show a spinner.
+    /// `true` while either shelf is still on its initial load (no videos yet).
+    /// Used by the view to show a spinner.
     public var isLoadingAny: Bool {
         sections.contains { $0.isLoading }
     }
 
-    /// Rebuilds `mergedVideos` from both sections' current video lists.
-    /// Called once after a full load completes so mid-load arrivals never
-    /// rearrange already-rendered cards.  Not called during pagination —
-    /// `loadMore` appends to `mergedVideos` directly to keep positions stable.
+    /// The recommendations shelf, which alone feeds `mergedVideos` and its pagination.
+    public var recommendations: SectionState? { sections.first { $0.section.type == .home } }
+
+    /// Rebuilds `mergedVideos` from the recommendations shelf once a load completes, so
+    /// mid-load arrivals never rearrange rendered cards. Pagination appends instead.
     private func rebuildMergedVideos() {
         feedGeneration += 1
-        let recState = sections.first { $0.section.type == .home }
-        let subState = sections.first { $0.section.type == .subscriptions }
-        let recs = recState?.videos ?? []
-        let subs = subState?.videos ?? []
-
-        guard !subs.isEmpty else {
-            var seen = Set<String>()
-            let deduped = recs.filter { seen.insert($0.id).inserted }
-            if deduped.count != recs.count {
-                homeLog.notice(
-                    "rebuildMergedVideos: recs-only dedup removed \(recs.count - deduped.count) duplicate(s) (raw=\(recs.count))"
-                )
-            }
-            mergedVideos = deduped
-            return
-        }
-        guard !recs.isEmpty else {
-            var seen = Set<String>()
-            let deduped = subs.filter { seen.insert($0.id).inserted }
-            if deduped.count != subs.count {
-                homeLog.notice(
-                    "rebuildMergedVideos: subs-only dedup removed \(subs.count - deduped.count) duplicate(s) (raw=\(subs.count))"
-                )
-            }
-            mergedVideos = deduped
-            return
-        }
-
-        let recIds = Set(recs.map(\.id))
-        let uniqueSubs = subs.filter { !recIds.contains($0.id) }
-
-        var result: [Video] = []
-        result.reserveCapacity(recs.count + uniqueSubs.count)
-
-        var subIndex = 0
-        for (i, rec) in recs.enumerated() {
-            result.append(rec)
-            let slot = i + 1
-            if slot % Self.interleaveRatio == 0, subIndex < uniqueSubs.count {
-                result.append(uniqueSubs[subIndex])
-                subIndex += 1
-            }
-        }
-        if subIndex < uniqueSubs.count {
-            result.append(contentsOf: uniqueSubs[subIndex...])
-        }
-        // Final safety-net dedup: prevents any remaining duplicate IDs from
-        // reaching ForEach, which would cause SwiftUI to render blank cells.
+        let recs = recommendations?.videos ?? []
         var seen = Set<String>()
-        let deduped = result.filter { seen.insert($0.id).inserted }
-        if deduped.count != result.count {
+        // Duplicate IDs would make SwiftUI's ForEach render blank cells.
+        mergedVideos = recs.filter { seen.insert($0.id).inserted }
+        if mergedVideos.count != recs.count {
             homeLog.notice(
-                "rebuildMergedVideos: final dedup removed \(result.count - deduped.count) duplicate(s) (subs+recs raw=\(result.count))"
+                "rebuildMergedVideos: dedup removed \(recs.count - mergedVideos.count) duplicate(s) (raw=\(recs.count))"
             )
         }
-        mergedVideos = deduped
     }
 
-    /// Non-Short videos from the interleaved home feed.
+    /// Non-Short videos from the recommendations feed.
     /// Used by `homeShelves` to populate the main grid (Shorts are shown separately).
     public var homeRegularVideos: [Video] { mergedVideos.filter { !$0.isShort } }
 
@@ -230,6 +180,7 @@ public final class HomeViewModel {
         isLoadingMoreShorts = false
         requestedShortsCount = 0
         isRefreshing = true
+        recommendationsStalled = false
         if !keepingContent {
             shortsVideos = []
             mergedVideos = []
@@ -266,19 +217,16 @@ public final class HomeViewModel {
                         sections[idx].nextPageToken = token
                         sections[idx].isLoading = false
                         sections[idx].hasFailed = videos.isEmpty
-                        // Show the first-arrived section immediately as a flat list so
-                        // the user sees content right away.  We do NOT interleave here —
-                        // that avoids re-ordering cards when the second section arrives.
-                        if mergedVideos.isEmpty, !videos.isEmpty {
+                        // Show recommendations as soon as they arrive, before the
+                        // subscriptions shelf (Shorts only) finishes.
+                        if sections[idx].section.type == .home, mergedVideos.isEmpty, !videos.isEmpty {
                             mergedVideos = videos
                         }
                     }
                 }
             }
             guard isCurrentLoad(generation) else { return }
-            // Both sections are now loaded. Rebuild the full interleaved list once,
-            // replacing the partial first-arrived list. This is a single atomic swap
-            // rather than incremental insertions, so existing card positions don't jump.
+            // Both shelves are loaded: one atomic swap to the deduplicated recommendations.
             rebuildMergedVideos()
             let (fetchedShorts, nextToken) = await fetchedShortsResult
             guard isCurrentLoad(generation) else { return }
@@ -292,6 +240,8 @@ public final class HomeViewModel {
             loadedAt = Date()
             onHomeLoaded?(mergedVideos)
             resumeShortsDemand()
+            // No regular card means no scroll trigger: continue the recommendations right away.
+            if homeRegularVideos.isEmpty { loadMoreMerged() }
             let merged = self.mergedVideos
             let mergedShorts = merged.filter { $0.isShort }.count
             homeLog.notice(
@@ -313,7 +263,11 @@ public final class HomeViewModel {
         }
         var authenticated = (signedIn ?? true) && token != nil
         #if DEBUG
-        if signedIn == true, HomePaginationUITestFixture.isEnabled { authenticated = true }
+        if signedIn == true,
+            HomePaginationUITestFixture.isEnabled || !HomePaginationUITestFixture.injectedRecommendationIDs.isEmpty
+        {
+            authenticated = true
+        }
         #endif
         let changedSession = self.sessionID != sessionID
         let needsLoad = authenticated && (!hasAuthToken || changedSession || (loadedAt == nil && !isRefreshing))
@@ -325,6 +279,7 @@ public final class HomeViewModel {
             shortsPreloadTask?.cancel()
             sections = Self.shelfSections.map { SectionState(section: $0, isLoading: false) }
             mergedVideos = []
+            recommendationsStalled = false
             shortsVideos = []
             shortsNextPageToken = nil
             requestedShortsCount = 0
@@ -363,43 +318,64 @@ public final class HomeViewModel {
         let type = sections[idx].section.type
         let generation = loadGeneration
         return Task {
-            guard isCurrentLoad(generation) else { return }
-            let (newVideos, nextToken) = await HomeViewModel.fetchMoreVideos(type: type, token: token, api: api)
-            guard isCurrentLoad(generation) else { return }
-            if let idx = sections.firstIndex(where: { $0.id == sectionId }) {
+            var token = token
+            var usedTokens: Set<String> = []
+            var addedVideos = false
+            var addedRegularVideo = false
+            // A recommendations page that adds no new regular video (empty, duplicates, Shorts only) shows no new
+            // card to trigger the next page, so continue here, a bounded number of times per request.
+            for _ in 0..<Self.maxEmptyPagesPerRequest {
+                guard isCurrentLoad(generation) else { return }
+                usedTokens.insert(token)
+                let (newVideos, fetchedToken) = await HomeViewModel.fetchMoreVideos(type: type, token: token, api: api)
+                guard isCurrentLoad(generation), let idx = sections.firstIndex(where: { $0.id == sectionId })
+                else { return }
+                // A token already sent would repeat the same pages forever.
+                let nextToken = fetchedToken.flatMap { usedTokens.contains($0) ? nil : $0 }
                 // Use a growing set so IDs that appear multiple times within
                 // newVideos itself (same page returning the same video twice)
                 // are also caught — not just duplicates against existing videos.
                 var seenIds = Set(sections[idx].videos.map(\.id))
                 let deduplicated = newVideos.filter { seenIds.insert($0.id).inserted }
                 sections[idx].videos.append(contentsOf: deduplicated)
-                // NOTE: Do NOT sort after appending. The YouTube subscription feed API
-                // returns pages in reverse-chronological order — page N+1 videos are
-                // always older than page N. Sorting the entire array after each append
-                // reorders existing items in SwiftUI's ForEach / mergedVideos interleave,
-                // which breaks the LazyVGrid scroll position (content shifts under the
-                // user's offset, making previously-seen cards reappear and the list
-                // appear to jump back).
-                //
-                // Stable-append to mergedVideos: only add videos not already present,
-                // preserving all existing card positions.
-                let existingMergedIds = Set(mergedVideos.map(\.id))
-                let newForMerged = deduplicated.filter { !existingMergedIds.contains($0.id) }
-                mergedVideos.append(contentsOf: newForMerged)
                 sections[idx].nextPageToken = nextToken
-                sections[idx].isLoadingMore = false
-                resumeShortsDemand()
+                // Do NOT sort after appending: reordering existing items shifts the
+                // LazyVGrid under the user's scroll offset.
+                // Only recommendations join the Home feed; subscription pages feed Shorts.
+                guard type == .home else { break }
+                let existingMergedIds = Set(mergedVideos.map(\.id))
+                let added = deduplicated.filter { !existingMergedIds.contains($0.id) }
+                mergedVideos.append(contentsOf: added)
+                addedVideos = addedVideos || !added.isEmpty
+                addedRegularVideo = added.contains { !$0.isShort }
+                guard let nextToken, !addedRegularVideo else { break }
+                token = nextToken
             }
+            if let idx = sections.firstIndex(where: { $0.id == sectionId }) {
+                sections[idx].isLoadingMore = false
+                if type == .home {
+                    // The scan limit ended with no new card to trigger the next page: the view offers More.
+                    recommendationsStalled = !addedRegularVideo && sections[idx].nextPageToken != nil
+                }
+            }
+            // Automatic paging can turn an empty or Shorts-only first page into the real feed.
+            if type == .home, addedVideos { onHomeLoaded?(mergedVideos) }
+            resumeShortsDemand()
         }
     }
 
-    /// Called by the merged home feed when the user scrolls near the bottom.
-    /// Pages both the recommended and subscriptions sections simultaneously so
-    /// the interleaved list keeps growing evenly.
-    public func loadMoreMerged() {
-        for state in sections where state.section.type == .home || state.section.type == .subscriptions {
-            loadMore(sectionId: state.id)
-        }
+    /// Recommendation pages fetched in a row while each adds no new regular video.
+    static let maxEmptyPagesPerRequest = 3
+
+    /// `true` when the last recommendations request reached `maxEmptyPagesPerRequest` without a new regular video
+    /// while a continuation remains: no new card appears to trigger the next page, so the view shows More.
+    public private(set) var recommendationsStalled = false
+
+    /// Called by the Home feed when the user scrolls near the bottom: continues the
+    /// recommendations feed.
+    @discardableResult
+    public func loadMoreMerged() -> Task<Void, Never>? {
+        recommendations.flatMap { loadMore(sectionId: $0.id) }
     }
 
     /// Pages Shorts (search continuation, then subscriptions) until `homeShortsVideos` holds
@@ -452,7 +428,8 @@ public final class HomeViewModel {
     /// if available, falling back to one subscriptions-continuation page if the
     /// search page is exhausted or returned nothing new. Search results land in
     /// `shortsVideos`; subs results land in `sections[subscriptions].videos` — both
-    /// are surfaced together via `homeShortsVideos`.
+    /// are surfaced together via `homeShortsVideos`. Regular subscription videos never
+    /// reach the Home feed.
     /// Returns `true` if videos were appended or a continuation advanced.
     private func fetchOneShortsPage(generation: Int) async -> Bool {
         guard isCurrentLoad(generation) else { return false }
@@ -495,10 +472,6 @@ public final class HomeViewModel {
             let newVideos = more.0.filter { seenIDs.insert($0.id).inserted }
             sections[idx].videos.append(contentsOf: newVideos)
             sections[idx].nextPageToken = newVideos.isEmpty && more.1 == token ? nil : more.1
-            // `loadMore` will not fetch this page again, so its regular videos join the feed
-            // here instead of being lost.
-            let mergedIDs = Set(mergedVideos.map(\.id))
-            mergedVideos.append(contentsOf: newVideos.filter { !mergedIDs.contains($0.id) })
             let newShorts = newVideos.filter { $0.isShort }.count
             homeLog.notice(
                 "fetchOneShortsPage subs: added \(newVideos.count) (\(newShorts) shorts) hasMore=\(more.1 != nil)")
@@ -571,12 +544,7 @@ extension HomeViewModel {
                 homeLog.notice(
                     "fetchVideos home: total=\(deduped.count) shorts=\(fetchedShortsCount) regular=\(deduped.count - fetchedShortsCount)"
                 )
-                if deduped.isEmpty {
-                    // Home feed empty (no watch history / feedNudgeRenderer) — fall back to popular
-                    let popular = try await api.search(query: "popular")
-                    // Generic regular-video fallback must not leak discovery Shorts into account rows.
-                    return (popular.videos.filter { !$0.isShort }, popular.nextPageToken)
-                }
+                // An empty account Home stays empty: no generic fallback replaces the recommendations.
                 return (initialShelfVideos(deduped), token)
             default:
                 return ([], nil)

@@ -107,8 +107,10 @@ struct ShortsShelfHeader: View {
 
 extension View {
     /// Groups a feed block's cards under `id`. Always the same modifiers: switching them when the last block
-    /// grows past one card would give the block a new identity and redraw every card in it.
-    func feedBlockGroup(_ id: String) -> some View {
-        accessibilityElement(children: .contain).accessibilityIdentifier(id)
+    /// grows past one card would give the block a new identity and redraw every card in it. A one-card block
+    /// disables the identifier: SwiftUI folds the lone card's container into the group, and any group identifier
+    /// (even an empty one) would replace the card's `video.card.<id>`.
+    func feedBlockGroup(_ id: String, cards: Int) -> some View {
+        accessibilityElement(children: .contain).accessibilityIdentifier(id, isEnabled: cards > 1)
     }
 }

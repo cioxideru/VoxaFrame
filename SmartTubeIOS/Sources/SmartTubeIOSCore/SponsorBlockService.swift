@@ -4,19 +4,27 @@ import Foundation
 import FoundationNetworking
 #endif
 
+/// Seam for tests: a source that distinguishes "no segments" (empty) from a failed fetch (throws).
+public protocol SponsorSegmentSource: Sendable {
+    func segments(videoId: String, categories: Set<SponsorSegment.Category>) async throws -> [SponsorSegment]
+}
+
 // MARK: - SponsorBlockService
 //
 // Queries the SponsorBlock API (https://sponsor.ajay.app) to retrieve
 // ad-skip segments for a given video, mirroring the Android
 // SponsorBlockController functionality.
 
-public actor SponsorBlockService {
+public actor SponsorBlockService: SponsorSegmentSource {
 
     private let session: URLSession
     private let baseURL = "https://sponsor.ajay.app/api"
 
     public init() {
         let config = URLSessionConfiguration.default
+        // Short limits: one slow response must not hold up the offline refresh queue.
+        config.timeoutIntervalForRequest = 15
+        config.timeoutIntervalForResource = 30
         self.session = URLSession(configuration: config)
     }
 
@@ -30,28 +38,42 @@ public actor SponsorBlockService {
     /// Fetches sponsor segments for `videoId`.  Returns an empty array if the
     /// video has no segments or the request fails.
     public func fetchSegments(videoId: String, categories: Set<SponsorSegment.Category>) async -> [SponsorSegment] {
+        (try? await segments(videoId: videoId, categories: categories)) ?? []
+    }
+
+    /// Like `fetchSegments`, but a transport or server failure throws, so callers that persist the
+    /// result (offline videos) can tell "no segments" (HTTP 404, SponsorBlock's answer) from "unknown".
+    public func segments(videoId: String, categories: Set<SponsorSegment.Category>) async throws -> [SponsorSegment] {
         guard !categories.isEmpty else { return [] }
+        #if DEBUG
+        // UI-test fixture launches must not reach the live service (the offline fixture stubs it instead).
+        if ProcessInfo.processInfo.environment["OFFLINE_TEST_MEDIA_URL"] != nil {
+            throw URLError(.notConnectedToInternet)
+        }
+        #endif
         let cats = categories.map { "\"\($0.rawValue)\"" }.joined(separator: ",")
         let urlStr = "\(baseURL)/skipSegments?videoID=\(videoId)&categories=[\(cats)]"
         guard let url = URL(string: urlStr.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? urlStr)
-        else { return [] }
-
-        do {
-            let (data, _) = try await session.data(from: url)
-            let raw = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] ?? []
-            return raw.compactMap { parse($0) }
-        } catch {
-            return []
+        else { throw URLError(.badURL) }
+        let (data, response) = try await session.data(from: url)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 200
+        if status == 404 { return [] }
+        guard (200..<300).contains(status) else { throw URLError(.badServerResponse) }
+        // A wrong shape (e.g. an error object) must not read as "no segments".
+        guard let raw = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            throw URLError(.cannotParseResponse)
         }
+        return try raw.compactMap { try parse($0) }
     }
 
-    private func parse(_ dict: [String: Any]) -> SponsorSegment? {
-        guard
-            let segment = dict["segment"] as? [Double],
-            segment.count == 2,
-            let categoryStr = dict["category"] as? String,
-            let category = SponsorSegment.Category(rawValue: categoryStr)
-        else { return nil }
+    /// Unsupported categories are skipped on purpose; a malformed record of a supported one throws, so a
+    /// bad response never replaces saved segments with a shorter list.
+    private func parse(_ dict: [String: Any]) throws -> SponsorSegment? {
+        guard let categoryStr = dict["category"] as? String else { throw URLError(.cannotParseResponse) }
+        guard let category = SponsorSegment.Category(rawValue: categoryStr) else { return nil }
+        guard let segment = dict["segment"] as? [Double], segment.count == 2, segment[0].isFinite, segment[1].isFinite,
+            segment[0] >= 0, segment[1] >= segment[0]
+        else { throw URLError(.cannotParseResponse) }
         return SponsorSegment(
             start: segment[0], end: segment[1], category: category, apiUUID: dict["UUID"] as? String)
     }

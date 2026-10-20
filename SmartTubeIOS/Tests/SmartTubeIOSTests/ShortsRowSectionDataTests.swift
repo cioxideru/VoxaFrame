@@ -107,7 +107,7 @@ struct ShortsRowSectionDataTests {
     @Test("Non-Shorts section types do not trigger vertical layout")
     func nonShortsTypesAreHorizontal() {
         let nonShortsTypes: [BrowseSection.SectionType] = [
-            .home, .recommended, .subscriptions, .history,
+            .home, .subscriptions, .history,
             .playlists, .channels, .music, .news, .gaming, .live, .sports,
         ]
 

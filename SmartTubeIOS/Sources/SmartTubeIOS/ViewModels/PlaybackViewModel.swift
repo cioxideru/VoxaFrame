@@ -30,6 +30,11 @@ public final class PlaybackViewModel {
     let qualityManager: PlaybackQualityManager
     var voiceOver: VoiceOverTranslationController
     @ObservationIgnored lazy var offlineTranslations: any OfflineTranslationFinding = OfflineCoordinator.shared
+    @ObservationIgnored lazy var offlineSponsor: any OfflineSponsorSegmentProviding = OfflineCoordinator.shared
+    /// Segments stored with the saved video on screen, unfiltered, so a settings change can re-filter them.
+    @ObservationIgnored var offlineSponsorStored: (id: String, segments: OfflineSponsorSegments)?
+    /// The saved video whose stored segments were looked up (or are being looked up) under enabled settings.
+    @ObservationIgnored var offlineSponsorLookupID: String?
     @ObservationIgnored var offlineTranslationTask: Task<Void, Never>?
     @ObservationIgnored var offlineMedia: any OfflineMediaPreparing = OfflineMediaPreparer()
     /// The player's per-video translation toggle: `nil` follows Settings, `true` translates even
@@ -570,6 +575,8 @@ public final class PlaybackViewModel {
     public func updateSettings(_ newSettings: AppSettings) {
         settings = isShortsPlayer ? newSettings.shortsPlaybackSettings : newSettings
         isAudioOnlyMode = newSettings.audioOnlyMode
+        refilterOfflineSponsorSegments()
+        startOfflineSponsorLookupIfNeeded()
     }
 }
 

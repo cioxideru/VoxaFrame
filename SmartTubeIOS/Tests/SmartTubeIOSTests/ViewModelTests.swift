@@ -325,24 +325,26 @@ struct HomeViewModelTests {
         #expect(homeState?.videos.isEmpty == false)
     }
 
-    @Test("mergedVideos interleaves rec and sub videos")
-    func mergedVideosInterleaves() async {
+    @Test("Home feed holds only recommendations, never subscription videos")
+    func homeFeedIsRecommendationsOnly() async {
         let mock = MockInnerTubeAPI()
         let recVideos = (0..<8).map { makeVideo("rec\($0)_AAAAAA") }
         let subVideos = (0..<4).map { makeVideo("sub\($0)_BBBBBB") }
-        mock.homeRowsResult = [VideoGroup(title: "Rec", videos: recVideos)]
-        mock.subscriptionsResult = VideoGroup(title: "Subs", videos: subVideos)
+        mock.homeRowsResult = [VideoGroup(title: "Rec", videos: recVideos + [recVideos[0]], nextPageToken: "rec-2")]
+        mock.subscriptionsResult = VideoGroup(title: "Subs", videos: subVideos, nextPageToken: "sub-2")
 
         let vm = HomeViewModel(api: mock)
         defer { vm.cancel() }
         vm.load()
         await waitForTasks(until: { !vm.isRefreshing })
+        #expect(vm.mergedVideos == recVideos)
 
-        // mergedVideos inserts 1 sub every 4 recs; total should be > 8
-        #expect(vm.mergedVideos.count > 8)
-        // Subscription videos should appear in merged list
-        let ids = Set(vm.mergedVideos.map(\.id))
-        #expect(ids.contains("sub0_BBBBBB"))
+        mock.homeRowsResult = [VideoGroup(title: "Rec", videos: [makeVideo("rec8_AAAAAA"), recVideos[1]])]
+        await vm.loadMoreMerged()?.value
+        #expect(vm.mergedVideos.map(\.id) == recVideos.map(\.id) + ["rec8_AAAAAA"])
+        // Paging Home continues the recommendations feed only.
+        #expect(mock.calls.contains(.init(method: "fetchHomeRows", args: ["rec-2"])))
+        #expect(!mock.calls.contains(.init(method: "fetchSubscriptions", args: ["sub-2"])))
     }
 
     @Test("mergedVideos with empty subs returns only recs")
@@ -542,11 +544,11 @@ struct HomeViewModelTests {
 
         #expect(!vm.isRefreshing)
         #expect(vm.feedGeneration > generation)
-        #expect(Set(vm.mergedVideos.map(\.id)) == ["vid_0000001", "vid_0000002"])
+        #expect(vm.mergedVideos.map(\.id) == ["vid_0000001"])
     }
 
-    @Test("A subscriptions page fetched for Shorts also adds its regular videos to the feed")
-    func shortsSubsPageFeedsRegularVideos() async {
+    @Test("A subscriptions page fetched for Shorts keeps its regular videos out of Home")
+    func shortsSubsPageKeepsRegularVideosOut() async {
         let mock = MockInnerTubeAPI()
         mock.homeRowsResult = [VideoGroup(title: "Rec", videos: [makeVideo("vid_0000001")])]
         mock.subscriptionsResult = VideoGroup(
@@ -570,7 +572,7 @@ struct HomeViewModelTests {
         vm.loadShorts(atLeast: 10)
         await waitForTasks(until: { vm.homeShortsVideos.contains { $0.id == "srt_0000004" } })
 
-        #expect(vm.homeRegularVideos.map(\.id) == ["vid_0000001", "vid_0000002", "vid_0000003"])
+        #expect(vm.homeRegularVideos.map(\.id) == ["vid_0000001"])
         let subscriptionIDs = vm.sections.first { $0.section.type == .subscriptions }?.videos.map(\.id) ?? []
         #expect(subscriptionIDs == ["vid_0000002", "vid_0000003", "vid_0000001", "srt_0000004"])
         #expect(Set(vm.mergedVideos.map(\.id)).count == vm.mergedVideos.count)

@@ -1,6 +1,7 @@
 #if DEBUG
 import Foundation
 import SmartTubeIOSCore
+import os
 
 /// Only the simulator fixture may use HTTP; production downloads remain HTTPS-only.
 enum OfflineUITestFixture {
@@ -15,6 +16,26 @@ enum OfflineUITestFixture {
     static func allows(_ url: URL) -> Bool {
         guard let baseURL else { return false }
         return url.scheme == baseURL.scheme && url.host == baseURL.host && url.port == baseURL.port
+    }
+
+    /// Offline SponsorBlock without the network: the Nth request for a video returns N sponsor segments,
+    /// so tests can tell a fresh response from stored data.
+    static func sponsorSource() -> (any SponsorSegmentSource)? {
+        baseURL == nil ? nil : SponsorStub()
+    }
+
+    private final class SponsorStub: SponsorSegmentSource {
+        private let counts = OSAllocatedUnfairLock(initialState: [String: Int]())
+        // swiftlint:disable:next async_without_await
+        func segments(videoId: String, categories: Set<SponsorSegment.Category>) async throws -> [SponsorSegment] {
+            let count = counts.withLock { state -> Int in
+                state[videoId, default: 0] += 1
+                return state[videoId] ?? 1
+            }
+            return (0..<count).map {
+                SponsorSegment(start: Double($0) * 10 + 1, end: Double($0) * 10 + 3, category: .sponsor)
+            }
+        }
     }
 
     static func resolver() -> (any OfflineResolving)? {
