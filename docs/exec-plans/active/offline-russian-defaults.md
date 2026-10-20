@@ -1,6 +1,6 @@
 # PLAN-0034: Language and bitrate defaults in the offline download dialog
 
-Status: completed
+Status: active
 Owner: Codex
 Date: 2026-10-20
 
@@ -37,12 +37,32 @@ selection and download validation.
 | Callers and data flow | One shared sheet used by video cards and player; current audio preference selects original, translation starts off | inspected |
 | Language and bitrate defaults | 17 focused tests covered by full CI: settings/system language, regional tags, lowest known rate, original fallback, compatible HLS choice, bitrate propagation, legacy decoding and unlabeled audio | passed |
 | Manual choice | Simulator UI test covers Russian/English settings, enabled translation, manual target and toggle retained across quality changes | passed |
-| Physical iPad | User confirmed initial choices; reported unknown language labels for `X-v5XyT1XwU` | defaults confirmed |
+| Physical iPad | Fresh manifest proves completed AAC 50,704 bps plus Yandex `ru`; follow-up library label correction is installed | label confirmation pending |
 | Missing language | Live VisionOS response for the reported video has no `audioTrack`, `LANGUAGE` or video language metadata; AAC options are 50,704 and 131,413 bps. Regression preserves nil language and labels them by codec/rate | fixed |
 | Required checks | Final CI: 1,356 tests / 181 suites; strict SwiftLint: zero violations / 492 files | passed |
 | Platform acceptance | Final iOS UI run: 2 passed / 0 failed; tvOS Debug simulator build exit 0; Xcode rebuilt and reports Running SmartTube on iPad (Ivan) | passed |
+| Library-label follow-up | Regression failed before the fix; CI now passes 1,357 tests / 181 suites, strict lint has zero violations; iPad rebuilt and launched | code verified |
 
 ## Evidence and limits
+
+Follow-up after `2aab6fe2`: the user reported "labels or selection are still
+incorrect". LLDB
+read the running iPad module UUID as `821747FE-C405-32F8-915D-C5104CCF964A`, exactly
+matching the rebuilt local `SmartTube.debug.dylib`. The app was resumed and Xcode
+confirmed Running. `OfflineCoordinator.catalog` calls the resolver directly,
+so the new-download dialog does not reuse a stored catalog. A fresh, read-only
+copy of the iPad manifest confirms this video's completed video, AAC 50,704 bps
+track labelled `Audio · AAC 50 kbps`, and Yandex `ru` translation. Selection and
+downloads were correct. The library rebuilds audio labels independently from
+the nil language, producing "Unknown language" again. A new regression test
+reproduced six failed assertions for legacy, current and empty-language tracks.
+The library now uses generic Audio with the encoding detail when no language is
+provided; known-language labels are unchanged. This does not rewrite saved files.
+Follow-up evidence: `library-label-before.log`, `library-label-ci.log`,
+`library-label-lint.log`, and `followup-manifest.json` in the diagnostics folder.
+Xcode rebuilt the physical app at 18:45 and reported Running. The two simulator
+UI tests and tvOS build below belong to the first commit; they were not repeated
+for this label-only correction. Physical library-label confirmation is pending.
 
 Local diagnostics: `/private/tmp/voxaframe-offline-defaults-20261020`.
 `ci-final.log`, `lint-final.log` and the sanitized `reported-audio-metadata.log`

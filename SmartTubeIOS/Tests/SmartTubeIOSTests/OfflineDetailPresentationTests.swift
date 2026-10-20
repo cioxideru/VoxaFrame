@@ -245,6 +245,23 @@ struct OfflineDetailPresentationTests {
         #expect(Set(options.map(\.label)).count == options.count)
     }
 
+    @Test func unlabeledAudioKeepsEncodingInLibraryChoicesForOldAndNewDownloads() {
+        let tracks = [
+            OfflineTrack(id: "old", kind: .audio, label: "Unknown language · Audio · AAC 131 kbps"),
+            OfflineTrack(id: "new", kind: .audio, label: "Audio · AAC 50 kbps"),
+            OfflineTrack(id: "empty", kind: .audio, label: "Audio · AAC 70 kbps", language: ""),
+        ]
+        for track in tracks {
+            #expect(OfflineDetailPresentation.audioLabel(track, locale: english) == "Audio")
+            let options = OfflineDetailPresentation.audioOptions(
+                for: video("silent", hasAudio: false), saved: [track], locale: english)
+            #expect(options.first?.label == "Audio · \(OfflineDetailPresentation.audioDetail(track) ?? "")")
+        }
+        let options = OfflineDetailPresentation.audioOptions(
+            for: video("silent", hasAudio: false), saved: tracks, locale: english)
+        #expect(Set(options.map(\.label)).count == tracks.count)
+    }
+
     @Test func savedItemsDisappearFromEveryDownloadGroup() {
         let saved = entry([video("720"), audio("en", original: true), .translation("ru")])
         let available = saved.assets.map(\.track) + [video("1080", height: 1080), audio("fr")]

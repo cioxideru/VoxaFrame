@@ -162,7 +162,9 @@ enum OfflineDetailPresentation {
     }
 
     static func audioLabel(_ track: OfflineTrack, locale: Locale = .current) -> String {
-        let language = languageName(track.language, locale: locale)
+        let language =
+            track.language?.isEmpty == false
+            ? languageName(track.language, locale: locale) : String(localized: "Audio", bundle: .module)
         switch track.isOriginalAudio {
         case .some(true): return String(localized: "\(language) · Original", bundle: .module)
         case .some(false): return String(localized: "\(language) · Dubbed", bundle: .module)
@@ -175,11 +177,11 @@ enum OfflineDetailPresentation {
     ) -> [AudioOption] {
         let tracks = sortedAudio(saved, locale: locale)
         let labels = tracks.map { track in
-            track.isOriginalAudio == false
+            track.isOriginalAudio == false || track.language?.isEmpty != false
                 ? audioLabel(track, locale: locale) : languageName(track.language, locale: locale)
         }
         let detailed = zip(tracks, labels).map { track, label in
-            labels.filter { $0 == label }.count > 1
+            track.language?.isEmpty != false || labels.filter { $0 == label }.count > 1
                 ? [label, audioDetail(track)].compactMap { $0 }.joined(separator: " · ") : label
         }
         var occurrences: [String: Int] = [:]

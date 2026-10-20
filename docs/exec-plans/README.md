@@ -19,6 +19,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
+- [PLAN-0034: Offline language defaults](active/offline-russian-defaults.md) — audio/Yandex defaults implemented; physical acceptance reopened after a follow-up report.
+
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
@@ -28,8 +30,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
-
-- [PLAN-0034: Offline language defaults](completed/offline-russian-defaults.md) — audio and Yandex follow Default Audio Language, prefer lower bitrate, and preserve manual choices; unit/UI checks and physical launch verified.
 
 - [PLAN-0032: Saved translation language](completed/offline-translation-language.md) — original-language selection fixed; repaired saved Russian audio, pause and seeking confirmed on iPad.
 
