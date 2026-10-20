@@ -18,7 +18,12 @@ struct OfflineDownloadSheet: View {
     private var audio: [OfflineTrack] {
         selectedVideo.map { OfflineSelection.audio(for: $0, in: catalog) } ?? []
     }
-    private var preferredAudioID: String? { audio.first { $0.isOriginalAudio == true }?.id ?? audio.first?.id }
+    private var preferredLanguage: String? {
+        OfflineSelection.defaultLanguage(preference: store.settings.preferredAudioLanguage)
+    }
+    private var preferredAudioID: String? {
+        OfflineSelection.preferredAudio(in: audio, language: preferredLanguage)?.id
+    }
     private var tracks: [OfflineTrack]? {
         guard let selectedVideo, let selectedAudio = audio.first(where: { $0.id == audioID }) else { return nil }
         return try? OfflineSelection.tracks(
@@ -123,6 +128,12 @@ struct OfflineDownloadSheet: View {
                 catalog = loaded
                 videoID = videos.first { $0.videoSize?.height == 720 && $0.codec == .h264 }?.id ?? videos.first?.id
                 audioID = preferredAudioID
+                if let preferredLanguage, YandexVOTClient.targetLanguages.contains(preferredLanguage) {
+                    language = preferredLanguage
+                    translates = true
+                } else {
+                    translates = false
+                }
                 error = videos.isEmpty ? OfflineLibraryError.unavailable.localizedDescription : nil
             } catch {
                 if Task.isCancelled { return }
@@ -184,6 +195,7 @@ struct OfflineDownloadSheet: View {
                 Text("Audio track", bundle: .module)
             }
             .accessibilityIdentifier(AccessibilityID.offlineSelectionAudio)
+            .accessibilityValue(audio.first { $0.id == audioID }.map { $0.audioLabel ?? $0.label } ?? "")
             if audio.isEmpty {
                 Text("No compatible audio track is available for this video stream.", bundle: .module)
             }
@@ -200,6 +212,7 @@ struct OfflineDownloadSheet: View {
                     Text("Translation language", bundle: .module)
                 }
                 .accessibilityIdentifier(AccessibilityID.offlineSelectionLanguage)
+                .accessibilityValue(OfflinePresentation.languageName(language))
             }
         }
     }

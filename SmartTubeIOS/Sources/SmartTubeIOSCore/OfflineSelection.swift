@@ -17,6 +17,34 @@ public extension OfflineTrack {
 
 /// One video (or one muxed HLS rendition), one companion audio, and optional voice-over.
 public enum OfflineSelection {
+    public static func defaultLanguage(preference: String?, locale: Locale = .current) -> String? {
+        guard preference != "original" else { return nil }
+        return Locale.Language(identifier: preference ?? locale.identifier).languageCode?.identifier
+    }
+
+    public static func preferredAudio(in options: [OfflineTrack], language: String?) -> OfflineTrack? {
+        let preferred = language.flatMap { Locale.Language(identifier: $0).languageCode?.identifier }
+        func rank(_ track: OfflineTrack) -> Int {
+            if let preferred, let code = track.language,
+                Locale.Language(identifier: code).languageCode?.identifier == preferred
+            {
+                return 0
+            }
+            return track.isOriginalAudio == true ? 1 : 2
+        }
+        func bitrate(_ track: OfflineTrack) -> Double {
+            guard let value = track.bitrate.map(Double.init) ?? track.hlsPeakBitRate,
+                value.isFinite, value > 0
+            else { return .infinity }
+            return value
+        }
+        return options.min {
+            if rank($0) != rank($1) { return rank($0) < rank($1) }
+            if bitrate($0) != bitrate($1) { return bitrate($0) < bitrate($1) }
+            return $0.id < $1.id
+        }
+    }
+
     public static func estimatedBytes(for tracks: [OfflineTrack]) -> Int64? {
         var total: Int64 = 0
         for track in tracks where track.kind != .translation {

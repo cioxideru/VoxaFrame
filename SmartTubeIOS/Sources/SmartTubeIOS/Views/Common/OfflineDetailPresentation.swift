@@ -207,7 +207,7 @@ enum OfflineDetailPresentation {
     static func audioDetail(_ track: OfflineTrack) -> String? {
         // Existing manifests keep the codec and bitrate in the final label component.
         let parts = track.label.components(separatedBy: " · ")
-        return parts.count >= 3 ? parts.last : nil
+        return parts.count >= 2 ? parts.last : nil
     }
 
     static func isPlayable(_ track: OfflineTrack, hardwareCodecs: Set<VideoCodec>) -> Bool {

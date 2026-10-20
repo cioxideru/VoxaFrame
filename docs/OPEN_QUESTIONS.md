@@ -279,7 +279,8 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   The subsequent English-to-Kazakh request still returned a Yandex FAILED response before
   any audio URL, reproduced independently on the Mac. Explicit language, auto detection
   and diagnostic cache bypass did not resolve it; the internal service cause is unknown.
-  Kazakh acceptance, airplane-mode listening and long-duration synchronization remain open.
+  Kazakh translation work is deferred at the user's request on 2026-10-20.
+  Airplane-mode listening and long-duration synchronization remain open.
 - On 2026-10-20, [PLAN-0032](exec-plans/completed/offline-translation-language.md) fixed
   local live requests ignoring the saved original language. For the reported UPI video,
   the old Russian-labelled MP3 exactly matched Yandex's `auto→ru` response and contained

@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0034: Offline language defaults](completed/offline-russian-defaults.md) — audio and Yandex follow Default Audio Language, prefer lower bitrate, and preserve manual choices; unit/UI checks and physical launch verified.
+
 - [PLAN-0032: Saved translation language](completed/offline-translation-language.md) — original-language selection fixed; repaired saved Russian audio, pause and seeking confirmed on iPad.
 
 - [PLAN-0033: iPad sidebar launch warning](completed/ipad-sidebar-state-warning.md) — warning and Queue identity regression fixed; five focused iPad UI tests pass, broader Split View acceptance remains in OQ-0019.

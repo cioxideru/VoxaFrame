@@ -10,6 +10,73 @@ struct OfflineSelectionTests {
     private let picture = OfflineTrack(id: "720", kind: .video, label: "720p H.264")
     private let sound = OfflineTrack(id: "en", kind: .audio, label: "English")
 
+    @Test func defaultLanguageFollowsSettingsAndSystemLocale() {
+        let english = Locale(identifier: "en_US")
+        #expect(OfflineSelection.defaultLanguage(preference: "ru", locale: english) == "ru")
+        #expect(OfflineSelection.defaultLanguage(preference: "EN_us", locale: english) == "en")
+        #expect(OfflineSelection.defaultLanguage(preference: "pt-BR", locale: english) == "pt")
+        #expect(OfflineSelection.defaultLanguage(preference: nil, locale: english) == "en")
+        #expect(OfflineSelection.defaultLanguage(preference: nil, locale: Locale(identifier: "ru_RU")) == "ru")
+        #expect(OfflineSelection.defaultLanguage(preference: "original", locale: english) == nil)
+    }
+
+    @Test func preferredAudioUsesLanguageThenLowestKnownBitrate() {
+        func track(_ id: String, language: String, bitrate: Int?, original: Bool = false) -> OfflineTrack {
+            var track = OfflineTrack(id: id, kind: .audio, label: id, language: language)
+            track.bitrate = bitrate
+            track.isOriginalAudio = original
+            return track
+        }
+        let options = [
+            track("ru-unknown", language: "ru", bitrate: nil),
+            track("ru-invalid", language: "ru", bitrate: 0),
+            track("ru-high", language: "ru-RU", bitrate: 130_000),
+            track("en-high", language: "en-US", bitrate: 130_000, original: true),
+            track("fr-low", language: "fr", bitrate: 10_000),
+            track("ru-low", language: "RU_ru", bitrate: 50_000),
+            track("en-low", language: "en-US", bitrate: 40_000, original: true),
+        ]
+        for catalog in [options, Array(options.reversed())] {
+            #expect(OfflineSelection.preferredAudio(in: catalog, language: "ru")?.id == "ru-low")
+            #expect(OfflineSelection.preferredAudio(in: catalog, language: "en")?.id == "en-low")
+            #expect(OfflineSelection.preferredAudio(in: catalog, language: "de")?.id == "en-low")
+            #expect(OfflineSelection.preferredAudio(in: catalog, language: nil)?.id == "en-low")
+        }
+        #expect(OfflineSelection.preferredAudio(in: [], language: "ru") == nil)
+    }
+
+    @Test func directCatalogCarriesBitrateAndOldTracksStillDecode() throws {
+        let url = try #require(URL(string: "https://example.invalid/audio?itag=139"))
+        let format = VideoFormat(
+            label: "Russian", width: 0, height: 0, fps: 0, mimeType: "audio/mp4",
+            url: url, bitrate: 50_000, audioLanguage: "ru", isOriginalAudio: false)
+        let info = PlayerInfo(
+            video: video, formats: [format], hlsURL: nil, dashURL: nil, captionTracks: [],
+            trackingURLs: nil, endCards: [])
+        let track = try #require(OfflineSourceResolver.directSources(info, userAgent: "fixture").first?.track)
+        #expect(track.bitrate == 50_000)
+        #expect(try JSONDecoder().decode(OfflineTrack.self, from: JSONEncoder().encode(track)).bitrate == 50_000)
+        let old = Data(#"{"id":"old","kind":"audio","label":"Original","hasAudio":false}"#.utf8)
+        #expect(try JSONDecoder().decode(OfflineTrack.self, from: old).bitrate == nil)
+    }
+
+    @Test func unlabeledAudioShowsEncodingWithoutInventingALanguage() throws {
+        let formats = try [139, 140].map { itag in
+            VideoFormat(
+                label: "Audio", width: 0, height: 0, fps: 0, mimeType: #"audio/mp4; codecs="mp4a.40.2""#,
+                url: try #require(URL(string: "https://example.invalid/audio?itag=\(itag)")),
+                bitrate: itag == 139 ? 50_704 : 131_413)
+        }
+        let info = PlayerInfo(
+            video: video, formats: formats, hlsURL: nil, dashURL: nil, captionTracks: [],
+            trackingURLs: nil, endCards: [])
+        let tracks = OfflineSourceResolver.directSources(info, userAgent: "fixture").map(\.track)
+        #expect(tracks.map(\.label) == ["Audio · AAC 50 kbps", "Audio · AAC 131 kbps"])
+        #expect(tracks.allSatisfy { $0.language == nil })
+        #expect(OfflineSelection.preferredAudio(in: tracks, language: "ru") == tracks[0])
+        #expect(OfflineDetailPresentation.audioDetail(tracks[0]) == "AAC 50 kbps")
+    }
+
     @Test func serverRejectionIsNotReportedAsCorruptMedia() throws {
         let url = try #require(URL(string: "https://example.invalid/video"))
         func response(_ code: Int) throws -> HTTPURLResponse {
@@ -117,6 +184,8 @@ struct OfflineSelectionTests {
         let external = first.filter { $0.0.hlsAudioName == "Русский - dubbed-auto" }
         #expect(external.map(\.0.hlsPeakBitRate) == [900_000, 1_000_000])
         #expect(external.allSatisfy { $0.0.language == "ru" && $0.0.isOriginalAudio == false })
+        let options = OfflineSelection.audio(for: first[0].0, in: Array(first.map(\.0).reversed()))
+        #expect(OfflineSelection.preferredAudio(in: options, language: "ru")?.hlsPeakBitRate == 900_000)
         let muxed = first.filter { $0.0.videoSize?.height == 480 }
         // Equal peaks: only the variant URL tells these apart, so the transport qualifies the variant itself.
         #expect(muxed.map(\.1.lastPathComponent) == ["muxed-original.m3u8", "muxed-ru.m3u8"])

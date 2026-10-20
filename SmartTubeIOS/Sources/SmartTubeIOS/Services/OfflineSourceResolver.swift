@@ -188,14 +188,19 @@ actor OfflineSourceResolver: OfflineResolving {
             else { return nil }
             let audio = format.mimeType.hasPrefix("audio/")
             let language = format.audioLanguage
+            let role =
+                format.isOriginalAudio == true ? "Original" : format.isOriginalAudio == false ? "Dubbed" : "Audio"
+            let audioLabel = [
+                language, role,
+                "\(format.mimeType.contains("mp4a") ? "AAC" : "MP4 audio") \(format.bitrate.map { "\($0 / 1000) kbps" } ?? "")",
+            ].compactMap { $0 }.joined(separator: " · ")
             let itag = query("itag", url: url) ?? "\(format.height)-\(format.fps)-\(format.codecShortLabel)"
             var track = OfflineTrack(
                 id: "direct-\(itag)-\(format.audioTrackID ?? "original")", kind: audio ? .audio : .video,
-                label: audio
-                    ? "\(language ?? "Unknown language") · \(format.isOriginalAudio == true ? "Original" : format.isOriginalAudio == false ? "Dubbed" : "Audio") · \(format.mimeType.contains("mp4a") ? "AAC" : "MP4 audio") \(format.bitrate.map { "\($0 / 1000) kbps" } ?? "")"
-                    : "\(format.qualityLabel) · \(format.codecShortLabel)", language: language,
+                label: audio ? audioLabel : "\(format.qualityLabel) · \(format.codecShortLabel)", language: language,
                 hasAudio: !audio && format.mimeType.contains(","))
             track.isOriginalAudio = format.isOriginalAudio
+            track.bitrate = format.bitrate
             if !audio {
                 track.videoSize = OfflineVideoSize(width: format.width, height: format.height)
                 track.fps = format.fps

@@ -18,6 +18,35 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
     }
 
+    func testDownloadDefaultsFollowAudioLanguageAndPreserveManualChoices() {
+        for language in ["Russian", "English"] {
+            launch(videoID: nil, sponsorBlock: true)
+            UITestHelpers.tapTab(named: "Settings", in: app)
+            UITestHelpers.selectSettingsCategory("languages", in: app)
+            app.buttons[AccessibilityID.settingsPreferredAudioLanguageRow].tap()
+            app.buttons[language].firstMatch.tap()
+
+            launch(videoID: "offline-ui-defaults-" + UUID().uuidString)
+            openDownloadSheet()
+            XCTAssertEqual(app.buttons[AccessibilityID.offlineSelectionAudio].value as? String, language)
+            let target = app.buttons[AccessibilityID.offlineSelectionLanguage]
+            XCTAssertEqual(target.value as? String, language)
+            let toggle = app.switches[AccessibilityID.offlineSelectionTranslate].switches.firstMatch
+            XCTAssertEqual(toggle.value as? String, "1")
+
+            let other = language == "Russian" ? "English" : "Russian"
+            target.tap()
+            app.buttons[other].firstMatch.tap()
+            app.buttons[AccessibilityID.offlineSelectionVideo].tap()
+            app.buttons["360p · H.264 · MP4"].firstMatch.tap()
+            XCTAssertEqual(target.value as? String, other)
+            toggle.tap()
+            app.buttons[AccessibilityID.offlineSelectionVideo].tap()
+            app.buttons["720p · H.264 · MP4"].firstMatch.tap()
+            XCTAssertEqual(toggle.value as? String, "0")
+        }
+    }
+
     func testDownloadThenAddAudioAndTranslationAndPlayAfterRelaunch() async throws {
         let id = "offline-ui-" + UUID().uuidString
         launch(videoID: id)
@@ -78,11 +107,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertTrue(quick.waitForExistence(timeout: 25))
         XCTAssertTrue(quick.label.contains("Offline"), quick.label)
         XCTAssertTrue(quick.isEnabled)
-        quick.tap()
-        let original = app.buttons[AccessibilityID.offlineSelectionDownload].firstMatch
-        XCTAssertTrue(original.waitForExistence(timeout: 15))
-        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: original)
-        XCTAssertEqual(XCTWaiter().wait(for: [ready], timeout: 15), .completed)
+        let original = openDownloadSheet()
         app.buttons[AccessibilityID.offlineSelectionVideo].tap()
         app.buttons["360p · H.264 · MP4"].firstMatch.tap()
         original.tap()
@@ -384,7 +409,7 @@ extension DownloadsPlaybackUITests {
         app.launch()
     }
 
-    private func saveFromPlayer(selectTracks: Bool = false) {
+    @discardableResult private func openDownloadSheet() -> XCUIElement {
         let save = app.buttons[AccessibilityID.playerQuickOfflineButton].firstMatch
         XCTAssertTrue(save.waitForExistence(timeout: 25))
         save.tap()
@@ -392,19 +417,30 @@ extension DownloadsPlaybackUITests {
         XCTAssertTrue(original.waitForExistence(timeout: 15))
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: original)
         XCTAssertEqual(XCTWaiter().wait(for: [ready], timeout: 15), .completed)
+        return original
+    }
+
+    private func saveFromPlayer(selectTracks: Bool = false) {
+        let original = openDownloadSheet()
+        let toggle = app.switches[AccessibilityID.offlineSelectionTranslate].switches.firstMatch
+        if (toggle.value as? String == "1") != selectTracks { toggle.tap() }
         app.buttons[AccessibilityID.offlineSelectionVideo].tap()
         if selectTracks {
             app.buttons["720p · H.264 · MP4"].firstMatch.tap()
             app.buttons[AccessibilityID.offlineSelectionAudio].tap()
             app.buttons["en · Original"].firstMatch.tap()
-            app.switches[AccessibilityID.offlineSelectionTranslate].switches.firstMatch.tap()
-            XCTAssertTrue(app.buttons[AccessibilityID.offlineSelectionLanguage].waitForExistence(timeout: 3))
+            let language = app.buttons[AccessibilityID.offlineSelectionLanguage]
+            XCTAssertTrue(language.waitForExistence(timeout: 3))
+            language.tap()
+            app.buttons["Russian"].firstMatch.tap()
             let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
             attachment.name = "Offline stream and translation selection"
             attachment.lifetime = .keepAlways
             add(attachment)
         } else {
             app.buttons["360p · H.264 · MP4"].firstMatch.tap()
+            app.buttons[AccessibilityID.offlineSelectionAudio].tap()
+            app.buttons["360p · H.264"].firstMatch.tap()
         }
         original.tap()
         let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Allow"].firstMatch

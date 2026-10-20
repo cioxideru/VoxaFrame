@@ -6,8 +6,13 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Changed
+
+- **Offline downloads:** audio and Yandex translation default to Default Audio Language from Settings. Matching audio prefers the lowest known bitrate; original audio is the fallback. Yandex is enabled even when a matching audio track exists, for supported target languages. Later manual choices remain unchanged.
+
 ### Fixed
 
+- Offline audio choices without language metadata show their codec and bitrate instead of an "Unknown language" prefix.
 - Offline Yandex translation uses the original audio or auto-generated caption language instead of relying on failed language detection. Live translation of a saved video uses its stored original-audio language before the first request; if that metadata is missing, an automatic-language refusal retries once with fresh original-language metadata. Download errors preserve Yandex's explanation.
 - **iPad:** open the landscape sidebar after SwiftUI finishes updating, preserving the user's later choice. Keep the Queue tab's identity stable when hiding it so resizing preserves navigation state and avoids a UIKit tab-rebuilding crash.
 

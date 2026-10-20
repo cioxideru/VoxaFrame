@@ -12,6 +12,7 @@ public struct OfflineTrack: Codable, Hashable, Sendable, Identifiable {
     public var fps: Int?
     public var codec: VideoCodec?
     public var audioLabel: String?
+    public var bitrate: Int?
     public var estimatedBytes: Int64?
     public var isOriginalAudio: Bool?
     public var hlsAudioName: String?
