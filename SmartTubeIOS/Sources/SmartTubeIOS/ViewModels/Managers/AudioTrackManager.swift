@@ -9,6 +9,7 @@ private let playerLog = ViewModelLogger(category: "Player")
 @MainActor
 protocol AudioTrackDelegate: AnyObject {
     var settings: AppSettings { get set }
+    var originalAudioLanguage: String? { get }
 }
 
 // MARK: - AudioTrackManager
@@ -80,6 +81,7 @@ final class AudioTrackManager {
     /// Does NOT set audioSelectionGroup — track switching is handled via onHLSLanguageChange.
     func loadHLSVariantTracks(_ tracks: [AudioTrack]) {
         guard !tracks.isEmpty else { return }
+        let tracks = resolvingOriginalLanguage(in: tracks)
         availableAudioTracks = tracks
         let preferred = delegate?.settings.preferredAudioLanguage
         if let pref = preferred,
@@ -105,11 +107,12 @@ final class AudioTrackManager {
         // leaving no audio option selected → silent video after a quality switch.
         // Use `!isEmpty` so a single-track manifest still gets its track applied.
         let group = try? await asset.loadMediaSelectionGroup(for: .audible)
+        guard !Task.isCancelled, player.currentItem === item else { return }
         let groupDesc = group.map { "\($0.options.count) option(s)" } ?? "nil"
         playerLog.notice("AudioTrackManager: loadMediaSelectionGroup=\(groupDesc)")
         guard let group, !group.options.isEmpty else { return }
         let (initialTracks, optionMap) = audioTracks(in: group)
-        let tracks = markingOriginalTracks(initialTracks, optionMap: optionMap)
+        let tracks = resolvingOriginalLanguage(in: markingOriginalTracks(initialTracks, optionMap: optionMap))
         self.audioSelectionGroup = group
         self.audioOptionsByID = optionMap
 
@@ -137,7 +140,8 @@ final class AudioTrackManager {
         let autoSelect: AudioTrack? = {
             // Item reloads (quality switch) keep the track already chosen for this video;
             // reset() clears it when a new video loads.
-            if let current = self.selectedAudioTrack, tracks.contains(where: { $0.id == current.id }) {
+            if let selectedID = self.selectedAudioTrack?.id, let current = tracks.first(where: { $0.id == selectedID })
+            {
                 return current
             }
             if let lang = preferred {
@@ -173,6 +177,21 @@ final class AudioTrackManager {
             "Audio tracks: \(tracks.map(\.name).joined(separator: ", ")) — auto-selected: \(autoSelect?.name ?? "default")"
         )
     }
+
+    private func resolvingOriginalLanguage(in tracks: [AudioTrack]) -> [AudioTrack] {
+        tracks.map { track in
+            guard !track.hasKnownLanguage else { return track }
+            let language = track.isOriginal ? delegate?.originalAudioLanguage : nil
+            let name =
+                language.map { Locale.current.localizedString(forIdentifier: $0) ?? $0 }
+                ?? String(localized: "Audio", bundle: .module)
+            // The ID still addresses AVFoundation's option or the HLS variant after its label is resolved.
+            return AudioTrack(
+                id: track.id, name: name, languageCode: language ?? track.languageCode,
+                isOriginal: track.isOriginal, contentID: track.contentID)
+        }
+    }
+
     private func audioTracks(in group: AVMediaSelectionGroup) -> ([AudioTrack], [String: AVMediaSelectionOption]) {
         var tracks: [AudioTrack] = []
         var optionMap: [String: AVMediaSelectionOption] = [:]

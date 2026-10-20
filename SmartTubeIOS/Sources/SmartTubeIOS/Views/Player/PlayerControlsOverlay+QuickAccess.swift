@@ -89,7 +89,9 @@ extension PlayerControlsOverlay {
     }
 
     private var audioTrackLabel: String {
-        let track = vm.selectedAudioTrack.map { $0.languageCode } ?? String(localized: "Auto", bundle: .module)
+        let track =
+            vm.selectedAudioTrack.map { $0.hasKnownLanguage ? $0.languageCode : $0.name }
+            ?? String(localized: "Auto", bundle: .module)
         guard vm.isVoiceOverActive, let target = vm.voiceOverTargetLanguage else { return track }
         return "\(track) → \(target) (Yandex)"
     }

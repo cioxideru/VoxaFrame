@@ -31,6 +31,8 @@ selection and download validation.
 - Reuse original-track and auto-generated-caption language evidence in the
   catalog. Preserve explicit dubbed-track languages and HLS selection names.
 - Collapse direct variants with the same saved-track ID (normal/DRC duplicates).
+- Resolve missing original-language labels in `AudioTrackManager` for the player's
+  audio picker and quick-access button, using the same `PlayerInfo` evidence.
 - Record the changed defaults and acceptance evidence.
 
 ## Acceptance and checkpoints
@@ -40,12 +42,13 @@ selection and download validation.
 | Callers and data flow | One shared sheet used by video cards and player; current audio preference selects original, translation starts off | inspected |
 | Language and bitrate defaults | 17 focused tests covered by full CI: settings/system language, regional tags, lowest known rate, original fallback, compatible HLS choice, bitrate propagation, legacy decoding and unlabeled audio | passed |
 | Manual choice | Simulator UI test covers Russian/English settings, enabled translation, manual target and toggle retained across quality changes | passed |
-| Physical iPad | Fresh manifest proves completed AAC 50,704 bps plus Yandex `ru`; the original-language/deduplication build is now installed and running | label confirmation pending |
+| Physical iPad | Fresh manifest proves completed AAC 50,704 bps plus Yandex `ru`; after `827baeb0`, the user confirmed the language is displayed and duplicate choices are absent on a Vert Dider video | passed |
 | Missing language | Initial investigation found no `audioTrack` or HLS `LANGUAGE`; the caption metadata follow-up below found original-speech `ru`. Generic labels alone did not satisfy the request | superseded |
-| Required checks | Current CI: 1,360 tests / 181 suites; strict SwiftLint: zero violations / 492 files | passed |
+| Required checks | Current CI: 1,361 tests / 181 suites; strict SwiftLint: zero violations / 492 files | passed |
 | Platform acceptance | Earlier defaults UI run: 2 passed / 0 failed; current tvOS Debug simulator build exit 0; Xcode rebuilt and reports Running SmartTube on iPad (Ivan) | passed |
 | Library-label follow-up | Regression failed before the fix; CI now passes 1,357 tests / 181 suites, strict lint has zero violations; iPad rebuilt and launched | code verified |
 | Original-language follow-up | Regression covers ASR versus manual captions, direct duplicates, muxed/video-only formats, ambiguous/multilingual audio and stable HLS selection identities; included in full CI | code verified |
+| Player-label follow-up | Real manager regression covers missing-language markers, original versus dubbed audio, unchanged rendition IDs and no inferred-language carryover to manual-caption metadata; full CI and tvOS build pass, device build is running | code verified; physical acceptance pending |
 
 ## Evidence and limits
 
@@ -71,9 +74,38 @@ Evidence: `source-language-metadata.log`, `source-language-focused.log`,
 in the diagnostics folder. Full CI passes 1,360 tests in 181 suites; strict lint
 reports zero violations in 492 files; the tvOS simulator build exits 0. Xcode
 rebuilt the physical device binary at 19:10 and reported Running SmartTube on
-iPad (Ivan). The user has been asked to check the language and duplicate choices
-on an undownloaded Vert Dider video; that result remains pending. No new UI-test
-run is claimed for this metadata correction.
+iPad (Ivan). On 2026-10-20, the user checked the new-download dialog on an
+undownloaded Vert Dider video and confirmed: "Да, язык указан и дублей нет"
+("Yes, the language is shown and there are no duplicates"). This completes
+physical acceptance of the download dialog in `827baeb0`. No new download was
+requested for this label check, and no new UI-test run is claimed for this
+metadata correction.
+
+The subsequent 19:15 screenshot shows a separate surface: the online player's
+audio picker and quick-access button still display `unknown` / Original for
+the same Vert Dider lecture. AVFoundation reports no rendition locale for the
+unlabelled VisionOS HLS audio. `AudioTrackManager` previously ignored the
+original-language evidence already used by the download catalog. It now reads
+that evidence through its existing delegate, enriches unlabelled original tracks
+after original-track detection, and keeps IDs/content IDs unchanged. Both HLS
+variant and AVFoundation group paths use that enrichment. Known dubbed languages
+remain untouched. Unknown-language rows use Audio, and the quick-access button
+uses that label instead of a raw sentinel. Quality reloads retain the selected
+ID while adopting refreshed labels; asynchronous group loading cannot apply an
+old item's tracks to the current item. The live translation policy uses the same
+source metadata. This follow-up keeps the plan active; the accepted download
+dialog result remains valid.
+
+Focused verification: 31 tests in two suites passed, including four missing-code
+cases exercised through the real `PlaybackViewModel` / `AudioTrackManager`.
+Full CI passes 1,361 tests in 181 suites; strict SwiftLint reports zero violations
+in 492 files; the tvOS simulator build exits 0. Evidence:
+`player-language-focused.log`, `player-language-ci.log`, `player-language-lint.log`
+and `player-language-tvos.log` in the diagnostics folder. Xcode rebuilt the device
+binary at 19:22 and reported Running SmartTube on iPad (Ivan). The user has been
+asked to verify Russian in the player audio menu, `ru` on its quick-access button
+and continued audio playback after selection. This separate player's physical
+confirmation is still pending.
 
 Follow-up after `2aab6fe2`: the user reported "labels or selection are still
 incorrect". LLDB
@@ -92,7 +124,8 @@ Follow-up evidence: `library-label-before.log`, `library-label-ci.log`,
 `library-label-lint.log`, and `followup-manifest.json` in the diagnostics folder.
 Xcode rebuilt the physical app at 18:45 and reported Running. The two simulator
 UI tests and tvOS build below belong to the first commit; they were not repeated
-for this label-only correction. Physical library-label confirmation is pending.
+for this label-only correction. The final physical confirmation applies to the
+new-download dialog; old saved-track metadata was not rewritten or revalidated.
 
 Local diagnostics: `/private/tmp/voxaframe-offline-defaults-20261020`.
 `ci-final.log`, `lint-final.log` and the sanitized `reported-audio-metadata.log`

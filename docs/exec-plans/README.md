@@ -19,7 +19,7 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0034: Offline language defaults](active/offline-russian-defaults.md) — audio/Yandex defaults implemented; physical acceptance reopened after a follow-up report.
+- [PLAN-0034: Offline language defaults](active/offline-russian-defaults.md) — download dialog accepted on iPad; follow-up fixes the same missing language in the player's audio picker.
 
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 

@@ -6,11 +6,11 @@ import Foundation
 /// AVMediaSelectionOption itself is not Sendable, so we snapshot the data we need
 /// into this struct at load time; the actual option is kept in PlaybackViewModel.
 public struct AudioTrack: Identifiable, Hashable, Sendable {
-    /// BCP 47 language tag from the HLS rendition (e.g. "en", "es-419", "fr").
+    /// Stable rendition identifier; usually the HLS language tag (e.g. "en", "es-419", "fr").
     public let id: String
     /// Localised display name (e.g. "English", "Spanish", "French").
     public let name: String
-    /// ISO 639-1 / BCP 47 language code — same value as `id` for #EXT-X-MEDIA tracks.
+    /// ISO 639-1 / BCP 47 language code; source metadata may resolve it without changing `id`.
     public let languageCode: String
     /// `true` when this is the HLS `DEFAULT=YES` rendition (the original audio).
     public let isOriginal: Bool
@@ -20,6 +20,10 @@ public struct AudioTrack: Identifiable, Hashable, Sendable {
     /// lacks a `YT-EXT-AUDIO-CONTENT-ID` attribute. When `nil`, the proxy keeps
     /// variants that have *no* `YT-EXT-AUDIO-CONTENT-ID` (i.e. the original stream).
     public let contentID: String?
+
+    public var hasKnownLanguage: Bool {
+        !["", "unknown", "und", "original"].contains(languageCode.lowercased())
+    }
 
     public init(
         id: String, name: String, languageCode: String, isOriginal: Bool,

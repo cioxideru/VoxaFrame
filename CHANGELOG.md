@@ -14,6 +14,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 - Offline audio choices without language metadata show their codec and bitrate instead of an "Unknown language" prefix, including the library's additional-download list and saved-audio picker.
 - Offline original-audio choices also use YouTube's auto-generated caption language when stream metadata omits it, including Vert Dider uploads. Explicit dubbed languages and HLS selection identities are preserved; repeated normal/DRC encodings no longer create duplicate audio choices.
+- The player's audio picker and quick-access button also resolve an unlabelled original track from source-language metadata. If no language is available, they show Audio instead of a raw `unknown` value; rendition identities and explicit dubbed languages are preserved.
 - Offline Yandex translation uses the original audio or auto-generated caption language instead of relying on failed language detection. Live translation of a saved video uses its stored original-audio language before the first request; if that metadata is missing, an automatic-language refusal retries once with fresh original-language metadata. Download errors preserve Yandex's explanation.
 - **iPad:** open the landscape sidebar after SwiftUI finishes updating, preserving the user's later choice. Keep the Queue tab's identity stable when hiding it so resizing preserves navigation state and avoids a UIKit tab-rebuilding crash.
 
