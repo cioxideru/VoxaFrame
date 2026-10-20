@@ -15,6 +15,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- The offline management column no longer repeats the selected card's video title and channel; standalone detail screens retain their heading.
 - Offline track chips stay in video, audio, Yandex order, with distinct icon/outline accents for media kinds and video quality.
 - Selected offline library cards accent the video title while keeping the channel and track chips readable; their background updates when the theme changes.
 - Player metadata retains the channel ID, so videos opened by a link can open their channel from Description and More after loading.

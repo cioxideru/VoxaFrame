@@ -74,7 +74,7 @@ struct OfflineVideoDetail: View {
                     }
                 }
                 #endif
-                header(entry)
+                if !isEmbedded { header(entry) }
                 Section {
                     Button {
                         showsDownloads = true

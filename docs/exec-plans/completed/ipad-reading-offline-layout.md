@@ -154,3 +154,18 @@ the updated app on the connected iPad. Evidence:
 `/private/tmp/voxaframe-offline-chips-20261020`.
 Native visual inspection remains blocked by the locked Mac. The user was asked
 to check the new chips and the lower-card playback-options button on the iPad.
+
+## Follow-up: remove the repeated detail heading
+
+The management column omits its video title and channel because the selected
+library card already provides both. The existing embedded-presentation flag
+controls this; the standalone detail screen keeps its heading when the library
+is no longer visible. Both callers were checked, with no changes to downloads,
+playback or stored files.
+
+CI passed 1,370 tests in 182 suites and strict SwiftLint found zero violations.
+iOS simulator, physical Debug and tvOS simulator builds passed. CoreDevice
+installed the updated app on the connected iPad. Evidence:
+`/private/tmp/voxaframe-offline-detail-header-20261020`.
+The device rejected launch because the iPad is locked; the app is installed but
+was not launched. Native visual inspection also remains blocked by the locked Mac.
