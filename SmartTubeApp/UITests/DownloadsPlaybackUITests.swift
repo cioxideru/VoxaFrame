@@ -16,7 +16,9 @@ final class DownloadsPlaybackUITests: XCTestCase {
 
     override func tearDown() {
         app.terminate()
+        #if os(iOS)
         XCUIDevice.shared.orientation = .portrait
+        #endif
     }
 
     func testDownloadDefaultsFollowAudioLanguageAndPreserveManualChoices() {
@@ -73,6 +75,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         selectSavedTrack(AccessibilityID.offlineTranslationPicker, title: "Russian")
         play("fixture-360", translated: true)
         expectSavedStatus(saved: true)
+        #if os(iOS)
         let probe = app.staticTexts[AccessibilityID.offlinePlaybackStatus]
         let timeBeforeRotation = value("time", in: probe.label)
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -85,10 +88,13 @@ final class DownloadsPlaybackUITests: XCTestCase {
         XCTAssertEqual(
             XCTWaiter().wait(for: [rotated], timeout: 15), .completed,
             "app=\(app.frame) \(probe.label)")
+        #endif
         expectPlayback(translated: true)
         attachScreenshot("Saved video and local Yandex audio")
         app.terminate()
+        #if os(iOS)
         XCUIDevice.shared.orientation = .portrait
+        #endif
 
         launch(videoID: nil)
         openEntry(id)
@@ -377,10 +383,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         remove.tap()
         let confirm = app.buttons["Delete all"].firstMatch
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
-        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        attachment.name = "Confirm deletion of all offline videos and cache"
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        attachScreenshot("Confirm deletion of all offline videos and cache")
         confirm.tap()
         let empty = app.staticTexts[
             "Choose Offline watch from a video's menu. Accepted downloads continue when you leave this page."]
@@ -436,10 +439,7 @@ extension DownloadsPlaybackUITests {
             XCTAssertTrue(language.waitForExistence(timeout: 3))
             language.tap()
             app.buttons["Russian"].firstMatch.tap()
-            let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-            attachment.name = "Offline stream and translation selection"
-            attachment.lifetime = .keepAlways
-            add(attachment)
+            attachScreenshot("Offline stream and translation selection")
         } else {
             app.buttons["360p · H.264 · MP4"].firstMatch.tap()
             app.buttons[AccessibilityID.offlineSelectionAudio].tap()

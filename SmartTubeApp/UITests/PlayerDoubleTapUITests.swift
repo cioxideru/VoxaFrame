@@ -241,6 +241,7 @@ final class PlayerDoubleTapUITests: XCTestCase {
     }
 }
 
+#if os(iOS)
 /// Local media keeps the gesture regression independent of YouTube and account state.
 final class PlayerLevelGestureUITests: XCTestCase {
     private let app = XCUIApplication()
@@ -546,3 +547,4 @@ final class PlayerLevelDeviceUITests: XCTestCase {
         add(evidence)
     }
 }
+#endif

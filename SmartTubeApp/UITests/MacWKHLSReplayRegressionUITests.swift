@@ -212,6 +212,26 @@ final class MacWKHLSReplayRegressionUITests: XCTestCase {
         return allTitles.count > 0 ? allTitles.firstMatch.label : nil
     }
 
+    /// Hovers the player so the auto-hiding controls appear, then clicks the hittable Back.
+    private func clickVisibleBack(cycle: Int) -> Bool {
+        let backButtons = app.buttons.matching(identifier: AccessibilityID.playerBackButton)
+        let backButton = backButtons.firstMatch
+        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Cycle \(cycle): player.backButton not found")
+        backButton.hover()
+        let backIsHittable = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in
+                backButtons.allElementsBoundByIndex.contains { $0.isHittable }
+            }, object: nil)
+        guard XCTWaiter().wait(for: [backIsHittable], timeout: 5) == .completed,
+            let visibleBack = backButtons.allElementsBoundByIndex.first(where: { $0.isHittable })
+        else {
+            XCTFail("Cycle \(cycle): player.backButton did not become clickable after hover")
+            return false
+        }
+        visibleBack.click()
+        return true
+    }
+
     private func captureAndSkip(_ message: String, in app: XCUIApplication) throws -> Never {
         let screenshot = app.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
@@ -231,26 +251,6 @@ private extension XCUIElement {
             swipeUp()
             swipes += 1
         }
-    }
-
-    /// Hovers the player so the auto-hiding controls appear, then clicks the hittable Back.
-    private func clickVisibleBack(cycle: Int) -> Bool {
-        let backButtons = app.buttons.matching(identifier: AccessibilityID.playerBackButton)
-        let backButton = backButtons.firstMatch
-        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Cycle \(cycle): player.backButton not found")
-        backButton.hover()
-        let backIsHittable = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                backButtons.allElementsBoundByIndex.contains { $0.isHittable }
-            }, object: nil)
-        guard XCTWaiter().wait(for: [backIsHittable], timeout: 5) == .completed,
-            let visibleBack = backButtons.allElementsBoundByIndex.first(where: { $0.isHittable })
-        else {
-            XCTFail("Cycle \(cycle): player.backButton did not become clickable after hover")
-            return false
-        }
-        visibleBack.click()
-        return true
     }
 }
 #endif

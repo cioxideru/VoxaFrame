@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0037: SourceKit-LSP scan](completed/sourcekit-lsp-scan.md) — 500 Swift files checked; macOS UI-test compilation and the player's root-controller capture fixed; CI and all three platform test builds passed.
+
 - [PLAN-0036: iPad reading panels and offline library](completed/ipad-reading-offline-layout.md) — readable panels with channel navigation, compact library cards with Play choices, filtered download dialogs and active-progress summary; package/platform/UI checks passed.
 
 - [PLAN-0035: Audio and translation grouping](completed/audio-translation-grouping.md) — separate YouTube/Yandex groups in both dialogs; visually verified and accepted on iPad.

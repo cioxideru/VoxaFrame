@@ -179,7 +179,7 @@ private struct LandscapePresenter<Item: Identifiable & Hashable>: UIViewControll
             hc.modalPresentationStyle = .fullScreen
             hc.view.backgroundColor = .black
             let presentedBinding = latestBinding
-            hc.onDismiss = { [weak self, weak hc] in
+            hc.onDismiss = { [weak self, weak hc, weak root] in
                 guard let self, let hc, self.hostedVC === hc else { return }
                 self.presentationGeneration += 1
                 self.clearPresentation()

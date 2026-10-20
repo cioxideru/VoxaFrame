@@ -185,9 +185,7 @@ final class IPadMenuLayoutUITests: XCTestCase {
         app.scrollViews[AccessibilityID.homeChipBar].buttons[AccessibilityID.homeSectionChip("Channels")].firstMatch
     }
 
-    private var sidebarItems: XCUIElementQuery {
-        UITestHelpers.sidebarItems(in: app)
-    }
+    private var sidebarItems: XCUIElementQuery { UITestHelpers.sidebarItems(in: app) }
 
     private var searchTab: XCUIElement? { UITestHelpers.tabItem(named: "Search", in: app) }
 
@@ -628,6 +626,7 @@ final class HideWatchedSettingsUITests: XCTestCase {
     }
 }
 
+#if os(iOS)
 /// The Queue sidebar item is off by default: absent from the sidebar, still reachable through Library, and
 /// shown after the Settings toggle is turned on. No `--uitesting-show-queue-tab` override here.
 final class IPadQueueSidebarDefaultUITests: XCTestCase {
@@ -677,3 +676,4 @@ final class IPadQueueSidebarDefaultUITests: XCTestCase {
             "Queue appears in the sidebar after enabling the setting")
     }
 }
+#endif

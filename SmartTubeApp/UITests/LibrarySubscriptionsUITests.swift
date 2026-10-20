@@ -14,7 +14,9 @@ final class SubscriptionManagementUITests: XCTestCase {
 
     override func tearDown() {
         app.terminate()
+        #if os(iOS)
         XCUIDevice.shared.orientation = .portrait
+        #endif
         super.tearDown()
     }
 
@@ -39,11 +41,12 @@ final class SubscriptionManagementUITests: XCTestCase {
 
     private func cancelConfirmation() {
         XCTAssertTrue(confirm.waitForExistence(timeout: 3))
-        if UIDevice.current.userInterfaceIdiom == .pad {
+        let cancel = app.buttons[AccessibilityID.subscriptionCancel].firstMatch
+        if cancel.exists {
+            cancel.tap()
+        } else {
             // iPad confirmation popovers dismiss outside; UIKit omits the Cancel button.
             app.otherElements[AccessibilityID.popoverDismissRegion].tap()
-        } else {
-            app.buttons[AccessibilityID.subscriptionCancel].firstMatch.tap()
         }
         XCTAssertTrue(confirm.waitForNonExistence(timeout: 3))
     }
@@ -126,7 +129,7 @@ final class SubscriptionManagementUITests: XCTestCase {
     }
 
     func testLiveListAndChannelReturnWithoutChangingSubscriptions() throws {
-        #if targetEnvironment(simulator)
+        #if !os(iOS) || targetEnvironment(simulator)
         throw XCTSkip("Live account check runs on the connected physical iPad")
         #else
         app.launchArguments = ["--uitesting", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]

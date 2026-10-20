@@ -33,6 +33,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0019) | current | 2026-10-17 |
 | [exec-plans/completed/offline-ipad-cleanup.md](exec-plans/completed/offline-ipad-cleanup.md) | PLAN-0028: physical iPad offline download and cleanup | current | 2026-10-17 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
+| [exec-plans/completed/sourcekit-lsp-scan.md](exec-plans/completed/sourcekit-lsp-scan.md) | PLAN-0037: SourceKit-LSP scan and platform compilation fixes | current | 2026-10-20 |
 | [exec-plans/completed/ipad-reading-offline-layout.md](exec-plans/completed/ipad-reading-offline-layout.md) | PLAN-0036: iPad reading panels and offline library hierarchy | implemented | 2026-10-20 |
 | [exec-plans/completed/audio-translation-grouping.md](exec-plans/completed/audio-translation-grouping.md) | PLAN-0035: provider groups in player and offline download dialog, accepted on iPad | completed | 2026-10-20 |
 | [exec-plans/completed/offline-russian-defaults.md](exec-plans/completed/offline-russian-defaults.md) | PLAN-0034: language/bitrate defaults, download and player labels, audio playback confirmed on iPad | completed | 2026-10-20 |

@@ -32,7 +32,9 @@ final class ShortsPreloadingUITests: XCTestCase {
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
         ]
         if autoHideControls {
+            #if os(iOS)
             XCUIDevice.shared.orientation = .portrait
+            #endif
             app.launchArguments.append("--uitesting-controls-hide-timeout=\(controlsHideTimeout)")
         } else {
             app.launchArguments.append("--uitesting-show-controls")
@@ -116,9 +118,10 @@ final class ShortsPreloadingUITests: XCTestCase {
         XCTAssertTrue(prepared.contains("shorts:prepared"), prepared)
         expectRate(0.5, in: app)
 
+        let speed = app.buttons[AccessibilityID.shortsSpeedButton]
+        #if os(iOS)
         XCUIDevice.shared.orientation = .landscapeLeft
         defer { XCUIDevice.shared.orientation = .portrait }
-        let speed = app.buttons[AccessibilityID.shortsSpeedButton]
         let landscape = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in
                 let frame = app.windows.firstMatch.frame
@@ -130,6 +133,7 @@ final class ShortsPreloadingUITests: XCTestCase {
         screenshot.name = "Independent Shorts speed in landscape"
         screenshot.lifetime = .keepAlways
         add(screenshot)
+        #endif
 
         app.terminate()
         app.launchArguments.removeAll { $0 == "--uitesting-reset-settings" }
@@ -247,7 +251,11 @@ final class ShortsPreloadingUITests: XCTestCase {
             XCTAssertLessThanOrEqual(number("queue", in: status), 2)
             XCTAssertLessThanOrEqual(number("retained", in: status), 120)
         }
+        #if os(macOS)
+        app.typeKey("h", modifierFlags: .command)
+        #else
         XCUIDevice.shared.press(.home)
+        #endif
         app.activate()
         // Background playback is disabled by default; the current item stays paused.
         let paused = app.staticTexts[AccessibilityID.shortsPreloadStatus]
@@ -569,7 +577,9 @@ final class ShortsAccountControlsUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+        #if os(iOS)
         XCUIDevice.shared.orientation = .portrait
+        #endif
         app = XCUIApplication()
         app.launchArguments = [
             "--uitesting", "--uitesting-shorts", "--uitesting-reset-settings",
@@ -579,7 +589,9 @@ final class ShortsAccountControlsUITests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
+        #if os(iOS)
         XCUIDevice.shared.orientation = .portrait
+        #endif
         app.terminate()
         app = nil
     }
@@ -643,10 +655,12 @@ final class ShortsAccountControlsUITests: XCTestCase {
         add(screenshot)
         app.buttons["Cancel"].firstMatch.tap()
 
+        #if os(iOS)
         XCUIDevice.shared.orientation = .landscapeLeft
         XCTAssertTrue(scale.waitForExistence(timeout: 5))
         XCTAssertEqual(scale.value as? String, "Fill (crop)")
         XCUIDevice.shared.orientation = .portrait
+        #endif
         swipeToNext()
         expectIndex("2 / 3")
         XCTAssertEqual(scale.value as? String, "Fill (crop)")
@@ -718,10 +732,13 @@ final class ShortsAccountControlsUITests: XCTestCase {
         scale.tap()
         XCTAssertGreaterThanOrEqual(seconds(), before)
         XCTAssertEqual(scale.value as? String, "Fill (crop)")
+        #if os(iOS)
         XCUIDevice.shared.orientation = .landscapeLeft
+        #endif
         let stillPlaying = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in seconds() > before + 1 }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [stillPlaying], timeout: 10), .completed)
+        #if os(iOS)
         let landscape = XCTNSPredicateExpectation(
             predicate: NSPredicate { [self] _, _ in
                 let frame = app.windows.firstMatch.frame
@@ -733,5 +750,6 @@ final class ShortsAccountControlsUITests: XCTestCase {
         screenshot.name = "Shorts Fill in landscape during playback"
         screenshot.lifetime = .keepAlways
         add(screenshot)
+        #endif
     }
 }
