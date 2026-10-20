@@ -391,7 +391,7 @@ extension SettingsView {
             if #available(iOS 26.0, *) {
                 Toggle(isOn: $store.settings.disableLiquidGlass) {
                     Text("Disable Liquid Glass")
-                    // Applied live: TabBarLiquidGlassConfigurator and vfGlassScope both read the setting.
+                    // Applied live: TabBarConfigurator and vfGlassScope both read the setting.
                     Text("Opaque bars and panels instead of glass.", bundle: .module)
                 }
                 .accessibilityIdentifier(AccessibilityID.settingsDisableLiquidGlassToggle)

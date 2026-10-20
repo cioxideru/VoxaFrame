@@ -82,7 +82,10 @@ enum AccessibilityID {
     static var systemWindowedApps: String { "com.apple.settings.multitaskingAndGestures.windowedApps" }
     static var systemStageManager: String { "com.apple.settings.multitaskingAndGestures.stageManager" }
     static var systemSmartTubeWindowControls: String { "window-controls:com.ibaranov.smarttube.app" }
+    static var systemTabSidebarToggle: String { "ToggleSidebar" }
     static var systemWindowZoom: String { "Zoom-button" }
+    // The system tiling menu exposes labels without identifiers.
+    static var systemTileSideBySideLabels: [String] { ["Left and Right", "Влево и вправо"] }
     static var popoverDismissRegion: String { "PopoverDismissRegion" }
     static var homeChipBar: String { "home.chipBar" }
     static func homeSectionChip(_ title: String) -> String { "chip.\(title)" }

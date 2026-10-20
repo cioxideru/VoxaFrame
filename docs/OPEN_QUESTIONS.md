@@ -337,10 +337,11 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 ## OQ-0019 — VoxaFrame redesign follow-ups
 
 - Status: open; owner: UI maintainer; basis: [PLAN-0027](exec-plans/active/voxaframe-redesign.md), [ADR-0012](adr/0012-redesign-availability-and-tokens.md), [ADR-0013](adr/0013-minimum-os-18.md).
-- iPadOS 27 landscape launch emits SwiftUI's "Modifying state during view update" warning before sidebar
-  interaction. PLAN-0030 reproduced it on the unchanged pre-release `master` (`dfc06e62`) as well as
-  the 5.18 candidate; the sidebar navigation and Queue toggle assertions pass. The source of the
-  write remains to be located; do not treat passing navigation tests as proof the warning is harmless.
+- iPadOS 27 multiwindow acceptance: [PLAN-0033](exec-plans/completed/ipad-sidebar-state-warning.md) fixes
+  the sidebar launch warning and Queue identity regression; five focused UI tests pass without runtime warnings.
+  The expanded test verifies navigation in 375×585 and 993×779 floating windows, then fails preparing
+  Split View: the system places VoxaFrame on the left but does not pair Settings on the right.
+  Repair the two-app scene setup and verify 1/2, 1/3, 2/3 and full-screen restoration; those stages are not accepted.
 - Mini-player: the tab-bar bottom accessory was rejected in stage 2a (`0d446f6`): it re-parented the persistent player
   layer on every tab switch, has a fixed height, no opaque fallback and needs iOS 26.1. The overlay stays on every version.
   Its space is reserved by a UIKit bridge (`NavigationBottomReserve`) that adds the bar height to each tab's navigation

@@ -189,9 +189,7 @@ final class IPadMenuLayoutUITests: XCTestCase {
         UITestHelpers.sidebarItems(in: app)
     }
 
-    private var searchTab: XCUIElement? {
-        UITestHelpers.tabItem(named: "Search", in: app)
-    }
+    private var searchTab: XCUIElement? { UITestHelpers.tabItem(named: "Search", in: app) }
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -282,6 +280,27 @@ final class IPadMenuLayoutUITests: XCTestCase {
         add(screenshot)
     }
 
+    func testSidebarChoiceAndSelectionSurviveRotation() {
+        app.terminate()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        app.launch()
+
+        let queue = sidebarItems[AccessibilityID.tab("Queue")].firstMatch
+        XCTAssertTrue(queue.waitForExistence(timeout: 5) && queue.isHittable)
+        UITestHelpers.tapTab(named: "Library", in: app)
+        let toggle = app.buttons[AccessibilityID.systemTabSidebarToggle].firstMatch
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        toggle.tap()
+        waitForLayout("The user can hide the sidebar") { !queue.isHittable }
+
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
+            XCUIDevice.shared.orientation = orientation
+            waitForLayout("Rotation must preserve the user's sidebar choice and selected tab") {
+                !queue.isHittable && self.app.navigationBars["Library"].exists
+            }
+        }
+    }
+
     func testMenusAcrossSplitViewAndWindowResizing() throws {
         if #unavailable(iOS 26.0) { throw XCTSkip("Requires iPad Windowed Apps") }
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -310,7 +329,9 @@ final class IPadMenuLayoutUITests: XCTestCase {
         exerciseNavigationRoundTrips(named: "Resized floating window")
 
         windowControls.press(forDuration: 1)
-        let split = springBoard.buttons["Left and Right"]
+        let split = springBoard.buttons.matching(
+            NSPredicate(format: "label IN %@", AccessibilityID.systemTileSideBySideLabels)
+        ).firstMatch
         XCTAssertTrue(split.waitForExistence(timeout: 5))
         split.tap()
         assertSplitView(fraction: 0.5)
@@ -443,10 +464,11 @@ final class IPadMenuLayoutUITests: XCTestCase {
         UITestHelpers.selectSettingsCategory("appearance", in: app)
         let form = UITestHelpers.settingsForm(in: app)
         XCTAssertTrue(form.waitForExistence(timeout: 5))
-        let visibleSections = form.buttons[AccessibilityID.settingsVisibleSectionsLink].firstMatch
-        UITestHelpers.scrollUntilVisible(visibleSections, in: form)
-        XCTAssertTrue(visibleSections.waitForExistence(timeout: 5))
-        visibleSections.tap()
+        let link = form.buttons[AccessibilityID.settingsVisibleSectionsLink].firstMatch
+        // A fast fling can skip this row entirely in a compact floating window.
+        for _ in 0..<16 where !(link.exists && form.frame.contains(link.frame)) { form.swipeUp(velocity: .slow) }
+        XCTAssertTrue(link.waitForExistence(timeout: 5))
+        link.tap()
         let navigationBar = app.navigationBars["Visible Sections"].firstMatch
         XCTAssertTrue(navigationBar.waitForExistence(timeout: 5))
         navigationBar.buttons.firstMatch.tap()

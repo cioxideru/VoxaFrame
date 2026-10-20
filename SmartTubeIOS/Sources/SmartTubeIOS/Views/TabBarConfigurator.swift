@@ -2,7 +2,7 @@
 import SwiftUI
 import UIKit
 
-// MARK: - TabBarLiquidGlassConfigurator (#107, #143)
+// MARK: - TabBarConfigurator (#107, #143, PLAN-0033)
 //
 // Forces the tab bar to render as an opaque bar instead of iOS 26's Liquid Glass
 // material when `AppSettings.disableLiquidGlass` is on.
@@ -17,19 +17,35 @@ import UIKit
 //
 // A zero-size UIViewRepresentable is the only reliable way to reach the live
 // UITabBar instance from SwiftUI's TabView, which doesn't expose one directly.
-struct TabBarLiquidGlassConfigurator: UIViewRepresentable {
+struct TabBarConfigurator: UIViewRepresentable {
     let disableLiquidGlass: Bool
+
+    @MainActor
+    final class Coordinator {
+        weak var configuredController: UITabBarController?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> UIView {
         UIView(frame: .zero)
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
-        // Deferred to the next run-loop tick: this view's own tabBarController is
-        // usually nil on the same pass SwiftUI first inserts it into the hierarchy.
-        DispatchQueue.main.async {
-            guard let tabBar = uiView.window?.rootViewController?.tabBarController(in: uiView)?.tabBar
+        let coordinator = context.coordinator
+        // Leave SwiftUI's update before UIKit calls back into its sidebar visibility binding.
+        Task { @MainActor in
+            guard let window = uiView.window,
+                let controller = window.rootViewController?.tabBarController(in: uiView)
             else { return }
+            if coordinator.configuredController !== controller {
+                coordinator.configuredController = controller
+                if controller.traitCollection.userInterfaceIdiom == .pad {
+                    // Apply the initial window shape once; later updates preserve the user's toggle.
+                    controller.sidebar.isHidden = window.bounds.width <= window.bounds.height
+                }
+            }
+            let tabBar = controller.tabBar
             let appearance = UITabBarAppearance()
             if disableLiquidGlass {
                 appearance.configureWithOpaqueBackground()

@@ -50,7 +50,6 @@ struct MainTabView: View {
     @State private var miniPlayerHeight: CGFloat = 0
     @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.isLandscapeLayout) private var isLandscapeLayout
     @Environment(\.innerTubeAPI) private var api
     @Environment(SettingsStore.self) private var store
     @Environment(PlayerStateStore.self) private var playerState
@@ -83,9 +82,9 @@ struct MainTabView: View {
             } action: {
                 shellFrame = $0
             }
-            .background(TabBarLiquidGlassConfigurator(disableLiquidGlass: store.settings.disableLiquidGlass))
+            .background(TabBarConfigurator(disableLiquidGlass: store.settings.disableLiquidGlass))
             .environment(searchVM)
-            // A compact width, or the setting turned off, removes the Queue tab: keep the user on the queue,
+            // A compact width, or the setting turned off, hides the Queue tab: keep the user on the queue,
             // as Library › Queue.
             .onChange(of: horizontalSizeClass == .regular && store.settings.showQueueTab) { _, queueTabShown in
                 guard !queueTabShown, selectedTab == .queue else { return }
@@ -193,23 +192,21 @@ struct MainTabView: View {
             // A1: the Queue under Library in the sidebar of a regular-width window only. A compact width
             // shows `.sidebarOnly` tabs in the tab bar too (a sixth tab pushes Search into More), so there
             // the queue stays in Library › Queue.
-            if horizontalSizeClass == .regular, store.settings.showQueueTab {
-                Tab(
-                    String(localized: "Queue", bundle: .module), systemImage: ShellItem.queue.icon,
-                    value: ShellItem.queue
-                ) {
-                    tabContent(.queue)
-                }
-                .tabPlacement(.sidebarOnly)
-                .accessibilityIdentifier(AccessibilityID.tab(ShellItem.queue.id))
+            Tab(
+                String(localized: "Queue", bundle: .module), systemImage: ShellItem.queue.icon,
+                value: ShellItem.queue
+            ) {
+                tabContent(.queue)
             }
+            .tabPlacement(.sidebarOnly)
+            // Keep the tab hierarchy stable when UIKit changes between regular and compact layouts.
+            .hidden(horizontalSizeClass != .regular || !store.settings.showQueueTab)
+            .accessibilityIdentifier(AccessibilityID.tab(ShellItem.queue.id))
             ForEach(Self.tabOrder.dropFirst(2)) { section in
                 sectionTab(section)
             }
         }
         .tabViewStyle(.sidebarAdaptable)
-        // Match the initial window shape; the user can still toggle between the sidebar and tabs.
-        .defaultAdaptableTabBarPlacement(isLandscapeLayout ? .sidebar : .tabBar)
         // An invisible header that reports where the sidebar is while it is on screen.
         .tabViewSidebarHeader {
             Color.clear

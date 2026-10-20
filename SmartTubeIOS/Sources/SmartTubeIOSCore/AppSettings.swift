@@ -73,7 +73,7 @@ public struct AppSettings: Codable {
 
     /// #107/#143: opts the app out of iOS 26's Liquid Glass tab bar. Apple's documented
     /// mechanism (`UIDesignRequiresCompatibility` in Info.plist) is build-time only and
-    /// can't back a live, per-user toggle — see `TabBarLiquidGlassConfigurator`, which
+    /// can't back a live, per-user toggle — see `TabBarConfigurator`, which
     /// instead restyles the actual on-screen `UITabBar` instance directly. Takes effect
     /// immediately, no restart needed. Also turns `vfGlass` surfaces opaque.
     public var disableLiquidGlass: Bool
