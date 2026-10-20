@@ -74,6 +74,7 @@ struct OfflineVideosView: View {
                 }
             }
             .navigationTitle(Text("Offline videos", bundle: .module))
+            .toolbarTitleDisplayMode(.inline)
             .onGeometryChange(for: CGFloat.self, of: \.size.width) { contentWidth = $0 }
             .onAppear(perform: syncSelection)
             .onChange(of: snapshot.entries.map(\.id)) { _, _ in syncSelection() }

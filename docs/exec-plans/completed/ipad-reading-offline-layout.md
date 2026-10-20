@@ -99,3 +99,20 @@ the updated executable built at 21:28:24 local time on 2026-10-20.
 Logs and screenshots: `/private/tmp/voxaframe-floating-downloads-20261020`.
 The physical layout awaits user observation; iPhone and tvOS interaction were
 not exercised.
+
+## Follow-up: reclaim the large-title area
+
+The user's marked screenshot showed the system's large navigation-title region
+taking space above the library. Offline videos now uses the same inline toolbar
+title mode as its existing dialogs: the name and actions share one compact row,
+and both content columns start higher. The floating download summary still
+reserves space only when active work or errors exist.
+
+The compact title and active summary were visually checked in landscape iPad
+Simulator. CI passed 1,368 tests in 182 suites and strict SwiftLint reported zero
+violations. iOS/tvOS builds and the existing Downloads UI journey passed
+(`test_sim_2026-10-20T18-32-51-126Z_pid52182_6f836de4.xcresult`).
+Xcode reports Running SmartTube on iPad (Ivan); the updated executable
+was built at 21:33:19 local time on 2026-10-20.
+Evidence: `/private/tmp/voxaframe-compact-offline-header-20261020`.
+The latest physical layout and iPhone interaction await user observation.
