@@ -119,6 +119,19 @@ enum OfflinePresentation {
         let track: OfflineTrack
         let status: JobStatus
         var id: String { track.id }
+        var accent: AppSettings.AccentColorChoice {
+            switch part(of: track) {
+            case .audio: .green
+            case .translation: .orange
+            case .video:
+                switch AppSettings.VideoQuality.from(height: OfflineDetailPresentation.height(track)) {
+                case .q720: .blue
+                case .q1080, .q1440: .purple
+                case .q2160: .pink
+                default: .teal
+                }
+            }
+        }
         var compactLabel: String {
             switch track.kind {
             case .video, .hls:
@@ -153,13 +166,14 @@ enum OfflinePresentation {
         let own = jobs.filter { $0.videoID == entry.id }
         var seen = Set<String>()
         let tracks = entry.assets.map(\.track) + own.map(\.track)
-        return tracks.compactMap { track in
+        let badges: [TrackBadge] = tracks.compactMap { track in
             guard seen.insert(track.id).inserted else { return nil }
             let saved = entry.assets.contains { $0.id == track.id }
             let latest = own.last { $0.track.id == track.id }
             let state = latest.map(status) ?? .completed
             return TrackBadge(track: track, status: saved && latest?.state == .cancelled ? .completed : state)
         }
+        return Part.allCases.flatMap { part in badges.filter { self.part(of: $0.track) == part } }
     }
 
     /// The video title, or its ID when the title is unknown (a deep link opens a video without one).

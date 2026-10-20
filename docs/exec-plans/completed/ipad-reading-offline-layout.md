@@ -135,3 +135,22 @@ latest executable built at 21:48:52 local time on 2026-10-20.
 Evidence: `/private/tmp/voxaframe-offline-selection-20261020`.
 The title accent awaits physical user observation; iPhone and tvOS interaction
 were not exercised for this visual change.
+
+## Follow-up: track-chip order and colour
+
+Saved and pending chips are grouped in the existing Video → Audio → Translation
+order, preserving their order within each group and keeping one chip per track.
+Icons and outlines use the existing light/dark accent pairs: teal for SD or
+unknown quality, blue for 720p, purple for 1080p/1440p, pink for 2160p, green for
+audio and orange for Yandex. Labels keep the primary text colour, so resolution,
+codec, language and status remain readable without distinguishing colours.
+Quality uses the existing shared metadata/legacy-label helper.
+
+Two unit checks cover mixed saved/pending ordering and kind/quality accents,
+including legacy labels and structured metadata taking precedence. CI passed
+1,370 tests in 182 suites; strict SwiftLint found zero violations. iOS simulator,
+physical Debug and tvOS simulator builds passed. CoreDevice installed and launched
+the updated app on the connected iPad. Evidence:
+`/private/tmp/voxaframe-offline-chips-20261020`.
+Native visual inspection remains blocked by the locked Mac. The user was asked
+to check the new chips and the lower-card playback-options button on the iPad.

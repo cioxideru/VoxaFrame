@@ -242,7 +242,7 @@ enum OfflineDetailPresentation {
         return height > 0 ? "\(height)p" : track.kind == .hls ? "HLS" : String(localized: "Video", bundle: .module)
     }
 
-    private static func height(_ track: OfflineTrack) -> Int {
+    static func height(_ track: OfflineTrack) -> Int {
         // Older saved tracks and the loopback fixture may predate structured video metadata.
         track.videoSize?.height ?? Int(track.label.prefix(while: \.isNumber)) ?? 0
     }

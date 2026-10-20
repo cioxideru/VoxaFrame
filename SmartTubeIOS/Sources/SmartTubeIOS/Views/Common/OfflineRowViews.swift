@@ -100,10 +100,13 @@ private struct OfflineTrackBadge: View {
     let item: OfflinePresentation.TrackBadge
 
     var body: some View {
+        let accent = Color(VFColorPair.action(for: item.accent))
         HStack(spacing: VFSpace.s4) {
             Image(systemName: OfflinePresentation.part(of: item.track).symbol)
+                .foregroundStyle(accent)
             Text(item.compactLabel.isEmpty ? item.label : item.compactLabel)
                 .lineLimit(1)
+                .foregroundStyle(Color.primary)
             switch item.status {
             case .downloading, .resolving:
                 ProgressView().controlSize(.small)
@@ -118,7 +121,10 @@ private struct OfflineTrackBadge: View {
         .frame(minHeight: VFSpace.s20)
         .padding(.horizontal, VFSpace.s8)
         .padding(.vertical, VFSpace.s4)
-        .background(.quaternary, in: RoundedRectangle(cornerRadius: VFRadius.small))
+        .background(VFColor.surface, in: RoundedRectangle(cornerRadius: VFRadius.small))
+        .overlay {
+            RoundedRectangle(cornerRadius: VFRadius.small).strokeBorder(accent.opacity(0.35))
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             Text("offline.statusLine \(Text(item.label)) \(item.status.label.text)", bundle: .module))

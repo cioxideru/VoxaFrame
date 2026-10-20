@@ -113,6 +113,34 @@ struct OfflinePresentationTests {
             OfflinePresentation.TrackBadge(track: .translation("ru"), status: .queued).compactLabel == "Yandex 🇷🇺 RU")
     }
 
+    @Test func chipAccentsDistinguishKindsAndUseSavedQualityBeforeLegacyLabels() {
+        func accent(_ track: OfflineTrack) -> AppSettings.AccentColorChoice {
+            OfflinePresentation.TrackBadge(track: track, status: .completed).accent
+        }
+        #expect(accent(picture) == .blue)
+        #expect(accent(muxed) == .teal)
+        #expect(accent(sound) == .green)
+        #expect(accent(.translation("ru")) == .orange)
+        #expect(accent(package) == .teal)
+        var hls = package
+        hls.videoSize = OfflineVideoSize(width: 1920, height: 1080)
+        #expect(accent(hls) == .purple)
+        var video = picture
+        video.videoSize = OfflineVideoSize(width: 3840, height: 2160)
+        #expect(accent(video) == .pink)
+    }
+
+    @Test func trackChipsGroupSavedAndPendingFilesInVideoAudioTranslationOrder() {
+        let saved = entry("a", [.translation("ru"), sound, package])
+        let jobs = [
+            job("a", .translation("en"), .failed), job("a", picture, .queued),
+            job("a", sound, .completed), job("a", .translation("ru"), .completed),
+        ]
+        let chips = OfflinePresentation.trackBadges(saved, jobs: jobs)
+        #expect(chips.map(\.id) == [package.id, picture.id, sound.id, "vot-ru", "vot-en"])
+        #expect(chips.map(\.status) == [.completed, .queued, .completed, .completed, .failed])
+    }
+
     @Test func transferSummaryCountsFilesAndKeepsCompletedPartsOfActiveBatches() {
         let batch = UUID()
         let jobs = [
