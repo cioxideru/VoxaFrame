@@ -86,6 +86,10 @@ enum OfflineUITestFixture {
         }
 
         func resolve(video: Video, track: OfflineTrack, attempt: UUID) throws -> OfflineSource {
+            if video.id.hasPrefix("offline-ui-overview-") {
+                if track.kind == .audio { throw OfflineLibraryError.unavailable }
+                throw OfflineResolutionDeferred(delay: 3600)
+            }
             if track.kind == .translation { return source(video, track: track, file: "voice.mp3") }
             let sources = try catalog(video: video)
             guard

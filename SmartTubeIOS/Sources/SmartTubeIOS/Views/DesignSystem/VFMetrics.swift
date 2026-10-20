@@ -57,9 +57,9 @@ enum VFColumn {
     static let detailMinimum: CGFloat = 320
     /// Offline rows carry a cover, a title of up to three lines and a status line, so their list takes a larger
     /// share; the detail still keeps at least `detailMinimum`.
-    static let offlineListMinimum: CGFloat = 320
-    static let offlineListFraction: CGFloat = 0.45
-    static let offlineListMaximum: CGFloat = 420
+    static let offlineListMinimum: CGFloat = 420
+    static let offlineListFraction: CGFloat = 0.6
+    static let offlineListMaximum: CGFloat = 900
     /// Longest line of running text (description, comments) before it stops being comfortable to read.
     static let readableMaximum: CGFloat = 640
     static let settingsCategoriesMaximum: CGFloat = 320
@@ -75,7 +75,7 @@ enum VFColumn {
     static func listWidth(
         in width: CGFloat, minimum: CGFloat = listMinimum, fraction: CGFloat = listFraction, maximum: CGFloat
     ) -> CGFloat {
-        max(minimum, min(width * fraction, maximum))
+        max(minimum, min(width - detailMinimum, width * fraction, maximum))
     }
 }
 

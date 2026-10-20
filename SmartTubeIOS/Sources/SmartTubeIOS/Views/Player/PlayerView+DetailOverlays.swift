@@ -8,7 +8,8 @@ extension PlayerView {
     var descriptionPanel: some View {
         let panel = PlayerOptionPanel(
             title: Text("Description", bundle: .module), isPresented: $showDescriptionSheet,
-            cancelAccessibilityIdentifier: AccessibilityID.playerDescriptionPanelCancel
+            cancelAccessibilityIdentifier: AccessibilityID.playerDescriptionPanelCancel,
+            preferredWidth: VFColumn.readableMaximum
         ) {
             ScrollView { descriptionContent }
                 .background(VFColor.surface)
@@ -39,6 +40,11 @@ extension PlayerView {
                 }
             }
             .descriptionCard()
+            #if !os(tvOS)
+            if playingChannelId != nil {
+                moreMenuChannelRow.descriptionCard()
+            }
+            #endif
             Group {
                 if !description.isEmpty {
                     Text(descriptionAttributedString(description))

@@ -50,7 +50,15 @@ enum AccessibilityID {
     static func offlineDeleteJob(_ id: UUID) -> String { "offline.deleteJob.\(id)" }
     static var offlineWatch: String { "offline.watch" }
     static var offlinePage: String { "offline.page" }
-    static var offlinePagePicker: String { "offline.pagePicker" }
+    static var offlineTransferSummary: String { "offline.transferSummary" }
+    static var offlineVideoDownloads: String { "offline.videoDownloads" }
+    static var offlineDownloads: String { "offline.downloads" }
+    static var offlineDownloadsFilter: String { "offline.downloadsFilter" }
+    static var offlinePlaybackOptionsList: String { "offline.playbackOptionsList" }
+    static var offlinePlayOptionsClose: String { "offline.playOptionsClose" }
+    static func offlinePlayOptions(_ videoID: String) -> String { "offline.playOptions.\(videoID)" }
+    static func offlineLibraryPlay(_ videoID: String) -> String { "offline.libraryPlay.\(videoID)" }
+    static var offlineDownloadsClose: String { "offline.downloadsClose" }
     static var offlineLibraryList: String { "offline.libraryList" }
     static var offlineJobsList: String { "offline.jobsList" }
     static var offlineDetailList: String { "offline.detailList" }

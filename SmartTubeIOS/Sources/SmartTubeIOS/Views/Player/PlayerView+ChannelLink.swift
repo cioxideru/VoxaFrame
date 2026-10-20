@@ -15,6 +15,7 @@ extension PlayerView {
     func openPlayingChannel() {
         guard let cid = playingChannelId else { return }
         showMoreMenu = false
+        showDescriptionSheet = false
         #if os(iOS)
         playerState.openChannel(cid, miniPlayerEnabled: store.settings.miniPlayerEnabled)
         #else

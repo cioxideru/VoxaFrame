@@ -592,9 +592,9 @@ extension InnerTubeAPI {
         }()
 
         let video = Video(
-            id: videoId,
-            title: title,
+            id: videoId, title: title,
             channelTitle: channelTitle,
+            channelId: videoDetails?["channelId"] as? String,
             description: description,
             thumbnailURL: thumbURL,
             duration: duration,

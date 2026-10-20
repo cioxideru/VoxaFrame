@@ -15,7 +15,8 @@ struct CommentsPanel: View {
     var body: some View {
         PlayerOptionPanel(
             title: Text("Comments", bundle: .module), isPresented: $isPresented,
-            cancelAccessibilityIdentifier: AccessibilityID.playerCommentsPanelCancel
+            cancelAccessibilityIdentifier: AccessibilityID.playerCommentsPanelCancel,
+            preferredWidth: VFColumn.readableMaximum
         ) {
             ScrollView { CommentsList(comments: comments, isLoading: isLoading) }
                 .background(VFColor.surface)

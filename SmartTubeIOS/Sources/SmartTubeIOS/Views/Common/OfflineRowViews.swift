@@ -54,12 +54,12 @@ struct OfflineEntryLabel: View {
     let entry: OfflineEntry
     let title: String
     let status: OfflinePresentation.EntryStatus
+    let tracks: [OfflinePresentation.TrackBadge]
     @Environment(\.dynamicTypeSize) private var typeSize
 
     #if os(tvOS)
     private static let thumbnailWidth: CGFloat = 240
     #else
-    /// I-Offline: leaves about 220 pt of text beside the cover in the iPad portrait column.
     private static let thumbnailWidth: CGFloat = 104
     #endif
 
@@ -70,22 +70,132 @@ struct OfflineEntryLabel: View {
             compact
             ? AnyLayout(HStackLayout(alignment: .top, spacing: VFSpace.s12))
             : AnyLayout(VStackLayout(alignment: .leading, spacing: VFSpace.s8))
-        let parts = OfflinePresentation.parts(entry)
-        var statusLine = status.label
-        statusLine.detail = parts.isEmpty ? nil : parts.map(\.title).formatted(.list(type: .and, width: .narrow))
-        return layout {
-            OfflineCover(url: entry.video.thumbnailURL, width: Self.thumbnailWidth)
-            VStack(alignment: .leading, spacing: VFSpace.s4) {
-                Text(title).font(.headline).lineLimit(compact ? 3 : nil)
-                if !entry.video.channelTitle.isEmpty {
-                    Text(entry.video.channelTitle).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
+        return VStack(alignment: .leading, spacing: VFSpace.s8) {
+            layout {
+                OfflineCover(url: entry.video.thumbnailURL, width: Self.thumbnailWidth)
+                VStack(alignment: .leading, spacing: VFSpace.s4) {
+                    Text(title).font(.headline).lineLimit(compact ? 3 : nil)
+                    if !entry.video.channelTitle.isEmpty {
+                        Text(entry.video.channelTitle).font(.footnote).foregroundStyle(.secondary)
+                    }
                 }
-                statusLine.lineLimit(compact ? 1 : nil)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            status.label
+            OfflineBadgeLayout {
+                ForEach(tracks) { item in
+                    OfflineTrackBadge(item: item)
+                        .accessibilityIdentifier(AccessibilityID.offlineTrackBadge(entry.id, item.id))
+                }
+            }
         }
-        // A Button label centres multi-line text by default.
+        .padding(.vertical, VFSpace.s8)
         .multilineTextAlignment(.leading)
+    }
+}
+
+private struct OfflineTrackBadge: View {
+    let item: OfflinePresentation.TrackBadge
+
+    var body: some View {
+        HStack(spacing: VFSpace.s4) {
+            Image(systemName: OfflinePresentation.part(of: item.track).symbol)
+            Text(item.compactLabel.isEmpty ? item.label : item.compactLabel)
+                .lineLimit(1)
+            switch item.status {
+            case .downloading, .resolving:
+                ProgressView().controlSize(.small)
+            case .completed:
+                EmptyView()
+            default:
+                Image(systemName: item.status.label.symbol)
+                    .foregroundStyle(item.status.label.style)
+            }
+        }
+        .font(.caption)
+        .frame(minHeight: VFSpace.s20)
+        .padding(.horizontal, VFSpace.s8)
+        .padding(.vertical, VFSpace.s4)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: VFRadius.small))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            Text("offline.statusLine \(Text(item.label)) \(item.status.label.text)", bundle: .module))
+    }
+}
+
+/// Wrap whole chips, keeping each label on one line.
+private struct OfflineBadgeLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        arrangement(width: proposal.width ?? .infinity, subviews: subviews).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = arrangement(width: bounds.width, subviews: subviews)
+        for (index, view) in subviews.enumerated() {
+            let frame = result.frames[index]
+            view.place(
+                at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                proposal: ProposedViewSize(frame.size))
+        }
+    }
+
+    private func arrangement(width: CGFloat, subviews: Subviews) -> (size: CGSize, frames: [CGRect]) {
+        var frames: [CGRect] = []
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        var usedWidth: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(ProposedViewSize(width: width, height: nil))
+            if x > 0 && x + size.width > width {
+                x = 0
+                y += rowHeight + VFSpace.s4
+                rowHeight = 0
+            }
+            frames.append(CGRect(origin: CGPoint(x: x, y: y), size: size))
+            usedWidth = max(usedWidth, x + size.width)
+            x += size.width + VFSpace.s4
+            rowHeight = max(rowHeight, size.height)
+        }
+        return (CGSize(width: usedWidth, height: y + rowHeight), frames)
+    }
+}
+
+struct OfflineTransferSummary: View {
+    let jobs: [OfflineJob]
+    let action: () -> Void
+
+    var body: some View {
+        let summary = OfflinePresentation.transferSummary(jobs)
+        if summary.isVisible {
+            Button(action: action) {
+                VStack(alignment: .leading, spacing: VFSpace.s8) {
+                    HStack {
+                        Label {
+                            Text("Downloads", bundle: .module).font(.headline)
+                        } icon: {
+                            Image(systemName: AppSymbol.download)
+                        }
+                        Spacer()
+                        if let progress = summary.progress {
+                            Text(progress, format: .percent.precision(.fractionLength(0)))
+                                .monospacedDigit()
+                        }
+                        Image(systemName: AppSymbol.chevronRight).accessibilityHidden(true)
+                    }
+                    if summary.activeCount > 0 { Text(summary.countText).font(.subheadline) }
+                    if let progress = summary.progress { ProgressView(value: progress) }
+                    if summary.failures > 0 {
+                        Text("Failed downloads: \(summary.failures)", bundle: .module)
+                            .font(.footnote).foregroundStyle(VFColor.danger)
+                    }
+                }
+                .padding()
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.offlineTransferSummary)
+        }
     }
 }
 
@@ -258,25 +368,6 @@ struct OfflineTotalsLabel: View {
                 .lineLimit(1)
                 .accessibilityLabel(Text("Offline storage used: \(text)", bundle: .module))
                 .accessibilityIdentifier(AccessibilityID.offlineTotals)
-        }
-    }
-}
-
-/// Video title of a Downloads section with the sizes of its saved files below; at accessibility sizes the sizes
-/// wrap without a line limit and the header grows.
-struct OfflineGroupHeader: View {
-    let title: String
-    let sizes: String?
-    @Environment(\.dynamicTypeSize) private var typeSize
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: VFSpace.s4) {
-            Text(title)
-            if let sizes {
-                Text(sizes).font(.footnote).foregroundStyle(.secondary)
-                    .lineLimit(typeSize.isAccessibilitySize ? nil : 2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
         }
     }
 }

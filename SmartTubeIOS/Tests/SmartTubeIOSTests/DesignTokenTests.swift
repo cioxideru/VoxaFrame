@@ -47,6 +47,8 @@ struct DesignTokenTests {
         for width: CGFloat in [threshold, 744, 834, 1024, 1366, 2400] {
             #expect(width - offlineList(width) >= VFColumn.detailMinimum)
         }
+        #expect(offlineList(1024) > 1024 / 2)
+        #expect(offlineList(1210) > 1210 / 2)
         #expect(offlineList(2400) == VFColumn.offlineListMaximum)
     }
 

@@ -1,7 +1,7 @@
-// Downloading is compiled out (App Store guideline 5.2.3). Define ENABLE_DOWNLOADS to build it.
-#if ENABLE_DOWNLOADS
 import XCTest
 
+// Legacy gallery downloading is compiled out. The offline-library tests below are always enabled on iOS.
+#if ENABLE_DOWNLOADS
 // MARK: - VideoDownloadUITests
 //
 // UI tests for the two video-download entry points available in the iOS app:
@@ -369,3 +369,96 @@ final class VideoDownloadUITests: XCTestCase {
     }
 }
 #endif  // ENABLE_DOWNLOADS
+
+#if os(iOS)
+@MainActor
+final class OfflineTransferOverviewUITests: XCTestCase {
+    private var app = XCUIApplication()
+
+    override func setUp() async throws {
+        continueAfterFailure = false
+        let url = try XCTUnwrap(URL(string: "http://127.0.0.1:18766/health"))
+        let (_, response) = try await URLSession.shared.data(from: url)
+        XCTAssertEqual((response as? HTTPURLResponse)?.statusCode, 200)
+    }
+
+    override func tearDown() { app.terminate() }
+
+    func testHeaderOpensOnlyPendingAndFailedFilesWithActions() {
+        let id = "offline-ui-overview-" + UUID().uuidString
+        app.launchArguments = [
+            "--uitesting", "--uitesting-sign-out", "--uitesting-show-controls",
+            "--uitesting-disable-sponsorblock", "--uitesting-deeplink-video=" + id,
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+        app.launchEnvironment["SHORTS_TEST_MEDIA_URL"] = "http://127.0.0.1:18766"
+        app.launchEnvironment["OFFLINE_TEST_MEDIA_URL"] = "http://127.0.0.1:18766"
+        app.launch()
+        let offline = app.buttons[AccessibilityID.playerQuickOfflineButton].firstMatch
+        XCTAssertTrue(offline.waitForExistence(timeout: 25))
+        offline.tap()
+        let save = app.buttons[AccessibilityID.offlineSelectionDownload]
+        XCTAssertTrue(save.waitForExistence(timeout: 15))
+        app.buttons[AccessibilityID.offlineSelectionVideo].tap()
+        app.buttons["720p · H.264 · MP4"].firstMatch.tap()
+        app.buttons[AccessibilityID.offlineSelectionAudio].tap()
+        app.buttons["en · Original"].firstMatch.tap()
+        let translation = app.switches[AccessibilityID.offlineSelectionTranslate].switches.firstMatch
+        if translation.value as? String == "0" { translation.tap() }
+        save.tap()
+        app.buttons[AccessibilityID.playerBackButton].firstMatch.tap()
+        UITestHelpers.tapTab(named: "Offline videos", in: app)
+        let summary = app.buttons[AccessibilityID.offlineTransferSummary]
+        XCTAssertTrue(summary.waitForExistence(timeout: 15))
+        summary.tap()
+        let filters = app.segmentedControls[AccessibilityID.offlineDownloadsFilter]
+        XCTAssertTrue(filters.buttons["Active"].isSelected)
+        XCTAssertFalse(app.buttons["Open"].exists, "Files must not open the entire video card")
+        filters.buttons["Video"].tap()
+        XCTAssertTrue(actions("offline.retry.", videoID: id).isEmpty)
+        XCTAssertEqual(actions("offline.cancel.", videoID: id).count, 1)
+        filters.buttons["Audio"].tap()
+        XCTAssertEqual(actions("offline.retry.", videoID: id).count, 1)
+        XCTAssertEqual(actions("offline.cancel.", videoID: id).count, 1)
+        filters.buttons["Error"].tap()
+        XCTAssertEqual(actions("offline.retry.", videoID: id).count, 1)
+        XCTAssertTrue(actions("offline.cancel.", videoID: id).isEmpty)
+        filters.buttons["Active"].tap()
+        actions("offline.retry.", videoID: id).first?.tap()
+        let retried = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in self.actions("offline.retry.", videoID: id).count == 1 }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [retried], timeout: 15), .completed)
+        XCTAssertEqual(actions("offline.cancel.", videoID: id).count, 2)
+        for remaining in [1, 0] {
+            actions("offline.cancel.", videoID: id).first?.tap()
+            let cancelled = XCTNSPredicateExpectation(
+                predicate: NSPredicate { _, _ in self.actions("offline.cancel.", videoID: id).count == remaining },
+                object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [cancelled], timeout: 10), .completed)
+        }
+        actions("offline.deleteJob.", videoID: id).first?.tap()
+        app.buttons["Delete"].firstMatch.tap()
+        let removed = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in self.actions("offline.deleteJob.", videoID: id).isEmpty }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [removed], timeout: 10), .completed)
+        app.buttons[AccessibilityID.offlineDownloadsClose].tap()
+        let downloads = app.buttons[AccessibilityID.offlineDownloads]
+        XCTAssertTrue(downloads.exists)
+        downloads.tap()
+        XCTAssertTrue(filters.buttons["All"].waitForExistence(timeout: 5))
+        XCTAssertTrue(filters.buttons["All"].isSelected)
+        XCTAssertEqual(actions("offline.retry.", videoID: id).count, 2)
+        filters.buttons["Active"].tap()
+        XCTAssertTrue(actions("offline.deleteJob.", videoID: id).isEmpty)
+    }
+
+    private func actions(_ prefix: String, videoID: String) -> [XCUIElement] {
+        let rows = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH 'offline.job.' AND label == %@", videoID))
+        return rows.allElementsBoundByIndex.flatMap {
+            $0.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix)).allElementsBoundByIndex
+        }
+
+    }
+}
+#endif

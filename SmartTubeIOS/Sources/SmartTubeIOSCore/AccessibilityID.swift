@@ -54,7 +54,18 @@ public enum AccessibilityID {
     public static func offlineDeleteJob(_ id: UUID) -> String { "offline.deleteJob.\(id)" }
     public static var offlineWatch: String { "offline.watch" }
     public static var offlinePage: String { "offline.page" }
-    public static var offlinePagePicker: String { "offline.pagePicker" }
+    public static var offlineTransferSummary: String { "offline.transferSummary" }
+    public static var offlineVideoDownloads: String { "offline.videoDownloads" }
+    public static var offlineDownloads: String { "offline.downloads" }
+    public static var offlineDownloadsFilter: String { "offline.downloadsFilter" }
+    public static var offlinePlaybackOptionsList: String { "offline.playbackOptionsList" }
+    public static var offlinePlayOptionsClose: String { "offline.playOptionsClose" }
+    public static func offlinePlayOptions(_ videoID: String) -> String { "offline.playOptions.\(videoID)" }
+    public static func offlineLibraryPlay(_ videoID: String) -> String { "offline.libraryPlay.\(videoID)" }
+    public static var offlineDownloadsClose: String { "offline.downloadsClose" }
+    public static func offlineTrackBadge(_ video: String, _ track: String) -> String {
+        "offline.track.\(video).\(track)"
+    }
     public static var offlineLibraryList: String { "offline.libraryList" }
     public static var offlineJobsList: String { "offline.jobsList" }
     public static var offlineDetailList: String { "offline.detailList" }

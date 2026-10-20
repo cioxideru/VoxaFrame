@@ -14,6 +14,7 @@ struct PlayerOptionPanel<Content: View>: View {
     let title: Text
     @Binding var isPresented: Bool
     var cancelAccessibilityIdentifier: String = AccessibilityID.playerOptionPanelCancel
+    var preferredWidth: CGFloat = 360
     @ViewBuilder var content: Content
     #if os(iOS)
     @State private var contentHeight: CGFloat?
@@ -35,7 +36,11 @@ struct PlayerOptionPanel<Content: View>: View {
             content
             #endif
         }
+        #if os(tvOS)
         .modifier(OptionPanelChrome())
+        #else
+        .modifier(OptionPanelChrome(preferredWidth: preferredWidth))
+        #endif
         #if os(iOS)
         .accessibilityElement(children: .contain)
         #endif
@@ -190,12 +195,14 @@ private struct OptionPanelChrome: ViewModifier {
 #else
 /// iOS and macOS: the system sheet or popover is the container; this only sizes a popover.
 private struct OptionPanelChrome: ViewModifier {
+    let preferredWidth: CGFloat
+
     func body(content: Content) -> some View {
         #if os(iOS)
         // The measured scroll content supplies the height; the system can still shrink its viewport.
-        content.frame(minWidth: 320, idealWidth: 360, alignment: .top)
+        content.frame(minWidth: 320, idealWidth: preferredWidth, alignment: .top)
         #else
-        content.frame(minWidth: 320, idealWidth: 360, maxHeight: .infinity, alignment: .top)
+        content.frame(minWidth: 320, idealWidth: preferredWidth, maxHeight: .infinity, alignment: .top)
         #endif
     }
 }

@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0036: iPad reading panels and offline library](completed/ipad-reading-offline-layout.md) — readable panels with channel navigation, compact library cards with Play choices, filtered download dialogs and active-progress summary; package/platform/UI checks passed.
+
 - [PLAN-0035: Audio and translation grouping](completed/audio-translation-grouping.md) — separate YouTube/Yandex groups in both dialogs; visually verified and accepted on iPad.
 
 - [PLAN-0034: Offline language defaults](completed/offline-russian-defaults.md) — settings-based audio/Yandex defaults and lower bitrate; download and player labels, absent duplicate choices and working audio confirmed on iPad.

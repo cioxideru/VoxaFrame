@@ -8,10 +8,14 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Changed
 
+- **Offline videos:** wide windows give more space to the library. Cards show compact, single-line badges for saved and pending video/audio/translation variants, with status and a Play button whose secondary action opens saved playback choices. Global and per-video Downloads dialogs show newest tasks first with All / Active / Error / Video / Audio filters. The library header shows active file counts and combined progress; SponsorBlock remains the last management section.
+- **Reading panels:** Description and Comments use a wider, readable column on iPad and Mac while fitting narrow windows. Description includes a channel-page link; short content stays compact and long text scrolls within the window. Other player menus keep their compact width.
 - **Audio controls:** the player and Offline watch dialog separate YouTube source tracks from Yandex translation controls. The player shows a visible Translation language label within the Yandex group.
 - **Offline downloads:** audio and Yandex translation default to Default Audio Language from Settings. Matching audio prefers the lowest known bitrate; original audio is the fallback. Yandex is enabled even when a matching audio track exists, for supported target languages. Later manual choices remain unchanged.
 
 ### Fixed
+
+- Player metadata retains the channel ID, so videos opened by a link can open their channel from Description and More after loading.
 
 - Offline audio choices without language metadata show their codec and bitrate instead of an "Unknown language" prefix, including the library's additional-download list and saved-audio picker.
 - Offline original-audio choices also use YouTube's auto-generated caption language when stream metadata omits it, including Vert Dider uploads. Explicit dubbed languages and HLS selection identities are preserved; repeated normal/DRC encodings no longer create duplicate audio choices.

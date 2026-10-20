@@ -25,22 +25,15 @@ enum OfflinePresentation {
     }
 
     /// The one action a job row offers besides Delete task and files, which every job has.
-    enum JobAction: Equatable { case cancel, retry, open }
+    enum JobAction: Equatable { case cancel, retry, none }
 
     /// Badge of a library row: what this video's jobs are doing, otherwise whether it can play.
     enum EntryStatus: Equatable { case downloading(Double), preparing, queued, failed, ready, notReady }
 
     /// A kind of saved file, in display order.
-    enum Part: CaseIterable { case video, audio, translation }
+    enum Part: CaseIterable, Hashable { case video, audio, translation }
 
     enum PageState: Equatable { case loading, storageError(String), empty, content }
-
-    struct JobGroup: Identifiable {
-        let videoID: String
-        let title: String
-        let jobs: [OfflineJob]
-        var id: String { videoID }
-    }
 
     static func status(_ job: OfflineJob) -> JobStatus {
         switch job.state {
@@ -57,20 +50,115 @@ enum OfflinePresentation {
         switch job.state {
         case .queued, .resolving, .downloading: .cancel
         case .failed, .cancelled: .retry
-        case .completed: .open
+        case .completed: .none
         }
     }
 
-    /// Jobs under their video, in the order each video first appears in the queue.
-    static func groups(jobs: [OfflineJob], entries: [OfflineEntry]) -> [JobGroup] {
-        var order: [String] = []
-        var byVideo: [String: [OfflineJob]] = [:]
-        for job in jobs {
-            if byVideo[job.videoID] == nil { order.append(job.videoID) }
-            byVideo[job.videoID, default: []].append(job)
+    enum DownloadFilter: String, CaseIterable, Identifiable {
+        case all, active, error, video, audio
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .all: String(localized: "All", bundle: .module)
+            case .active: String(localized: "Active", bundle: .module)
+            case .error: String(localized: "Error", bundle: .module)
+            case .video: String(localized: "Video", bundle: .module)
+            case .audio: String(localized: "Audio", bundle: .module)
+            }
         }
-        return order.map { id in
-            JobGroup(videoID: id, title: title(of: id, in: entries), jobs: byVideo[id] ?? [])
+    }
+
+    /// The manifest appends tasks, so reversing preserves newest-first order without inventing timestamps.
+    static func downloadJobs(
+        _ jobs: [OfflineJob], videoID: String?, filter: DownloadFilter
+    ) -> [OfflineJob] {
+        jobs.reversed().filter { job in
+            guard videoID == nil || job.videoID == videoID else { return false }
+            switch filter {
+            case .all: return true
+            case .active: return OfflineSizes.isActive(job) || job.state == .failed
+            case .error: return job.state == .failed
+            case .video: return part(of: job.track) == .video
+            case .audio: return part(of: job.track) != .video
+            }
+        }
+    }
+
+    struct TransferSummary {
+        let counts: [Part: Int]
+        let failures: Int
+        /// Equal weight per file in the currently active batches, including their completed files.
+        let progress: Double?
+        var activeCount: Int { counts.values.reduce(0, +) }
+        var isVisible: Bool { activeCount > 0 || failures > 0 }
+        var countText: String {
+            Part.allCases.compactMap { part in
+                guard let count = counts[part], count > 0 else { return nil }
+                return String(localized: "offline.partCount \(part.title) \(count)", bundle: .module)
+            }.joined(separator: " · ")
+        }
+    }
+
+    static func transferSummary(_ jobs: [OfflineJob]) -> TransferSummary {
+        let active = jobs.filter(OfflineSizes.isActive)
+        let batches = Set(active.map(\.batch))
+        let current = jobs.filter { batches.contains($0.batch) && $0.state != .cancelled }
+        let done = current.reduce(0.0) { sum, job in
+            if job.state == .completed { return sum + 1 }
+            guard job.state == .downloading, job.progress.isFinite else { return sum }
+            return sum + min(1, max(0, job.progress))
+        }
+        return TransferSummary(
+            counts: Dictionary(grouping: active, by: { part(of: $0.track) }).mapValues(\.count),
+            failures: jobs.filter { $0.state == .failed }.count,
+            progress: current.isEmpty ? nil : done / Double(current.count))
+    }
+
+    struct TrackBadge: Identifiable {
+        let track: OfflineTrack
+        let status: JobStatus
+        var id: String { track.id }
+        var compactLabel: String {
+            switch track.kind {
+            case .video, .hls:
+                return [track.videoChoiceLabel, track.hasAudio ? languageBadge : nil]
+                    .compactMap { $0 }.joined(separator: " · ")
+            case .audio:
+                return [languageBadge, OfflineDetailPresentation.audioDetail(track)]
+                    .compactMap { $0 }.joined(separator: " · ")
+            case .translation:
+                return ["Yandex", languageBadge].compactMap { $0 }.joined(separator: " ")
+            }
+        }
+        private var languageBadge: String? {
+            guard let code = track.language, !code.isEmpty else { return nil }
+            return code == "ru" ? "🇷🇺 RU" : code.uppercased()
+        }
+        var label: String {
+            switch track.kind {
+            case .video, .hls:
+                return [track.videoChoiceLabel, track.hasAudio || track.kind == .hls ? track.audioLabel : nil]
+                    .compactMap { $0 }.joined(separator: " · ")
+            case .audio: return track.audioLabel ?? track.label
+            case .translation:
+                guard let language = track.language, !language.isEmpty else { return track.label }
+                return String(localized: "Yandex translation · \(languageName(language))", bundle: .module)
+            }
+        }
+    }
+
+    /// Saved variants and the latest attempt for each unsaved variant; never duplicate a saved track's chip.
+    static func trackBadges(_ entry: OfflineEntry, jobs: [OfflineJob]) -> [TrackBadge] {
+        let own = jobs.filter { $0.videoID == entry.id }
+        var seen = Set<String>()
+        let tracks = entry.assets.map(\.track) + own.map(\.track)
+        return tracks.compactMap { track in
+            guard seen.insert(track.id).inserted else { return nil }
+            let saved = entry.assets.contains { $0.id == track.id }
+            let latest = own.last { $0.track.id == track.id }
+            let state = latest.map(status) ?? .completed
+            return TrackBadge(track: track, status: saved && latest?.state == .cancelled ? .completed : state)
         }
     }
 

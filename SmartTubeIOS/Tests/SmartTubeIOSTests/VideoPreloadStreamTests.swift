@@ -42,7 +42,7 @@ private final class PreloadStreamURLProtocol: URLProtocol, @unchecked Sendable {
             let hls = Self.includesHLS ? #""hlsManifestUrl":"https://example.test/master.m3u8","# : ""
             body = """
                 {"playabilityStatus":{"status":"OK"},
-                "videoDetails":{"videoId":"prefetch-test","title":"Short","author":"Test"},
+                "videoDetails":{"videoId":"prefetch-test","title":"Short","author":"Test","channelId":"UC-fixture-owner"},
                 "streamingData":{\(hls)"adaptiveFormats":[
                 {"itag":137,"url":"https://example.test/video?c=VISIONOS","mimeType":"video/mp4","height":1080}]}}
                 """
@@ -83,6 +83,17 @@ struct VideoPreloadStreamTests {
         #expect(PreloadStreamURLProtocol.paths == ["/youtubei/v1/visitor_id", "/youtubei/v1/player"])
         #expect((info?.hlsURL != nil) == includesHLS)
         #expect((cached.playerInfo?.isFromVisionOSClient == true) == includesHLS)
+        #expect(info?.video.channelId == (includesHLS ? "UC-fixture-owner" : nil))
+        #expect(cached.playerInfo?.video.channelId == (includesHLS ? "UC-fixture-owner" : nil))
+        if let info {
+            await MainActor.run {
+                let vm = PlaybackViewModel()
+                vm.currentVideo = Video(id: "prefetch-test", title: "", channelTitle: "")
+                vm.playerInfo = info
+                #expect(vm.channelVideo?.channelId == "UC-fixture-owner")
+                #expect(vm.channelVideo?.channelTitle == "Test")
+            }
+        }
         #expect(cached.nextInfo == nil)
         #expect(await cache.inFlightPlayerFetch(videoId: "prefetch-test") == nil)
     }

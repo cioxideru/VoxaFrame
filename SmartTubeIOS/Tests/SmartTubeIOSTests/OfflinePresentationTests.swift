@@ -13,10 +13,10 @@ struct OfflinePresentationTests {
 
     private func job(
         _ video: String, _ track: OfflineTrack, _ state: OfflineJob.State, progress: Double = 0,
-        waitsUntil: Date? = nil
+        waitsUntil: Date? = nil, batch: UUID = UUID()
     ) -> OfflineJob {
         OfflineJob(
-            id: UUID(), batch: UUID(), attempt: UUID(), videoID: video, track: track, state: state, progress: progress,
+            id: UUID(), batch: batch, attempt: UUID(), videoID: video, track: track, state: state, progress: progress,
             nextResolutionAt: waitsUntil)
     }
 
@@ -62,7 +62,7 @@ struct OfflinePresentationTests {
         expect(job("a", .translation("ru"), .queued, waitsUntil: .distantFuture), .waitingForTranslation, .cancel)
         expect(job("a", picture, .resolving), .resolving, .cancel)
         expect(job("a", picture, .downloading, progress: 0.42), .downloading(0.42), .cancel)
-        expect(job("a", picture, .completed, progress: 1), .completed, .open)
+        expect(job("a", picture, .completed, progress: 1), .completed, .none)
         expect(job("a", picture, .failed), .failed, .retry)
         expect(job("a", picture, .cancelled), .cancelled, .retry)
     }
@@ -89,17 +89,80 @@ struct OfflinePresentationTests {
         #expect(OfflinePresentation.QuickAction.queued.isEnabled)
     }
 
-    @Test func jobsStayUnderTheirVideoInQueueOrder() {
+    @Test func downloadFiltersKeepNewestFirstAndIncludeTranslationsWithAudio() {
         let jobs = [
-            job("b", picture, .downloading), job("a", sound, .queued), job("b", sound, .queued),
-            job("a", .translation("ru"), .queued),
+            job("a", picture, .completed), job("b", sound, .failed),
+            job("a", .translation("ru"), .queued), job("a", package, .cancelled),
         ]
-        let groups = OfflinePresentation.groups(
-            jobs: jobs, entries: [entry("a", title: "First"), entry("b", title: "")])
-        #expect(groups.map(\.videoID) == ["b", "a"])
-        #expect(groups.map { $0.jobs.map(\.id) } == [[jobs[0].id, jobs[2].id], [jobs[1].id, jobs[3].id]])
-        // A deep-linked video can be saved without a title; the ID stands in for it.
-        #expect(groups.map(\.title) == ["b", "First"])
+        func ids(_ filter: OfflinePresentation.DownloadFilter, videoID: String? = nil) -> [UUID] {
+            OfflinePresentation.downloadJobs(jobs, videoID: videoID, filter: filter).map(\.id)
+        }
+        #expect(ids(.all) == jobs.reversed().map(\.id))
+        #expect(ids(.active) == [jobs[2].id, jobs[1].id])
+        #expect(ids(.error) == [jobs[1].id])
+        #expect(ids(.video) == [jobs[3].id, jobs[0].id])
+        #expect(ids(.audio) == [jobs[2].id, jobs[1].id])
+        #expect(ids(.audio, videoID: "a") == [jobs[2].id])
+    }
+
+    @Test func compactChipsPreserveQualityCodecLanguageAndBitrate() {
+        let audio = OfflineTrack(id: "ru", kind: .audio, label: "Russian · AAC 52kbps", language: "ru")
+        #expect(OfflinePresentation.TrackBadge(track: audio, status: .completed).compactLabel == "🇷🇺 RU · AAC 52kbps")
+        #expect(OfflinePresentation.TrackBadge(track: picture, status: .completed).compactLabel == "720p · H.264")
+        #expect(
+            OfflinePresentation.TrackBadge(track: .translation("ru"), status: .queued).compactLabel == "Yandex 🇷🇺 RU")
+    }
+
+    @Test func transferSummaryCountsFilesAndKeepsCompletedPartsOfActiveBatches() {
+        let batch = UUID()
+        let jobs = [
+            job("a", picture, .completed, progress: 1, batch: batch),
+            job("a", sound, .downloading, progress: 0.5, batch: batch),
+            job("a", .translation("ru"), .queued, batch: batch),
+            job("b", package, .resolving, batch: batch),
+            job("old", picture, .completed, progress: 1),
+            job("failed", sound, .failed),
+            job("cancelled", sound, .cancelled, batch: batch),
+        ]
+        let summary = OfflinePresentation.transferSummary(jobs)
+        #expect(summary.counts == [.video: 1, .audio: 1, .translation: 1])
+        #expect(summary.failures == 1)
+        #expect(summary.progress == 0.375)
+        #expect(summary.isVisible)
+
+    }
+
+    @Test func summaryHandlesIdleFailureOnlyAndInvalidProgress() {
+        let idle = OfflinePresentation.transferSummary([job("a", picture, .completed)])
+        #expect(!idle.isVisible)
+        #expect(idle.progress == nil)
+        let failed = OfflinePresentation.transferSummary([job("a", picture, .failed)])
+        #expect(failed.isVisible && failed.activeCount == 0 && failed.progress == nil)
+        for progress in [-1.0, .nan, .infinity] {
+            #expect(
+                OfflinePresentation.transferSummary([job("a", picture, .downloading, progress: progress)]).progress == 0
+            )
+        }
+        #expect(OfflinePresentation.transferSummary([job("a", picture, .downloading, progress: 2)]).progress == 1)
+    }
+
+    @Test func trackChipsMergeSavedFilesWithTheLatestAttemptWithoutDuplicates() {
+        let saved = entry("a", [picture, sound])
+        let jobs = [
+            job("a", picture, .completed), job("a", sound, .cancelled),
+            job("a", .translation("ru"), .failed), job("a", .translation("ru"), .downloading, progress: 0.4),
+            job("other", package, .queued),
+        ]
+        let chips = OfflinePresentation.trackBadges(saved, jobs: jobs)
+        #expect(chips.map(\.id) == [picture.id, sound.id, "vot-ru"])
+        #expect(chips.map(\.status) == [.completed, .completed, .downloading(0.4)])
+        #expect(chips[0].label == "720p · H.264")
+        #expect(chips[1].label == "en · Original")
+        var hls = package
+        hls.audioLabel = "Russian · AAC"
+        #expect(OfflinePresentation.TrackBadge(track: hls, status: .completed).label.hasSuffix("Russian · AAC"))
+        let legacy = OfflineTrack(id: "legacy", kind: .translation, label: "Saved translation")
+        #expect(OfflinePresentation.TrackBadge(track: legacy, status: .completed).label == legacy.label)
     }
 
     @Test func storageErrorReplacesEmptyAndLoadingLastsUntilReady() {
