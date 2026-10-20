@@ -134,6 +134,8 @@ extension PlaybackViewModel {
                     attachSavedTranslation(saved, video: video)
                     return
                 }
+                let sourceLanguage = try await offlineTranslations.originalAudioLanguage(videoID: video.id)
+                guard !Task.isCancelled, currentVideo?.hasSamePlaybackSource(as: video) == true else { return }
                 let seconds = duration > 0 ? duration : (video.duration ?? 0)
                 guard seconds > 0, seconds <= YandexVOTClient.maximumDuration else {
                     voiceOver.reportUnavailable(
@@ -144,7 +146,7 @@ extension PlaybackViewModel {
                 }
                 voiceOver.start(
                     .init(
-                        videoId: video.id, duration: seconds, sourceLanguage: "auto", targetLanguage: target,
+                        videoId: video.id, duration: seconds, sourceLanguage: sourceLanguage, targetLanguage: target,
                         livelyVoiceToken: settings.yandexVOTLivelyVoice && target == "ru"
                             ? TokenManager.yandexVOTToken() : nil,
                         originalAudioURL: nil, originalAudioHLSURL: nil,

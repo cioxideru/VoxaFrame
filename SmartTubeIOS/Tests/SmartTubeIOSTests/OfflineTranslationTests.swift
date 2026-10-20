@@ -7,6 +7,27 @@ import Testing
 
 // Shares the serialized owner of OfflineDecisionURLProtocol.log.
 extension OfflinePlaybackDecisionTests {
+    @Test("A local live request uses the known original language before a successful Yandex response")
+    func liveTranslationUsesStoredOriginalLanguage() async throws {
+        let (api, _) = api()
+        let url = try voiceFile()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let vot = OfflineVOTProbe([.finished], audioURL: url)
+        let lookup = SavedTranslationProbe()
+        lookup.sourceLanguage = "en"
+        let model = PlaybackViewModel(api: api)
+        model.voiceOver = VoiceOverTranslationController(api: api, client: vot)
+        model.offlineTranslations = lookup
+        model.currentVideo = video()
+        model.settings.preferredAudioLanguage = "ru"
+        defer { model.stop() }
+        model.setVoiceOverForCurrentVideo(true)
+        #expect(await eventually { model.voiceOver.state == .playing(livelyVoice: false) })
+        #expect(await vot.requests.map(\.sourceLanguage) == ["en"])
+        #expect(lookup.sourceRequests == ["online-id"])
+        #expect(OfflineDecisionURLProtocol.log.isEmpty)
+    }
+
     @Test("Translation language uses original speech, ignores dubs and normalizes regional codes")
     func translationLanguageEvidence() throws {
         let url = try #require(URL(string: "https://example.invalid/captions"))

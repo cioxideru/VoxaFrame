@@ -97,7 +97,14 @@ struct OfflineCoordinatorTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let store = OfflineLibraryStore(directory: directory)
         let video = Video(id: "saved-identity", title: "Saved", channelTitle: "Test", duration: 60)
-        let tracks = [OfflineTrack(id: "muxed", kind: .video, label: "Video", hasAudio: true), .translation("ru")]
+        var original = OfflineTrack(id: "original", kind: .audio, label: "Original", language: "EN_us")
+        original.isOriginalAudio = true
+        var dubbed = OfflineTrack(id: "dubbed", kind: .audio, label: "Dubbed", language: "ru")
+        dubbed.isOriginalAudio = false
+        let tracks = [
+            OfflineTrack(id: "muxed", kind: .video, label: "Video", hasAudio: true),
+            .translation("ru"), dubbed, original,
+        ]
         let jobs = try await store.enqueue(video: video, tracks: tracks).jobs
         for job in jobs {
             try await store.update(attempt: job.attempt, state: .downloading)
@@ -123,6 +130,8 @@ struct OfflineCoordinatorTests {
             try await coordinator.savedTranslation(videoID: video.id, language: "ru")
                 == selected.localTranslationFileURL)
         #expect(try await coordinator.savedTranslation(videoID: video.id, language: "en") == nil)
+        #expect(try await coordinator.originalAudioLanguage(videoID: video.id) == "en")
+        #expect(try await coordinator.originalAudioLanguage(videoID: "missing") == "auto")
         var stale = entry
         stale.video = selected
         let without = try await coordinator.playbackVideo(entry: stale, videoAsset: media, audio: nil, translation: nil)

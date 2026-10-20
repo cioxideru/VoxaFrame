@@ -87,24 +87,38 @@ actor OfflineVOTProbe: YandexVOTServing {
 }
 
 @MainActor
-private final class SavedTranslationProbe: OfflineTranslationFinding {
+final class SavedTranslationProbe: OfflineTranslationFinding {
     var requests: [String] = []
+    var sourceRequests: [String] = []
+    var sourceLanguage = "auto"
     var url: URL?
     func savedTranslation(videoID: String, language: String) -> URL? {
         requests.append("\(videoID)/\(language)")
         return url
     }
+    func originalAudioLanguage(videoID: String) -> String {
+        sourceRequests.append(videoID)
+        return sourceLanguage
+    }
 }
 
 @MainActor
 private final class SavedTranslationGate: OfflineTranslationFinding {
+    var gatesSource = false
     var pending: CheckedContinuation<URL?, Never>?
+    var pendingSource: CheckedContinuation<String, Never>?
     func savedTranslation(videoID: String, language: String) async -> URL? {
-        await withCheckedContinuation { pending = $0 }
+        if gatesSource { return nil }
+        return await withCheckedContinuation { pending = $0 }
+    }
+    func originalAudioLanguage(videoID: String) async -> String {
+        await withCheckedContinuation { pendingSource = $0 }
     }
     func finish() {
         pending?.resume(returning: nil)
         pending = nil
+        pendingSource?.resume(returning: "en")
+        pendingSource = nil
     }
 }
 
@@ -215,6 +229,7 @@ struct OfflinePlaybackDecisionTests {
         #expect(model.voiceOver.state == .playing(livelyVoice: false))
         #expect(model.voiceOver.videoId == saved.id)
         #expect(lookup.requests == (manual ? ["online-id/ru"] : []))
+        #expect(lookup.sourceRequests.isEmpty)
         #expect(await vot.requests.isEmpty)
         #expect(OfflineDecisionURLProtocol.log.isEmpty)
         model.setVoiceOverForCurrentVideo(false)
@@ -254,11 +269,12 @@ struct OfflinePlaybackDecisionTests {
         #expect(await vot.requests.count == 2)
     }
 
-    @Test("Cancelling translation while the library is read cannot start a late Yandex request")
-    func cancellationDuringLookup() async throws {
+    @Test("Cancelling either library lookup cannot start a late Yandex request", arguments: [false, true])
+    func cancellationDuringLookup(atSource: Bool) async throws {
         let (api, _) = api()
         let vot = OfflineVOTProbe()
         let lookup = SavedTranslationGate()
+        lookup.gatesSource = atSource
         let model = PlaybackViewModel(api: api)
         model.voiceOver = VoiceOverTranslationController(api: api, client: vot)
         model.offlineTranslations = lookup
@@ -270,7 +286,7 @@ struct OfflinePlaybackDecisionTests {
         }
         model.setVoiceOverForCurrentVideo(true)
         let task = try #require(model.offlineTranslationTask)
-        try #require(await eventually { lookup.pending != nil })
+        try #require(await eventually { atSource ? lookup.pendingSource != nil : lookup.pending != nil })
         model.setVoiceOverForCurrentVideo(false)
         lookup.finish()
         await task.value
