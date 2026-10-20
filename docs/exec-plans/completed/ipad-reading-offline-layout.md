@@ -136,6 +136,31 @@ Evidence: `/private/tmp/voxaframe-offline-selection-20261020`.
 The title accent awaits physical user observation; iPhone and tvOS interaction
 were not exercised for this visual change.
 
+## Follow-up: compact playback controls
+
+Play and the saved-track chooser now form a trailing column of icon buttons in
+each library row. The card content takes the remaining width; the Play label
+remains available to VoiceOver. The iOS button style retains its 44-point minimum
+touch target. Preparing still replaces the play icon with a spinner and disables
+both controls. Playback errors remain below the full row so they can wrap
+normally, instead of being squeezed into the icon column.
+
+The landscape iPad layout was visually checked. CI passed 1,370 tests in 182
+suites, strict SwiftLint found zero violations, and iOS/tvOS builds passed.
+The existing direct-Play and file-deletion UI journey passed. The saved-voice-over
+journey failed because its lower-row options button was not hittable after
+scrolling; its failure screenshot was not captured. The Mac was locked during
+this run, preventing native UI inspection. The user subsequently confirmed on
+the physical iPad that scrolling to a lower card and opening its playback-options
+button works. This provides device acceptance; the cause of the automated
+failure remains unresolved and the failed run has not been repeated.
+Result: `test_sim_2026-10-20T18-53-43-215Z_pid52182_4d8634c3.xcresult`.
+
+The device build completed at 21:54:49 local time on 2026-10-20. CoreDevice
+confirmed SmartTube running on the connected iPad (PID 26359). Evidence is under
+`/private/tmp/voxaframe-compact-play-20261020`. A separate portrait visual check
+was not performed.
+
 ## Follow-up: track-chip order and colour
 
 Saved and pending chips are grouped in the existing Video → Audio → Translation
@@ -152,8 +177,8 @@ including legacy labels and structured metadata taking precedence. CI passed
 physical Debug and tvOS simulator builds passed. CoreDevice installed and launched
 the updated app on the connected iPad. Evidence:
 `/private/tmp/voxaframe-offline-chips-20261020`.
-Native visual inspection remains blocked by the locked Mac. The user was asked
-to check the new chips and the lower-card playback-options button on the iPad.
+The user confirmed on the physical iPad that chip order and colours fit the
+request, and that the lower-card playback-options button opens its dialog.
 
 ## Follow-up: remove the repeated detail heading
 

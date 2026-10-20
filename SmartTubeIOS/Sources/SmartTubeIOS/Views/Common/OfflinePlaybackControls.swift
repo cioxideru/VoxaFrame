@@ -4,10 +4,11 @@ import os
 
 private let offlinePlaybackLog = Logger(subsystem: appSubsystem, category: "OfflinePlayback")
 
-/// The library owns playback; the secondary button opens saved variants before starting.
-struct OfflinePlaybackControls: View {
+/// Keeps playback errors below the full row while controls occupy its trailing edge.
+struct OfflinePlaybackControls<Content: View>: View {
     let entry: OfflineEntry
     let open: (Video) -> Void
+    @ViewBuilder let content: Content
     @State private var coordinator = OfflineCoordinator.shared
     @State private var selection = OfflineDetailPresentation.Selection()
     @State private var showsOptions = false
@@ -19,30 +20,39 @@ struct OfflinePlaybackControls: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: VFSpace.s4) {
-            if let video {
-                HStack(spacing: VFSpace.s4) {
-                    Button {
-                        play(entry, asset: video)
-                    } label: {
-                        Label {
-                            Text("Play", bundle: .module)
-                        } icon: {
-                            if preparing { ProgressView() } else { Image(systemName: AppSymbol.play) }
+            HStack(spacing: VFSpace.s12) {
+                content.frame(maxWidth: .infinity, alignment: .leading)
+                if let video {
+                    VStack(spacing: VFSpace.s4) {
+                        Button {
+                            play(entry, asset: video)
+                        } label: {
+                            Label {
+                                Text("Play", bundle: .module)
+                            } icon: {
+                                if preparing { ProgressView() } else { Image(systemName: AppSymbol.play) }
+                            }
+                            .labelStyle(.iconOnly)
+                            .frame(minWidth: VFSpace.s20)
                         }
-                        .frame(maxWidth: .infinity)
+                        .accessibilityLabel(Text("Play", bundle: .module))
+                        .accessibilityIdentifier(AccessibilityID.offlineLibraryPlay(entry.id))
+                        Button {
+                            showsOptions = true
+                        } label: {
+                            Image(systemName: AppSymbol.chevronDown)
+                                .frame(minWidth: VFSpace.s20)
+                        }
+                        .accessibilityLabel(Text("Playback options", bundle: .module))
+                        .accessibilityIdentifier(AccessibilityID.offlinePlayOptions(entry.id))
                     }
-                    .accessibilityIdentifier(AccessibilityID.offlineLibraryPlay(entry.id))
-                    Button {
-                        showsOptions = true
-                    } label: {
-                        Image(systemName: AppSymbol.chevronDown)
-                            .frame(minWidth: VFSpace.s16)
-                    }
-                    .accessibilityLabel(Text("Playback options", bundle: .module))
-                    .accessibilityIdentifier(AccessibilityID.offlinePlayOptions(entry.id))
+                    .buttonStyle(.vfProminent)
+                    #if os(iOS)
+                    .controlSize(.small)
+                    #endif
+                    .fixedSize(horizontal: true, vertical: false)
+                    .disabled(preparing)
                 }
-                .buttonStyle(.vfProminent)
-                .disabled(preparing)
             }
             if let error { Text(error).font(.footnote).foregroundStyle(VFColor.danger) }
         }

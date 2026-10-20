@@ -279,7 +279,13 @@ struct OfflineVideosView: View {
                     entry: entry, title: title, isSelected: isSelected,
                     status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs),
                     tracks: OfflinePresentation.trackBadges(entry, jobs: snapshot.jobs))
-                VStack(alignment: .leading, spacing: VFSpace.s4) {
+                OfflinePlaybackControls(entry: entry) { video in
+                    #if os(iOS)
+                    router.open(video: video, api: api)
+                    #else
+                    playbackVideo = video
+                    #endif
+                } content: {
                     if showsColumns {
                         Button {
                             selectedVideoID = entry.id
@@ -298,13 +304,6 @@ struct OfflineVideosView: View {
                             entryLabel
                         }
                         .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
-                    }
-                    OfflinePlaybackControls(entry: entry) { video in
-                        #if os(iOS)
-                        router.open(video: video, api: api)
-                        #else
-                        playbackVideo = video
-                        #endif
                     }
                 }
                 .offlineDeleteActions(
