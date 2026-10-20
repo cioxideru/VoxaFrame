@@ -220,6 +220,7 @@ public enum AccessibilityID {
     /// The card's title text, exactly as shown; outside the `video.card.` prefix like `videoCardMenu`.
     public static var videoCardTitle: String { "videoCardTitle" }
 
+    public static let videoSecondaryMenu = "video.menu.secondary"
     public static let videoNotInterested = "video.feedback.notInterested"
     public static let videoDontRecommendChannel = "video.feedback.dontRecommendChannel"
     public static let videoFeedbackConfirm = "video.feedback.confirm"

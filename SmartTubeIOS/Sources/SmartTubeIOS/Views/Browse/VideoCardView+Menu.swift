@@ -8,7 +8,7 @@ import SwiftUI
 
 extension VideoCardView {
     /// Every card command, used by the context menu, the More button, VoiceOver actions and the tvOS dialog.
-    @ViewBuilder var menuItems: some View {
+    @ViewBuilder func menuItems(nested: Bool = true) -> some View {
         Section {
             #if !os(tvOS)
             if let shareURL = video.shareURL {
@@ -20,20 +20,20 @@ extension VideoCardView {
             }
         }
         Section {
-            Button(action: playNext) { menuLabel("Play Next", AppSymbol.playNext) }
-            Button {
-                Task { await CurrentQueueStore.shared.append(video) }
-            } label: {
-                menuLabel("Add to Queue", AppSymbol.addToQueue)
+            if nested {
+                Menu {
+                    secondaryMenuItems
+                } label: {
+                    Text(verbatim: "…")  // verbatim: Glyph only; the accessibility label is localized.
+                }
+                .accessibilityLabel(Text("More", bundle: .module))
+                .accessibilityIdentifier(AccessibilityID.videoSecondaryMenu)
+            } else {
+                secondaryMenuItems
             }
             if authService.isSignedIn {
                 if effectivePlaylistId != "WL" {
                     Button(action: saveToWatchLater) { menuLabel("Save to Watch Later", AppSymbol.watchLater) }
-                }
-                Button {
-                    playlistPickerMode = .copy
-                } label: {
-                    menuLabel("Copy to Playlist", AppSymbol.copyToPlaylist)
                 }
                 if effectivePlaylistId != nil {
                     Button {
@@ -43,13 +43,6 @@ extension VideoCardView {
                     }
                 }
             }
-            #if os(iOS)
-            Button {
-                playerRouter.open(video: video, api: api, incognito: true)
-            } label: {
-                menuLabel("Play Incognito", AppSymbol.incognito)
-            }
-            #endif
             OfflineWatchButton(video: video) { showsOfflineDownload = true }
             #if !os(tvOS) && ENABLE_DOWNLOADS
             Button {
@@ -87,6 +80,29 @@ extension VideoCardView {
                 }
             }
         }
+    }
+
+    @ViewBuilder private var secondaryMenuItems: some View {
+        Button(action: playNext) { menuLabel("Play Next", AppSymbol.playNext) }
+        Button {
+            Task { await CurrentQueueStore.shared.append(video) }
+        } label: {
+            menuLabel("Add to Queue", AppSymbol.addToQueue)
+        }
+        if authService.isSignedIn {
+            Button {
+                playlistPickerMode = .copy
+            } label: {
+                menuLabel("Copy to Playlist", AppSymbol.copyToPlaylist)
+            }
+        }
+        #if os(iOS)
+        Button {
+            playerRouter.open(video: video, api: api, incognito: true)
+        } label: {
+            menuLabel("Play Incognito", AppSymbol.incognito)
+        }
+        #endif
     }
 
     func menuLabel(_ title: LocalizedStringKey, _ symbol: String) -> some View {

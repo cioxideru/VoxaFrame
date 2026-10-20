@@ -32,7 +32,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [design/claude-design/CLAUDE_IMPORT.md](design/claude-design/CLAUDE_IMPORT.md) | Apple 27 design-system specification, platform rules, components and provenance | current | 2026-10-17 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0019) | current | 2026-10-17 |
 | [exec-plans/completed/offline-ipad-cleanup.md](exec-plans/completed/offline-ipad-cleanup.md) | PLAN-0028: physical iPad offline download and cleanup | current | 2026-10-17 |
-| [exec-plans/completed/video-feedback-confirmation.md](exec-plans/completed/video-feedback-confirmation.md) | PLAN-0038: confirm card feedback before hiding videos or channels | current | 2026-10-20 |
+| [exec-plans/completed/video-feedback-confirmation.md](exec-plans/completed/video-feedback-confirmation.md) | PLAN-0038: card feedback confirmation and secondary-action submenu | current | 2026-10-20 |
 | [exec-plans/README.md](exec-plans/README.md) | Plan lifecycle, metadata and indexes | current | 2026-10-15 |
 | [exec-plans/completed/sourcekit-lsp-scan.md](exec-plans/completed/sourcekit-lsp-scan.md) | PLAN-0037: SourceKit-LSP scan and platform compilation fixes | current | 2026-10-20 |
 | [exec-plans/completed/ipad-reading-offline-layout.md](exec-plans/completed/ipad-reading-offline-layout.md) | PLAN-0036: iPad reading panels and offline library hierarchy | implemented | 2026-10-20 |

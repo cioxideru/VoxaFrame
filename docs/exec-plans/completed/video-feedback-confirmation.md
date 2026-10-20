@@ -55,3 +55,35 @@ One intermediate pre-commit CI run ended with a SIGTRAP in native
 MediaToolbox/CoreFoundation (`__CF_IS_OBJC`, `CFDictionaryAddValue`), without a Swift
 test assertion. The subsequent complete pre-commit CI, rules and SwiftLint gate passed.
 No playback code was changed for this task.
+
+## Follow-up: card menu organization
+
+The user requested Open Channel in the main card menu and a nested ellipsis menu for
+Play Next, Add to Queue, Copy to Playlist and Play Incognito. Open Channel was already
+present at the top level and remains there, as explicitly clarified by the user. Work
+resumed in the same clean worktree at local master `4392412f`.
+
+- Group only the requested actions, preserving sign-in and platform visibility.
+- Apply the same grouping to the actions available on Shorts cards.
+- Keep VoiceOver actions and the tvOS Play/Pause dialog flat.
+- Verify the nested menu, channel navigation and confirmation regression in the
+  offline fixture, then run CI, strict SwiftLint and platform builds.
+
+| Step | Evidence | Result |
+|---|---|---|
+| Scope | Both card menus and their shared entry points inspected | reviewed |
+| Implementation | Four requested normal-card commands and both Shorts queue commands share a nested menu; VoiceOver and tvOS dialog stay flat | reviewed |
+| CI | 1,370 tests in 182 suites; secrets, docs, core boundary, formatting | passed |
+| SwiftLint | Strict baseline check, no new violations | passed |
+| Platform builds | Xcode 27.0 iOS app/UI-test target and tvOS Simulator app; native macOS package via CI | passed |
+| Confirmation regression | Existing four fixture UI tests on iPad Pro 13-inch (M5), iOS 27.0 | passed |
+| Runtime menu inspection | Main menu and nested four-command menu visible; Copy to Playlist opens its picker; Open Channel opens the channel screen | passed |
+
+Follow-up evidence: `/private/tmp/voxaframe-video-feedback-PLAN-0037/menu-followup/`
+contains `ui.xcresult`, `ci.log`, `swiftlint.log`, `tvos-build.log`, the menu screenshots
+and `ui-observations.txt`. No feedback or playlist request reached a live account.
+
+NOT RUN: physical-device, VoiceOver and macOS/tvOS UI interaction. Manual inspection
+of the Shorts submenu did not finish because the simulator automation request stalled;
+both existing Shorts confirmation UI tests passed. The four-command regular-card menu
+was visually checked and its playlist picker and channel navigation were exercised.

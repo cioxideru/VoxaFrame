@@ -112,7 +112,7 @@ public struct VideoCardView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(accessibilitySummary)
             .accessibilityAddTraits(.isButton)
-            .accessibilityActions { menuItems }
+            .accessibilityActions { menuItems(nested: false) }
             .modifier(DefaultAccessibilityAction(action: onSelect))
     }
 
@@ -133,7 +133,7 @@ public struct VideoCardView: View {
                 )
             }
             .contextMenu {
-                menuItems
+                menuItems()
             } preview: {
                 layout
                     .padding(VFSpace.s12)
@@ -206,7 +206,7 @@ extension VideoCardView {
             .focused($isFocused)
             .onPlayPauseCommand { showsActions = true }
             .confirmationDialog(Text(displayTitle), isPresented: $showsActions, titleVisibility: .visible) {
-                menuItems
+                menuItems(nested: false)
             }
             .onAppear { feedLog.info("[feed] id=\(self.video.id) title=\(self.video.title)") }
             .onChange(of: isFocused) { _, newValue in
@@ -271,7 +271,7 @@ extension VideoCardView {
     /// The Mac shows it while the pointer is over the card, next to the context menu.
     private var moreButton: some View {
         Menu {
-            menuItems
+            menuItems()
         } label: {
             // The glyph stops growing at the largest standard size so it keeps clear of the title; the large
             // content viewer shows it enlarged on a long press.

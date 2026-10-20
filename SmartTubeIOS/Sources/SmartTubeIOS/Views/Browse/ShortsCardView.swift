@@ -79,8 +79,8 @@ struct ShortsCardView: View {
         )
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(.default, onTap)
-        .accessibilityActions { menuItems }
-        .contextMenu { menuItems }
+        .accessibilityActions { menuItems(nested: false) }
+        .contextMenu { menuItems() }
         .feedbackAlert(item: $watchLaterAlert)
         .alert(Text("Not Interested", bundle: .module), isPresented: $confirmsNotInterested) {
             Button(role: .destructive) {
@@ -117,7 +117,7 @@ struct ShortsCardView: View {
     // MARK: - Menu
 
     /// The Shorts set: no Offline watch, playlists or Incognito (functional brief §6).
-    @ViewBuilder private var menuItems: some View {
+    @ViewBuilder private func menuItems(nested: Bool = true) -> some View {
         Section {
             #if !os(tvOS)
             if let shareURL = video.shareURL {
@@ -137,11 +137,16 @@ struct ShortsCardView: View {
             }
         }
         Section {
-            Button(action: playNext) { menuLabel("Play Next", AppSymbol.playNext) }
-            Button {
-                Task { await CurrentQueueStore.shared.append(video) }
-            } label: {
-                menuLabel("Add to Queue", AppSymbol.addToQueue)
+            if nested {
+                Menu {
+                    secondaryMenuItems
+                } label: {
+                    Text(verbatim: "…")  // verbatim: Glyph only; the accessibility label is localized.
+                }
+                .accessibilityLabel(Text("More", bundle: .module))
+                .accessibilityIdentifier(AccessibilityID.videoSecondaryMenu)
+            } else {
+                secondaryMenuItems
             }
             if authService.isSignedIn {
                 Button(action: saveToWatchLater) { menuLabel("Save to Watch Later", AppSymbol.watchLater) }
@@ -181,6 +186,15 @@ struct ShortsCardView: View {
                     .accessibilityIdentifier(AccessibilityID.videoDontRecommendChannel)
                 }
             }
+        }
+    }
+
+    @ViewBuilder private var secondaryMenuItems: some View {
+        Button(action: playNext) { menuLabel("Play Next", AppSymbol.playNext) }
+        Button {
+            Task { await CurrentQueueStore.shared.append(video) }
+        } label: {
+            menuLabel("Add to Queue", AppSymbol.addToQueue)
         }
     }
 

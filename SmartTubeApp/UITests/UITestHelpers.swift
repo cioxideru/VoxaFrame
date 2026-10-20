@@ -216,6 +216,7 @@ enum AccessibilityID {
 
     static var videoCardTitle: String { "videoCardTitle" }
 
+    static let videoSecondaryMenu = "video.menu.secondary"
     static let videoNotInterested = "video.feedback.notInterested"
     static let videoDontRecommendChannel = "video.feedback.dontRecommendChannel"
     static let videoFeedbackConfirm = "video.feedback.confirm"

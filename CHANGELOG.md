@@ -8,6 +8,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Changed
 
+- **Video card menus:** Play Next, Add to Queue, Copy to Playlist and Play Incognito are grouped under an ellipsis submenu. Open Channel remains directly accessible; Shorts group their two queue commands the same way.
 - **Offline videos:** wide windows give more space to the library. Cards show compact, single-line badges for saved and pending video/audio/translation variants, with status and a Play button whose secondary action opens saved playback choices. Global and per-video Downloads dialogs show newest tasks first with All / Active / Error / Video / Audio filters. The page title shares the compact toolbar instead of reserving a large header. A compact floating card above the library shows active file counts and combined progress, stays visible while scrolling, and opens active downloads and errors; SponsorBlock remains the last management section.
 - **Reading panels:** Description and Comments use a wider, readable column on iPad and Mac while fitting narrow windows. Description includes a channel-page link; short content stays compact and long text scrolls within the window. Other player menus keep their compact width.
 - **Audio controls:** the player and Offline watch dialog separate YouTube source tracks from Yandex translation controls. The player shows a visible Translation language label within the Yandex group.
