@@ -509,3 +509,88 @@ final class MixedFeedLayoutUITests: XCTestCase {
         return elements.filter { seen.insert($0.identifier).inserted }
     }
 }
+
+/// Confirmation must gate both local feed changes and feedback sent through the fixture transport.
+final class VideoFeedbackConfirmationUITests: XCTestCase {
+    private let app = XCUIApplication()
+
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+        app.launchArguments = [
+            "--uitesting", "--uitesting-subscriptions", "--uitesting-reset-settings", "--uitesting-mixed-feed",
+            "--uitesting-enable-shorts", "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+        ]
+        app.launch()
+        UITestHelpers.tapTab(named: "Home", in: app)
+    }
+
+    override func tearDown() {
+        app.terminate()
+        super.tearDown()
+    }
+
+    func testVideoNotInterestedRequiresConfirmation() throws {
+        try assertConfirmation(action: AccessibilityID.videoNotInterested, shorts: false, useMoreButton: false)
+    }
+
+    func testVideoDontRecommendRequiresConfirmation() throws {
+        try assertConfirmation(action: AccessibilityID.videoDontRecommendChannel, shorts: false, useMoreButton: true)
+    }
+
+    func testShortsNotInterestedRequiresConfirmation() throws {
+        try assertConfirmation(action: AccessibilityID.videoNotInterested, shorts: true, useMoreButton: false)
+    }
+
+    func testShortsDontRecommendRequiresConfirmation() throws {
+        try assertConfirmation(action: AccessibilityID.videoDontRecommendChannel, shorts: true, useMoreButton: false)
+    }
+
+    private func assertConfirmation(action: String, shorts: Bool, useMoreButton: Bool) throws {
+        let card: XCUIElement
+        if shorts {
+            let row = app.scrollViews[AccessibilityID.homeShortsRow(0)]
+            XCTAssertTrue(row.waitForExistence(timeout: 10))
+            card =
+                row.descendants(matching: .any)
+                .matching(NSPredicate(format: "identifier BEGINSWITH 'shorts.card.'")).firstMatch
+        } else {
+            card = try XCTUnwrap(UITestHelpers.waitForVideoCards(in: app, timeout: 10))
+        }
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        let cardID = card.identifier
+        let target = app.descendants(matching: .any).matching(identifier: cardID).firstMatch
+        let title = shorts ? "" : target.staticTexts[AccessibilityID.videoCardTitle].firstMatch.label
+        let actionTitle =
+            action == AccessibilityID.videoDontRecommendChannel ? "Don't Recommend Channel" : "Not Interested"
+
+        func requestConfirmation() {
+            if useMoreButton {
+                let videoID = String(cardID.dropFirst("video.card.".count))
+                app.buttons[AccessibilityID.videoCardMenu(videoID)].firstMatch.tap()
+            } else {
+                target.press(forDuration: 1)
+            }
+            // Native menu actions omit SwiftUI identifiers on iOS; the fixture fixes the UI language to English.
+            let menuAction = app.buttons.matching(
+                NSPredicate(format: "identifier == %@ OR label == %@", action, actionTitle)
+            ).firstMatch
+            XCTAssertTrue(menuAction.waitForExistence(timeout: 5), app.debugDescription)
+            menuAction.tap()
+            XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 5))
+            XCTAssertTrue(target.exists, "Requesting confirmation must not hide the card")
+            let expectedText = action == AccessibilityID.videoDontRecommendChannel ? "Fixture" : title
+            if !expectedText.isEmpty {
+                XCTAssertTrue(app.alerts.firstMatch.staticTexts[expectedText].exists)
+            }
+        }
+
+        requestConfirmation()
+        app.alerts.buttons[AccessibilityID.videoFeedbackCancel].firstMatch.tap()
+        XCTAssertTrue(app.alerts.firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(target.exists, "Cancel must keep the video and channel in the feed")
+        requestConfirmation()
+        app.alerts.buttons[AccessibilityID.videoFeedbackConfirm].firstMatch.tap()
+        XCTAssertTrue(target.waitForNonExistence(timeout: 10), "Only confirmation may hide the video or channel")
+    }
+}

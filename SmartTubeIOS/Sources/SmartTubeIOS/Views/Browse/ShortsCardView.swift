@@ -19,6 +19,8 @@ struct ShortsCardView: View {
     @Environment(PlayerRouter.self) private var playerRouter
     #endif
     @State private var watchLaterAlert: DownloadAlertItem?
+    @State private var confirmsNotInterested = false
+    @State private var confirmsDontRecommendChannel = false
     #if !os(tvOS) && ENABLE_DOWNLOADS
     @Environment(VideoDownloadService.self) private var downloadService
     #endif
@@ -80,6 +82,36 @@ struct ShortsCardView: View {
         .accessibilityActions { menuItems }
         .contextMenu { menuItems }
         .feedbackAlert(item: $watchLaterAlert)
+        .alert(Text("Not Interested", bundle: .module), isPresented: $confirmsNotInterested) {
+            Button(role: .destructive) {
+                sendFeedback(token: video.notInterestedToken, iconType: "NOT_INTERESTED")
+            } label: {
+                Text("Not Interested", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.videoFeedbackConfirm)
+            Button(role: .cancel) {
+            } label: {
+                Text("Cancel", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.videoFeedbackCancel)
+        } message: {
+            Text(video.title)
+        }
+        .alert(Text("Don't Recommend Channel", bundle: .module), isPresented: $confirmsDontRecommendChannel) {
+            Button(role: .destructive) {
+                if let channelId = video.channelId, !channelId.isEmpty { dontRecommendChannel(channelId) }
+            } label: {
+                Text("Don't Recommend Channel", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.videoFeedbackConfirm)
+            Button(role: .cancel) {
+            } label: {
+                Text("Cancel", bundle: .module)
+            }
+            .accessibilityIdentifier(AccessibilityID.videoFeedbackCancel)
+        } message: {
+            Text(video.channelTitle)
+        }
     }
 
     // MARK: - Menu
@@ -130,10 +162,11 @@ struct ShortsCardView: View {
         if authService.isSignedIn {
             Section {
                 Button(role: .destructive) {
-                    sendFeedback(token: video.notInterestedToken, iconType: "NOT_INTERESTED")
+                    confirmsNotInterested = true
                 } label: {
                     menuLabel("Not Interested", AppSymbol.notInterested)
                 }
+                .accessibilityIdentifier(AccessibilityID.videoNotInterested)
                 Button(role: .destructive) {
                     sendFeedback(token: video.dontLikeToken, iconType: "DISLIKE")
                 } label: {
@@ -141,10 +174,11 @@ struct ShortsCardView: View {
                 }
                 if let channelId = video.channelId, !channelId.isEmpty {
                     Button(role: .destructive) {
-                        dontRecommendChannel(channelId)
+                        confirmsDontRecommendChannel = true
                     } label: {
                         menuLabel("Don't Recommend Channel", AppSymbol.dontRecommendChannel)
                     }
+                    .accessibilityIdentifier(AccessibilityID.videoDontRecommendChannel)
                 }
             }
         }

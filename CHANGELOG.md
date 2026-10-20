@@ -15,6 +15,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- Video and Shorts cards ask for confirmation before Not Interested or Don't Recommend Channel; Cancel leaves the feed and blocked channels unchanged.
 - macOS UI tests compile with iOS rotation and touch scenarios correctly scoped; the replay test's Back helper belongs to its test case. The iOS full-screen player's dismissal callback no longer retains its presenting root controller.
 - The offline management column no longer repeats the selected card's video title and channel; standalone detail screens retain their heading.
 - Offline track chips stay in video, audio, Yandex order, with distinct icon/outline accents for media kinds and video quality.

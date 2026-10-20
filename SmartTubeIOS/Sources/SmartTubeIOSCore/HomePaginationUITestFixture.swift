@@ -49,9 +49,10 @@ enum HomePaginationUITestFixture {
     /// UI pagination must cross the parser boundary, including competing navigation/shelf cursors.
     static func browseResponse(for group: VideoGroup) -> [String: Any] {
         func renderer(_ video: Video) -> [String: Any] {
+            let channel = ["browseEndpoint": ["browseId": video.channelId ?? "UCfixture-\(video.id)"]]
             var fields: [String: Any] = [
                 "videoId": video.id, "title": ["simpleText": video.title],
-                "ownerText": ["simpleText": video.channelTitle],
+                "ownerText": ["runs": [["text": video.channelTitle, "navigationEndpoint": channel]]],
             ]
             if video.isShort {
                 fields["navigationEndpoint"] = ["reelWatchEndpoint": ["videoId": video.id]]
@@ -200,7 +201,8 @@ enum HomePaginationUITestFixture {
             title: "Shorts",
             videos: (0..<10).map {
                 Video(
-                    id: "\(prefix)-short-\($0)", title: "\(prefix) short \($0)", channelTitle: "Fixture", isShort: true,
+                    id: "\(prefix)-short-\($0)", title: "\(prefix) short \($0)", channelTitle: "Fixture",
+                    channelId: "UCfixture-\(prefix)-short-\($0)", isShort: true,
                     watchProgress: progress(at: $0))
             },
             nextPageToken: nextToken

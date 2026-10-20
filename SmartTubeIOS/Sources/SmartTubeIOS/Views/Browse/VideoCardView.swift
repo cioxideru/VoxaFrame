@@ -55,6 +55,8 @@ public struct VideoCardView: View {
     @State private var localProgress: Double?
     @State private var isVisibleForPrefetch = false
     @State var watchLaterAlert: DownloadAlertItem?
+    @State var confirmsNotInterested = false
+    @State var confirmsDontRecommendChannel = false
     @State var showsOfflineDownload = false
     @State var playlistPickerMode: PlaylistPickerSheet.Mode?
     /// Index into `video.thumbnailFallbackURLs`. -1 = use primary `thumbnailURL`.
@@ -150,6 +152,32 @@ extension VideoCardView {
         cardBody
             .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
             .accessibilityValue(video.isShort ? "short" : "")
+            .alert(Text("Not Interested", bundle: .module), isPresented: $confirmsNotInterested) {
+                Button(role: .destructive, action: notInterested) {
+                    Text("Not Interested", bundle: .module)
+                }
+                .accessibilityIdentifier(AccessibilityID.videoFeedbackConfirm)
+                Button(role: .cancel) {
+                } label: {
+                    Text("Cancel", bundle: .module)
+                }
+                .accessibilityIdentifier(AccessibilityID.videoFeedbackCancel)
+            } message: {
+                Text(video.title)
+            }
+            .alert(Text("Don't Recommend Channel", bundle: .module), isPresented: $confirmsDontRecommendChannel) {
+                Button(role: .destructive, action: dontRecommendChannel) {
+                    Text("Don't Recommend Channel", bundle: .module)
+                }
+                .accessibilityIdentifier(AccessibilityID.videoFeedbackConfirm)
+                Button(role: .cancel) {
+                } label: {
+                    Text("Cancel", bundle: .module)
+                }
+                .accessibilityIdentifier(AccessibilityID.videoFeedbackCancel)
+            } message: {
+                Text(video.channelTitle)
+            }
     }
 
     @ViewBuilder private var cardBody: some View {

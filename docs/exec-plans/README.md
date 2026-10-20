@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0038: Video feedback confirmation](completed/video-feedback-confirmation.md) — both card actions require confirmation; cancellation and confirmation pass four fixture UI tests.
+
 - [PLAN-0037: SourceKit-LSP scan](completed/sourcekit-lsp-scan.md) — 500 Swift files checked; macOS UI-test compilation and the player's root-controller capture fixed; CI and all three platform test builds passed.
 
 - [PLAN-0036: iPad reading panels and offline library](completed/ipad-reading-offline-layout.md) — readable panels with channel navigation, compact library cards with Play choices, filtered download dialogs and active-progress summary; package/platform/UI checks passed.

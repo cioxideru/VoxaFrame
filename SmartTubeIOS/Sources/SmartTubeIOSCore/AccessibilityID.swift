@@ -220,6 +220,11 @@ public enum AccessibilityID {
     /// The card's title text, exactly as shown; outside the `video.card.` prefix like `videoCardMenu`.
     public static var videoCardTitle: String { "videoCardTitle" }
 
+    public static let videoNotInterested = "video.feedback.notInterested"
+    public static let videoDontRecommendChannel = "video.feedback.dontRecommendChannel"
+    public static let videoFeedbackConfirm = "video.feedback.confirm"
+    public static let videoFeedbackCancel = "video.feedback.cancel"
+
     public static func shortsCard(_ videoId: String) -> String {
         "shorts.card.\(videoId)"
     }

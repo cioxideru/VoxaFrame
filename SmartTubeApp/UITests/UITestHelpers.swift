@@ -216,6 +216,11 @@ enum AccessibilityID {
 
     static var videoCardTitle: String { "videoCardTitle" }
 
+    static let videoNotInterested = "video.feedback.notInterested"
+    static let videoDontRecommendChannel = "video.feedback.dontRecommendChannel"
+    static let videoFeedbackConfirm = "video.feedback.confirm"
+    static let videoFeedbackCancel = "video.feedback.cancel"
+
     static func shortsCard(_ videoId: String) -> String {
         "shorts.card.\(videoId)"
     }

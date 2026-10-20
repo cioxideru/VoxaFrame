@@ -71,13 +71,19 @@ extension VideoCardView {
                         menuLabel("Remove from Watch Later", AppSymbol.watchLater)
                     }
                 }
-                Button(role: .destructive, action: notInterested) {
+                Button(role: .destructive) {
+                    confirmsNotInterested = true
+                } label: {
                     menuLabel("Not Interested", AppSymbol.notInterested)
                 }
+                .accessibilityIdentifier(AccessibilityID.videoNotInterested)
                 if hasChannel {
-                    Button(role: .destructive, action: dontRecommendChannel) {
+                    Button(role: .destructive) {
+                        confirmsDontRecommendChannel = true
+                    } label: {
                         menuLabel("Don't Recommend Channel", AppSymbol.dontRecommendChannel)
                     }
+                    .accessibilityIdentifier(AccessibilityID.videoDontRecommendChannel)
                 }
             }
         }
