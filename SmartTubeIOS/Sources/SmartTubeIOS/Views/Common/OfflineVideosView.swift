@@ -35,6 +35,7 @@ struct OfflineVideosView: View {
     @State private var hasShownVideo = false
     @State private var contentWidth: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.innerTubeAPI) private var api
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -272,9 +273,11 @@ struct OfflineVideosView: View {
         List(selection: showsColumns ? $selectedVideoID : nil) {
             notices
             ForEach(snapshot.entries) { entry in
+                let isSelected = showsColumns && selectedVideoID == entry.id
                 let title = OfflinePresentation.title(of: entry.id, in: snapshot.entries)
                 let entryLabel = OfflineEntryLabel(
-                    entry: entry, title: title, status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs),
+                    entry: entry, title: title, isSelected: isSelected,
+                    status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs),
                     tracks: OfflinePresentation.trackBadges(entry, jobs: snapshot.jobs))
                 VStack(alignment: .leading, spacing: VFSpace.s4) {
                     if showsColumns {
@@ -284,8 +287,9 @@ struct OfflineVideosView: View {
                             entryLabel.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
                         }
                         .buttonStyle(.borderless)
-                        .foregroundStyle(.primary)
-                        .accessibilityAddTraits(selectedVideoID == entry.id ? [.isSelected] : [])
+                        // Reset the selected List row's white foreground before applying text/chip hierarchy.
+                        .foregroundStyle(Color.primary)
+                        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
                         .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
                     } else {
                         NavigationLink {
@@ -310,7 +314,8 @@ struct OfflineVideosView: View {
                     deletion = entry
                 }
                 .tag(entry.id)
-                .listRowBackground(showsColumns && selectedVideoID == entry.id ? VFColor.surface : nil)
+                // List caches this background across theme changes; refresh it without resetting the list.
+                .listRowBackground(isSelected ? VFColor.surface.id(colorScheme) : nil)
             }
         }
         .accessibilityIdentifier(AccessibilityID.offlineLibraryList)

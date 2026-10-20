@@ -53,6 +53,7 @@ struct OfflineCover: View {
 struct OfflineEntryLabel: View {
     let entry: OfflineEntry
     let title: String
+    let isSelected: Bool
     let status: OfflinePresentation.EntryStatus
     let tracks: [OfflinePresentation.TrackBadge]
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -75,6 +76,7 @@ struct OfflineEntryLabel: View {
                 OfflineCover(url: entry.video.thumbnailURL, width: Self.thumbnailWidth)
                 VStack(alignment: .leading, spacing: VFSpace.s4) {
                     Text(title).font(.headline).lineLimit(compact ? 3 : nil)
+                        .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.primary))
                     if !entry.video.channelTitle.isEmpty {
                         Text(entry.video.channelTitle).font(.footnote).foregroundStyle(.secondary)
                     }

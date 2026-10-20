@@ -15,6 +15,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- Selected offline library cards accent the video title while keeping the channel and track chips readable; their background updates when the theme changes.
 - Player metadata retains the channel ID, so videos opened by a link can open their channel from Description and More after loading.
 
 - Offline audio choices without language metadata show their codec and bitrate instead of an "Unknown language" prefix, including the library's additional-download list and saved-audio picker.

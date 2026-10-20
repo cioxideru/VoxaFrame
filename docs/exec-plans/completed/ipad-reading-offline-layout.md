@@ -116,3 +116,22 @@ Xcode reports Running SmartTube on iPad (Ivan); the updated executable
 was built at 21:33:19 local time on 2026-10-20.
 Evidence: `/private/tmp/voxaframe-compact-offline-header-20261020`.
 The latest physical layout and iPhone interaction await user observation.
+
+## Follow-up: selected-card contrast and title accent
+
+The custom selected-row background inherited the List selection's white
+foreground. The entry button now establishes `Color.primary` before applying the
+channel and chip hierarchy. Only the selected title uses the app's accent tint.
+The background's identity follows the color scheme, so changing themes refreshes
+the cached List background without resetting the selection or list.
+
+The user confirmed the initial contrast repair on the physical iPad. The added
+title accent was checked in iPad Simulator in both themes, including a dark/light/dark
+round trip without changing the selection. Selecting another card moves the
+accent and updates the detail column; its playback-options dialog still opens.
+CI passed 1,368 tests in 182 suites, strict SwiftLint found zero violations, and
+iOS/tvOS builds passed. Xcode reports Running SmartTube on iPad (Ivan), with the
+latest executable built at 21:48:52 local time on 2026-10-20.
+Evidence: `/private/tmp/voxaframe-offline-selection-20261020`.
+The title accent awaits physical user observation; iPhone and tvOS interaction
+were not exercised for this visual change.
