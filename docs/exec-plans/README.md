@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0040: Channel subscription in card menus](completed/card-channel-subscription.md) — avatar-only player channel row; Go to Channel and subscription status in video and Shorts card menus; checks and focused UI tests passed.
+
 - [PLAN-0039: HIG review fixes](completed/hig-review-fixes.md) — whole-app HIG review; SponsorBlock palette, compact subscription row, navigation, feedback, accessibility and polish across six packages; checks, builds and focused UI tests passed.
 
 - [PLAN-0038: Video feedback confirmation](completed/video-feedback-confirmation.md) — confirmation for both feedback actions, secondary commands under an ellipsis submenu and direct channel navigation; fixture UI and platform checks passed.

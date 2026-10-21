@@ -430,5 +430,7 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Larger platform work, not started: the system player (`AVPlayerViewController`) and system search page on tvOS.
 - Known placement limits of the app-level toast: it can briefly cover the iPhone tab bar, and a toast from a card
   action appears beneath the full-screen iOS player.
+- [PLAN-0040](exec-plans/completed/card-channel-subscription.md): check the card-menu ControlGroup on iOS and macOS and the
+  tvOS Play/Pause → Unsubscribe chained dialog on screen; a failed subscription lookup only hides the control.
 - Evidence gaps: every HIG finding and fix was judged from source; nothing was rendered for contrast, Dynamic Type
   at accessibility sizes, tvOS focus or the macOS menu bar. The macOS app target is not built by the scripts.
