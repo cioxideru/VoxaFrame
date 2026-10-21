@@ -8,6 +8,11 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Changed
 
+- **Player More menu:** a compact channel row shows the channel, its subscription status, a Subscribe or Subscribed control (Unsubscribe asks first) and opens the channel; it also appears on tvOS.
+- **Feedback:** routine results (Watch Later, Added to Playlist, SponsorBlock updates) appear as one app-level toast that VoiceOver announces; Not Interested and Don't Recommend Channel hide a card only after YouTube accepts them, and failures, including like/dislike, are reported. Search Clear History and Sign Out ask for confirmation. Buttons say Try Again; dialog titles use Title Case.
+- **SponsorBlock colours:** each category has light and dark variants; the Skip button picks a readable label and timeline marks stay visible over the player.
+- **Navigation:** opening a channel pushes it on the current tab only. tvOS always opens the player full screen, and its Open Channel returns to the current tab. macOS adds a Playback menu, ⌥⌘I for the inspector, ⌘1–⌘5 for sections and Offline commands under File; Settings live only in the Settings window, and the sidebar selection is restored per window.
+- **Accessibility and symbols:** player icon buttons offer the Large Content Viewer and Mac tooltips, captions follow Dynamic Type and the system caption size, Reduce Motion removes player slides, More-menu rows report their selected state, the sleep timer shows the time left, and fill/fit, Watch Later, subscribe and audio-only use distinct symbols.
 - **Video card menus:** Play Next, Add to Queue, Copy to Playlist and Play Incognito are grouped under an ellipsis submenu. Open Channel remains directly accessible; Shorts group their two queue commands the same way.
 - **Offline videos:** wide windows give more space to the library. Cards show compact, single-line badges for saved and pending video/audio/translation variants, with status and a Play button whose secondary action opens saved playback choices. Global and per-video Downloads dialogs show newest tasks first with All / Active / Error / Video / Audio filters. The page title shares the compact toolbar instead of reserving a large header. A compact floating card above the library shows active file counts and combined progress, stays visible while scrolling, and opens active downloads and errors; SponsorBlock remains the last management section.
 - **Reading panels:** Description and Comments use a wider, readable column on iPad and Mac while fitting narrow windows. Description includes a channel-page link; short content stays compact and long text scrolls within the window. Other player menus keep their compact width.
@@ -16,6 +21,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- HIG review fixes (PLAN-0039): tvOS menu focus is clearly visible, the macOS More menu closes with Escape, the 2× badge and gesture hints stay readable over bright video, AirPlay and section buttons are labelled, the widget uses text styles with a readable LIVE badge, and empty states offer an action.
 - Video and Shorts cards ask for confirmation before Not Interested or Don't Recommend Channel; Cancel leaves the feed and blocked channels unchanged.
 - macOS UI tests compile with iOS rotation and touch scenarios correctly scoped; the replay test's Back helper belongs to its test case. The iOS full-screen player's dismissal callback no longer retains its presenting root controller.
 - The offline management column no longer repeats the selected card's video title and channel; standalone detail screens retain their heading.

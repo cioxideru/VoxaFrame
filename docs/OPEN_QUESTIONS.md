@@ -419,3 +419,16 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   component READMEs DownloadRow (`cancelled`, `hls`, percent), OfflineAssetRow (`hls`, size only when known), ConfirmDeletion (job/video/library).
 - tvOS offline media lives under Documents, which tvOS may not keep; the TV offline path has been built but never run.
 - `docs/design/claude-design/HANDOFF.ru.md` still says "Mac Catalyst"; the target is native macOS.
+
+## OQ-0020 — HIG review findings left open
+
+- Status: open; owner: UI maintainer; basis: [PLAN-0039](exec-plans/completed/hig-review-fixes.md).
+- Not taken in PLAN-0039 by the user's decision (2026-10-21): the iOS player hides its controls under VoiceOver with
+  no way back; tvOS overlay controls (`tvOverlayControl`) have no accessibility labels; Channel Shorts and compact
+  cards do not open on tvOS (no `onSelect`); tvOS sign-in text and activation code are unreadable in Light theme;
+  load failures in comments, Home recommendations, Library feeds and RSS are shown as empty states.
+- Larger platform work, not started: the system player (`AVPlayerViewController`) and system search page on tvOS.
+- Known placement limits of the app-level toast: it can briefly cover the iPhone tab bar, and a toast from a card
+  action appears beneath the full-screen iOS player.
+- Evidence gaps: every HIG finding and fix was judged from source; nothing was rendered for contrast, Dynamic Type
+  at accessibility sizes, tvOS focus or the macOS menu bar. The macOS app target is not built by the scripts.

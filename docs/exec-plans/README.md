@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0039: HIG review fixes](completed/hig-review-fixes.md) — whole-app HIG review; SponsorBlock palette, compact subscription row, navigation, feedback, accessibility and polish across six packages; checks, builds and focused UI tests passed.
+
 - [PLAN-0038: Video feedback confirmation](completed/video-feedback-confirmation.md) — confirmation for both feedback actions, secondary commands under an ellipsis submenu and direct channel navigation; fixture UI and platform checks passed.
 
 - [PLAN-0037: SourceKit-LSP scan](completed/sourcekit-lsp-scan.md) — 500 Swift files checked; macOS UI-test compilation and the player's root-controller capture fixed; CI and all three platform test builds passed.
