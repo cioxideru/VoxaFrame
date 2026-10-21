@@ -5,7 +5,7 @@ import SwiftUI
 //
 // The channel control of the video and Shorts card menus, like the channel row of the player's More menu: Go to
 // Channel and the subscription state with Subscribe / Unsubscribe. Menus allow only native items, so iOS and the Mac
-// show one compact ControlGroup row ("Go to Channel" | "Subscribe" or "Subscribed", the second button only once the
+// show one compact ControlGroup row ("Channel" | "Subscribe" or "Subscribed", the second button only once the
 // state is known); the tvOS dialogs and the VoiceOver actions get plain buttons with explicit titles. The state
 // comes from `SubscribedChannelsCache`, loaded when a menu opens. Unsubscribe asks first through `cardChannelSubscription(channel:pending:)` on the card.
 
@@ -49,7 +49,7 @@ struct CardChannelMenuItems: View {
         #else
         if compact {
             ControlGroup {
-                goToChannelButton(Text("Go to Channel", bundle: .module))
+                goToChannelButton(Text("Channel", bundle: .module))
                 compactSubscriptionButton
             }
             .onAppear(perform: load)

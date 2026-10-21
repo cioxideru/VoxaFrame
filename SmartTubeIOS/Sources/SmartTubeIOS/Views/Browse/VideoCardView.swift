@@ -28,7 +28,7 @@ public struct VideoCardView: View {
     public var compact: Bool = false
     /// When set, this is the `playlistId` of the list the user is currently browsing.
     /// Pass `"WL"` when inside the Watch Later playlist so the context menu shows
-    /// "Remove from Watch Later" instead of "Save to Watch Later".
+    /// "Remove from Watch Later" instead of "Watch Later".
     public var currentPlaylistId: String? = nil
     /// Opens the video. tvOS calls it on Select; elsewhere it is the VoiceOver default action and callers keep their
     /// own tap gesture (cards on the Channel and Playlist screens pass none and keep VoiceOver's plain activation).

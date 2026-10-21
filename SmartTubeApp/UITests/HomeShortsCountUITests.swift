@@ -374,9 +374,9 @@ final class MixedFeedLayoutUITests: XCTestCase {
         XCTAssertFalse(title.label.isEmpty)
         XCTAssertTrue(more.label.hasSuffix(title.label), "More's VoiceOver label names its card")
         more.tap()
-        // Add to Queue sits in the "…" submenu (PLAN-0038); Go to Channel is a top-level item of every fixture card.
+        // Add to Queue sits in the "…" submenu (PLAN-0038); Channel is a top-level item of every fixture card.
         XCTAssertTrue(
-            app.buttons["Go to Channel"].firstMatch.waitForExistence(timeout: 5), "More must open the card's menu")
+            app.buttons["Channel"].firstMatch.waitForExistence(timeout: 5), "More must open the card's menu")
         XCTAssertFalse(
             app.staticTexts[AccessibilityID.playerTitleLabel].exists, "Opening the menu must not start the video")
     }
@@ -565,7 +565,7 @@ final class VideoFeedbackConfirmationUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(more.frame.height, 44, "More must be a 44 pt touch target")
         more.tap()
         XCTAssertTrue(
-            app.buttons["Go to Channel"].firstMatch.waitForExistence(timeout: 5), "More must open the card's menu")
+            app.buttons["Channel"].firstMatch.waitForExistence(timeout: 5), "More must open the card's menu")
         XCTAssertFalse(
             app.staticTexts[AccessibilityID.playerTitleLabel].exists, "Opening the menu must not start the Short")
     }
@@ -593,8 +593,8 @@ final class VideoFeedbackConfirmationUITests: XCTestCase {
         let title = shorts ? "" : target.staticTexts[AccessibilityID.videoCardTitle].firstMatch.label
         let actionTitle =
             switch action {
-            case AccessibilityID.videoDontRecommendChannel: "Don't Recommend Channel"
-            case AccessibilityID.videoDontLike: "Don't Like This Video"
+            case AccessibilityID.videoDontRecommendChannel: "Don't Recommend"
+            case AccessibilityID.videoDontLike: "Don't Like"
             default: "Not Interested"
             }
 

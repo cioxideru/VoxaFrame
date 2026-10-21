@@ -64,7 +64,7 @@ struct VideoCardMenuItems: View {
             }
             if authService.isSignedIn {
                 if playlistId != "WL" {
-                    Button(action: saveToWatchLater) { menuLabel("Save to Watch Later", AppSymbol.watchLater) }
+                    Button(action: saveToWatchLater) { menuLabel("Watch Later", AppSymbol.watchLater) }
                 }
                 if playlistId != nil {
                     Button {
@@ -104,14 +104,14 @@ struct VideoCardMenuItems: View {
                 Button(role: .destructive) {
                     state.confirmsDontLike = true
                 } label: {
-                    menuLabel("Don't Like This Video", AppSymbol.thumbsDown)
+                    menuLabel("Don't Like", AppSymbol.thumbsDown)
                 }
                 .accessibilityIdentifier(AccessibilityID.videoDontLike)
                 if Channel.ofCard(video) != nil {
                     Button(role: .destructive) {
                         state.confirmsDontRecommendChannel = true
                     } label: {
-                        menuLabel("Don't Recommend Channel", AppSymbol.dontRecommendChannel)
+                        menuLabel("Don't Recommend", AppSymbol.dontRecommendChannel)
                     }
                     .accessibilityIdentifier(AccessibilityID.videoDontRecommendChannel)
                 }

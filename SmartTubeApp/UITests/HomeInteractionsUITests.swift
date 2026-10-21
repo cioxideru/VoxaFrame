@@ -150,10 +150,10 @@ final class HomeInteractionsUITests: XCTestCase {
         return card
     }
 
-    /// Long-presses `element` and returns the "Save to Watch Later" menu button, or nil.
+    /// Long-presses `element` and returns the "Watch Later" menu button, or nil.
     private func openContextMenuWatchLaterButton(on element: XCUIElement) -> XCUIElement? {
         element.press(forDuration: 1.0)
-        let button = app.buttons["Save to Watch Later"].firstMatch
+        let button = app.buttons["Watch Later"].firstMatch
         guard button.waitForExistence(timeout: 5) else { return nil }
         return button
     }
@@ -446,25 +446,25 @@ final class HomeInteractionsUITests: XCTestCase {
     func testA_WatchLaterMenuItemVisibleWhenSignedIn() throws {
         let card = try firstHomeCard()
         guard let button = openContextMenuWatchLaterButton(on: card) else {
-            try captureAndSkip("'Save to Watch Later' not shown — account may not be signed in", in: app)
+            try captureAndSkip("'Watch Later' not shown — account may not be signed in", in: app)
         }
         XCTAssertTrue(
             button.exists,
-            "'Save to Watch Later' context menu item must be visible for signed-in users")
+            "'Watch Later' context menu item must be visible for signed-in users")
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.02)).tap()
     }
 
     func testA_SaveToWatchLaterShowsSuccessAlertNotError() throws {
         let card = try firstHomeCard()
         guard let button = openContextMenuWatchLaterButton(on: card) else {
-            try captureAndSkip("'Save to Watch Later' not shown — account may not be signed in", in: app)
+            try captureAndSkip("'Watch Later' not shown — account may not be signed in", in: app)
         }
         button.tap()
 
         let anyAlert = app.alerts.firstMatch
         XCTAssertTrue(
             anyAlert.waitForExistence(timeout: 10),
-            "An alert should appear after tapping 'Save to Watch Later'")
+            "An alert should appear after tapping 'Watch Later'")
 
         let successAlert = app.alerts["Saved to Watch Later"].firstMatch
         let errorAlert = app.alerts["Could Not Save"].firstMatch
