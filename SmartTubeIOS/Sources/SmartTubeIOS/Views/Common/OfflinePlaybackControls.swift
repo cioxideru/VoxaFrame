@@ -102,7 +102,7 @@ struct OfflinePlaybackControls<Content: View>: View {
             .navigationTitle(Text("Playback options", bundle: .module))
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button {
                         showsOptions = false
                     } label: {

@@ -81,11 +81,6 @@ public struct RootView: View {
             Text(item.message)
         }
         #endif
-        .sheet(isPresented: .constant(!auth.isSignedIn && requiresAuth)) {
-            // Sign-in prompt is shown as a dismissible sheet so users
-            // can still browse without being signed in.
-            SignInView()
-        }
         #if os(iOS)
         // Deep link is handled by MainTabView.onChange(of: browseVM.deepLinkedVideo)
         // which calls playerRouter.open(video:api:). No landscapePlayerCover needed here.
@@ -97,8 +92,6 @@ public struct RootView: View {
         }
         #endif
     }
-
-    private var requiresAuth: Bool { false }  // guest browsing is allowed
 }
 
 // MARK: - AppSection
@@ -111,6 +104,17 @@ enum AppSection: String, CaseIterable, Identifiable {
     case settings = "Settings"
 
     var id: String { rawValue }
+
+    /// Short, localized chrome labels for every shell; raw values remain the stable navigation and accessibility identity.
+    var tabTitle: String {
+        switch self {
+        case .home: String(localized: "Home", bundle: .module)
+        case .library: String(localized: "Library", bundle: .module)
+        case .offline: String(localized: "Offline", bundle: .module)
+        case .settings: String(localized: "Settings", bundle: .module)
+        case .search: String(localized: "Search", bundle: .module)
+        }
+    }
 
     var icon: String {
         switch self {

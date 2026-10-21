@@ -161,6 +161,8 @@ struct AppEntry: App {
                     signOutIfNeeded()
                 }
             withDownloads(root)
+                // smarttube:// links open in the existing window instead of a new one.
+                .handlesExternalEvents(preferring: ["*"], allowing: ["*"])
         }
         .defaultSize(width: 1280, height: 800)
         .commands { MacWindowCommands() }
@@ -641,8 +643,8 @@ extension AppEntry {
 
     /// Handles `--uitesting-deeplink-channel=<channelId>` launch argument.
     ///
-    /// Posts `.openChannel` via NotificationCenter so the active navigation host
-    /// (HomeView, BrowseView, or PlaylistView) pushes `ChannelView` directly,
+    /// Posts `.openChannel` via NotificationCenter so the shell pushes `ChannelView` on the
+    /// selected tab (MainTabView, MainSidebarView, MainTVTabView) directly,
     /// bypassing the need to navigate through the player or search results.
     /// Fires only once per launch so repeated `.active` transitions are no-ops.
     @MainActor
@@ -653,7 +655,7 @@ extension AppEntry {
         let channelID = String(arg.dropFirst("--uitesting-deeplink-channel=".count))
         guard !channelID.isEmpty else { return }
         channelDeepLinkConsumed = true
-        // Wrap in a Task to yield one run-loop tick so the HomeView's
+        // Wrap in a Task to yield one run-loop tick so the shell's
         // onReceive(.openChannel) handler is registered before the notification fires.
         Task { @MainActor in
             NotificationCenter.default.post(

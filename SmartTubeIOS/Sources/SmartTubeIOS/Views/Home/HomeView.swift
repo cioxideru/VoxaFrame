@@ -106,8 +106,12 @@ public struct HomeView: View {
                     homeLayout = HomeFeedLayout()
                     sectionLayout = HomeFeedLayout()
                 }
-                #if !os(iOS)
+                #if os(macOS)
             .navigationDestination(item: $selectedVideo) { video in
+                PlayerView(video: video, api: api)
+            }
+                #elseif os(tvOS)
+            .fullScreenCover(item: $selectedVideo) { video in
                 PlayerView(video: video, api: api)
             }
                 #endif
@@ -131,10 +135,6 @@ public struct HomeView: View {
         }
         #endif
         .sheet(isPresented: $showSignIn) { SignInView() }
-        .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
-            guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
-            channelDestination = ChannelDestination(channelId: channelId)
-        }
         #if !os(tvOS)
         // App Intents ("Open Subscriptions in SmartTube"): the shell switches to Home first.
         // A section hidden in Settings still opens, just without a chip.

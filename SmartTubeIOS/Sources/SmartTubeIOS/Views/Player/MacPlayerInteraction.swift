@@ -23,6 +23,8 @@ struct MacPlayerInteraction: ViewModifier {
             .focusEffectDisabled()
             .focused(focused)
             .onKeyPress(phases: .down) { press in handleKey(press) }
+            // The Playback menu: published only while the video surface has focus, like the keys above.
+            .focusedValue(\.macPlayback, active && !hasOpenPanel ? playbackTarget : nil)
             .onContinuousHover { phase in
                 guard active else { return }
                 switch phase {
@@ -58,6 +60,12 @@ struct MacPlayerInteraction: ViewModifier {
                 if !visible && keepsControlsVisible { revealControls() }
                 updateCursor()
             }
+    }
+
+    private var playbackTarget: MacPlaybackTarget {
+        MacPlaybackTarget(
+            vm: vm, seekBackSeconds: Double(settings.settings.seekBackSeconds),
+            seekForwardSeconds: Double(settings.settings.seekForwardSeconds))
     }
 
     private func revealControls(throttled: Bool = false) {

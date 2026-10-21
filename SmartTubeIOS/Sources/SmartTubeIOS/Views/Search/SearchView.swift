@@ -12,7 +12,6 @@ public struct SearchView: View {
     @Environment(\.innerTubeAPI) private var api
     @Environment(SettingsStore.self) private var store
     @State private var selectedVideo: Video?
-    @State private var channelDestination: ChannelDestination?
     @State private var showFilters = false
     #if os(macOS)
     @State private var showFiltersSheet = false
@@ -29,19 +28,16 @@ public struct SearchView: View {
 
     public var body: some View {
         searchPresentation
-            #if !os(iOS)
-        // tvOS and macOS push the player in this stack, like a card click; iOS presents it through PlayerRouter.
+            #if os(macOS)
+        // macOS pushes the player in this stack, like a card click; tvOS covers the screen; iOS presents it through PlayerRouter.
         .navigationDestination(item: $selectedVideo) { video in
             PlayerView(video: video, api: api)
         }
+            #elseif os(tvOS)
+        .fullScreenCover(item: $selectedVideo) { video in
+            PlayerView(video: video, api: api)
+        }
             #endif
-            .navigationDestination(item: $channelDestination) { dest in
-                ChannelView(channelId: dest.channelId, api: api)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
-                guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
-                channelDestination = ChannelDestination(channelId: channelId)
-            }
             .task(id: vm.query) { await vm.updateSuggestions(for: vm.query) }
             // Clearing the field (its clear button, Cancel, or the search tab's close) returns to recent searches.
             .onChange(of: vm.query) { _, query in

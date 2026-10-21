@@ -159,7 +159,14 @@ extension PlayerView {
             withAnimation(.none) { dismiss() }
         case .channel:
             let channelId = vm.playerInfo?.video.channelId ?? video.channelId
-            if let cid = channelId, !cid.isEmpty { channelDestination = ChannelDestination(channelId: cid) }
+            guard let cid = channelId, !cid.isEmpty else { return }
+            // The player is a full-screen cover with no stack of its own: close it like Back, then the shell
+            // (MainTVTabView, which outlives the cover) pushes the channel on the selected tab.
+            vm.stop()
+            withAnimation(.none) { dismiss() }
+            Task { @MainActor in
+                NotificationCenter.default.post(name: .openChannel, object: nil, userInfo: ["channelId": cid])
+            }
         case .more:
             playerLog.notice("[tv] .more activated — setting showMoreMenu=true")
             showMoreMenu = true

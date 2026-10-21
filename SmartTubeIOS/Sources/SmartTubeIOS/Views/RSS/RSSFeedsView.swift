@@ -65,9 +65,13 @@ struct RSSFeedsView: View {
         .sheet(isPresented: $showManageFeeds, onDismiss: { vm.load() }) {
             ManageRSSFeedsView()
         }
-        #if !os(iOS)
-        // tvOS and macOS push the player in the Library stack, like a card click elsewhere.
+        #if os(macOS)
+        // macOS pushes the player in the Library stack, like a card click elsewhere; tvOS covers the screen.
         .navigationDestination(item: $selectedVideo) { video in
+            PlayerView(video: video, api: api)
+        }
+        #elseif os(tvOS)
+        .fullScreenCover(item: $selectedVideo) { video in
             PlayerView(video: video, api: api)
         }
         #endif

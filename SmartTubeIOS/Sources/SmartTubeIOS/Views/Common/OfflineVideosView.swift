@@ -140,8 +140,14 @@ struct OfflineVideosView: View {
             .sheet(item: $downloads) { filter in OfflineDownloadsSheet(filter: filter) }
             #if os(macOS)
         .navigationDestination(item: $playbackVideo) { video in PlayerView(video: video, api: api) }
+        // The File menu's Downloads and Delete All commands (MacWindowCommands).
+        .focusedSceneValue(
+            \.macOfflineActions,
+            MacOfflineActions(
+                showDownloads: { downloads = .all },
+                deleteAll: coordinator.ready && !isLocked ? { showsDeleteAll = true } : nil))
             #elseif os(tvOS)
-        .sheet(item: $playbackVideo) { video in PlayerView(video: video, api: api) }
+        .fullScreenCover(item: $playbackVideo) { video in PlayerView(video: video, api: api) }
             #endif
             .confirmationDialog(
                 Text("Delete “\(deletion?.video.title ?? "")”?", bundle: .module),

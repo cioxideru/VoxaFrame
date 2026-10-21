@@ -19,9 +19,20 @@ enum ShellItem: Hashable, Identifiable {
         }
     }
 
+    /// The inverse of `id`, for `@SceneStorage`.
+    init?(id: String) {
+        if id == ShellItem.queue.id {
+            self = .queue
+        } else if let section = AppSection(rawValue: id) {
+            self = .section(section)
+        } else {
+            return nil
+        }
+    }
+
     var title: Text {
         switch self {
-        case .section(let section): Text(verbatim: section.rawValue)  // verbatim: raw value, as the tab bars (OQ-0019)
+        case .section(let section): Text(section.tabTitle)
         case .queue: Text("Queue", bundle: .module)
         }
     }

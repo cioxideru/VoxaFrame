@@ -16,7 +16,6 @@ public struct PlaylistView: View {
     @Environment(\.isLandscapeLayout) private var isLandscapeLayout
     @State private var vm: PlaylistViewModel
     @State private var selectedVideo: Video?
-    @State private var channelDestination: ChannelDestination?
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
     #endif
@@ -46,19 +45,16 @@ public struct PlaylistView: View {
             guard !isQueue else { return }
             vm.load(playlistId: playlistId)
         }
-        #if !os(iOS)
-        // tvOS and macOS push the player in this stack, like a card click elsewhere.
+        #if os(macOS)
+        // macOS pushes the player in this stack, like a card click elsewhere; tvOS covers the screen.
         .navigationDestination(item: $selectedVideo) { video in
             PlayerView(video: video, api: api)
         }
+        #elseif os(tvOS)
+        .fullScreenCover(item: $selectedVideo) { video in
+            PlayerView(video: video, api: api)
+        }
         #endif
-        .navigationDestination(item: $channelDestination) { dest in
-            ChannelView(channelId: dest.channelId, api: api)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
-            guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
-            channelDestination = ChannelDestination(channelId: channelId)
-        }
         .alert("Error", isPresented: .constant(vm.error != nil), presenting: vm.error) { _ in
             Button("Try Again") { vm.load(playlistId: playlistId) }
             Button("Dismiss", role: .cancel) { vm.error = nil }

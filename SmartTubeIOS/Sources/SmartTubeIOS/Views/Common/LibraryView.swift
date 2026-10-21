@@ -16,7 +16,6 @@ public struct LibraryView: View {
     @State private var selectedSection: LibrarySection = .subscriptions
     @State private var selectedVideo: Video?
     @State private var selectedPlaylist: Video?
-    @State private var channelDestination: ChannelDestination?
     @State private var showsSignIn = false
     @State private var scrollStore = ScrollOffsetStore()
     @State private var savedScrollOffset: CGFloat? = nil
@@ -86,20 +85,17 @@ public struct LibraryView: View {
         #else
         .navigationTitle(Text("Library", bundle: .module))
         #endif
-        #if !os(iOS)
+        #if os(macOS)
         .navigationDestination(item: $selectedVideo) { video in
+            PlayerView(video: video, api: api)
+        }
+        #elseif os(tvOS)
+        .fullScreenCover(item: $selectedVideo) { video in
             PlayerView(video: video, api: api)
         }
         #endif
         .navigationDestination(item: $selectedPlaylist) { stub in
             PlaylistView(playlistId: stub.id, playlistTitle: stub.title, api: api)
-        }
-        .navigationDestination(item: $channelDestination) { dest in
-            ChannelView(channelId: dest.channelId, api: api)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
-            guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
-            channelDestination = ChannelDestination(channelId: channelId)
         }
         // A sheet, not a push: SignInView owns a NavigationStack and must not nest in this one.
         .sheet(isPresented: $showsSignIn) {
@@ -133,12 +129,11 @@ public struct LibraryView: View {
             guard pending else { return }
             queueRequest.wrappedValue = false
             selectedPlaylist = nil
-            channelDestination = nil
             selectedVideo = nil
             selectedSection = .queue
         }
         #if os(tvOS)
-        // tvOS: player is opened via navigationDestination(item: $selectedVideo).
+        // tvOS: player is opened via fullScreenCover(item: $selectedVideo).
         // Save offset when selectedVideo is set; restore when it clears.
         .onChange(of: selectedVideo) { old, new in
             if old == nil, new != nil {

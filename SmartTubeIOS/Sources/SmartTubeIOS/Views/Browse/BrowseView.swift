@@ -13,7 +13,6 @@ public struct BrowseView: View {
     @State private var selectedVideo: Video?
     @State private var selectedPlaylist: Video?
     @State private var shortsPresentation: ShortsPresentation?
-    @State private var channelDestination: ChannelDestination?
     @State private var showSignIn = false
     @State private var showError = false
     #if os(iOS)
@@ -42,13 +41,6 @@ public struct BrowseView: View {
         #endif
         .navigationDestination(item: $selectedPlaylist) { stub in
             PlaylistView(playlistId: stub.id, playlistTitle: stub.title, api: api)
-        }
-        .navigationDestination(item: $channelDestination) { dest in
-            ChannelView(channelId: dest.channelId, api: api)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
-            guard let channelId = note.userInfo?["channelId"] as? String, !channelId.isEmpty else { return }
-            channelDestination = ChannelDestination(channelId: channelId)
         }
         .alert("Error", isPresented: $showError, presenting: vm.error) { _ in
             Button("Try Again") { vm.loadContent(refresh: true) }

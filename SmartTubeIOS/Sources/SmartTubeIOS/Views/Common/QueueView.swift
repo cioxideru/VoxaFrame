@@ -6,7 +6,7 @@ import SwiftUI
 // The play queue, read straight from `CurrentQueueStore` (PLAN-0027 A1): it never waits for account
 // playlists and needs no sign-in. Shown by Library › Queue, the iPad and Mac sidebar Queue item and Home's
 // Current Queue row (through `PlaylistView`). Clear Queue asks first (B3). Reorder and remove are A3.
-// It does not listen for `.openChannel`: its host screen does. `PlaylistViewModel` loads the queue and drops
+// It does not listen for `.openChannel`: the shell pushes the channel on the selected tab. `PlaylistViewModel` loads the queue and drops
 // cards on Not Interested / Don't Recommend Channel, as on any playlist; Hide Shorts applies as there.
 
 struct QueueView: View {
@@ -40,8 +40,12 @@ struct QueueView: View {
         }
         // Runs on every appearance, so the queue is current after playing a list elsewhere.
         .task { await reload() }
-        #if !os(iOS)
+        #if os(macOS)
         .navigationDestination(item: $selectedVideo) { video in
+            PlayerView(video: video, api: api)
+        }
+        #elseif os(tvOS)
+        .fullScreenCover(item: $selectedVideo) { video in
             PlayerView(video: video, api: api)
         }
         #endif

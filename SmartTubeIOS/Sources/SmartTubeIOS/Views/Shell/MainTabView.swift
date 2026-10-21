@@ -40,7 +40,7 @@ struct MainTabView: View {
 
     @State private var searchVM = SearchViewModel()
     @State private var selectedTab: ShellItem = .section(.home)
-    /// The channel page the player asked for, pushed on `channelPushTab`'s stack (any tab, Settings included).
+    /// The channel page the player, a card or a link asked for, pushed on the selected tab's stack (Settings included).
     @State private var channelPushes: [ShellItem: ChannelDestination] = [:]
     @State private var libraryQueueRequested = false
     @State private var tabContentFrame = TabContentFrame()
@@ -89,6 +89,7 @@ struct MainTabView: View {
             .onChange(of: horizontalSizeClass == .regular && store.settings.showQueueTab) { _, queueTabShown in
                 guard !queueTabShown, selectedTab == .queue else { return }
                 libraryQueueRequested = true
+                channelPushes[.section(.library)] = nil
                 selectedTab = .section(.library)
             }
             .environment(\.libraryQueueRequest, $libraryQueueRequested)
@@ -99,9 +100,16 @@ struct MainTabView: View {
             // the selected tab, unless that channel page is already showing.
             .onChange(of: playerState.presentation) { applyPendingChannel() }
             .onChange(of: playerState.pendingChannelId) { applyPendingChannel() }
+            // Cards and smarttube://channel links take the same route, so only the selected tab pushes the page.
+            .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
+                guard let id = note.userInfo?["channelId"] as? String, !id.isEmpty else { return }
+                playerState.pendingChannelId = id
+                applyPendingChannel()
+            }
             // App Intents / Spotlight (see AppEntry.handleOpenURL).
             .onReceive(NotificationCenter.default.publisher(for: .smartTubeOpenSearch)) { note in
                 guard let query = note.userInfo?["query"] as? String else { return }
+                channelPushes[.section(.search)] = nil
                 selectedTab = .section(.search)
                 searchVM.query = query
                 searchVM.search()
@@ -336,17 +344,6 @@ private struct NavigationBottomReserve: UIViewRepresentable {
 }
 
 extension AppSection {
-    /// Short, localized chrome labels; raw values remain the stable navigation and accessibility identity.
-    fileprivate var tabTitle: String {
-        switch self {
-        case .home: String(localized: "Home", bundle: .module)
-        case .library: String(localized: "Library", bundle: .module)
-        case .offline: String(localized: "Offline", bundle: .module)
-        case .settings: String(localized: "Settings", bundle: .module)
-        case .search: String(localized: "Search", bundle: .module)
-        }
-    }
-
     /// Search is the system search-role tab on iOS 26+; a regular tab before that.
     fileprivate var tabRole: TabRole? {
         guard self == .search else { return nil }
