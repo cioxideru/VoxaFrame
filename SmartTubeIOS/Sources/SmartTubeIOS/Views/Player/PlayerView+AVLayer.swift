@@ -166,16 +166,17 @@ final class PiPDelegate: NSObject, AVPictureInPictureControllerDelegate {
 
 struct HoldSpeedBadge: View {
     var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: "forward.fill")
-                .font(.system(size: 20, weight: .semibold))
-            Text("2×")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+        VStack(spacing: VFSpace.s4) {
+            Image(systemName: AppSymbol.skipForward)
+                .font(.title3.weight(.semibold))
+            Text(verbatim: "2×")  // verbatim: a rate, written the same in every language
+                .font(.subheadline.weight(.bold))
+                .fontDesign(.rounded)
         }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .foregroundStyle(VFColor.onMedia)
+        .padding(.horizontal, VFSpace.s16)
+        .padding(.vertical, VFSpace.s8)
+        .background(VFColor.scrim, in: RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous))
         .allowsHitTesting(false)
         .accessibilityIdentifier(AccessibilityID.playerHoldSpeedBadge)
     }

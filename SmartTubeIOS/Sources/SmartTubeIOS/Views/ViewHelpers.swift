@@ -226,7 +226,7 @@ enum AppSymbol {
     static let incognito = "eyeglasses"
     static let notInterested = "hand.raised"
     static let dontRecommendChannel = "person.slash"
-    static let savedToWatchLater = "bookmark.fill"
+    static let savedToWatchLater = "clock.badge.checkmark.fill"
     static let offlineSaved = "arrow.down.circle.fill"
     static let liveDot = "circle.fill"
     static let noCover = "play.rectangle"
@@ -258,13 +258,16 @@ enum AppSymbol {
     static let removeCircle = "minus.circle.fill"
     static let addCircle = "plus.circle.fill"
     static let personCircleMinus = "person.crop.circle.badge.minus"
+    /// Pairs with `personCircleMinus` (Unsubscribe).
+    static let subscribe = "person.crop.circle.badge.plus"
+    static let sponsorBlock = "forward.end"
 
     // MARK: - Navigation tabs
     static let home = "house.fill"
     static let search = "magnifyingglass"
     static let library = "square.stack.fill"
     static let settings = "gearshape.fill"
-    // The other macOS Settings window tabs (with `skipForward` and `personCircle`).
+    // The other macOS Settings window tabs (with `sponsorBlock` and `personCircle`).
     static let languages = "globe"
     static let appearance = "paintbrush"
     static let lock = "lock"
@@ -282,8 +285,9 @@ enum AppSymbol {
     static let speaker = "speaker.wave.2.fill"
     static let brightness = "sun.max.fill"
     static let verticalAdjustment = "arrow.up.and.down"
-    static let videoFill = "arrow.up.left.and.arrow.down.right"
-    static let videoFit = "arrow.down.right.and.arrow.up.left"
+    // Fill/Fit scale the picture; distinct from the full-screen arrows beside them on the Mac.
+    static let videoFill = "rectangle.arrowtriangle.2.outward"
+    static let videoFit = "rectangle.arrowtriangle.2.inward"
     static let enterFullScreen = "arrow.up.left.and.arrow.down.right.circle"
     static let exitFullScreen = "arrow.down.right.and.arrow.up.left.circle"
     static let previousTrack = "backward.end.fill"
@@ -292,6 +296,12 @@ enum AppSymbol {
     static let nextChapter = "forward.end.alt.fill"
     static let thumbsUp = "hand.thumbsup"
     static let thumbsDown = "hand.thumbsdown"
+    static let replay = "arrow.counterclockwise"
+    static let pipEnter = "pip.enter"
+    static let pipExit = "pip.exit"
+    static let landscapeLock = "lock.rotation"
+    static let landscapeUnlock = "lock.rotation.open"
+    static let audioOnlyArtwork = "music.note"
 
     // MARK: - Actions
     static let checkmark = "checkmark"
@@ -304,8 +314,12 @@ enum AppSymbol {
     static let deleteBackward = "delete.left"
     static let download = "arrow.down.to.line"
     static let retry = "arrow.clockwise"
-    static let watchLater = "clock.badge"
-    static let audioOnly = "waveform.circle"
+    // Watch Later is one clock family: save, remove, the saved mark and the playlist cover.
+    static let watchLater = "clock.badge.checkmark"
+    static let removeFromWatchLater = "clock.badge.xmark"
+    /// Distinct from `audioTrack` (a waveform), which picks the language track.
+    static let audioOnly = "headphones"
+    static let downloadsEmpty = "arrow.down.to.line.circle"
 
     // MARK: - Status / info
     static let warning = "exclamationmark.triangle.fill"
@@ -319,6 +333,7 @@ enum AppSymbol {
 
     // MARK: - People / account
     static let personCircle = "person.crop.circle"
+    static let personFill = "person.fill"
     static let personRectangle = "person.crop.rectangle"
     static let personCircleQuestion = "person.crop.circle.badge.questionmark"
     static let personCircleWarning = "person.crop.circle.badge.exclamationmark"

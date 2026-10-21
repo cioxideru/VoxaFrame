@@ -103,7 +103,7 @@ struct PlayerControlsOverlay: View {
                     width: 64,
                     height: 64
                 ) {
-                    Image(systemName: "ellipsis")
+                    Image(systemName: AppSymbol.more)
                         .font(.system(size: 18 * controlScale))
                         .foregroundStyle(VFColor.onMedia)
                 }
@@ -270,11 +270,11 @@ extension PlayerControlsOverlay {
                 #endif
             } label: {
                 Image(systemName: backSymbol)
-                    .font(.system(size: 18 * controlScale, weight: .semibold))
+                    .font(.system(size: 18 * controlScale))
                     .playerMediaControl(diameter: VFTarget.touch * controlScale)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(backLabel)
+            .playerIconControl(backLabel, symbol: backSymbol)
             .accessibilityIdentifier(AccessibilityID.playerBackButton)
             titleBlock
             Spacer(minLength: VFSpace.s8)
@@ -292,12 +292,15 @@ extension PlayerControlsOverlay {
                         pip.startPictureInPicture()
                     }
                 } label: {
-                    Image(systemName: isPiPActive ? "pip.exit" : "pip.enter")
+                    Image(systemName: isPiPActive ? AppSymbol.pipExit : AppSymbol.pipEnter)
                         .font(.system(size: 18 * controlScale))
                         .playerMediaControl(diameter: VFTarget.touch * controlScale, isActive: isPiPActive)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(Text("Picture in Picture", bundle: .module))
+                .playerIconControl(
+                    Text("Picture in Picture", bundle: .module),
+                    symbol: isPiPActive ? AppSymbol.pipExit : AppSymbol.pipEnter
+                )
                 .accessibilityAddTraits(isPiPActive ? .isSelected : [])
                 .accessibilityIdentifier(AccessibilityID.playerPiPButton)
             }
@@ -311,12 +314,12 @@ extension PlayerControlsOverlay {
                     "[menu] ... button tapped — controlsVisible=\(vm.controlsVisible) showMoreMenu=\(showMoreMenu)")
                 showMoreMenu = true
             } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 18 * controlScale, weight: .semibold))
+                Image(systemName: AppSymbol.more)
+                    .font(.system(size: 18 * controlScale))
                     .playerMediaControl(diameter: VFTarget.touch * controlScale)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Text("More", bundle: .module))
+            .playerIconControl(Text("More", bundle: .module), symbol: AppSymbol.more)
             .accessibilityIdentifier(AccessibilityID.playerMoreButton)
             .playerOptionPanelTrigger(.more)
         }
@@ -409,7 +412,7 @@ extension PlayerControlsOverlay {
         .buttonStyle(.plain)
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.35)
-        .accessibilityLabel(label)
+        .playerIconControl(label, symbol: symbol)
         .accessibilityIdentifier(identifier)
     }
 
@@ -493,12 +496,15 @@ extension PlayerControlsOverlay {
             Button {
                 isLandscapeLocked.toggle()
             } label: {
-                Image(systemName: isLandscapeLocked ? "lock.rotation" : "lock.rotation.open")
+                Image(systemName: isLandscapeLocked ? AppSymbol.landscapeLock : AppSymbol.landscapeUnlock)
                     .font(.system(size: 18 * controlScale))
                     .playerMediaControl(diameter: VFTarget.touch * controlScale, isActive: isLandscapeLocked)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Text("Landscape Lock", bundle: .module))
+            .playerIconControl(
+                Text("Landscape Lock", bundle: .module),
+                symbol: isLandscapeLocked ? AppSymbol.landscapeLock : AppSymbol.landscapeUnlock
+            )
             .accessibilityAddTraits(isLandscapeLocked ? .isSelected : [])
             .accessibilityIdentifier(AccessibilityID.playerLandscapeLockButton)
 
@@ -512,7 +518,7 @@ extension PlayerControlsOverlay {
                         diameter: VFTarget.touch * controlScale, isActive: store.settings.audioOnlyMode)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Text("Audio-Only", bundle: .module))
+            .playerIconControl(Text("Audio-Only", bundle: .module), symbol: AppSymbol.audioOnly)
             .accessibilityAddTraits(store.settings.audioOnlyMode ? .isSelected : [])
             .accessibilityIdentifier(AccessibilityID.playerAudioOnlyButton)
             #endif
@@ -604,16 +610,20 @@ extension PlayerControlsOverlay {
                 .playerMediaControl(diameter: 72 * controlScale)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(playPauseLabel)
+        .playerIconControl(playPauseLabel, symbol: playPauseSymbol)
         .accessibilityIdentifier(AccessibilityID.playerPlayPauseButton)
         #endif
     }
 
     var playPauseIcon: some View {
-        Image(systemName: vm.videoEnded ? "arrow.counterclockwise" : (vm.isPlaying ? "pause.fill" : "play.fill"))
+        Image(systemName: playPauseSymbol)
             .renderingMode(.original)
             .font(.system(size: 34 * controlScale))
             .foregroundStyle(VFColor.onMedia)
+    }
+
+    private var playPauseSymbol: String {
+        vm.videoEnded ? AppSymbol.replay : (vm.isPlaying ? AppSymbol.pause : AppSymbol.play)
     }
 
     /// Names the action, as the glyph does: Replay after the end, otherwise Pause or Play.
@@ -648,10 +658,11 @@ extension PlayerControlsOverlay {
                 .playerMediaControl(diameter: 52 * controlScale)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(
+        .playerIconControl(
             seconds < 0
                 ? Text("Back \(interval) seconds", bundle: .module)
-                : Text("Forward \(interval) seconds", bundle: .module)
+                : Text("Forward \(interval) seconds", bundle: .module),
+            symbol: symbol
         )
         .accessibilityIdentifier(seconds < 0 ? "player.seekBackButton" : "player.seekForwardButton")
         #endif

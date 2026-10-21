@@ -91,9 +91,11 @@ struct DownloadsView: View {
 
     private var emptyState: some View {
         VStack(spacing: 16) {
-            Image(systemName: "arrow.down.to.line.circle")
-                .font(.system(size: 52))
+            Image(systemName: AppSymbol.downloadsEmpty)
+                .font(.largeTitle)
+                .imageScale(.large)
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
             Text("No Downloaded Videos")
                 .font(.title3)
                 .foregroundStyle(.secondary)

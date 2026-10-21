@@ -31,6 +31,7 @@ extension PlayerControlsOverlay {
                     .playerMediaControl(diameter: VFTarget.touch * controlScale)
             }
             .buttonStyle(.plain)
+            .playerIconControl(Text("Video Fit", bundle: .module), symbol: symbol)
             .accessibilityIdentifier(AccessibilityID.playerVideoScaleButton)
             #endif
         }

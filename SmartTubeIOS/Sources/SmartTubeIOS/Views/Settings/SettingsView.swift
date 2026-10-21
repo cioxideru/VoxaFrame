@@ -115,7 +115,7 @@ public struct SettingsView: View {
                             image.resizable().scaledToFill()
                         case .failure, .empty:
                             Circle().fill(Color.secondary.opacity(0.3))
-                                .overlay(Image(systemName: "person.fill").foregroundStyle(.secondary))
+                                .overlay(Image(systemName: AppSymbol.personFill).foregroundStyle(.secondary))
                         @unknown default:
                             Circle().fill(Color.secondary.opacity(0.3))
                         }

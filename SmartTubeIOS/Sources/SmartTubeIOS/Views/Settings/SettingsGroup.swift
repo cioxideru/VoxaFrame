@@ -29,7 +29,7 @@ enum SettingsGroup: String, CaseIterable {
         case .languages: AppSymbol.languages
         case .thisDevice: AppSymbol.clock
         case .appearance: AppSymbol.appearance
-        case .sponsorBlock: AppSymbol.skipForward
+        case .sponsorBlock: AppSymbol.sponsorBlock
         case .parentalControls: AppSymbol.lock
         case .about: AppSymbol.questionCircle
         }
@@ -228,7 +228,7 @@ extension SettingsView {
         SettingsPane(
             title: "Appearance", symbol: AppSymbol.appearance, groups: [.appearance], height: 600, pushesDetail: true),
         SettingsPane(
-            title: "SponsorBlock", symbol: AppSymbol.skipForward, groups: [.sponsorBlock], height: 620,
+            title: "SponsorBlock", symbol: AppSymbol.sponsorBlock, groups: [.sponsorBlock], height: 620,
             pushesDetail: true),
         SettingsPane(title: "Parental Controls", symbol: AppSymbol.lock, groups: [.parentalControls], height: 240),
         SettingsPane(title: "Account", symbol: AppSymbol.personCircle, groups: [.account, .about], height: 440),

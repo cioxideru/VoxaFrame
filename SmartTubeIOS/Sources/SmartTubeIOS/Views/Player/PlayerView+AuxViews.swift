@@ -37,14 +37,14 @@ struct StatsForNerdsOverlay: View {
             smallRow("Stream URL", snapshot.streamURL.isEmpty ? "—" : snapshot.streamURL)
             Divider().background(.white.opacity(0.2)).padding(.vertical, 2)
             Text("Two-finger tap to dismiss")
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(VFColor.onMedia.opacity(0.65))
                 .font(.system(.caption2, design: .monospaced))
                 .padding(.top, 4)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.black.opacity(0.72))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .background(VFColor.scrim)
+        .clipShape(RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous))
         .padding(.horizontal, 20)
         .padding(.top, 30)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -55,7 +55,7 @@ struct StatsForNerdsOverlay: View {
     private func row(_ key: String, _ value: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(key)
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(VFColor.onMedia.opacity(0.75))
                 .frame(minWidth: 130, alignment: .leading)
             Text(value.isEmpty ? "—" : value)
                 .foregroundStyle(.white)
@@ -66,7 +66,7 @@ struct StatsForNerdsOverlay: View {
     private func smallRow(_ key: String, _ value: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(key)
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(VFColor.onMedia.opacity(0.75))
                 .frame(minWidth: 130, alignment: .leading)
             Text(value.isEmpty ? "—" : value)
                 .foregroundStyle(.white.opacity(0.8))
@@ -79,7 +79,7 @@ struct StatsForNerdsOverlay: View {
     private func identifiedRow(_ key: String, _ value: String, valueId: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(key)
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(VFColor.onMedia.opacity(0.75))
                 .frame(minWidth: 130, alignment: .leading)
             Text(value.isEmpty ? "—" : value)
                 .foregroundStyle(.white)
@@ -157,6 +157,28 @@ extension View {
             }
             .vfGlass(in: Circle())
             .contentShape(Circle())
+    }
+
+    /// An icon-only player control. Its glyph keeps a fixed size over the video, so at large text sizes the Large
+    /// Content Viewer shows it with its name; on the Mac the same name is the tooltip.
+    func playerIconControl(_ label: Text, symbol: String) -> some View {
+        accessibilityLabel(label)
+            .accessibilityShowsLargeContentViewer {
+                Label {
+                    label
+                } icon: {
+                    Image(systemName: symbol)
+                }
+            }
+            .playerTooltip(label)
+    }
+
+    @ViewBuilder private func playerTooltip(_ label: Text) -> some View {
+        #if os(macOS)
+        help(label)
+        #else
+        self
+        #endif
     }
 }
 
@@ -357,9 +379,9 @@ struct EndCardButton: View {
                 }
             }
             .frame(width: width, height: height)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous)
                     .stroke(.white.opacity(0.4), lineWidth: 1)
             )
             .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
@@ -397,8 +419,10 @@ struct AirPlayRoutePickerView: UIViewRepresentable {
         // Set the identifier directly on the UIKit view so XCUITest can find it.
         // The SwiftUI `.accessibilityIdentifier()` modifier applies to the hosting
         // wrapper view, not to AVRoutePickerView itself.
-        picker.accessibilityIdentifier = "player.airPlayButton"
+        picker.accessibilityIdentifier = AccessibilityID.playerAirPlayButton
         picker.isAccessibilityElement = true
+        // As one element the picker hides its inner button's name, so it needs its own.
+        picker.accessibilityLabel = String(localized: "AirPlay", bundle: .module)
         picker.accessibilityTraits = [.button]
         return picker
     }

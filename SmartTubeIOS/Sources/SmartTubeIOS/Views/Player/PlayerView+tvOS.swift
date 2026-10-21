@@ -252,7 +252,9 @@ extension PlayerControlsOverlay {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(.black.opacity(0.75), in: RoundedRectangle(cornerRadius: 8))
+                    .background(
+                        .black.opacity(0.75), in: RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous)
+                    )
                     .frame(width: labelW)
                     .position(x: clampedX, y: geo.size.height / 2)
                 }

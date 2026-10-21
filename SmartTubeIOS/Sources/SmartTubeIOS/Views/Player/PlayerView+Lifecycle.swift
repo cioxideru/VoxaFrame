@@ -605,22 +605,27 @@ extension PlayerView {
                             .frame(maxWidth: 280)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     case .failure:
-                        Image(systemName: "music.note")
-                            .font(.system(size: 48))
-                            .foregroundStyle(.white.opacity(0.6))
+                        audioOnlyArtworkPlaceholder
                     default:
                         ProgressView()
                             .tint(.white)
                     }
                 }
             } else {
-                Image(systemName: "music.note")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.white.opacity(0.6))
+                audioOnlyArtworkPlaceholder
             }
         }
         .ignoresSafeArea()
         .accessibilityLabel("Audio only — thumbnail")
         .accessibilityIdentifier("player.audioOnlyOverlay")
+    }
+
+    /// Decorative: the overlay's own label already says what it is.
+    private var audioOnlyArtworkPlaceholder: some View {
+        Image(systemName: AppSymbol.audioOnlyArtwork)
+            .font(.largeTitle)
+            .imageScale(.large)
+            .foregroundStyle(.white.opacity(0.6))
+            .accessibilityHidden(true)
     }
 }

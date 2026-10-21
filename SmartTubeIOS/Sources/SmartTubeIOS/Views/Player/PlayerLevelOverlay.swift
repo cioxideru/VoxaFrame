@@ -37,8 +37,8 @@ struct PlayerLevelOverlay: View {
                     }
                 }
                 .font(.subheadline.weight(.semibold))
-                .padding(16)
-                .background(.black.opacity(0.65), in: RoundedRectangle(cornerRadius: 16))
+                .padding(VFSpace.s16)
+                .background(VFColor.scrim, in: RoundedRectangle(cornerRadius: VFRadius.card, style: .continuous))
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(title(level)))
                 .accessibilityValue(
@@ -49,17 +49,21 @@ struct PlayerLevelOverlay: View {
                     level == .brightness ? AccessibilityID.playerBrightnessGesture : AccessibilityID.playerVolumeGesture
                 )
             } else if showsHints {
-                Label(title(level), systemImage: symbol(level))
-                    .font(.caption)
-                    .opacity(0.65)
-                    .accessibilityHidden(true)
-                Image(systemName: AppSymbol.verticalAdjustment).font(.caption).opacity(0.65)
-                    .accessibilityHidden(true)
+                // On a scrim, at full opacity: the hint reads over any frame.
+                VStack(spacing: VFSpace.s4) {
+                    Label(title(level), systemImage: symbol(level))
+                    Image(systemName: AppSymbol.verticalAdjustment)
+                }
+                .font(.caption)
+                .padding(.horizontal, VFSpace.s12)
+                .padding(.vertical, VFSpace.s8)
+                .background(VFColor.scrim, in: Capsule())
+                .accessibilityHidden(true)
             }
             Spacer()
             Spacer()
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(VFColor.onMedia)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(feedback?.level == level ? Color.white.opacity(0.04) : .clear)
     }
