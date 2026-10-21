@@ -8,6 +8,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Changed
 
+- **Shorts cards:** Home Shorts rows and the Shorts chip use the same menu as video cards, including Offline Watch, Copy to Playlist, Play Incognito and a More button. Don't Like This Video asks for confirmation on every card.
 - **Card menus:** video and Shorts menus replace Open Channel with a compact Go to Channel + Subscribe/Subscribed pair; Unsubscribe asks first. The player More menu's channel row shows only the avatar.
 - **Player More menu:** a compact channel row shows the channel, its subscription status, a Subscribe or Subscribed control (Unsubscribe asks first) and opens the channel; it also appears on tvOS.
 - **Feedback:** routine results (Watch Later, Added to Playlist, SponsorBlock updates) appear as one app-level toast that VoiceOver announces; Not Interested and Don't Recommend Channel hide a card only after YouTube accepts them, and failures, including like/dislike, are reported. Search Clear History and Sign Out ask for confirmation. Buttons say Try Again; dialog titles use Title Case.

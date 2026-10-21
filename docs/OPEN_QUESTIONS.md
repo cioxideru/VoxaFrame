@@ -432,5 +432,8 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   action appears beneath the full-screen iOS player.
 - [PLAN-0040](exec-plans/completed/card-channel-subscription.md): check the card-menu ControlGroup on iOS and macOS and the
   tvOS Play/Pause → Unsubscribe chained dialog on screen; a failed subscription lookup only hides the control.
+- [PLAN-0041](exec-plans/completed/unified-card-menu.md): on macOS the hover-only More button is hidden with opacity and may
+  still take Full Keyboard Access focus; the tvOS Play/Pause dialog lists every command flat. `HomeShortsCountUITests`
+  (live feed, stale `home.shortsRow` lookup) and the `MixedFeedLayoutUITests` history fixture test fail on master.
 - Evidence gaps: every HIG finding and fix was judged from source; nothing was rendered for contrast, Dynamic Type
   at accessibility sizes, tvOS focus or the macOS menu bar. The macOS app target is not built by the scripts.
