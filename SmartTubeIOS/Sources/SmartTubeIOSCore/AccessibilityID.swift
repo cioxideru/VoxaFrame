@@ -228,6 +228,9 @@ public enum AccessibilityID {
     public static var videoCardTitle: String { "videoCardTitle" }
 
     public static let videoSecondaryMenu = "video.menu.secondary"
+    public static let videoMenuGoToChannel = "video.menu.goToChannel"
+    public static let videoMenuSubscribe = "video.menu.subscribe"
+    public static let videoMenuUnsubscribe = "video.menu.unsubscribe"
     public static let videoNotInterested = "video.feedback.notInterested"
     public static let videoDontRecommendChannel = "video.feedback.dontRecommendChannel"
     public static let videoFeedbackConfirm = "video.feedback.confirm"

@@ -22,6 +22,7 @@ struct ShortsCardView: View {
     @Environment(\.showToast) private var showToast
     @State private var confirmsNotInterested = false
     @State private var confirmsDontRecommendChannel = false
+    @State private var pendingUnsubscribe: PendingUnsubscribe?
     #if !os(tvOS) && ENABLE_DOWNLOADS
     @Environment(VideoDownloadService.self) private var downloadService
     #endif
@@ -83,6 +84,7 @@ struct ShortsCardView: View {
         .accessibilityActions { menuItems(nested: false) }
         .contextMenu { menuItems() }
         .feedbackAlert(item: $watchLaterAlert)
+        .cardChannelSubscription(channel: Channel.ofCard(video), pending: $pendingUnsubscribe)
         .alert(Text("Not Interested", bundle: .module), isPresented: $confirmsNotInterested) {
             Button(role: .destructive) {
                 sendFeedback(token: video.notInterestedToken, iconType: "NOT_INTERESTED")
@@ -125,16 +127,8 @@ struct ShortsCardView: View {
                 ShareLink(item: shareURL) { menuLabel("Share", AppSymbol.share) }
             }
             #endif
-            if let channelId = video.channelId, !channelId.isEmpty {
-                Button {
-                    NotificationCenter.default.post(
-                        name: .openChannel,
-                        object: nil,
-                        userInfo: ["channelId": channelId, "channelTitle": video.channelTitle]
-                    )
-                } label: {
-                    menuLabel("Open Channel", AppSymbol.personRectangle)
-                }
+            if let channel = Channel.ofCard(video) {
+                CardChannelMenuItems(channel: channel, compact: nested, pendingUnsubscribe: $pendingUnsubscribe)
             }
         }
         Section {

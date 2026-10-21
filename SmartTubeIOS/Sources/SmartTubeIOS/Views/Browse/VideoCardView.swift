@@ -61,6 +61,7 @@ public struct VideoCardView: View {
     @State var confirmsDontRecommendChannel = false
     @State var showsOfflineDownload = false
     @State var playlistPickerMode: PlaylistPickerSheet.Mode?
+    @State var pendingUnsubscribe: PendingUnsubscribe?
     /// Index into `video.thumbnailFallbackURLs`. -1 = use primary `thumbnailURL`.
     @State private var thumbnailFallbackIndex: Int = -1
     #if !os(tvOS) && ENABLE_DOWNLOADS
@@ -154,6 +155,7 @@ extension VideoCardView {
         cardBody
             .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
             .accessibilityValue(video.isShort ? "short" : "")
+            .cardChannelSubscription(channel: Channel.ofCard(video), pending: $pendingUnsubscribe)
             .alert(Text("Not Interested", bundle: .module), isPresented: $confirmsNotInterested) {
                 Button(role: .destructive, action: notInterested) {
                     Text("Not Interested", bundle: .module)
@@ -206,7 +208,14 @@ extension VideoCardView {
             .focusable()
             .onTapGesture { onSelect?() }
             .focused($isFocused)
-            .onPlayPauseCommand { showsActions = true }
+            .onPlayPauseCommand {
+                showsActions = true
+                // The dialog lists Subscribe or Unsubscribe once the (shared, cached) state is known.
+                if hasChannel {
+                    let context = authService.subscriptionContext
+                    Task { await SubscribedChannelsCache.shared.load(context, api: api) }
+                }
+            }
             .confirmationDialog(Text(displayTitle), isPresented: $showsActions, titleVisibility: .visible) {
                 menuItems(nested: false)
             }

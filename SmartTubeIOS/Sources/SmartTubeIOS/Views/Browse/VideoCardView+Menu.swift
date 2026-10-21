@@ -15,8 +15,8 @@ extension VideoCardView {
                 ShareLink(item: shareURL) { menuLabel("Share", AppSymbol.share) }
             }
             #endif
-            if hasChannel {
-                Button(action: openChannel) { menuLabel("Open Channel", AppSymbol.personRectangle) }
+            if let channel = Channel.ofCard(video) {
+                CardChannelMenuItems(channel: channel, compact: nested, pendingUnsubscribe: $pendingUnsubscribe)
             }
         }
         Section {
