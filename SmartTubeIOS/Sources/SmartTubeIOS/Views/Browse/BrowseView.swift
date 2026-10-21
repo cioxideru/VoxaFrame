@@ -132,6 +132,7 @@ public struct BrowseView: View {
             Image(systemName: AppSymbol.personCircle)
                 .font(.title2)
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Sign in for your personal feed")
                     .font(.subheadline.weight(.semibold))
@@ -154,8 +155,10 @@ public struct BrowseView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             Image(systemName: vm.isAuthRequired ? AppSymbol.personCircleWarning : AppSymbol.tvPlay)
-                .font(.system(size: 60))
+                .font(.largeTitle)
+                .imageScale(.large)
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
             if vm.isAuthRequired && !auth.isSignedIn {
                 Text("Sign in to see your feed")
                     .font(.title3)

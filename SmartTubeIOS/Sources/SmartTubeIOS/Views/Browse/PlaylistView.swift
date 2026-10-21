@@ -87,12 +87,12 @@ public struct PlaylistView: View {
                             }
                         )
                         .padding(.horizontal)
-                        .padding(.vertical, 6)
+                        .padding(.vertical, VFSpace.s8)
                         .onAppear { vm.loadMoreIfNeeded(lastVideo: video) }
                         #else
                         VideoCardView(video: video, compact: true, currentPlaylistId: playlistId)
                             .padding(.horizontal)
-                            .padding(.vertical, 6)
+                            .padding(.vertical, VFSpace.s8)
                             .onTapGesture {
                                 #if os(iOS)
                                 Task { @MainActor in
@@ -204,13 +204,19 @@ public struct PlaylistView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: AppSymbol.stackLayers)
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary)
-            Text("No videos in this playlist")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+        ContentUnavailableView {
+            Label {
+                Text("No videos in this playlist", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.stackLayers)
+                    .accessibilityHidden(true)
+            }
+        } actions: {
+            Button {
+                vm.load(playlistId: playlistId, refresh: true)
+            } label: {
+                Text("Refresh", bundle: .module)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

@@ -113,7 +113,7 @@ public struct ChannelView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
-                .padding(.vertical, 10)
+                .padding(.vertical, VFSpace.s8)
                 .accessibilityIdentifier("channel.filterPicker")
 
                 let filtered = filteredVideos

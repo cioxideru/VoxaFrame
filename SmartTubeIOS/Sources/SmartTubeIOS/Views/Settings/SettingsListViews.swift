@@ -35,8 +35,11 @@ struct SectionsSettingsView: View {
                         } label: {
                             Image(systemName: AppSymbol.removeCircle)
                                 .foregroundStyle(.red)
+                                .frame(minWidth: VFTarget.touch, minHeight: VFTarget.touch)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Hide \(section.title)", bundle: .module))
                         .disabled(store.settings.enabledSections.count <= 1)
                     }
                 }
@@ -59,10 +62,11 @@ struct SectionsSettingsView: View {
                             HStack {
                                 Text(section.title).foregroundStyle(.primary)
                                 Spacer()
-                                Image(systemName: AppSymbol.addCircle).foregroundStyle(.green)
+                                Image(systemName: AppSymbol.addCircle).foregroundStyle(VFColor.success)
                             }
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Show \(section.title)", bundle: .module))
                     }
                 }
             }
@@ -129,8 +133,8 @@ struct GitHubQRView: View {
             // Opaque and appearance-aware, so the primary and secondary labels keep their contrast in Light and Dark.
             VFColor.surface.ignoresSafeArea()
 
-            VStack(spacing: 32) {
-                VStack(spacing: 12) {
+            VStack(spacing: VFSpace.s32) {
+                VStack(spacing: VFSpace.s12) {
                     Image(systemName: AppSymbol.sourceCode)
                         .font(.system(size: 56))
                         .foregroundStyle(.primary)
@@ -147,9 +151,9 @@ struct GitHubQRView: View {
 
                 QRCodeView(content: url.absoluteString)
                     .frame(width: 280, height: 280)
-                    .padding(16)
+                    .padding(VFSpace.s16)
                     .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .clipShape(RoundedRectangle(cornerRadius: VFRadius.card, style: .continuous))
 
                 Text(url.absoluteString)
                     .font(.title3)

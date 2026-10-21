@@ -26,7 +26,7 @@ struct ChannelListView: View {
                 ForEach(channels) { channel in
                     row(channel)
                     Divider()
-                        .padding(.leading, 72)
+                        .padding(.leading, VFSpace.s48 + VFSpace.s24)
                 }
             }
         }
@@ -39,7 +39,7 @@ struct ChannelListView: View {
         #else
         List(channels) { channel in
             row(channel)
-                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                .listRowInsets(EdgeInsets(top: 0, leading: VFSpace.s16, bottom: 0, trailing: VFSpace.s16))
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button {
                         requestRemoval(channel)
@@ -62,7 +62,7 @@ struct ChannelListView: View {
     }
 
     private func row(_ channel: Channel) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: VFSpace.s12) {
             Button {
                 onSelect(channel)
             } label: {
@@ -80,7 +80,7 @@ struct ChannelListView: View {
             } label: {
                 Label("Unsubscribe", systemImage: AppSymbol.personCircleMinus)
                     .labelStyle(.iconOnly)
-                    .frame(minWidth: 44, minHeight: 44)
+                    .frame(minWidth: VFTarget.touch, minHeight: VFTarget.touch)
             }
             .buttonStyle(.borderless)
             .foregroundStyle(.red)
@@ -112,7 +112,7 @@ private struct ChannelListRow: View {
     let channel: Channel
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: VFSpace.s12) {
             avatar
             VStack(alignment: .leading, spacing: 2) {
                 Text(channel.title.isEmpty ? "Unknown channel" : channel.title)
@@ -129,7 +129,7 @@ private struct ChannelListRow: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, VFSpace.s12)
     }
 
     @ViewBuilder

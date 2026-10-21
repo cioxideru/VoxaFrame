@@ -54,8 +54,8 @@ public struct HomeView: View {
     @State var nonShortsCountAtTrigger = 0
     #if os(tvOS)
     @FocusState private var focusedSection: BrowseSection?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     #endif
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
     private var visibleSections: [BrowseSection] {
         let types = store.settings.enabledSections
         let all: [BrowseSection] =
@@ -239,7 +239,7 @@ extension HomeView {
             // Keep the selected chip in view when the section changes by swipe (#159) or
             // App Intent, not by tapping the chip.
             .onChange(of: selectedSection) { _, section in
-                withAnimation { proxy.scrollTo(section.id, anchor: .center) }
+                withAnimation(sectionAnimation) { proxy.scrollTo(section.id, anchor: .center) }
             }
         }
         .accessibilityIdentifier(AccessibilityID.homeChipBar)
@@ -312,7 +312,7 @@ extension HomeView {
             guard let index = sections.firstIndex(of: selectedSection) else { return }
             let next = index + (dx < 0 ? 1 : -1)
             guard sections.indices.contains(next) else { return }
-            withAnimation(.easeInOut(duration: 0.2)) { select(sections[next]) }
+            withAnimation(sectionAnimation) { select(sections[next]) }
         }
     }
     #endif
@@ -341,7 +341,7 @@ extension HomeView {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            VStack(spacing: 12) {
+            VStack(spacing: VFSpace.s12) {
                 if let error = sectionVM.error {
                     Text(error.localizedDescription)
                         .foregroundStyle(.secondary)

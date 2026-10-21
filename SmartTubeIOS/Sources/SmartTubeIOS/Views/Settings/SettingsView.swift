@@ -122,8 +122,10 @@ public struct SettingsView: View {
                     }
                     .frame(width: avatarSize, height: avatarSize)
                     .clipShape(Circle())
+                    .accessibilityHidden(true)
                     Text(auth.accountName ?? "Unknown")
                 }
+                .accessibilityElement(children: .combine)
                 Button("Sign Out", role: .destructive) { auth.signOut() }
             } else {
                 Button("Sign in with Google") { showSignIn = true }

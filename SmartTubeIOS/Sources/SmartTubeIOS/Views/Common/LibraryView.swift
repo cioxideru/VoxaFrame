@@ -322,7 +322,16 @@ public struct LibraryView: View {
                     Image(systemName: AppSymbol.clock)
                 }
             } description: {
-                Text("Turn on Watch History in Settings to list the videos you play.", bundle: .module)
+                Text(
+                    "Turn on Watch History to list the videos you play. You can turn it off again in Settings.",
+                    bundle: .module)
+            } actions: {
+                Button {
+                    store.settings.historyState = .enabled
+                } label: {
+                    Text("Turn On Watch History", bundle: .module)
+                }
+                .buttonStyle(.vfProminent)
             }
         case .history:
             ContentUnavailableView {

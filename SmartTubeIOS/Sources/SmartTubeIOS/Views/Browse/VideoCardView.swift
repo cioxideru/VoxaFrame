@@ -220,8 +220,8 @@ extension VideoCardView {
                 }
                 #endif
             }
-            // Lift and glow; Reduce Motion keeps the glow and drops the scale.
-            .shadow(color: isFocused ? .white.opacity(0.9) : .clear, radius: 18, x: 0, y: 0)
+            // Lift and glow (primary, so it shows in Light and Dark); Reduce Motion keeps the glow and drops the scale.
+            .shadow(color: isFocused ? Color.primary.opacity(0.6) : .clear, radius: 18, x: 0, y: 0)
             .scaleEffect(isFocused && !reduceMotion ? 1.08 : 1.0)
             .zIndex(isFocused ? 1 : 0)
             .vfAnimation(VFMotion.fast, value: isFocused)

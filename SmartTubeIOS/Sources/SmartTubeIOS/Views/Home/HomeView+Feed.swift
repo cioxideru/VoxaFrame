@@ -2,6 +2,9 @@ import SmartTubeIOSCore
 import SwiftUI
 
 extension HomeView {
+    /// Chip changes animate; with Reduce Motion they apply at once.
+    var sectionAnimation: Animation? { reduceMotion ? nil : .easeInOut(duration: VFMotion.standard) }
+
     var feedContent: some View {
         let hideShorts = store.settings.hideShorts
         let hideLiveShorts = store.settings.hideLiveShorts
@@ -268,10 +271,10 @@ extension HomeView {
     }
 
     @ViewBuilder private var currentQueueRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: VFSpace.s12) {
             Image(systemName: AppSymbol.queue)
                 .font(.title2)
-                .frame(width: 44, height: 44)
+                .frame(width: VFTarget.touch, height: VFTarget.touch)
                 .foregroundStyle(Color.accentColor)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Current Queue")
@@ -288,7 +291,7 @@ extension HomeView {
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal)
-        .padding(.vertical, 10)
+        .padding(.vertical, VFSpace.s12)
         .contentShape(Rectangle())
         .onTapGesture {
             selectedPlaylist = Video(

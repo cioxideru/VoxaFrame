@@ -149,6 +149,8 @@ private struct VideoTile: View {
             .overlay(alignment: .bottomLeading) { caption }
             .overlay(alignment: .topTrailing) { badge }
             .clipped()
+            // One VoiceOver element per video: title, channel, then the badge.
+            .accessibilityElement(children: .combine)
     }
 
     private var caption: some View {
@@ -163,21 +165,22 @@ private struct VideoTile: View {
                 .lineLimit(1)
         }
         .shadow(color: .black.opacity(0.5), radius: 2)
-        .padding(.horizontal, size == .large ? 14 : 8)
-        .padding(.bottom, size == .large ? 14 : 7)
+        // At least 12 pt so the caption clears the rounded tile corners.
+        .padding(.horizontal, size == .large ? 14 : 12)
+        .padding(.bottom, size == .large ? 14 : 12)
     }
 
     private var titleFont: Font {
         switch size {
-        case .large: return .system(size: 17, weight: .bold)
-        case .small: return .system(size: 12, weight: .bold)
+        case .large: return .headline.bold()
+        case .small: return .caption.bold()
         }
     }
 
     private var channelFont: Font {
         switch size {
-        case .large: return .system(size: 15)
-        case .small: return .system(size: 10)
+        case .large: return .subheadline
+        case .small: return .caption2
         }
     }
 
@@ -186,6 +189,7 @@ private struct VideoTile: View {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
+                .accessibilityHidden(true)
         } else {
             Rectangle().fill(.white.opacity(0.12))
         }
@@ -193,7 +197,7 @@ private struct VideoTile: View {
 
     @ViewBuilder private var badge: some View {
         if item.video.isLive {
-            label("LIVE", background: .red)
+            label("LIVE", background: Self.liveRed)
         } else if let duration = item.video.duration, duration > 0 {
             label(Self.format(duration), background: .black.opacity(0.75))
         }
@@ -201,13 +205,16 @@ private struct VideoTile: View {
 
     private func label(_ text: String, background: Color) -> some View {
         Text(text)
-            .font(.system(size: 9, weight: .bold).monospacedDigit())
+            .font(.caption2.bold().monospacedDigit())
             .foregroundStyle(.white)
             .padding(.horizontal, 4)
             .padding(.vertical, 1)
-            .background(background, in: RoundedRectangle(cornerRadius: 3))
+            .background(background, in: RoundedRectangle(cornerRadius: 3, style: .continuous))
             .padding(size == .large ? 10 : 6)
     }
+
+    /// #B42318: white text on it is 6.6:1 (system red is under 4.5:1).
+    private static let liveRed = Color(red: 0xB4 / 255, green: 0x23 / 255, blue: 0x18 / 255)
 
     static func format(_ duration: TimeInterval) -> String {
         let total = Int(duration)
