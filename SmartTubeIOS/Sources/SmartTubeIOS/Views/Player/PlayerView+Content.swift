@@ -163,7 +163,7 @@ extension PlayerView {
                         if vm.hasNext {
                             performHorizontalTransition(direction: -1, screenWidth: geo.size.width) { vm.playNext() }
                         } else {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
+                            snapBack()
                         }
                     },
                     onSwipeRight: {
@@ -174,7 +174,7 @@ extension PlayerView {
                         if vm.hasPrevious {
                             performHorizontalTransition(direction: 1, screenWidth: geo.size.width) { vm.playPrevious() }
                         } else {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
+                            snapBack()
                         }
                     },
                     onTap: {
@@ -191,8 +191,9 @@ extension PlayerView {
                         } else {
                             store.settings.videoGravityMode.toggle()
                             let newMode = store.settings.videoGravityMode
-                            scaleToast = newMode == .fill ? "Fill" : "Fit"
-                            seekToastMessage = newMode == .fill ? "Fill" : "Fit"  // diagnostic: also set seekToast
+                            scaleToast =
+                                newMode == .fill
+                                ? String(localized: "Fill", bundle: .module) : String(localized: "Fit", bundle: .module)
                         }
                     },
                     onTwoFingerTap: { vm.toggleStatsForNerds() },
@@ -205,7 +206,7 @@ extension PlayerView {
                         }
                     },
                     onSwipeCancelled: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
+                        snapBack()
                     },
                     onLongPressStart: { vm.beginHoldSpeed() },
                     onLongPressEnd: { vm.endHoldSpeed() },
@@ -262,7 +263,7 @@ extension PlayerView {
                 if vm.isHoldingToSpeed {
                     HoldSpeedBadge()
                         .transition(.opacity.combined(with: .scale(scale: 0.85)))
-                        .animation(.easeOut(duration: 0.15), value: vm.isHoldingToSpeed)
+                        .vfAnimation(VFMotion.fast, value: vm.isHoldingToSpeed)
                 }
                 #endif
 
@@ -271,8 +272,7 @@ extension PlayerView {
                     makeControlsOverlay(size: geo.size, safeAreaInsets: geo.safeAreaInsets)
                         .ignoresSafeArea()
                         .transition(.opacity)
-                        .animation(.easeInOut(duration: 0.25), value: vm.controlsVisible)
-
+                        .vfAnimation(value: vm.controlsVisible)
                 }
 
                 #if os(iOS) && !targetEnvironment(macCatalyst)
@@ -295,7 +295,7 @@ extension PlayerView {
                             // Above the bottom controls while they show; when they are hidden, a small
                             // margin from the safe-area bottom is enough.
                             .padding(.bottom, vm.controlsVisible ? captionLiftAboveControls : 24)
-                            .animation(.easeInOut(duration: 0.2), value: vm.controlsVisible)
+                            .vfAnimation(value: vm.controlsVisible)
                     }
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
@@ -320,7 +320,7 @@ extension PlayerView {
                         }
                     )
                     .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.25), value: vm.controlsVisible)
+                    .vfAnimation(value: vm.controlsVisible)
                 }
                 #endif
 
@@ -328,7 +328,7 @@ extension PlayerView {
                 if vm.statsForNerdsVisible {
                     StatsForNerdsOverlay(snapshot: vm.statsSnapshot)
                         .transition(.opacity)
-                        .animation(.easeInOut(duration: 0.2), value: vm.statsForNerdsVisible)
+                        .vfAnimation(value: vm.statsForNerdsVisible)
                 }
 
                 // Picker / sheet overlays — see PlayerView+Overlays.swift

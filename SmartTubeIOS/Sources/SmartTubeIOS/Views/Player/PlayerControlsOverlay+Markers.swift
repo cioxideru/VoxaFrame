@@ -44,7 +44,7 @@ extension PlayerControlsOverlay {
                     // A highlight is a point; it keeps a 2 pt mark.
                     let width = max(trackW * CGFloat(span.upperBound - span.lowerBound), 2)
                     Rectangle()
-                        .fill(seg.category.color.opacity(0.95))
+                        .fill(seg.category.markerColor)
                         .frame(width: width, height: height)
                         .position(x: inset + trackW * CGFloat(span.lowerBound) + width / 2, y: geo.size.height / 2)
                         .allowsHitTesting(false)
@@ -94,7 +94,9 @@ extension PlayerControlsOverlay {
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(VFColor.scrim, in: RoundedRectangle(cornerRadius: 6))
+                        .background(
+                            VFColor.scrim, in: RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous)
+                        )
                         .frame(width: labelW)
                         .position(x: clampedX, y: geo.size.height / 2)
                     }

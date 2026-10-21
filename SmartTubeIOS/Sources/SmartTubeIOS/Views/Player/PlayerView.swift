@@ -57,10 +57,8 @@ public struct PlayerView: View {
     /// Measured by the controls overlay; captions stay above it.
     @State var controlsBottomBarHeight: CGFloat = 0
     #endif
-    #if os(tvOS)
-    /// The option menus cross-fade instead of sliding in with Reduce Motion.
+    /// With Reduce Motion: no swipe slide, the skip toast and tvOS option menus cross-fade.
     @Environment(\.accessibilityReduceMotion) var reduceMotion
-    #endif
     #if os(iOS)
     @State var moreMenuDestination: PlayerMoreMenuDestination?
     @State var isLandscapeLocked = false

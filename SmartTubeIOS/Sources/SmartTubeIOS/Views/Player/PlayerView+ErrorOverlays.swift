@@ -9,7 +9,7 @@ extension PlayerView {
 
     /// Animates the current content off-screen in `direction` (-1 = left, +1 = right),
     /// runs `action` to load the next/previous video, then slides the new content in
-    /// from the opposite side.
+    /// from the opposite side. With Reduce Motion nothing slides: the action runs at once.
     func performHorizontalTransition(direction: CGFloat, screenWidth: CGFloat, action: @escaping () -> Void) {
         // Set the re-entry guard synchronously so any concurrent gesture event
         // arriving before the Task runs still sees isTransitioning == true.
@@ -19,6 +19,12 @@ extension PlayerView {
         // touch-event delivery pass. On iOS 26 the UpdateCycle framework throws when
         // @Observable/@State mutations happen synchronously during event dispatch.
         Task { @MainActor in
+            if reduceMotion {
+                slideOffset = 0
+                action()
+                isTransitioning = false
+                return
+            }
             withAnimation(.easeIn(duration: 0.2)) {
                 slideOffset = direction * screenWidth
             }
@@ -31,6 +37,11 @@ extension PlayerView {
             try? await Task.sleep(for: .milliseconds(270))
             isTransitioning = false
         }
+    }
+
+    /// Returns a dragged or refused swipe to rest: a spring, or at once with Reduce Motion.
+    func snapBack() {
+        withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.7)) { slideOffset = 0 }
     }
 
     // MARK: - Toast / error
@@ -47,6 +58,7 @@ extension PlayerView {
                     // System style on purpose: the fill is the segment colour, not the accent `.vfProminent` pairs with.
                     .buttonStyle(.borderedProminent)
                     .tint(seg.category.color)
+                    .foregroundStyle(seg.category.skipLabelColor)
                     #if os(tvOS)
                     // When the skip-toast button is focused, D-pad left/right must still
                     // seek. Without this modifier the move event is consumed by the button
@@ -64,7 +76,7 @@ extension PlayerView {
                     .focused($skipToastButtonFocused)
                     #endif
                     .padding()
-                    .transition(.move(edge: .trailing))
+                    .transition(reduceMotion ? .opacity : .move(edge: .trailing))
                 }
             }
         }
@@ -118,6 +130,7 @@ extension PlayerView {
         .environment(\.colorScheme, .dark)
         .padding()
         .accessibilityIdentifier(isIPBlock ? "player.ipBlockBanner" : "player.errorBanner")
+        .task(id: err.localizedDescription) { AccessibilityNotification.Announcement(err.localizedDescription).post() }
     }
 }
 

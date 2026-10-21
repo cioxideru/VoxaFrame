@@ -3,24 +3,34 @@ import SwiftUI
 
 // MARK: - SponsorSegment.Category + SwiftUI color
 //
-// Maps each SponsorBlock category to its canonical colour.
-// Mirrors the colour values used in Android's SponsorBlockData.
+// Each category keeps the hue of its SponsorBlock colour (Android's SponsorBlockData), darkened in light so it
+// reads on white surfaces and lightened in dark so it reads on the player scrim over any frame: the raw outro and filler are ~2.2:1
+// on the player. Tests check the contrast and that the categories stay apart.
 
 extension SponsorSegment.Category {
-    /// The representative SwiftUI Color for this category.
-    var color: Color {
+    /// Light/dark colour of the category: the settings swatch and the Skip button fill.
+    var colorPair: VFColorPair {
         switch self {
-        case .sponsor: return Color(red: 0.00, green: 0.83, blue: 0.00)  // #00d400
-        case .selfPromo: return Color(red: 1.00, green: 1.00, blue: 0.00)  // #ffff00
-        case .interaction: return Color(red: 0.80, green: 0.00, blue: 1.00)  // #cc00ff
-        case .intro: return Color(red: 0.00, green: 1.00, blue: 1.00)  // #00ffff
-        case .outro: return Color(red: 0.01, green: 0.01, blue: 0.93)  // #0202ed
-        case .preview: return Color(red: 0.00, green: 0.56, blue: 0.84)  // #008fd6
-        case .filler: return Color(red: 0.45, green: 0.00, blue: 0.67)  // #7300ab
-        case .musicOfftopic: return Color(red: 1.00, green: 0.60, blue: 0.00)  // #ff9900
-        case .poiHighlight: return Color(red: 1.00, green: 0.09, blue: 0.52)  // #ff1684
+        case .sponsor: VFColorPair(light: 0x007A00, dark: 0x00D400)
+        case .selfPromo: VFColorPair(light: 0x766500, dark: 0xFFFF00)
+        case .interaction: VFColorPair(light: 0xA100CC, dark: 0xE066FF)
+        case .intro: VFColorPair(light: 0x00786E, dark: 0x00FFFF)
+        case .outro: VFColorPair(light: 0x0202ED, dark: 0x9AA4FF)
+        case .preview: VFColorPair(light: 0x0062C4, dark: 0x00A3F5)
+        case .filler: VFColorPair(light: 0x7300AB, dark: 0xB07AFF)
+        case .musicOfftopic: VFColorPair(light: 0xA35500, dark: 0xFF9900)
+        case .poiHighlight: VFColorPair(light: 0xCC005F, dark: 0xFF5CA8)
         }
     }
+
+    /// The representative SwiftUI Color for this category.
+    var color: Color { Color(colorPair) }
+
+    /// Timeline mark: the dark variant in every theme, because the timeline always sits on the player scrim.
+    var markerColor: Color { Color(VFColorPair(light: colorPair.dark, dark: colorPair.dark)) }
+
+    /// Label on a `color` fill (the Skip button).
+    var skipLabelColor: Color { Color(colorPair.readableLabel) }
 
     /// Human-readable label shown in the skip toast and settings UI.
     var displayName: String {
@@ -35,5 +45,27 @@ extension SponsorSegment.Category {
         case .musicOfftopic: return String(localized: "Music (Off-Topic)", bundle: .module)
         case .poiHighlight: return String(localized: "Highlight", bundle: .module)
         }
+    }
+}
+
+extension VFColorPair {
+    /// Black or white, whichever contrasts more with this fill, per theme.
+    var readableLabel: VFColorPair {
+        VFColorPair(light: Self.label(on: light), dark: Self.label(on: dark))
+    }
+
+    /// WCAG relative luminance of an sRGB hex colour.
+    static func luminance(_ hex: UInt32) -> Double {
+        func channel(_ shift: UInt32) -> Double {
+            let value = Double((hex >> shift) & 0xFF) / 255
+            return value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * channel(16) + 0.7152 * channel(8) + 0.0722 * channel(0)
+    }
+
+    /// Black when it contrasts more than white: (L + 0.05) / 0.05 against (1.05) / (L + 0.05).
+    private static func label(on fill: UInt32) -> UInt32 {
+        let lum = luminance(fill)
+        return (lum + 0.05) / 0.05 > 1.05 / (lum + 0.05) ? 0x000000 : 0xFFFFFF
     }
 }
