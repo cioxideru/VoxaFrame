@@ -1,8 +1,9 @@
 import SmartTubeIOSCore
 import SwiftUI
 
-/// One line in the player's More menu: the channel (avatar, name, chevron) opens the channel page, and the trailing
-/// control shows and changes the subscription. Unsubscribe asks first, as on the channel page.
+/// One line in the player's More menu: the channel avatar opens the channel page (the channel name is its
+/// accessibility label and tooltip), and the trailing control shows and changes the subscription. Unsubscribe asks
+/// first, as on the channel page.
 struct PlayerChannelRow: View {
     let channelId: String
     let title: String
@@ -47,26 +48,20 @@ struct PlayerChannelRow: View {
     var body: some View {
         HStack(spacing: VFSpace.s8) {
             Button(action: openChannel) {
-                HStack(spacing: VFSpace.s12) {
-                    PlayerMoreChannelAvatar(channelId: channelId, api: api)
-                    displayTitle
-                        .lineLimit(1)
-                    Image(systemName: AppSymbol.chevronForward)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .accessibilityHidden(true)
-                    Spacer(minLength: 0)
-                }
-                .frame(minHeight: rowTarget)
-                .contentShape(Rectangle())
+                PlayerMoreChannelAvatar(channelId: channelId, api: api)
+                    .frame(minWidth: rowTarget, minHeight: rowTarget)
+                    .contentShape(Rectangle())
             }
             .playerMenuRowButtonStyle()
             .foregroundStyle(.primary)
+            .help(displayTitle)
             .accessibilityLabel(displayTitle)
             .accessibilityValue(statusText)
             .accessibilityHint(openChannelHint)
             .accessibilityActions { subscriptionAction }
             .accessibilityIdentifier(AccessibilityID.playerMoreMenuOpenChannel)
+
+            Spacer(minLength: 0)
 
             subscriptionControl
         }
