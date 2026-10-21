@@ -226,6 +226,7 @@ enum AccessibilityID {
     static let videoMenuUnsubscribe = "video.menu.unsubscribe"
     static let videoNotInterested = "video.feedback.notInterested"
     static let videoDontRecommendChannel = "video.feedback.dontRecommendChannel"
+    static let videoDontLike = "video.feedback.dontLike"
     static let videoFeedbackConfirm = "video.feedback.confirm"
     static let videoFeedbackCancel = "video.feedback.cancel"
 

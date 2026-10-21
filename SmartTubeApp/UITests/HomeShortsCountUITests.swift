@@ -374,8 +374,9 @@ final class MixedFeedLayoutUITests: XCTestCase {
         XCTAssertFalse(title.label.isEmpty)
         XCTAssertTrue(more.label.hasSuffix(title.label), "More's VoiceOver label names its card")
         more.tap()
+        // Add to Queue sits in the "…" submenu (PLAN-0038); Go to Channel is a top-level item of every fixture card.
         XCTAssertTrue(
-            app.buttons["Add to Queue"].firstMatch.waitForExistence(timeout: 5), "More must open the card's menu")
+            app.buttons["Go to Channel"].firstMatch.waitForExistence(timeout: 5), "More must open the card's menu")
         XCTAssertFalse(
             app.staticTexts[AccessibilityID.playerTitleLabel].exists, "Opening the menu must not start the video")
     }
@@ -546,14 +547,43 @@ final class VideoFeedbackConfirmationUITests: XCTestCase {
         try assertConfirmation(action: AccessibilityID.videoDontRecommendChannel, shorts: true, useMoreButton: false)
     }
 
+    func testVideoDontLikeRequiresConfirmation() throws {
+        try assertConfirmation(action: AccessibilityID.videoDontLike, shorts: false, useMoreButton: false)
+    }
+
+    func testShortsDontLikeRequiresConfirmation() throws {
+        try assertConfirmation(action: AccessibilityID.videoDontLike, shorts: true, useMoreButton: true)
+    }
+
+    /// Shorts cards have the same separate More button as video cards: it opens the card menu, not the Short.
+    func testShortsMoreButtonOpensMenuWithoutPlaying() throws {
+        let card = try shortsCard()
+        let videoID = String(card.identifier.dropFirst("shorts.card.".count))
+        let more = app.buttons[AccessibilityID.videoCardMenu(videoID)].firstMatch
+        XCTAssertTrue(more.waitForExistence(timeout: 5), "Every Shorts card needs a separate More button")
+        XCTAssertGreaterThanOrEqual(more.frame.width, 44, "More must be a 44 pt touch target")
+        XCTAssertGreaterThanOrEqual(more.frame.height, 44, "More must be a 44 pt touch target")
+        more.tap()
+        XCTAssertTrue(
+            app.buttons["Go to Channel"].firstMatch.waitForExistence(timeout: 5), "More must open the card's menu")
+        XCTAssertFalse(
+            app.staticTexts[AccessibilityID.playerTitleLabel].exists, "Opening the menu must not start the Short")
+    }
+
+    private func shortsCard() throws -> XCUIElement {
+        let row = app.scrollViews[AccessibilityID.homeShortsRow(0)]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        let card =
+            row.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'shorts.card.'")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        return card
+    }
+
     private func assertConfirmation(action: String, shorts: Bool, useMoreButton: Bool) throws {
         let card: XCUIElement
         if shorts {
-            let row = app.scrollViews[AccessibilityID.homeShortsRow(0)]
-            XCTAssertTrue(row.waitForExistence(timeout: 10))
-            card =
-                row.descendants(matching: .any)
-                .matching(NSPredicate(format: "identifier BEGINSWITH 'shorts.card.'")).firstMatch
+            card = try shortsCard()
         } else {
             card = try XCTUnwrap(UITestHelpers.waitForVideoCards(in: app, timeout: 10))
         }
@@ -562,11 +592,16 @@ final class VideoFeedbackConfirmationUITests: XCTestCase {
         let target = app.descendants(matching: .any).matching(identifier: cardID).firstMatch
         let title = shorts ? "" : target.staticTexts[AccessibilityID.videoCardTitle].firstMatch.label
         let actionTitle =
-            action == AccessibilityID.videoDontRecommendChannel ? "Don't Recommend Channel" : "Not Interested"
+            switch action {
+            case AccessibilityID.videoDontRecommendChannel: "Don't Recommend Channel"
+            case AccessibilityID.videoDontLike: "Don't Like This Video"
+            default: "Not Interested"
+            }
 
         func requestConfirmation() {
             if useMoreButton {
-                let videoID = String(cardID.dropFirst("video.card.".count))
+                let videoID = cardID.replacingOccurrences(
+                    of: "^(video|shorts)\\.card\\.", with: "", options: .regularExpression)
                 app.buttons[AccessibilityID.videoCardMenu(videoID)].firstMatch.tap()
             } else {
                 target.press(forDuration: 1)

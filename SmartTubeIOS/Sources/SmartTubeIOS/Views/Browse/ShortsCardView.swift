@@ -5,26 +5,18 @@ import SwiftUI
 //
 // VF/ShortsCard, shelf variant: a 9:16 cover with the duration, then title (two lines) and channel.
 // Callers set the width; the height follows the cover and the text. One accessibility element that opens the Short
-// and carries the Shorts menu (its own reduced set) as actions. Used inside ShortsRowSection.
+// and carries the card menu (VideoCardMenu.swift, the same as every video card) as actions; the menu also opens from
+// the context menu, from a More button next to the title (on hover on the Mac) and, on tvOS, where the card is a
+// button, from Play/Pause. Used inside ShortsRowSection.
 
 struct ShortsCardView: View {
     let video: Video
     let onTap: () -> Void
 
-    @Environment(AuthService.self) private var authService
-    @Environment(SettingsStore.self) private var store
-    @Environment(\.innerTubeAPI) private var api
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    #if os(iOS)
-    @Environment(PlayerRouter.self) private var playerRouter
-    #endif
-    @State private var watchLaterAlert: DownloadAlertItem?
-    @Environment(\.showToast) private var showToast
-    @State private var confirmsNotInterested = false
-    @State private var confirmsDontRecommendChannel = false
-    @State private var pendingUnsubscribe: PendingUnsubscribe?
-    #if !os(tvOS) && ENABLE_DOWNLOADS
-    @Environment(VideoDownloadService.self) private var downloadService
+    @State private var menu = VideoCardMenuState()
+    #if os(macOS)
+    @State private var isHovering = false
     #endif
 
     /// Primary thumbnail URL: portrait oardefault.jpg when the API provided one
@@ -37,7 +29,71 @@ struct ShortsCardView: View {
 
     private var isLargeText: Bool { dynamicTypeSize.isAccessibilitySize }
 
+    /// Space the text leaves for the More button.
+    private var moreButtonInset: CGFloat {
+        #if os(tvOS)
+        return 0
+        #else
+        return VideoCardMoreButton.inset
+        #endif
+    }
+
     var body: some View {
+        #if os(tvOS)
+        // The button is the one focusable, accessible element: Select opens, long press shows the menu.
+        Button(action: onTap) { card }
+            .buttonStyle(.plain)
+            .accessibilityLabel(spokenSummary)
+            .accessibilityActions { menuItems(nested: false) }
+            .contextMenu { menuItems() }
+            .videoCardMenu(video: video, playlistId: video.playlistId, title: video.title, state: menu)
+        #else
+        let summary =
+            card
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onTap)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(spokenSummary)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction(.default, onTap)
+            .accessibilityActions { menuItems(nested: false) }
+            .contextMenu { menuItems() }
+            .overlay(alignment: Alignment(horizontal: .trailing, vertical: .cardTextTop)) {
+                VideoCardMoreButton(
+                    video: video, playlistId: video.playlistId, title: video.title, visible: moreButtonVisible,
+                    state: menu)
+            }
+            .videoCardMenu(video: video, playlistId: video.playlistId, title: video.title, state: menu)
+        #if os(macOS)
+        summary.onHover { isHovering = $0 }
+        #else
+        // A container for the summary and the More button.
+        summary.accessibilityElement(children: .contain)
+        #endif
+        #endif
+    }
+
+    #if !os(tvOS)
+    private var moreButtonVisible: Bool {
+        #if os(macOS)
+        return isHovering
+        #else
+        return true
+        #endif
+    }
+    #endif
+
+    private var spokenSummary: Text {
+        Text(
+            [video.title, video.channelTitle, video.accessibilityDuration ?? ""].filter { !$0.isEmpty }
+                .joined(separator: ", "))
+    }
+
+    private func menuItems(nested: Bool = true) -> some View {
+        VideoCardMenuItems(video: video, playlistId: video.playlistId, nested: nested, state: menu)
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: VFSpace.s8) {
             Color.clear
                 .aspectRatio(9 / 16, contentMode: .fit)
@@ -70,191 +126,9 @@ struct ShortsCardView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-        }
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            Text(
-                [video.title, video.channelTitle, video.accessibilityDuration ?? ""].filter { !$0.isEmpty }
-                    .joined(separator: ", "))
-        )
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction(.default, onTap)
-        .accessibilityActions { menuItems(nested: false) }
-        .contextMenu { menuItems() }
-        .feedbackAlert(item: $watchLaterAlert)
-        .cardChannelSubscription(channel: Channel.ofCard(video), pending: $pendingUnsubscribe)
-        .alert(Text("Not Interested", bundle: .module), isPresented: $confirmsNotInterested) {
-            Button(role: .destructive) {
-                sendFeedback(token: video.notInterestedToken, iconType: "NOT_INTERESTED")
-            } label: {
-                Text("Not Interested", bundle: .module)
-            }
-            .accessibilityIdentifier(AccessibilityID.videoFeedbackConfirm)
-            Button(role: .cancel) {
-            } label: {
-                Text("Cancel", bundle: .module)
-            }
-            .accessibilityIdentifier(AccessibilityID.videoFeedbackCancel)
-        } message: {
-            Text(video.title)
-        }
-        .alert(Text("Don't Recommend Channel", bundle: .module), isPresented: $confirmsDontRecommendChannel) {
-            Button(role: .destructive) {
-                if let channelId = video.channelId, !channelId.isEmpty { dontRecommendChannel(channelId) }
-            } label: {
-                Text("Don't Recommend Channel", bundle: .module)
-            }
-            .accessibilityIdentifier(AccessibilityID.videoFeedbackConfirm)
-            Button(role: .cancel) {
-            } label: {
-                Text("Cancel", bundle: .module)
-            }
-            .accessibilityIdentifier(AccessibilityID.videoFeedbackCancel)
-        } message: {
-            Text(video.channelTitle)
-        }
-    }
-
-    // MARK: - Menu
-
-    /// The Shorts set: no Offline watch, playlists or Incognito (functional brief §6).
-    @ViewBuilder private func menuItems(nested: Bool = true) -> some View {
-        Section {
-            #if !os(tvOS)
-            if let shareURL = video.shareURL {
-                ShareLink(item: shareURL) { menuLabel("Share", AppSymbol.share) }
-            }
-            #endif
-            if let channel = Channel.ofCard(video) {
-                CardChannelMenuItems(channel: channel, compact: nested, pendingUnsubscribe: $pendingUnsubscribe)
-            }
-        }
-        Section {
-            if nested {
-                Menu {
-                    secondaryMenuItems
-                } label: {
-                    Text(verbatim: "…")  // verbatim: Glyph only; the accessibility label is localized.
-                }
-                .accessibilityLabel(Text("More", bundle: .module))
-                .accessibilityIdentifier(AccessibilityID.videoSecondaryMenu)
-            } else {
-                secondaryMenuItems
-            }
-            if authService.isSignedIn {
-                Button(action: saveToWatchLater) { menuLabel("Save to Watch Later", AppSymbol.watchLater) }
-            }
-            #if !os(tvOS) && ENABLE_DOWNLOADS
-            Button {
-                downloadService.download(video: video)
-            } label: {
-                if downloadService.state.isActive {
-                    Label("Downloading…", systemImage: AppSymbol.download)
-                } else {
-                    Label("Download to Gallery", systemImage: AppSymbol.download)
-                }
-            }
-            .disabled(downloadService.state.isActive)
-            #endif
-        }
-        if authService.isSignedIn {
-            Section {
-                Button(role: .destructive) {
-                    confirmsNotInterested = true
-                } label: {
-                    menuLabel("Not Interested", AppSymbol.notInterested)
-                }
-                .accessibilityIdentifier(AccessibilityID.videoNotInterested)
-                Button(role: .destructive) {
-                    sendFeedback(token: video.dontLikeToken, iconType: "DISLIKE")
-                } label: {
-                    menuLabel("Don't Like This Video", AppSymbol.thumbsDown)
-                }
-                if let channelId = video.channelId, !channelId.isEmpty {
-                    Button(role: .destructive) {
-                        confirmsDontRecommendChannel = true
-                    } label: {
-                        menuLabel("Don't Recommend Channel", AppSymbol.dontRecommendChannel)
-                    }
-                    .accessibilityIdentifier(AccessibilityID.videoDontRecommendChannel)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder private var secondaryMenuItems: some View {
-        Button(action: playNext) { menuLabel("Play Next", AppSymbol.playNext) }
-        Button {
-            Task { await CurrentQueueStore.shared.append(video) }
-        } label: {
-            menuLabel("Add to Queue", AppSymbol.addToQueue)
-        }
-    }
-
-    private func menuLabel(_ title: LocalizedStringKey, _ symbol: String) -> some View {
-        Label {
-            Text(title, bundle: .module)
-        } icon: {
-            Image(systemName: symbol)
-        }
-    }
-
-    /// Right after the queue item the app player is playing, or first when it plays nothing from the queue.
-    private func playNext() {
-        #if os(iOS)
-        let playingIndex = playerRouter.playingQueueIndex
-        #else
-        let playingIndex: Int? = nil
-        #endif
-        Task { await CurrentQueueStore.shared.playNext(video, playingIndex: playingIndex) }
-    }
-
-    private func saveToWatchLater() {
-        Task {
-            do {
-                try await api.addToWatchLater(videoId: video.id)
-                showToast(String(localized: "Saved to Watch Later", bundle: .module))
-            } catch {
-                watchLaterAlert = DownloadAlertItem(
-                    title: String(localized: "Could Not Save", bundle: .module),
-                    message: error.localizedDescription
-                )
-            }
-        }
-    }
-
-    /// Not Interested and Don't Like This Video: the menu token when the feed sent one, else the icon type.
-    private func sendFeedback(token: String?, iconType: String) {
-        Task {
-            do {
-                if let token {
-                    try await api.sendFeedback(token: token)
-                } else {
-                    try await api.sendFeedbackForVideo(videoId: video.id, iconType: iconType)
-                }
-                NotificationCenter.default.post(name: .hideVideoFromFeed, object: nil, userInfo: ["videoId": video.id])
-            } catch {
-                showToast(VideoCardView.feedbackFailedText)
-            }
-        }
-    }
-
-    private func dontRecommendChannel(_ channelId: String) {
-        Task {
-            do {
-                if let token = video.hideChannelToken {
-                    try await api.sendFeedback(token: token)
-                } else {
-                    try await api.sendFeedbackForVideo(videoId: video.id, iconType: "BLOCK_CHANNEL")
-                }
-                store.settings.blockedChannels[channelId] = video.channelTitle
-                NotificationCenter.default.post(
-                    name: .hideChannelFromFeed, object: nil, userInfo: ["channelId": channelId])
-            } catch {
-                showToast(VideoCardView.feedbackFailedText)
-            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, moreButtonInset)
+            .alignmentGuide(.cardTextTop) { $0[.top] }
         }
     }
 }

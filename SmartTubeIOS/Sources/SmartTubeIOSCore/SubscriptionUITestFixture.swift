@@ -115,7 +115,7 @@ final class SubscriptionUITestProtocol: URLProtocol, @unchecked Sendable {
         }
         if path.hasSuffix("/next") {
             // The fixture feed has no per-card tokens, so card feedback fetches them here.
-            return ["contents": ["NOT_INTERESTED", "BLOCK_CHANNEL"].map(Self.feedbackMenuItem)]
+            return ["contents": ["NOT_INTERESTED", "DISLIKE", "BLOCK_CHANNEL"].map(Self.feedbackMenuItem)]
         }
         return ["responseContext": [:]]
     }

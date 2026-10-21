@@ -16,15 +16,6 @@ extension Notification.Name {
     // hideVideoFromFeed and hideChannelFromFeed are defined in SmartTubeIOSCore/FeedFeedbackNotifications.swift
 }
 
-extension VerticalAlignment {
-    private enum CardTextTop: AlignmentID {
-        static func defaultValue(in context: ViewDimensions) -> CGFloat { context[.top] }
-    }
-
-    /// Top of a card's text block, where its More button lines up.
-    fileprivate static let cardTextTop = VerticalAlignment(CardTextTop.self)
-}
-
 // MARK: - VideoCardView
 //
 // VF/VideoCard: a 16:9 cover with duration, Live or Upcoming tag, watch progress and the Watch Later mark, then title,
@@ -43,33 +34,17 @@ public struct VideoCardView: View {
     /// own tap gesture (cards on the Channel and Playlist screens pass none and keep VoiceOver's plain activation).
     public var onSelect: (() -> Void)? = nil
 
-    // Not private where VideoCardView+Menu.swift needs them.
-    @Environment(AuthService.self) var authService
-    @Environment(SettingsStore.self) var store
-    @Environment(\.innerTubeAPI) var api
+    @Environment(AuthService.self) private var authService
+    @Environment(SettingsStore.self) private var store
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    #if os(iOS)
-    @Environment(PlayerRouter.self) var playerRouter
-    #endif
     @State private var isSavedOffline = false
     @State private var localProgress: Double?
     @State private var isVisibleForPrefetch = false
-    @State var watchLaterAlert: DownloadAlertItem?
-    /// Routine results and feedback failures of the card menu go to the app-level toast.
-    @Environment(\.showToast) var showToast
-    @State var confirmsNotInterested = false
-    @State var confirmsDontRecommendChannel = false
-    @State var showsOfflineDownload = false
-    @State var playlistPickerMode: PlaylistPickerSheet.Mode?
-    @State var pendingUnsubscribe: PendingUnsubscribe?
+    @State private var menu = VideoCardMenuState()
     /// Index into `video.thumbnailFallbackURLs`. -1 = use primary `thumbnailURL`.
     @State private var thumbnailFallbackIndex: Int = -1
-    #if !os(tvOS) && ENABLE_DOWNLOADS
-    @Environment(VideoDownloadService.self) var downloadService
-    #endif
     #if os(tvOS)
     @FocusState private var isFocused: Bool
-    @State private var showsActions = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     #elseif os(macOS)
     @State private var isHovering = false
@@ -83,7 +58,7 @@ public struct VideoCardView: View {
     /// `currentPlaylistId` (e.g. the "Watch Later" home tab, which renders through the
     /// generic BrowseView grid that has no per-card playlist context of its own) — lets
     /// Remove/Move-to-Playlist actions work there too, not just from PlaylistView.
-    var effectivePlaylistId: String? {
+    private var effectivePlaylistId: String? {
         currentPlaylistId ?? video.playlistId
     }
 
@@ -97,6 +72,11 @@ public struct VideoCardView: View {
     }
 
     // MARK: - Shared card content (tasks + menus)
+
+    /// The card menu (see VideoCardMenu.swift).
+    private func menuItems(nested: Bool = true) -> some View {
+        VideoCardMenuItems(video: video, playlistId: effectivePlaylistId, nested: nested, state: menu)
+    }
 
     @ViewBuilder private var layout: some View {
         if compact {
@@ -155,34 +135,19 @@ extension VideoCardView {
         cardBody
             .accessibilityIdentifier(AccessibilityID.videoCard(video.id))
             .accessibilityValue(video.isShort ? "short" : "")
-            .cardChannelSubscription(channel: Channel.ofCard(video), pending: $pendingUnsubscribe)
-            .alert(Text("Not Interested", bundle: .module), isPresented: $confirmsNotInterested) {
-                Button(role: .destructive, action: notInterested) {
-                    Text("Not Interested", bundle: .module)
-                }
-                .accessibilityIdentifier(AccessibilityID.videoFeedbackConfirm)
-                Button(role: .cancel) {
-                } label: {
-                    Text("Cancel", bundle: .module)
-                }
-                .accessibilityIdentifier(AccessibilityID.videoFeedbackCancel)
-            } message: {
-                Text(video.title)
-            }
-            .alert(Text("Don't Recommend Channel", bundle: .module), isPresented: $confirmsDontRecommendChannel) {
-                Button(role: .destructive, action: dontRecommendChannel) {
-                    Text("Don't Recommend Channel", bundle: .module)
-                }
-                .accessibilityIdentifier(AccessibilityID.videoFeedbackConfirm)
-                Button(role: .cancel) {
-                } label: {
-                    Text("Cancel", bundle: .module)
-                }
-                .accessibilityIdentifier(AccessibilityID.videoFeedbackCancel)
-            } message: {
-                Text(video.channelTitle)
-            }
+            .videoCardMenu(video: video, playlistId: effectivePlaylistId, title: displayTitle, state: menu)
     }
+
+    #if !os(tvOS)
+    /// The Mac shows More while the pointer is over the card, next to the context menu.
+    private var moreButtonVisible: Bool {
+        #if os(macOS)
+        return isHovering
+        #else
+        return true
+        #endif
+    }
+    #endif
 
     @ViewBuilder private var cardBody: some View {
         #if os(tvOS)
@@ -208,17 +173,6 @@ extension VideoCardView {
             .focusable()
             .onTapGesture { onSelect?() }
             .focused($isFocused)
-            .onPlayPauseCommand {
-                showsActions = true
-                // The dialog lists Subscribe or Unsubscribe once the (shared, cached) state is known.
-                if hasChannel {
-                    let context = authService.subscriptionContext
-                    Task { await SubscribedChannelsCache.shared.load(context, api: api) }
-                }
-            }
-            .confirmationDialog(Text(displayTitle), isPresented: $showsActions, titleVisibility: .visible) {
-                menuItems(nested: false)
-            }
             .onAppear { feedLog.info("[feed] id=\(self.video.id) title=\(self.video.title)") }
             .onChange(of: isFocused) { _, newValue in
                 focusLog.info("[VideoCard] isFocused=\(newValue) id=\(self.video.id)")
@@ -236,27 +190,15 @@ extension VideoCardView {
             .scaleEffect(isFocused && !reduceMotion ? 1.08 : 1.0)
             .zIndex(isFocused ? 1 : 0)
             .vfAnimation(VFMotion.fast, value: isFocused)
-            .sheet(isPresented: $showsOfflineDownload) { OfflineDownloadSheet(video: video) }
-            .feedbackAlert(item: $watchLaterAlert)
-            .sheet(item: $playlistPickerMode) { mode in
-                PlaylistPickerSheet(
-                    mode: mode, video: video, sourcePlaylistId: effectivePlaylistId, api: api,
-                    onFinished: handlePlaylistPickerResult
-                )
-            }
         #else
         let card =
             cardContent
-            .overlay(alignment: Alignment(horizontal: .trailing, vertical: .cardTextTop)) { moreButton }
-            .onAppear { feedLog.info("[feed] id=\(self.video.id) title=\(self.video.title)") }
-            .sheet(isPresented: $showsOfflineDownload) { OfflineDownloadSheet(video: video) }
-            .feedbackAlert(item: $watchLaterAlert)
-            .sheet(item: $playlistPickerMode) { mode in
-                PlaylistPickerSheet(
-                    mode: mode, video: video, sourcePlaylistId: effectivePlaylistId, api: api,
-                    onFinished: handlePlaylistPickerResult
-                )
+            .overlay(alignment: Alignment(horizontal: .trailing, vertical: .cardTextTop)) {
+                VideoCardMoreButton(
+                    video: video, playlistId: effectivePlaylistId, title: displayTitle, visible: moreButtonVisible,
+                    state: menu)
             }
+            .onAppear { feedLog.info("[feed] id=\(self.video.id) title=\(self.video.title)") }
         #if os(macOS)
         card.onHover { isHovering = $0 }
         #else
@@ -266,61 +208,12 @@ extension VideoCardView {
         #endif
     }
 
-    // MARK: More button
-
-    #if !os(tvOS)
-    /// Touch target on iPhone and iPad, pointer target on the Mac; the text keeps clear of it.
-    private var moreTarget: CGFloat {
-        #if os(macOS)
-        return VFTarget.pointer
-        #else
-        return VFTarget.touch
-        #endif
-    }
-
-    /// A separate control (and VoiceOver element) next to the title, outside the card's tap area.
-    /// The Mac shows it while the pointer is over the card, next to the context menu.
-    private var moreButton: some View {
-        Menu {
-            menuItems()
-        } label: {
-            // The glyph stops growing at the largest standard size so it keeps clear of the title; the large
-            // content viewer shows it enlarged on a long press.
-            Image(systemName: AppSymbol.more)
-                .font(.body.weight(.semibold))
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                .foregroundStyle(.secondary)
-                .frame(width: moreTarget, height: moreTarget)
-                .contentShape(Rectangle())
-        }
-        .menuStyle(.button)
-        .buttonStyle(.plain)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .accessibilityShowsLargeContentViewer()
-        .accessibilityLabel(Text("More: \(displayTitle)", bundle: .module))
-        .accessibilityIdentifier(AccessibilityID.videoCardMenu(video.id))
-        // Centre the glyph on the first line of the title rather than the top of the text.
-        .alignmentGuide(.cardTextTop) { $0[.top] + ($0.height - VFTarget.pointer) / 2 }
-        .opacity(moreButtonVisible ? 1 : 0)
-        .accessibilityHidden(!moreButtonVisible)
-    }
-
-    private var moreButtonVisible: Bool {
-        #if os(macOS)
-        return isHovering
-        #else
-        return true
-        #endif
-    }
-    #endif
-
     /// Space the text leaves for the More button.
     private var moreButtonInset: CGFloat {
         #if os(tvOS)
         return 0
         #else
-        return moreTarget
+        return VideoCardMoreButton.inset
         #endif
     }
 
@@ -385,6 +278,15 @@ extension VideoCardView {
             }
         }
         .alignmentGuide(.cardTextTop) { $0[.top] }
+    }
+
+    private func openChannel() {
+        guard let channelId = video.channelId, !channelId.isEmpty else { return }
+        NotificationCenter.default.post(
+            name: .openChannel,
+            object: nil,
+            userInfo: ["channelId": channelId, "channelTitle": video.channelTitle]
+        )
     }
 
     /// Views and age; the scheduled start for an upcoming video; "DeArrow" when it replaced the title or cover.

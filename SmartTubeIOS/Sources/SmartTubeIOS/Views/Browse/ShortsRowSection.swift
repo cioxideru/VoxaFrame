@@ -52,22 +52,18 @@ struct ShortsRowSection: View {
         // navigation to the content below. Fit the ten cards into a plain HStack instead.
         HStack(alignment: .top, spacing: videoGridRowSpacing) {
             ForEach(Array(videos.prefix(HomeFeedLayout.shortsPerRow))) { video in
-                Button {
-                    onSelect(video)
-                } label: {
-                    ShortsCardView(video: video, onTap: { onSelect(video) })
-                        .containerRelativeFrame(.horizontal) { width, _ in
-                            min(
-                                cardWidth,
-                                max(
-                                    1,
-                                    (width - 32 - videoGridRowSpacing
-                                        * CGFloat(HomeFeedLayout.shortsPerRow - 1))
-                                        / CGFloat(HomeFeedLayout.shortsPerRow)))
-                        }
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
+                // The card is the button on tvOS, so Play/Pause reaches its menu.
+                ShortsCardView(video: video, onTap: { onSelect(video) })
+                    .containerRelativeFrame(.horizontal) { width, _ in
+                        min(
+                            cardWidth,
+                            max(
+                                1,
+                                (width - 32 - videoGridRowSpacing
+                                    * CGFloat(HomeFeedLayout.shortsPerRow - 1))
+                                    / CGFloat(HomeFeedLayout.shortsPerRow)))
+                    }
+                    .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
             }
         }
         .padding(.horizontal)
@@ -124,14 +120,9 @@ struct ShortsRowSection: View {
         // to avoid trapping Siri remote directional events.
         LazyVStack(alignment: .leading, spacing: videoGridRowSpacing) {
             ForEach(Array(videos.prefix(Self.verticalTVLimit))) { video in
-                Button {
-                    onSelect(video)
-                } label: {
-                    ShortsCardView(video: video, onTap: { onSelect(video) })
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
+                ShortsCardView(video: video, onTap: { onSelect(video) })
+                    .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier(AccessibilityID.shortsCard(video.id))
             }
         }
         .padding(.horizontal)
