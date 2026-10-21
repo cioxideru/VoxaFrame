@@ -55,6 +55,7 @@ public protocol InnerTubeAPIProtocol: AnyObject, Sendable {
     func sendFeedback(token: String) async throws
     /// On-demand feedback when no pre-fetched token is available (TV-client home feed).
     /// `iconType` is one of `"NOT_INTERESTED"`, `"DISLIKE"`, or `"BLOCK_CHANNEL"`.
+    /// Throws `InnerTubeAPI.VideoFeedbackError.tokenUnavailable` when there was nothing to send.
     func sendFeedbackForVideo(videoId: String, iconType: String) async throws
 }
 

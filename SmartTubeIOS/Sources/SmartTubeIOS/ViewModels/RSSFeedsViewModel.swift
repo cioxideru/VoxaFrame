@@ -31,12 +31,14 @@ public final class RSSFeedsViewModel {
     // MARK: - Load
 
     public func load() {
+        Task { [weak self] in await self?.reload() }
+    }
+
+    /// Fetches every active feed; returns when done, so pull to refresh shows the real work.
+    public func reload() async {
         isLoading = true
-        Task { [weak self] in
-            guard let self else { return }
-            await self.fetchAll()
-            self.isLoading = false
-        }
+        await fetchAll()
+        isLoading = false
     }
 
     private func fetchAll() async {

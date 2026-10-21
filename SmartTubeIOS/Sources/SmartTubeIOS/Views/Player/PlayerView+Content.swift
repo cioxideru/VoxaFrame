@@ -343,6 +343,9 @@ extension PlayerView {
         .toast(message: $qualityToastMessage)
         .toast(message: Binding(get: { vm.toastMessage }, set: { vm.toastMessage = $0 }))
         #endif
+        // Every platform rates videos: a rolled-back like or dislike; the toast clears it, so the next failure shows.
+        .toast(
+            message: Binding(get: { vm.likeDislike.failureMessage }, set: { vm.likeDislike.failureMessage = $0 }))
     }
 
 }

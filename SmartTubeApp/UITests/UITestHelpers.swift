@@ -114,6 +114,8 @@ enum AccessibilityID {
     static var searchResults: String { "search.results" }
     static var searchSuggestionsContainer: String { "search.suggestionsContainer" }
     static var searchHistoryClearAll: String { "search.history.clearAll" }
+    static var searchHistoryClearConfirm: String { "search.history.clearAll.confirm" }
+    static var searchHistoryClearCancel: String { "search.history.clearAll.cancel" }
     static func searchHistory(_ query: String) -> String { "search.history.\(query)" }
     static func searchSuggestion(_ text: String) -> String { "search.suggestion.\(text)" }
     static var searchNoResults: String { "search.noResults" }

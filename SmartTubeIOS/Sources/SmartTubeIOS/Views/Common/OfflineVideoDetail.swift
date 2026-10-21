@@ -331,7 +331,7 @@ extension OfflineVideoDetail {
 
     @ViewBuilder private func downloadState(_ track: OfflineTrack, job: OfflineJob?) -> some View {
         if let job, OfflinePresentation.action(job) == .retry {
-            Text("Retry", bundle: .module)
+            Text("Try Again", bundle: .module)
         } else if isLoading(track) {
             HStack(spacing: VFSpace.s4) {
                 ProgressView().accessibilityHidden(true)

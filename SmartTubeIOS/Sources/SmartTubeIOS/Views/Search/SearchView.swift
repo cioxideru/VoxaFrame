@@ -18,6 +18,7 @@ public struct SearchView: View {
     @State private var showFiltersSheet = false
     @State private var isSearchVisible = false
     #endif
+    @State private var confirmsClearHistory = false
     @FocusState private var isSearchFocused: Bool
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
@@ -200,12 +201,30 @@ public struct SearchView: View {
                         Text("Recent", bundle: .module)
                         Spacer()
                         Button(role: .destructive) {
-                            vm.clearHistory()
+                            confirmsClearHistory = true
                         } label: {
                             Text("Clear History", bundle: .module)
                         }
                         .font(.subheadline)
                         .accessibilityIdentifier(AccessibilityID.searchHistoryClearAll)
+                        .confirmationDialog(
+                            Text("Clear Search History?", bundle: .module), isPresented: $confirmsClearHistory,
+                            titleVisibility: .visible
+                        ) {
+                            Button(role: .destructive) {
+                                vm.clearHistory()
+                            } label: {
+                                Text("Clear History", bundle: .module)
+                            }
+                            .accessibilityIdentifier(AccessibilityID.searchHistoryClearConfirm)
+                            Button(role: .cancel) {
+                            } label: {
+                                Text("Cancel", bundle: .module)
+                            }
+                            .accessibilityIdentifier(AccessibilityID.searchHistoryClearCancel)
+                        } message: {
+                            Text("Your watch history is not affected.", bundle: .module)
+                        }
                     }
                 } footer: {
                     Text(

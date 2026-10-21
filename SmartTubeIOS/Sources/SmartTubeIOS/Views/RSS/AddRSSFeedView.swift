@@ -9,22 +9,33 @@ struct AddRSSFeedView: View {
     @State private var feedURL: String = ""
     @State private var feedTitle: String = ""
     @State private var isAdding = false
+    @FocusState private var focusedField: Field?
     @Environment(\.dismiss) private var dismiss
+
+    private enum Field { case title, url }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Feed Title (e.g. Tech Reviews)", text: $feedTitle)
+                    TextField("Tech Reviews", text: $feedTitle)
+                        .focused($focusedField, equals: .title)
+                        .submitLabel(.next)
+                        .onSubmit { focusedField = .url }
                         .accessibilityIdentifier("rss.addFeed.titleField")
-                    TextField("RSS Feed URL", text: $feedURL)
+                        .visibleLabel("Title")
+                    TextField("youtube.com/feeds/videos.xml?channel_id=…", text: $feedURL)
                         .textContentType(.URL)
                         .autocorrectionDisabled()
                         #if os(iOS)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
                         #endif
+                        .focused($focusedField, equals: .url)
+                        .submitLabel(.done)
+                        .onSubmit(addFeed)
                         .accessibilityIdentifier("rss.addFeed.urlField")
+                        .visibleLabel("Feed URL")
                 } header: {
                     Text("Feed Details")
                 } footer: {
@@ -37,25 +48,6 @@ struct AddRSSFeedView: View {
                         }
                         .foregroundStyle(VFColor.danger)
                     }
-                }
-
-                Section {
-                    Button {
-                        addFeed()
-                    } label: {
-                        if isAdding {
-                            HStack {
-                                ProgressView()
-                                    .padding(.trailing, 4)
-                                Text("Adding…")
-                            }
-                        } else {
-                            Text("Add Feed")
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        }
-                    }
-                    .disabled(validURL == nil || feedTitle.isEmpty || isAdding)
-                    .accessibilityIdentifier("rss.addFeed.confirmButton")
                 }
 
                 Section {
@@ -74,6 +66,23 @@ struct AddRSSFeedView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
+                ToolbarItem(placement: .confirmationAction) { addButton }
+            }
+        }
+    }
+
+    private var addButton: some View {
+        Group {
+            if isAdding {
+                ProgressView()
+            } else {
+                Button {
+                    addFeed()
+                } label: {
+                    Text("Add", bundle: .module)
+                }
+                .disabled(!canAdd)
+                .accessibilityIdentifier(AccessibilityID.rssAddFeedConfirm)
             }
         }
     }
@@ -86,9 +95,13 @@ struct AddRSSFeedView: View {
         return url
     }
 
+    private var canAdd: Bool {
+        validURL != nil && !feedTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isAdding
+    }
+
     private func addFeed() {
         let trimmedTitle = feedTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let url = validURL else { return }
+        guard canAdd, let url = validURL else { return }
 
         isAdding = true
 
@@ -96,6 +109,17 @@ struct AddRSSFeedView: View {
             let feed = RSSFeedInfo(title: trimmedTitle, feedURL: url)
             await RSSFeedStore.shared.addFeed(feed)
             dismiss()
+        }
+    }
+}
+
+extension View {
+    /// Shows `title` next to a field, so the field is not named by its placeholder alone.
+    fileprivate func visibleLabel(_ title: LocalizedStringKey) -> some View {
+        LabeledContent {
+            self
+        } label: {
+            Text(title, bundle: .module)
         }
     }
 }

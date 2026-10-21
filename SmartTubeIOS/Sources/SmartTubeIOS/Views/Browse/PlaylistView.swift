@@ -60,7 +60,7 @@ public struct PlaylistView: View {
             channelDestination = ChannelDestination(channelId: channelId)
         }
         .alert("Error", isPresented: .constant(vm.error != nil), presenting: vm.error) { _ in
-            Button("Retry") { vm.load(playlistId: playlistId) }
+            Button("Try Again") { vm.load(playlistId: playlistId) }
             Button("Dismiss", role: .cancel) { vm.error = nil }
         } message: { err in
             Text(err.localizedDescription)

@@ -61,7 +61,7 @@ struct OfflineDownloadSheet: View {
                         Button {
                             reload += 1
                         } label: {
-                            Text("Retry", bundle: .module)
+                            Text("Try Again", bundle: .module)
                         }
                     } else {
                         mediaSelections
@@ -201,7 +201,7 @@ struct OfflineDownloadSheet: View {
                     Text(track.audioLabel ?? track.label).tag(Optional(track.id))
                 }
             } label: {
-                Text("Audio track", bundle: .module)
+                Text("Audio Track", bundle: .module)
             }
             .accessibilityIdentifier(AccessibilityID.offlineSelectionAudio)
             .accessibilityValue(audio.first { $0.id == audioID }.map { $0.audioLabel ?? $0.label } ?? "")

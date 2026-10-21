@@ -55,6 +55,8 @@ public struct VideoCardView: View {
     @State private var localProgress: Double?
     @State private var isVisibleForPrefetch = false
     @State var watchLaterAlert: DownloadAlertItem?
+    /// Routine results and feedback failures of the card menu go to the app-level toast.
+    @Environment(\.showToast) var showToast
     @State var confirmsNotInterested = false
     @State var confirmsDontRecommendChannel = false
     @State var showsOfflineDownload = false

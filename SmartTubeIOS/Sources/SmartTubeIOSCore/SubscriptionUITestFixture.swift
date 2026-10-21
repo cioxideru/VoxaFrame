@@ -113,7 +113,20 @@ final class SubscriptionUITestProtocol: URLProtocol, @unchecked Sendable {
                 "contents": [:],
             ]
         }
+        if path.hasSuffix("/next") {
+            // The fixture feed has no per-card tokens, so card feedback fetches them here.
+            return ["contents": ["NOT_INTERESTED", "BLOCK_CHANNEL"].map(Self.feedbackMenuItem)]
+        }
         return ["responseContext": [:]]
+    }
+
+    private static func feedbackMenuItem(_ iconType: String) -> [String: Any] {
+        [
+            "menuServiceItemRenderer": [
+                "icon": ["iconType": iconType],
+                "serviceEndpoint": ["feedbackEndpoint": ["feedbackToken": "fixture-\(iconType)"]],
+            ]
+        ]
     }
 }
 #endif

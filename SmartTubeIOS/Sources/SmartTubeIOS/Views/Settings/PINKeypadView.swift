@@ -36,8 +36,13 @@ struct PINKeypadView: View {
 
     /// Shows `message` and speaks it. Called for every rejected PIN, so a repeated mistake, whose text
     /// does not change, is announced again, as is an error that arrives with a new step of the flow.
+    /// It also plays the error haptic: a mismatched new PIN moves the flow to another step, which replaces this view,
+    /// so a trigger-based `sensoryFeedback` here would miss it.
     static func rejection(_ message: String) -> String {
         AccessibilityNotification.Announcement(message).post()
+        #if os(iOS)
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+        #endif
         return message
     }
 

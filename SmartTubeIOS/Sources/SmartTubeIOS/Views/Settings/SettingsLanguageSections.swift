@@ -91,37 +91,138 @@ struct SettingsLanguageSections: View {
 
 private struct SettingsYandexTokenSection: View {
     @State private var token = ""
+    /// The Keychain holds a token: read back after every save, never assumed from the field.
+    @State private var hasToken = false
+    @State private var saveFailed = false
     @State private var showsHelp = false
+    @FocusState private var isEditing: Bool
 
     var body: some View {
         Section {
             SecureField("Yandex OAuth Token", text: $token)
                 .autocorrectionDisabled()
-                .onAppear { token = TokenManager.yandexVOTToken() ?? "" }
-                .onChange(of: token) { _, token in
-                    if token != TokenManager.yandexVOTToken() ?? "" { TokenManager.setYandexVOTToken(token) }
+                .focused($isEditing)
+                .submitLabel(.done)
+                .onSubmit(save)
+                .onChange(of: isEditing) { _, editing in
+                    if !editing { save() }
                 }
+                .onAppear {
+                    token = TokenManager.yandexVOTToken() ?? ""
+                    hasToken = !token.isEmpty
+                }
+                .onDisappear(perform: save)
                 .accessibilityIdentifier(AccessibilityID.settingsYandexVOTTokenField)
             Button("How to Get a Token") { showsHelp = true }
-                .alert("Yandex OAuth Token", isPresented: $showsHelp) {
-                    Button("OK", role: .cancel) {}
-                } message: {
-                    Text(
-                        """
-                        The token is only needed for lively voices.
-
-                        1. Sign in to your Yandex account and open oauth.yandex.ru/client/new.
-                        2. Create an app for "Web services" with the "Access to user's login" permission (login:info) and Redirect URI https://oauth.yandex.ru/verification_code.
-                        3. Open oauth.yandex.ru/authorize?response_type=token&client_id=<your app's ClientID>.
-                        4. Allow access — Yandex shows the token on the page. Paste it here.
-
-                        The token is stored in the Keychain on this device. A Yandex Plus subscription is not required.
-                        """)
-                }
+                .sheet(isPresented: $showsHelp) { YandexTokenHelpSheet() }
         } header: {
             Text("Yandex Token", bundle: .module)
         } footer: {
-            Text("Shared by videos and Shorts. Kept in this device's Keychain and shown only masked.", bundle: .module)
+            VStack(alignment: .leading, spacing: VFSpace.s4) {
+                Text(
+                    "Shared by videos and Shorts. Kept in this device's Keychain and shown only masked.",
+                    bundle: .module)
+                if saveFailed {
+                    Label {
+                        Text("Couldn't save the token to the Keychain.", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.warning)
+                    }
+                    .foregroundStyle(VFColor.danger)
+                } else if hasToken {
+                    Label {
+                        Text("Saved in Keychain", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.checkmarkCircle)
+                    }
+                }
+            }
+        }
+    }
+
+    /// Writes the token once editing ends, not on every keystroke, then reads back what the Keychain kept.
+    /// Blank input removes the token.
+    private func save() {
+        let normalized = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        if normalized != TokenManager.yandexVOTToken() ?? "" { TokenManager.setYandexVOTToken(normalized) }
+        let stored = TokenManager.yandexVOTToken() ?? ""
+        saveFailed = stored != normalized
+        hasToken = !stored.isEmpty && !saveFailed
+        if !saveFailed { token = stored }
+    }
+}
+
+// MARK: - YandexTokenHelpSheet
+//
+// The four steps to get a token, with tappable links and text that can be selected and copied.
+
+private struct YandexTokenHelpSheet: View {
+    private static let redirectURI = "https://oauth.yandex.ru/verification_code"
+    private static let authorizeAddress = "https://oauth.yandex.ru/authorize?response_type=token&client_id="
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("The token is only needed for lively voices.", bundle: .module)
+                }
+                Section {
+                    step(1) {
+                        Text("Sign in to your Yandex account and create an app:", bundle: .module)
+                        link("oauth.yandex.ru/client/new")
+                    }
+                    step(2) {
+                        Text(
+                            "Choose \"Web services\", add the \"Access to user's login\" permission (login:info) and this Redirect URI:",
+                            bundle: .module)
+                        Text(verbatim: Self.redirectURI).monospaced()  // verbatim: an address to copy
+                    }
+                    step(3) {
+                        Text("Open this address with your app's ClientID at the end:", bundle: .module)
+                        Text(verbatim: Self.authorizeAddress).monospaced()  // verbatim: an address to copy
+                    }
+                    step(4) {
+                        Text(
+                            "Allow access. Yandex shows the token on the page; paste it into the token field.",
+                            bundle: .module)
+                    }
+                } footer: {
+                    Text(
+                        "The token is stored in the Keychain on this device. A Yandex Plus subscription is not required.",
+                        bundle: .module)
+                }
+            }
+            #if !os(tvOS)
+            .textSelection(.enabled)
+            #endif
+            .navigationTitle(Text("Yandex OAuth Token", bundle: .module))
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Done", bundle: .module)
+                    }
+                }
+            }
+        }
+    }
+
+    private func step(_ number: Int, @ViewBuilder content: () -> some View) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: VFSpace.s12) {
+            Text(number, format: .number).font(.headline).monospacedDigit()
+            VStack(alignment: .leading, spacing: VFSpace.s4) { content() }
+        }
+    }
+
+    /// A tappable `https://` link that reads as the bare address.
+    @ViewBuilder private func link(_ address: String) -> some View {
+        if let url = URL(string: "https://\(address)") {
+            Link(address, destination: url)
         }
     }
 }

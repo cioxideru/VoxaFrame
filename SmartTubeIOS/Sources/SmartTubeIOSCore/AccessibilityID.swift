@@ -108,6 +108,11 @@ public enum AccessibilityID {
     /// The idle list: recent searches and topics.
     public static var searchSuggestionsContainer: String { "search.suggestionsContainer" }
     public static var searchHistoryClearAll: String { "search.history.clearAll" }
+    public static var searchHistoryClearConfirm: String { "search.history.clearAll.confirm" }
+    public static var searchHistoryClearCancel: String { "search.history.clearAll.cancel" }
+    public static var rssAddFeedConfirm: String { "rss.addFeed.confirmButton" }
+    public static var settingsSignOutConfirm: String { "settings.signOut.confirm" }
+    public static var settingsSignOutCancel: String { "settings.signOut.cancel" }
     public static func searchHistory(_ query: String) -> String { "search.history.\(query)" }
     /// A live suggestion or matching recent search under the search field.
     public static func searchSuggestion(_ text: String) -> String { "search.suggestion.\(text)" }

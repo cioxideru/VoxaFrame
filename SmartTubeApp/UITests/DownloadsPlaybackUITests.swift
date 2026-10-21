@@ -381,7 +381,7 @@ final class DownloadsPlaybackUITests: XCTestCase {
         }
         XCTAssertTrue(app.buttons[AccessibilityID.offlineEntry(second)].exists)
         remove.tap()
-        let confirm = app.buttons["Delete all"].firstMatch
+        let confirm = app.buttons["Delete All"].firstMatch
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
         attachScreenshot("Confirm deletion of all offline videos and cache")
         confirm.tap()

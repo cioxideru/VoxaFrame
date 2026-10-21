@@ -28,7 +28,7 @@ struct OfflineVideosView: View {
     @State private var downloads: OfflinePresentation.DownloadFilter?
     @State private var assetSizes = OfflineDiskSizes()
     @State private var showsDeleteAll = false
-    @State private var showsSponsorResult = false
+    @State private var sponsorToast: String?
     @State private var deletion: OfflineEntry?
     @State private var selectedVideoID: String?
     /// Set once a video has filled the detail column; from then on only the person's choice is kept.
@@ -112,14 +112,14 @@ struct OfflineVideosView: View {
                     .accessibilityIdentifier(AccessibilityID.offlineDeleteAll)
                     .disabled(!coordinator.ready || isLocked)
                     .confirmationDialog(
-                        Text("Delete all offline videos?", bundle: .module), isPresented: $showsDeleteAll,
+                        Text("Delete All Offline Videos?", bundle: .module), isPresented: $showsDeleteAll,
                         titleVisibility: .visible
                     ) {
                         Button(role: .destructive) {
                             guard coordinator.ready, !isLocked else { return }
                             coordinator.remove(videoID: nil)
                         } label: {
-                            Text("Delete all", bundle: .module)
+                            Text("Delete All", bundle: .module)
                         }
                         .disabled(!coordinator.ready || isLocked)
                         Button(role: .cancel) {
@@ -134,10 +134,7 @@ struct OfflineVideosView: View {
                 }
             }
             .toolbar { ToolbarItem(placement: sponsorPlacement) { updateSponsorBlockButton } }
-            .alert(
-                Text("SponsorBlock updated", bundle: .module), isPresented: $showsSponsorResult,
-                actions: {}, message: { Text(sponsorResultText) }
-            )
+            .toast(message: $sponsorToast)
             .task { coordinator.start() }
             .offlineSizes($assetSizes, store: coordinator.store, snapshot: snapshot)
             .sheet(item: $downloads) { filter in OfflineDownloadsSheet(filter: filter) }
@@ -360,7 +357,7 @@ extension OfflineVideosView {
 extension OfflineVideosView {
     var sponsorResultText: String {
         guard case .finished(let updated, let failed) = coordinator.sponsor.update else { return "" }
-        return String(localized: "Updated \(updated) videos, failed \(failed).", bundle: .module)
+        return String(localized: "SponsorBlock: \(updated) updated · \(failed) failed", bundle: .module)
     }
 
     var updateSponsorBlockButton: some View {
@@ -368,7 +365,7 @@ extension OfflineVideosView {
         return Button {
             Task {
                 await coordinator.refreshAllSponsorSegments()
-                showsSponsorResult = true
+                sponsorToast = sponsorResultText
             }
         } label: {
             Label {

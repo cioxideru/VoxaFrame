@@ -383,29 +383,52 @@ final class HomeInteractionsUITests: XCTestCase {
     func testClearAllHistoryRemovesAllEntries() throws {
         search(for: "clear all test a")
         search(for: "clear all test b")
+        openClearHistoryConfirmation()
 
-        let bar = searchBar
-        guard bar.waitForExistence(timeout: 5) else {
-            XCTFail("search.bar not found")
-            return
-        }
-        bar.tap()
-        UITestHelpers.clearSearchField(in: app)
+        let confirm = app.buttons[AccessibilityID.searchHistoryClearConfirm].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Clear History must ask for confirmation")
+        confirm.tap()
 
-        let clearAll = app.buttons[AccessibilityID.searchHistoryClearAll]
-        guard clearAll.waitForExistence(timeout: 5) else {
-            XCTFail("Clear History button not found")
-            return
-        }
-        clearAll.tap()
-
-        Thread.sleep(forTimeInterval: 0.3)
-        XCTAssertFalse(
-            app.buttons[AccessibilityID.searchHistory("clear all test a")].exists,
+        XCTAssertTrue(
+            app.buttons[AccessibilityID.searchHistory("clear all test a")].waitForNonExistence(timeout: 5),
             "All history entries should be removed after Clear History")
         XCTAssertFalse(
             app.buttons[AccessibilityID.searchHistory("clear all test b")].exists,
             "All history entries should be removed after Clear History")
+    }
+
+    func testCancelClearHistoryKeepsEntries() throws {
+        search(for: "keep history test")
+        openClearHistoryConfirmation()
+
+        let confirm = app.buttons[AccessibilityID.searchHistoryClearConfirm].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Clear History must ask for confirmation")
+        let cancel = app.buttons[AccessibilityID.searchHistoryClearCancel].firstMatch
+        if cancel.exists {
+            cancel.tap()
+        } else {
+            // iPad confirmation popovers cancel through the outside dismiss region.
+            let dismiss = app.otherElements["PopoverDismissRegion"]
+            XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
+            dismiss.tap()
+        }
+
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 5), "Cancel must close the confirmation")
+        XCTAssertTrue(
+            app.buttons[AccessibilityID.searchHistory("keep history test")].waitForExistence(timeout: 5),
+            "Cancel must keep the search history")
+    }
+
+    /// Shows the idle history list and taps Clear History.
+    private func openClearHistoryConfirmation() {
+        let bar = searchBar
+        XCTAssertTrue(bar.waitForExistence(timeout: 5), "search.bar not found")
+        bar.tap()
+        UITestHelpers.clearSearchField(in: app)
+
+        let clearAll = app.buttons[AccessibilityID.searchHistoryClearAll]
+        XCTAssertTrue(clearAll.waitForExistence(timeout: 5), "Clear History button not found")
+        clearAll.tap()
     }
 
     // MARK: - Tests (from WatchLaterContextMenuUITests)

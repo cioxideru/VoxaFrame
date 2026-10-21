@@ -346,7 +346,7 @@ extension HomeView {
                     Text(error.localizedDescription)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                    Button("Retry") { sectionVM.loadContent() }
+                    Button("Try Again") { sectionVM.loadContent() }
                         .accessibilityIdentifier(AccessibilityID.subscriptionRetry)
                 }
                 if sectionVM.subscribedChannels.isEmpty && sectionVM.error == nil {

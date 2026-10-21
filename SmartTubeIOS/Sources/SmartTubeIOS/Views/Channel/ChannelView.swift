@@ -73,11 +73,11 @@ public struct ChannelView: View {
         }
         #endif
         .alert(
-            "Error",
+            "Couldn't Load Channel",
             isPresented: Binding(get: { vm.error != nil }, set: { if !$0 { vm.error = nil } }),
             presenting: vm.error
         ) { _ in
-            Button("Retry") { vm.load(channelId: channelId, signedIn: auth.isSignedIn) }
+            Button("Try Again") { vm.load(channelId: channelId, signedIn: auth.isSignedIn) }
             Button("Dismiss", role: .cancel) { vm.error = nil }
         } message: { err in
             Text(err.localizedDescription)

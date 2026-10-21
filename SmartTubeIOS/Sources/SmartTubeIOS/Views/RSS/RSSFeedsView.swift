@@ -75,7 +75,7 @@ struct RSSFeedsView: View {
             vm.load()
         }
         .refreshable {
-            vm.load()
+            await vm.reload()
         }
     }
 

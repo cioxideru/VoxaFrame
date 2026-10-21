@@ -234,7 +234,7 @@ final class ChannelViewUITests: XCTestCase {
     func testNoErrorAlertOnChannelLoad() throws {
         try openChannelViaDeeplink()
         Thread.sleep(forTimeInterval: 5)
-        let errorAlert = app.alerts["Error"].firstMatch
+        let errorAlert = app.alerts["Couldn't Load Channel"].firstMatch
         if errorAlert.exists {
             try captureAndSkip("Error alert appeared on channel load — network issue on this simulator clone", in: app)
         }

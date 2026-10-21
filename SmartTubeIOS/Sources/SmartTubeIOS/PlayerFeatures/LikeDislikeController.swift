@@ -13,6 +13,11 @@ import SmartTubeIOSCore
 final class LikeDislikeController {
 
     private(set) var likeStatus: LikeStatus = .none
+    /// Set when a rating is rolled back, for the player to show as a toast; the toast clears it.
+    var failureMessage: String?
+    private static var failureText: String {
+        String(localized: "Couldn't save your rating. Try again.", bundle: .module)
+    }
 
     private let api: InnerTubeAPI
     private let logError: (String) -> Void
@@ -42,6 +47,7 @@ final class LikeDislikeController {
                 }
             } catch {
                 self.likeStatus = prev
+                self.failureMessage = Self.failureText
                 logError("like failed: \(ViewModelLogger.errorSummary(error))")
             }
         }
@@ -62,6 +68,7 @@ final class LikeDislikeController {
                 }
             } catch {
                 self.likeStatus = prev
+                self.failureMessage = Self.failureText
                 logError("dislike failed: \(ViewModelLogger.errorSummary(error))")
             }
         }

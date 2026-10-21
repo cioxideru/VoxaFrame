@@ -19,6 +19,7 @@ struct ShortsCardView: View {
     @Environment(PlayerRouter.self) private var playerRouter
     #endif
     @State private var watchLaterAlert: DownloadAlertItem?
+    @Environment(\.showToast) private var showToast
     @State private var confirmsNotInterested = false
     @State private var confirmsDontRecommendChannel = false
     #if !os(tvOS) && ENABLE_DOWNLOADS
@@ -220,12 +221,7 @@ struct ShortsCardView: View {
         Task {
             do {
                 try await api.addToWatchLater(videoId: video.id)
-                watchLaterAlert = DownloadAlertItem(
-                    title: String(localized: "Saved to Watch Later", bundle: .module),
-                    message: String(
-                        localized: "\"\(video.title)\" was added to your Watch Later playlist.",
-                        bundle: .module)
-                )
+                showToast(String(localized: "Saved to Watch Later", bundle: .module))
             } catch {
                 watchLaterAlert = DownloadAlertItem(
                     title: String(localized: "Could Not Save", bundle: .module),
@@ -238,24 +234,33 @@ struct ShortsCardView: View {
     /// Not Interested and Don't Like This Video: the menu token when the feed sent one, else the icon type.
     private func sendFeedback(token: String?, iconType: String) {
         Task {
-            if let token {
-                try? await api.sendFeedback(token: token)
-            } else {
-                try? await api.sendFeedbackForVideo(videoId: video.id, iconType: iconType)
+            do {
+                if let token {
+                    try await api.sendFeedback(token: token)
+                } else {
+                    try await api.sendFeedbackForVideo(videoId: video.id, iconType: iconType)
+                }
+                NotificationCenter.default.post(name: .hideVideoFromFeed, object: nil, userInfo: ["videoId": video.id])
+            } catch {
+                showToast(VideoCardView.feedbackFailedText)
             }
-            NotificationCenter.default.post(name: .hideVideoFromFeed, object: nil, userInfo: ["videoId": video.id])
         }
     }
 
     private func dontRecommendChannel(_ channelId: String) {
         Task {
-            if let token = video.hideChannelToken {
-                try? await api.sendFeedback(token: token)
-            } else {
-                try? await api.sendFeedbackForVideo(videoId: video.id, iconType: "BLOCK_CHANNEL")
+            do {
+                if let token = video.hideChannelToken {
+                    try await api.sendFeedback(token: token)
+                } else {
+                    try await api.sendFeedbackForVideo(videoId: video.id, iconType: "BLOCK_CHANNEL")
+                }
+                store.settings.blockedChannels[channelId] = video.channelTitle
+                NotificationCenter.default.post(
+                    name: .hideChannelFromFeed, object: nil, userInfo: ["channelId": channelId])
+            } catch {
+                showToast(VideoCardView.feedbackFailedText)
             }
-            store.settings.blockedChannels[channelId] = video.channelTitle
-            NotificationCenter.default.post(name: .hideChannelFromFeed, object: nil, userInfo: ["channelId": channelId])
         }
     }
 }

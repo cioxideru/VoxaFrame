@@ -190,7 +190,7 @@ struct OfflineDownloadsSheet: View {
                 guard !isLocked else { return }
                 coordinator.retry(job)
             } label: {
-                Text("Retry", bundle: .module)
+                Text("Try Again", bundle: .module)
             }
             .buttonStyle(.bordered)
             .disabled(isLocked)

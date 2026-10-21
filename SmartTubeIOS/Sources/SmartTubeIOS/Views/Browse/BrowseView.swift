@@ -51,7 +51,7 @@ public struct BrowseView: View {
             channelDestination = ChannelDestination(channelId: channelId)
         }
         .alert("Error", isPresented: $showError, presenting: vm.error) { _ in
-            Button("Retry") { vm.loadContent(refresh: true) }
+            Button("Try Again") { vm.loadContent(refresh: true) }
             Button("Dismiss", role: .cancel) { vm.error = nil }
         } message: { err in
             Text(err.localizedDescription)

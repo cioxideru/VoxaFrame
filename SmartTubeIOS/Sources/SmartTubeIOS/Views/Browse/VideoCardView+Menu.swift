@@ -141,12 +141,7 @@ extension VideoCardView {
             do {
                 let setVideoId = try await api.addToWatchLater(videoId: video.id)
                 WatchLaterMembershipStore.shared.markSaved(video, setVideoId: setVideoId)
-                watchLaterAlert = DownloadAlertItem(
-                    title: String(localized: "Saved to Watch Later", bundle: .module),
-                    message: String(
-                        localized: "\"\(video.title)\" was added to your Watch Later playlist.",
-                        bundle: .module)
-                )
+                showToast(String(localized: "Saved to Watch Later", bundle: .module))
             } catch {
                 watchLaterAlert = DownloadAlertItem(
                     title: String(localized: "Could Not Save", bundle: .module),
@@ -174,12 +169,7 @@ extension VideoCardView {
             do {
                 try await api.removeFromWatchLater(setVideoId: setVideoId)
                 WatchLaterMembershipStore.shared.markRemoved(video.id)
-                watchLaterAlert = DownloadAlertItem(
-                    title: String(localized: "Removed from Watch Later", bundle: .module),
-                    message: String(
-                        localized: "\"\(video.title)\" was removed from your Watch Later playlist.",
-                        bundle: .module)
-                )
+                showToast(String(localized: "Removed from Watch Later", bundle: .module))
             } catch {
                 watchLaterAlert = DownloadAlertItem(
                     title: String(localized: "Could Not Remove", bundle: .module),
@@ -189,38 +179,49 @@ extension VideoCardView {
         }
     }
 
+    /// Hides the card only once YouTube accepted the feedback; a failure keeps it and says so.
     func notInterested() {
         Task {
-            if let token = video.notInterestedToken {
-                try? await api.sendFeedback(token: token)
-            } else {
-                try? await api.sendFeedbackForVideo(videoId: video.id, iconType: "NOT_INTERESTED")
+            do {
+                if let token = video.notInterestedToken {
+                    try await api.sendFeedback(token: token)
+                } else {
+                    try await api.sendFeedbackForVideo(videoId: video.id, iconType: "NOT_INTERESTED")
+                }
+                NotificationCenter.default.post(name: .hideVideoFromFeed, object: nil, userInfo: ["videoId": video.id])
+            } catch {
+                showToast(Self.feedbackFailedText)
             }
-            NotificationCenter.default.post(name: .hideVideoFromFeed, object: nil, userInfo: ["videoId": video.id])
         }
     }
 
     func dontRecommendChannel() {
         guard let channelId = video.channelId, !channelId.isEmpty else { return }
         Task {
-            if let token = video.hideChannelToken {
-                try? await api.sendFeedback(token: token)
-            } else {
-                try? await api.sendFeedbackForVideo(videoId: video.id, iconType: "BLOCK_CHANNEL")
+            do {
+                if let token = video.hideChannelToken {
+                    try await api.sendFeedback(token: token)
+                } else {
+                    try await api.sendFeedbackForVideo(videoId: video.id, iconType: "BLOCK_CHANNEL")
+                }
+                store.settings.blockedChannels[channelId] = video.channelTitle
+                NotificationCenter.default.post(
+                    name: .hideChannelFromFeed, object: nil, userInfo: ["channelId": channelId])
+            } catch {
+                showToast(Self.feedbackFailedText)
             }
-            store.settings.blockedChannels[channelId] = video.channelTitle
-            NotificationCenter.default.post(name: .hideChannelFromFeed, object: nil, userInfo: ["channelId": channelId])
         }
+    }
+
+    /// Shared with the Shorts card.
+    static var feedbackFailedText: String {
+        String(localized: "Couldn't send feedback. Try again.", bundle: .module)
     }
 
     func handlePlaylistPickerResult(_ result: Result<PlaylistInfo, Error>) {
         switch result {
         case .success(let playlist):
-            watchLaterAlert = DownloadAlertItem(
-                title: String(localized: "Added to Playlist", bundle: .module),
-                message: String(
-                    localized: "\"\(video.title)\" was added to \"\(playlist.title)\".", bundle: .module)
-            )
+            showToast(String(localized: "Added to \(playlist.title)", bundle: .module))
         case .failure(let error):
             watchLaterAlert = DownloadAlertItem(
                 title: String(localized: "Could Not Update Playlist", bundle: .module),

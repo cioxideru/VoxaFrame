@@ -33,6 +33,7 @@ public struct SettingsView: View {
     /// B1 and B2: both destructive rows ask first; Cancel is the safe default.
     @State private var confirmsClearHistory = false
     @State private var confirmsReset = false
+    @State private var confirmsSignOut = false
     #if os(macOS)
     private(set) var showsPanes = false
     #endif
@@ -126,7 +127,19 @@ public struct SettingsView: View {
                     Text(auth.accountName ?? "Unknown")
                 }
                 .accessibilityElement(children: .combine)
-                Button("Sign Out", role: .destructive) { auth.signOut() }
+                Button("Sign Out", role: .destructive) { confirmsSignOut = true }
+                    .confirmationDialog(
+                        Text("Sign Out of YouTube?", bundle: .module), isPresented: $confirmsSignOut,
+                        titleVisibility: .visible
+                    ) {
+                        Button(role: .destructive) {
+                            auth.signOut()
+                        } label: {
+                            Text("Sign Out", bundle: .module)
+                        }
+                        .accessibilityIdentifier(AccessibilityID.settingsSignOutConfirm)
+                        confirmationCancelButton(AccessibilityID.settingsSignOutCancel)
+                    }
             } else {
                 Button("Sign in with Google") { showSignIn = true }
                     .accessibilityIdentifier(AccessibilityID.settingsSignInButton)

@@ -162,7 +162,7 @@ public struct ShortsPlayerView: View {
                             .font(.callout.weight(.semibold))
                             .multilineTextAlignment(.center)
                             .accessibilityIdentifier(AccessibilityID.shortsErrorBanner)
-                        Button("Retry") {
+                        Button("Try Again") {
                             vm.retryLoad()
                             vm.showControls()
                         }

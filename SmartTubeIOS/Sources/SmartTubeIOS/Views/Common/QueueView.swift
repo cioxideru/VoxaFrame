@@ -107,7 +107,7 @@ struct QueueView: View {
             .accessibilityIdentifier(AccessibilityID.queueClearButton)
             // B3: nothing is cleared without this answer; Cancel is the default.
             .confirmationDialog(
-                Text("Clear the queue?", bundle: .module), isPresented: $confirmsClear, titleVisibility: .visible
+                Text("Clear the Queue?", bundle: .module), isPresented: $confirmsClear, titleVisibility: .visible
             ) {
                 Button(role: .destructive) {
                     Task {

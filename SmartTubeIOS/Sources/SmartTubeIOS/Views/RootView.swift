@@ -41,6 +41,7 @@ public struct RootView: View {
         }
         .environment(\.isLandscapeLayout, isLandscapeLayout)
         .vfGlassScope()
+        .toastPresenter()
         .onGeometryChange(for: Bool.self) {
             $0.size.width > $0.size.height
         } action: {

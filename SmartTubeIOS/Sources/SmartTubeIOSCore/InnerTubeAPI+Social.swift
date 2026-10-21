@@ -96,6 +96,12 @@ extension InnerTubeAPI {
         )
     }
 
+    /// Why a feedback action did not reach YouTube.
+    public enum VideoFeedbackError: Error, Equatable {
+        /// `/next` offered no feedback token for the requested action, so no request was sent.
+        case tokenUnavailable
+    }
+
     /// Sends a feed feedback signal to YouTube.
     /// Used for "Not interested", "Don't like this video", and "Don't recommend channel" —
     /// all three actions share this endpoint and differ only in their `feedbackToken`.
@@ -120,9 +126,8 @@ extension InnerTubeAPI {
     ///   - iconType: The InnerTube icon type string identifying the action:
     ///     `"NOT_INTERESTED"`, `"DISLIKE"`, or `"BLOCK_CHANNEL"`.
     ///
-    /// If YouTube's response does not include a matching token, the method returns
-    /// silently (it logs a warning but does not throw) so the caller's hide-from-feed
-    /// notification can still be posted.
+    /// Throws `VideoFeedbackError.tokenUnavailable` when YouTube's response has no matching
+    /// token: nothing was sent, so callers must not hide the video or block the channel.
     public func sendFeedbackForVideo(videoId: String, iconType: String) async throws {
         var body = makeBody(client: webClientContext)
         body["videoId"] = videoId
@@ -131,7 +136,7 @@ extension InnerTubeAPI {
             tubeLog.warning(
                 "sendFeedbackForVideo: no \(iconType, privacy: .public) token in /next for videoId=\(videoId, privacy: .public)"
             )
-            return
+            throw VideoFeedbackError.tokenUnavailable
         }
         try await sendFeedback(token: token)
     }

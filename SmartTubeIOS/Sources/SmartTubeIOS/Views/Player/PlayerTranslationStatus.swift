@@ -49,7 +49,7 @@ struct PlayerTranslationStatus: View {
                 HStack(spacing: VFSpace.s8) {
                     Spacer(minLength: 0)
                     if case .failed = phase {
-                        actionButton(Text("Retry", bundle: .module), primary: false) {
+                        actionButton(Text("Try Again", bundle: .module), primary: false) {
                             vm.setVoiceOverForCurrentVideo(true)
                         }
                     }
