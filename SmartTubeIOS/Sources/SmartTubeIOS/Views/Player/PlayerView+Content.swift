@@ -262,7 +262,7 @@ extension PlayerView {
                 #if os(iOS) || os(tvOS)
                 if vm.isHoldingToSpeed {
                     HoldSpeedBadge()
-                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                        .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.85)))
                         .vfAnimation(VFMotion.fast, value: vm.isHoldingToSpeed)
                 }
                 #endif

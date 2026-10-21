@@ -315,7 +315,7 @@ enum AppSymbol {
     static let download = "arrow.down.to.line"
     static let retry = "arrow.clockwise"
     // Watch Later is one clock family: save, remove, the saved mark and the playlist cover.
-    static let watchLater = "clock.badge.checkmark"
+    static let watchLater = "clock.badge"
     static let removeFromWatchLater = "clock.badge.xmark"
     /// Distinct from `audioTrack` (a waveform), which picks the language track.
     static let audioOnly = "headphones"

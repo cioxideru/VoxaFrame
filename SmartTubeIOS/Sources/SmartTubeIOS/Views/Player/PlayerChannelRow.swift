@@ -140,14 +140,30 @@ struct PlayerChannelRow: View {
     }
 
     /// Subscribe is prominent; once subscribed it steps back to a quiet "Subscribed" that offers Unsubscribe.
-    /// A spinner stands in while the state loads; nothing is shown when it could not be loaded.
+    /// A spinner stands in while the state loads; nothing is shown when it could not be loaded. While a change is in
+    /// flight the button stays (disabled) under the spinner, so tvOS and VoiceOver focus is not lost.
     @ViewBuilder private var subscriptionControl: some View {
-        if subscription.isLoading || subscription.isChanging {
+        if subscription.isLoading {
             ProgressView()
                 .controlSize(.small)
                 .frame(minWidth: rowTarget, minHeight: rowTarget)
                 .accessibilityLabel(Text("Loading subscription", bundle: .module))
-        } else if let subscribed = subscription.isSubscribed {
+        } else if subscription.isSubscribed != nil {
+            subscriptionButton
+                .disabled(subscription.isChanging)
+                .opacity(subscription.isChanging ? 0.4 : 1)
+                .overlay {
+                    if subscription.isChanging {
+                        ProgressView()
+                            .controlSize(.small)
+                            .accessibilityLabel(Text("Updating subscription", bundle: .module))
+                    }
+                }
+        }
+    }
+
+    @ViewBuilder private var subscriptionButton: some View {
+        if let subscribed = subscription.isSubscribed {
             if subscribed {
                 subscribedButton
             } else {

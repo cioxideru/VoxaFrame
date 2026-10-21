@@ -49,6 +49,7 @@ private struct ToastModifier: ViewModifier {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
                 .background(.black.opacity(0.72), in: Capsule())
+                .padding(.horizontal, VFSpace.s16)
                 .padding(.bottom, 32)
                 .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.92, anchor: .bottom)))
                 .accessibilityIdentifier(AccessibilityID.playerToast)

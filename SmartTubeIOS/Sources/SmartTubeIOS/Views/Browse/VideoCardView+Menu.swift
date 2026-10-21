@@ -61,7 +61,7 @@ extension VideoCardView {
             Section {
                 if effectivePlaylistId == "WL" {
                     Button(role: .destructive, action: removeFromWatchLater) {
-                        menuLabel("Remove from Watch Later", AppSymbol.watchLater)
+                        menuLabel("Remove from Watch Later", AppSymbol.removeFromWatchLater)
                     }
                 }
                 Button(role: .destructive) {

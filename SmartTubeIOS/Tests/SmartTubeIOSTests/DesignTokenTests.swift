@@ -65,16 +65,9 @@ struct DesignTokenTests {
         Surface(name: "elevated", light: 0xFFFFFF, dark: 0x2C2C2E),
     ]
 
-    private static func luminance(_ hex: UInt32) -> Double {
-        func channel(_ shift: UInt32) -> Double {
-            let value = Double((hex >> shift) & 0xFF) / 255
-            return value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
-        }
-        return 0.2126 * channel(16) + 0.7152 * channel(8) + 0.0722 * channel(0)
-    }
-
     private static func contrast(_ first: UInt32, _ second: UInt32) -> Double {
-        let (high, low) = (max(luminance(first), luminance(second)), min(luminance(first), luminance(second)))
+        let (lumA, lumB) = (VFColorPair.luminance(first), VFColorPair.luminance(second))
+        let (high, low) = (max(lumA, lumB), min(lumA, lumB))
         return (high + 0.05) / (low + 0.05)
     }
 

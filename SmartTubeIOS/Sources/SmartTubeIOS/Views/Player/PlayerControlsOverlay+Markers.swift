@@ -45,6 +45,8 @@ extension PlayerControlsOverlay {
                     let width = max(trackW * CGFloat(span.upperBound - span.lowerBound), 2)
                     Rectangle()
                         .fill(seg.category.markerColor)
+                        // Light colours (Self-Promotion, Intro) would vanish on the white played part without it.
+                        .overlay(Rectangle().strokeBorder(.black.opacity(0.6), lineWidth: 0.5))
                         .frame(width: width, height: height)
                         .position(x: inset + trackW * CGFloat(span.lowerBound) + width / 2, y: geo.size.height / 2)
                         .allowsHitTesting(false)

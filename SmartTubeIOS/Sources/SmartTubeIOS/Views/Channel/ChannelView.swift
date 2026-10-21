@@ -281,7 +281,7 @@ public struct ChannelView: View {
             Label {
                 Text(channel.isSubscribed ? LocalizedStringKey("Unsubscribe") : "Subscribe", bundle: .module)
             } icon: {
-                Image(systemName: channel.isSubscribed ? AppSymbol.personCircleMinus : AppSymbol.addCircle)
+                Image(systemName: channel.isSubscribed ? AppSymbol.personCircleMinus : AppSymbol.subscribe)
             }
         }
         Group {
