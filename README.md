@@ -17,13 +17,26 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 
 ## Screenshots
 
+iPhone (guest mode, no account):
+
 <table>
   <tr>
-    <td><img src="docs/screenshots/home.png" width="160"/></td>
     <td><img src="docs/screenshots/search.png" width="160"/></td>
+    <td><img src="docs/screenshots/card-menu.png" width="160"/></td>
     <td><img src="docs/screenshots/player.png" width="160"/></td>
-    <td><img src="docs/screenshots/player-menu.png" width="160"/></td>
     <td><img src="docs/screenshots/settings.png" width="160"/></td>
+  </tr>
+</table>
+
+iPad in landscape:
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/ipad-search.png" width="420"/></td>
+    <td><img src="docs/screenshots/ipad-player.png" width="420"/></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/ipad-settings.png" width="420"/></td>
   </tr>
 </table>
 
@@ -58,6 +71,8 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 - RSS channel feeds with background refresh and deduplication
 - iCloud sync for subscriptions, watch state, queue, and RSS feeds
 - Video publish date shown in search results and feed cards
+- One card menu for videos and Shorts: Share, Channel with Subscribe / Subscribed, Watch Later, Offline watch, and Not Interested / Don't Like / Don't Recommend with confirmation
+- iPad landscape sidebar, two-column Settings and wide reading panels for Description and Comments
 - Grid columns per orientation: up to 4 in iPad landscape, up to 5 on Mac
 - Signed-in Shorts come from your subscriptions and the Shorts on YouTube's TV Home page; YouTube does not offer personal Shorts recommendations to the TV sign-in
 
@@ -71,6 +86,7 @@ Inspired by the original [SmartTube Android app](https://github.com/yuliskov/Sma
 - Safari Web Extension — auto-redirects YouTube, Shorts, and Music links to VoxaFrame
 - Share Extension — share YouTube links from any app directly into VoxaFrame
 - Offline videos with a persistent download queue, progress page and completion notifications
+- Offline SponsorBlock segments and measured file sizes for saved videos
 - Save additional video qualities, original/dubbed audio and Yandex voice-over tracks; play downloaded media locally
 - Variants grouped by type (video, audio, voice-over) and parallel downloads with a configurable limit
 - Downloads and speculative preloading yield while active playback prepares or buffers
@@ -102,7 +118,7 @@ SmartTube.xcworkspace/ Xcode workspace (references both above)
 | iOS / iPadOS | 18.0 |
 | macOS (native) | 15.0 |
 | tvOS | 18.0 |
-| Xcode | 27.0 (project toolchain) |
+| Xcode | 27.1 (project toolchain) |
 | Swift | 6.0 |
 
 ---

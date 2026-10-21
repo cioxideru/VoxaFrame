@@ -42,6 +42,7 @@ text and IDs; put unresolved work in the register, and closed outcomes in the ch
 
 ## Gotchas
 - The Simulator cannot decode VP9/AV1 and cannot run PiP; assert stream *selection* in tests, not decoding.
+- Xcode 27.1 ships no Simulator.app: rotate a simulator only from a UI test (`XCUIDevice.shared.orientation`); the orientation stays after the test ends. README screenshots are taken in guest mode, dark theme, never with a personal account.
 - WKWebView `evaluateJavaScript` has no user activation: PiP/fullscreen cannot be triggered from Swift.
 - Authenticated InnerTube calls use the TVHTML5 client on youtubei.googleapis.com with a Bearer token and no API key; the WEB client rejects Bearer tokens. Never call `/oauth2/v3/userinfo` for account info (the TV OAuth client isn't Data-API-v3-enabled) — use `account/accounts` with the TVHTML5 context instead.
 - The 16 GB build Mac stalls with > 3 parallel simulator clones; the scripts cap UI workers at 3.
