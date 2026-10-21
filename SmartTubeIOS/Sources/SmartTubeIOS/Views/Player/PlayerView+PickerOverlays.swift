@@ -320,29 +320,43 @@ extension PlayerView {
 }
 
 #if os(tvOS)
-// MARK: - PickerHeaderButtonStyle (tvOS)
+// MARK: - Focus platters (tvOS)
 
-/// Flat style for the Cancel button in picker sheet headers. The default tvOS
-/// button style renders a bright white platter that clashes with the dark
-/// sheet material; this shows a gray highlight when focused instead, matching
-/// the more-menu row treatment.
+/// Cancel in picker sheet headers. The default tvOS platter is a bright white button; this keeps the header
+/// flat and marks focus with the same platter as the More menu rows.
 struct PickerHeaderButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        PickerHeaderButtonLabel(configuration: configuration)
+        TVFocusPlatter(
+            configuration: configuration,
+            insets: EdgeInsets(top: VFSpace.s8, leading: VFSpace.s16, bottom: VFSpace.s8, trailing: VFSpace.s16))
     }
+}
 
-    private struct PickerHeaderButtonLabel: View {
-        @Environment(\.isFocused) private var isFocused
-        let configuration: ButtonStyle.Configuration
+/// More menu rows: the label already carries its padding.
+struct PlayerMenuRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        TVFocusPlatter(configuration: configuration, insets: EdgeInsets())
+    }
+}
 
-        var body: some View {
-            configuration.label
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(isFocused ? Color.gray.opacity(0.35) : .clear)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-        }
+/// A focused button gets a primary-colour platter with its label drawn in the opposite colour scheme, so focus
+/// stands out from the sheet material far beyond 3:1 and secondary text stays readable on it.
+private struct TVFocusPlatter: View {
+    @Environment(\.isFocused) private var isFocused
+    @Environment(\.colorScheme) private var colorScheme
+    let configuration: ButtonStyle.Configuration
+    let insets: EdgeInsets
+
+    var body: some View {
+        configuration.label
+            .foregroundStyle(.primary)
+            .padding(insets)
+            .environment(\.colorScheme, isFocused ? (colorScheme == .dark ? .light : .dark) : colorScheme)
+            .background(
+                isFocused ? Color.primary : .clear,
+                in: RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous)
+            )
+            .opacity(configuration.isPressed ? 0.8 : 1)
     }
 }
 #endif

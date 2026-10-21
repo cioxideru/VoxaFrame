@@ -11,6 +11,8 @@ import Foundation
 final class SleepTimerController {
 
     private(set) var sleepTimerMinutes: Int? = nil
+    /// When the running countdown fires, for showing the remaining time; `nil` when no timer runs.
+    private(set) var fireDate: Date?
 
     @ObservationIgnored private var task: Task<Void, Never>?
 
@@ -22,11 +24,14 @@ final class SleepTimerController {
         task?.cancel()
         task = nil
         sleepTimerMinutes = minutes
+        fireDate = nil
         guard let minutes else { return }
+        fireDate = .now.addingTimeInterval(Double(minutes) * 60)
         task = Task { [weak self] in
             try? await Task.sleep(for: .seconds(Double(minutes) * 60))
             guard let self, !Task.isCancelled else { return }
             self.sleepTimerMinutes = nil
+            self.fireDate = nil
             onFire()
         }
     }

@@ -17,6 +17,15 @@ private struct MoreMenuContentHeightKey: PreferenceKey {
     }
 }
 
+/// The More menu slides up and fades; with Reduce Motion it only fades.
+private struct MoreMenuTransition: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content.transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+    }
+}
+
 // MARK: - PlayerView overlay sheets
 //
 // Pure-SwiftUI overlays rendered inside the player's ZStack so no UIKit
@@ -37,11 +46,14 @@ extension PlayerView {
     /// The option panels are here on tvOS only; iOS and macOS present them natively (`playerContentView`).
     @ViewBuilder var overlayStack: some View {
         #if !os(iOS)
-        if showMoreMenu {
-            moreMenuOverlay
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeOut(duration: 0.2), value: showMoreMenu)
+        // The container animates both the insertion and the removal; Reduce Motion fades instead of sliding.
+        ZStack {
+            if showMoreMenu {
+                moreMenuOverlay
+                    .modifier(MoreMenuTransition())
+            }
         }
+        .animation(.easeOut(duration: VFMotion.standard), value: showMoreMenu)
         #endif
         #if os(tvOS)
         tvOptionPanels
@@ -87,7 +99,7 @@ extension PlayerView {
             }
             .accessibilityIdentifier(AccessibilityID.playerMoreMenuScrollView)
             .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: VFRadius.card, style: .continuous))
             .onPreferenceChange(MoreMenuContentHeightKey.self) { moreMenuContentHeight = $0 }
             // Height = natural content height capped at moreMenuMaxHeight.
             // Falls back to moreMenuMaxHeight on the first render (before the
@@ -96,15 +108,18 @@ extension PlayerView {
                 maxWidth: moreMenuPortraitWidth,
                 maxHeight: moreMenuContentHeight > 0 ? min(moreMenuContentHeight, moreMenuMaxHeight) : moreMenuMaxHeight
             )
+            #if !os(iOS)
+            // Menu button on tvOS, Escape on macOS.
+            .onExitCommand {
+                playerMenuLog.notice("[moreMenu] onExitCommand fired — dismissing")
+                showMoreMenu = false
+            }
+            #endif
             #if os(tvOS)
             // Native SwiftUI focus handles D-pad navigation via the .focused() bindings
             // on each row button. onMoveCommand was removed because it caused a double-step
             // bug: both onMoveCommand and the native focus engine responded to the same
             // D-pad event, advancing focus twice per press.
-            .onExitCommand {
-                playerMenuLog.notice("[moreMenu] onExitCommand fired — dismissing via Menu button")
-                showMoreMenu = false
-            }
             .onAppear {
                 playerMenuLog.notice("[moreMenu] overlay appeared — native tvOS focus via .focused() bindings")
             }
@@ -120,6 +135,7 @@ extension PlayerView {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
         .ignoresSafeArea()
+        .accessibilityAddTraits(.isModal)
         #if os(tvOS)
         .focusScope(moreMenuNamespace)
         #endif
@@ -146,9 +162,7 @@ extension PlayerView {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             Divider()
-            #if os(macOS)
             moreMenuChannelRow
-            #endif
             #if os(tvOS)
             moreMenuSpeedRow
             moreMenuQualityRow
@@ -212,7 +226,7 @@ extension PlayerView {
             showSpeedPicker = true
         } label: {
             HStack {
-                Label("Playback Speed", systemImage: "speedometer")
+                Label("Playback Speed", systemImage: AppSymbol.speedometer)
                 Spacer()
                 Text(
                     store.settings.playbackSpeed == 1.0
@@ -224,12 +238,10 @@ extension PlayerView {
             .padding()
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .playerMenuRowButtonStyle()
         .foregroundStyle(.primary)
         .accessibilityIdentifier(AccessibilityID.playerMoreMenuSpeedRow)
         #if os(tvOS)
-        .background(moreMenuFocusedRow == .speed ? Color.gray.opacity(0.35) : .clear)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
         .focused($moreMenuFocusedRow, equals: .speed)
         .prefersDefaultFocus(in: moreMenuNamespace)
         #endif
@@ -245,7 +257,7 @@ extension PlayerView {
                 showQualityPicker = true
             } label: {
                 HStack {
-                    Label("Quality", systemImage: "film.stack")
+                    Label("Quality", systemImage: AppSymbol.videoQuality)
                     Spacer()
                     Text(
                         vm.selectedFormat?.qualityLabel
@@ -256,11 +268,9 @@ extension PlayerView {
                 .padding()
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .playerMenuRowButtonStyle()
             .foregroundStyle(.primary)
             .accessibilityIdentifier(AccessibilityID.playerMoreMenuQualityRow)
-            .background(moreMenuFocusedRow == .quality ? Color.gray.opacity(0.35) : .clear)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
             .focused($moreMenuFocusedRow, equals: .quality)
             Divider()
         }
@@ -294,11 +304,9 @@ extension PlayerView {
                     .foregroundStyle(vm.likeStatus == .like ? Color.accentColor : .primary)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .playerMenuRowButtonStyle()
                 .accessibilityIdentifier(AccessibilityID.playerMoreMenuLikeRow)
                 #if os(tvOS)
-                .background(moreMenuFocusedRow == .like ? Color.gray.opacity(0.35) : .clear)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
                 .focused($moreMenuFocusedRow, equals: .like)
                 #endif
                 Divider().frame(height: 44)
@@ -316,11 +324,9 @@ extension PlayerView {
                     .foregroundStyle(vm.likeStatus == .dislike ? Color.accentColor : .primary)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .playerMenuRowButtonStyle()
                 .accessibilityIdentifier(AccessibilityID.playerMoreMenuDislikeRow)
                 #if os(tvOS)
-                .background(moreMenuFocusedRow == .dislike ? Color.gray.opacity(0.35) : .clear)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
                 .focused($moreMenuFocusedRow, equals: .dislike)
                 #endif
             }
@@ -344,7 +350,7 @@ extension PlayerView {
                 .padding()
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .playerMenuRowButtonStyle()
         .foregroundStyle(.primary)
         .accessibilityIdentifier(AccessibilityID.playerMoreMenuShareRow)
         #endif
@@ -362,8 +368,9 @@ extension PlayerView {
                     Image(systemName: AppSymbol.sleepTimer)
                 }
                 Spacer()
-                if let mins = vm.sleepTimerMinutes {
-                    Text("\(mins) min", bundle: .module)
+                if let fireDate = vm.sleepTimer.fireDate {
+                    Text(timerInterval: Date.now...max(fireDate, .now), countsDown: true)
+                        .monospacedDigit()
                         .foregroundStyle(.secondary)
                 } else {
                     Text("Off", bundle: .module)
@@ -373,12 +380,10 @@ extension PlayerView {
             .padding()
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .playerMenuRowButtonStyle()
         .foregroundStyle(.primary)
         .accessibilityIdentifier(AccessibilityID.playerMoreMenuSleepTimerRow)
         #if os(tvOS)
-        .background(moreMenuFocusedRow == .sleepTimer ? Color.gray.opacity(0.35) : .clear)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
         .focused($moreMenuFocusedRow, equals: .sleepTimer)
         #endif
         #if !os(iOS)
@@ -396,27 +401,26 @@ extension PlayerView {
             showMoreMenu = false
         } label: {
             HStack {
-                Label(
-                    store.settings.audioOnlyMode
-                        ? String(localized: "Audio-Only (On)", bundle: .module)
-                        : String(localized: "Audio-Only", bundle: .module),
-                    systemImage: AppSymbol.audioOnly
-                )
+                Label {
+                    Text("Audio-Only", bundle: .module)
+                } icon: {
+                    Image(systemName: AppSymbol.audioOnly)
+                }
                 Spacer()
                 if store.settings.audioOnlyMode {
                     Image(systemName: AppSymbol.checkmark)
                         .foregroundStyle(Color.accentColor)
+                        .accessibilityHidden(true)
                 }
             }
             .padding()
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .playerMenuRowButtonStyle()
         .foregroundStyle(.primary)
+        .accessibilityAddTraits(store.settings.audioOnlyMode ? .isSelected : [])
         .accessibilityIdentifier(AccessibilityID.playerMoreMenuAudioOnlyRow)
         #if os(tvOS)
-        .background(moreMenuFocusedRow == .audioOnly ? Color.gray.opacity(0.35) : .clear)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
         .focused($moreMenuFocusedRow, equals: .audioOnly)
         #endif
         Divider()
@@ -432,27 +436,26 @@ extension PlayerView {
                 showMoreMenu = false
             } label: {
                 HStack {
-                    Label(
-                        store.settings.queueShuffleEnabled
-                            ? String(localized: "Shuffle Queue (On)", bundle: .module)
-                            : String(localized: "Shuffle Queue", bundle: .module),
-                        systemImage: AppSymbol.shuffle
-                    )
+                    Label {
+                        Text("Shuffle Queue", bundle: .module)
+                    } icon: {
+                        Image(systemName: AppSymbol.shuffle)
+                    }
                     Spacer()
                     if store.settings.queueShuffleEnabled {
                         Image(systemName: AppSymbol.checkmark)
                             .foregroundStyle(Color.accentColor)
+                            .accessibilityHidden(true)
                     }
                 }
                 .padding()
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .playerMenuRowButtonStyle()
             .foregroundStyle(.primary)
+            .accessibilityAddTraits(store.settings.queueShuffleEnabled ? .isSelected : [])
             .accessibilityIdentifier(AccessibilityID.playerMoreMenuQueueShuffleRow)
             #if os(tvOS)
-            .background(moreMenuFocusedRow == .queueShuffle ? Color.gray.opacity(0.35) : .clear)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
             .focused($moreMenuFocusedRow, equals: .queueShuffle)
             #endif
             #if !os(iOS)
@@ -487,7 +490,7 @@ extension PlayerView {
             .padding()
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .playerMenuRowButtonStyle()
         .foregroundStyle(.primary)
         .disabled(downloadService.state.isActive)
         .accessibilityIdentifier(AccessibilityID.playerMoreMenuDownloadButton)
@@ -515,12 +518,10 @@ extension PlayerView {
                 .padding()
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .playerMenuRowButtonStyle()
             .foregroundStyle(.primary)
             .accessibilityIdentifier(AccessibilityID.playerMoreMenuCaptionsRow)
             #if os(tvOS)
-            .background(moreMenuFocusedRow == .captions ? Color.gray.opacity(0.35) : .clear)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
             .focused($moreMenuFocusedRow, equals: .captions)
             #endif
             #if !os(iOS)
@@ -547,12 +548,10 @@ extension PlayerView {
                 .padding()
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .playerMenuRowButtonStyle()
             .foregroundStyle(.primary)
             .accessibilityIdentifier(AccessibilityID.playerMoreMenuAudioTrackRow)
             #if os(tvOS)
-            .background(moreMenuFocusedRow == .audioTrack ? Color.gray.opacity(0.35) : .clear)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
             .focused($moreMenuFocusedRow, equals: .audioTrack)
             #endif
             #if !os(iOS)
@@ -572,12 +571,10 @@ extension PlayerView {
                 .padding()
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .playerMenuRowButtonStyle()
         .foregroundStyle(.primary)
         .accessibilityIdentifier(AccessibilityID.playerMoreMenuDescriptionRow)
         #if os(tvOS)
-        .background(moreMenuFocusedRow == .description ? Color.gray.opacity(0.35) : .clear)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
         .focused($moreMenuFocusedRow, equals: .description)
         #endif
         #if !os(iOS)
@@ -594,12 +591,10 @@ extension PlayerView {
                 .padding()
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .playerMenuRowButtonStyle()
         .foregroundStyle(.primary)
         .accessibilityIdentifier(AccessibilityID.playerMoreMenuCommentsRow)
         #if os(tvOS)
-        .background(moreMenuFocusedRow == .comments ? Color.gray.opacity(0.35) : .clear)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
         .focused($moreMenuFocusedRow, equals: .comments)
         #endif
         #if !os(iOS)
@@ -618,18 +613,18 @@ extension PlayerView {
                 if vm.statsForNerdsVisible {
                     Image(systemName: AppSymbol.checkmark)
                         .foregroundStyle(Color.accentColor)
+                        .accessibilityHidden(true)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .playerMenuRowButtonStyle()
         .foregroundStyle(.primary)
+        .accessibilityAddTraits(vm.statsForNerdsVisible ? .isSelected : [])
         .accessibilityIdentifier(AccessibilityID.playerMoreMenuStatsForNerds)
         #if os(tvOS)
-        .background(moreMenuFocusedRow == .statsForNerds ? Color.gray.opacity(0.35) : .clear)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
         .focused($moreMenuFocusedRow, equals: .statsForNerds)
         #endif
         #if !os(iOS)
@@ -647,13 +642,25 @@ extension PlayerView {
                 .fontWeight(.semibold)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .playerMenuRowButtonStyle()
         .foregroundStyle(.primary)
         .accessibilityIdentifier(AccessibilityID.playerMoreMenuCancelButton)
+        #if os(macOS)
+        .keyboardShortcut(.cancelAction)
+        #endif
         #if os(tvOS)
-        .background(moreMenuFocusedRow == .cancel ? Color.gray.opacity(0.35) : .clear)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
         .focused($moreMenuFocusedRow, equals: .cancel)
+        #endif
+    }
+}
+
+extension View {
+    /// The More menu's row button style: plain, and on tvOS a high-contrast focus platter.
+    func playerMenuRowButtonStyle() -> some View {
+        #if os(tvOS)
+        buttonStyle(PlayerMenuRowButtonStyle())
+        #else
+        buttonStyle(.plain)
         #endif
     }
 }

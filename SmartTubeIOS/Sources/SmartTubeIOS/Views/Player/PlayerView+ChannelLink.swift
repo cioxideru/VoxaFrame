@@ -1,4 +1,3 @@
-#if !os(tvOS)
 import SmartTubeIOSCore
 import SwiftUI
 
@@ -34,34 +33,12 @@ extension PlayerView {
         #endif
     }
 
-    /// "Open Channel" row of the More menu with the channel avatar; hidden for videos without a channel.
+    /// The More menu's channel row (open the channel, subscribe or unsubscribe); hidden for videos without a channel.
     @ViewBuilder var moreMenuChannelRow: some View {
         if let cid = playingChannelId {
-            let row = Button(action: openPlayingChannel) {
-                HStack(spacing: VFSpace.s12) {
-                    PlayerMoreChannelAvatar(channelId: cid, api: vm.api)
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("Open Channel", bundle: .module)
-                        if let name = vm.channelVideo?.channelTitle, !name.isEmpty {
-                            Text(name)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
-                    }
-                    Spacer(minLength: 0)
-                    Image(systemName: AppSymbol.chevronForward)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .accessibilityHidden(true)
-                }
-                .frame(minHeight: VFTarget.touch)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(.primary)
-            .accessibilityHint(openChannelHint)
-            .accessibilityIdentifier(AccessibilityID.playerMoreMenuOpenChannel)
+            let row = PlayerChannelRow(
+                channelId: cid, title: vm.channelVideo?.channelTitle ?? "", api: vm.api,
+                isSignedIn: authService.isSignedIn, openChannelHint: openChannelHint, openChannel: openPlayingChannel)
             #if os(iOS)
             row.padding(.horizontal, VFSpace.s12)
             #else
@@ -84,46 +61,3 @@ extension PlaybackViewModel {
         return current
     }
 }
-
-/// Avatar URLs by channel id, kept for the session (including channels without one), so reopening the More
-/// menu does not repeat the request.
-@MainActor private enum ChannelAvatarCache {
-    static var urls: [String: URL?] = [:]
-}
-
-/// Channel avatar loaded via `fetchChannelThumbnailURL`; falls back to the person symbol.
-private struct PlayerMoreChannelAvatar: View {
-    let channelId: String
-    let api: InnerTubeAPI
-    @State private var url: URL?
-
-    var body: some View {
-        AsyncImage(url: url) { image in
-            image.resizable().scaledToFill()
-        } placeholder: {
-            Image(systemName: AppSymbol.personCircle)
-                .resizable()
-                .foregroundStyle(.tint)
-        }
-        .frame(width: VFTarget.pointer, height: VFTarget.pointer)
-        .clipShape(Circle())
-        .accessibilityHidden(true)
-        .task(id: channelId) {
-            if let cached = ChannelAvatarCache.urls[channelId] {
-                url = cached
-                return
-            }
-            url = nil
-            // Only a completed lookup is cached (a channel without a thumbnail included); failures retry.
-            do {
-                let fetched = try await api.fetchChannelThumbnailURL(channelId: channelId)
-                guard !Task.isCancelled else { return }
-                ChannelAvatarCache.urls[channelId] = .some(fetched)
-                url = fetched
-            } catch {
-                return
-            }
-        }
-    }
-}
-#endif
