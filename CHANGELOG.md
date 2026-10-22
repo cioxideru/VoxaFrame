@@ -6,9 +6,13 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Changed
+
+- Player transport controls stay centered independently of the bars. Time moves to the right above the lower timeline, with both bottom button groups aligned; mobile Up Next moves from More to the quick-access row after Offline. The left group uses icons only when labels do not fit (PLAN-0043).
+
 ### Fixed
 
-- iPhone and iPad player More menus offer Up Next, sharing the Mac inspector's remaining queue and recommendations. Selecting a video starts it and closes the panel. The More menu no longer repeats the video title and channel heading (PLAN-0042).
+- iPhone and iPad players offer Up Next, sharing the Mac inspector's remaining queue and recommendations. Selecting a video starts it and closes the panel. The More menu no longer repeats the video title and channel heading (PLAN-0042).
 
 ## [5.19] – 2026-10-21
 

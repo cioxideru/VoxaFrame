@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0043: Player controls placement](completed/player-controls-layout.md) — centered transport, aligned bottom groups and direct Up Next; compact icons, larger text and iPhone/iPad simulator checks passed.
+
 - [PLAN-0042: Up Next on iPhone and iPad](completed/player-up-next.md) — shared queue/recommendations panel, compact More menu; native checks, iOS/tvOS builds and eight simulator UI tests passed.
 
 - [PLAN-0041: One card menu on every screen](completed/unified-card-menu.md) — Shorts cards share the full video card menu and More button; Don't Like This Video asks first; focused UI tests passed.

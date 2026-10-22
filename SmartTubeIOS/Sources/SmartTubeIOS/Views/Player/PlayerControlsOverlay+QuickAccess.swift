@@ -76,6 +76,16 @@ extension PlayerControlsOverlay {
             }
 
             offlineQuickButton
+            #if os(iOS)
+            quickAccessButton(
+                systemImage: AppSymbol.queue,
+                label: String(localized: "Up next", bundle: .module),
+                accessibilityLabel: Text("Up next", bundle: .module),
+                accessibilityId: AccessibilityID.playerQuickUpNextButton
+            ) { showUpNextSheet = true }
+            .accessibilityLabel(Text("Up next", bundle: .module))
+            .playerOptionPanelTrigger(.upNext)
+            #endif
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityID.playerQuickAccessRow)
@@ -136,7 +146,7 @@ extension PlayerControlsOverlay {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(VFColor.onMedia)
                 .padding(.horizontal, VFSpace.s12)
-                .frame(minHeight: Self.quickAccessTarget)
+                .frame(minWidth: Self.quickAccessTarget, minHeight: Self.quickAccessTarget)
                 .vfGlass()
                 .contentShape(Capsule())
         }

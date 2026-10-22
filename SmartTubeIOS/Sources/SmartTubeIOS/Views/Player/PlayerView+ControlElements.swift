@@ -16,7 +16,7 @@ private let controlsLog = ViewModelLogger(category: "Player")
 // the Swift generic type tree depth in __swift5_typeref.
 //
 // iPhone, iPad and Mac (VF/Player, VF/Transport): top bar, then previous · back · play/pause · forward · next,
-// then the timeline, time and chapter row and the quick settings. Every glyph is `onMedia` on glass over the
+// then time and chapter above the timeline and the bottom actions. Every glyph is `onMedia` on glass over the
 // scrim, so it reads on any frame; an active toggle is inverted, not only tinted. tvOS keeps its own layout
 // because its remote navigation (`tvNextControl`) is built on those rows.
 
@@ -32,8 +32,8 @@ struct PlayerControlsOverlay: View {
     let pipController: AVPictureInPictureController?
     let isPiPActive: Bool
     @Binding var isLandscapeLocked: Bool
+    @Binding var showUpNextSheet: Bool
     @Environment(PlayerStateStore.self) private var playerState
-    @Environment(\.verticalSizeClass) private var verticalSizeClass
     var vm: PlaybackViewModel { playerState.vm }
     #else
     let vm: PlaybackViewModel
@@ -45,7 +45,7 @@ struct PlayerControlsOverlay: View {
     @Binding var offlineDownloadVideo: Video?
     /// The bottom bar's height, which the captions keep clear of.
     @Binding var bottomBarHeight: CGFloat
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .caption) var timelineLabelHeight: CGFloat = 28
     #endif
     #if os(tvOS)
     @Binding var highlightedControl: PlayerView.TVPlayerControl?
@@ -217,20 +217,21 @@ struct PlayerControlsOverlay: View {
     var body: some View {
         // The safe area is ignored by the caller so each bar's scrim reaches the edges; the bars keep their
         // content out of the notch and home indicator.
-        VStack(spacing: 0) {
-            topBar
-                .padding(.leading, safeAreaInsets.leading)
-                .padding(.trailing, safeAreaInsets.trailing)
-                .playerBarScrim(fadingDown: true)
-            Spacer(minLength: VFSpace.s8)
+        ZStack {
             transportRow
-            Spacer(minLength: VFSpace.s8)
-            bottomBar
-                .padding(.leading, safeAreaInsets.leading)
-                .padding(.trailing, safeAreaInsets.trailing)
-                .playerBarScrim(fadingDown: false)
-                // Captions sit above whatever height the bar has in this layout and text size.
-                .onGeometryChange(for: CGFloat.self, of: { $0.size.height }, action: { bottomBarHeight = $0 })
+            VStack(spacing: 0) {
+                topBar
+                    .padding(.leading, safeAreaInsets.leading)
+                    .padding(.trailing, safeAreaInsets.trailing)
+                    .playerBarScrim(fadingDown: true)
+                Spacer(minLength: VFSpace.s8)
+                bottomBar
+                    .padding(.leading, safeAreaInsets.leading)
+                    .padding(.trailing, safeAreaInsets.trailing)
+                    .playerBarScrim(fadingDown: false)
+                    // Captions sit above whatever height the bar has in this layout and text size.
+                    .onGeometryChange(for: CGFloat.self, of: { $0.size.height }, action: { bottomBarHeight = $0 })
+            }
         }
         // Controls always sit on dark media, whatever the app's appearance, so glass and fallbacks resolve dark.
         .environment(\.colorScheme, .dark)
@@ -418,48 +419,36 @@ extension PlayerControlsOverlay {
 
     // MARK: Bottom bar
 
-    /// Timeline, then time and buttons, then the setting pills. In a landscape iPhone the time, pills and buttons
-    /// share one row, so the bar leaves the picture (and the captions above it) as much room as it can. At
-    /// accessibility text sizes they keep two rows and the pills scroll sideways instead of being cut.
+    /// The chapter/time share the scrub-tooltip space; bottom actions stay aligned and collapse to icons to fit.
     private var bottomBar: some View {
         VStack(spacing: VFSpace.s8) {
-            currentChapterTitle
             progressBar
-            if isCompactHeight && !dynamicTypeSize.isAccessibilitySize {
-                HStack(spacing: VFSpace.s12) {
-                    timeLabel
-                    quickAccessButtons
-                    Spacer(minLength: VFSpace.s8)
-                    rowButtons
-                }
-                .padding(.horizontal, VFSpace.s20)
-            } else {
-                HStack(spacing: VFSpace.s8) {
-                    timeLabel
-                    Spacer(minLength: VFSpace.s8)
-                    rowButtons
-                }
-                .padding(.horizontal, VFSpace.s20)
-                if dynamicTypeSize.isAccessibilitySize {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        quickAccessButtons.padding(.horizontal, VFSpace.s20)
+                .overlay(alignment: .top) {
+                    if !vm.isScrubbing {
+                        HStack(alignment: .firstTextBaseline, spacing: VFSpace.s8) {
+                            currentChapterTitle
+                            Spacer(minLength: VFSpace.s8)
+                            timeLabel.padding(.trailing, VFSpace.s20)
+                        }
+                        .padding(.top, VFSpace.s4)
+                        .allowsHitTesting(false)
                     }
-                } else {
-                    quickAccessButtons
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, VFSpace.s20)
                 }
+            HStack(spacing: VFSpace.s12) {
+                ViewThatFits(in: .horizontal) {
+                    quickAccessButtons.fixedSize()
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        quickAccessButtons.labelStyle(.iconOnly)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier(AccessibilityID.playerQuickAccessScrollView)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                rowButtons.fixedSize()
             }
+            .padding(.horizontal, VFSpace.s20)
         }
         .padding(.bottom, max(safeAreaInsets.bottom, VFSpace.s16))
-    }
-
-    private var isCompactHeight: Bool {
-        #if os(iOS)
-        verticalSizeClass == .compact
-        #else
-        false
-        #endif
     }
 
     private var timeLabel: some View {

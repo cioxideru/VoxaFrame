@@ -63,8 +63,8 @@ extension PlayerControlsOverlay {
     var iosProgressBar: some View {
         // Wrap in an outer GeometryReader so the highPriorityGesture below can
         // reference the bar's width.  The gesture is placed on the full-height
-        // VStack (tooltip row + track row = 60 pt) so any touch in that area —
-        // including the 28 pt invisible tooltip strip above the visible bar — will
+        // VStack (tooltip row + track row) so any touch in that area —
+        // including the tooltip strip above the visible bar — will
         // activate the scrub drag.  Previously the gesture was only on the inner
         // 28 pt track ZStack, which meant touches on the empty tooltip row were
         // silently swallowed without triggering the seek.
@@ -103,7 +103,7 @@ extension PlayerControlsOverlay {
                         .position(x: clampedX, y: geo.size.height / 2)
                     }
                 }
-                .frame(height: 28)
+                .frame(height: timelineLabelHeight)
 
                 // Track: remaining in `onMediaTrack`, played in full `onMedia`, SponsorBlock segments in their category
                 // colour, chapter starts as gaps, and the knob, which grows while scrubbing.
@@ -138,7 +138,7 @@ extension PlayerControlsOverlay {
                 .modifier(TimelineAccessibility(vm: vm))
             }
             .contentShape(Rectangle())
-            // highPriorityGesture on the full VStack (tooltip + track, 60 pt total)
+            // highPriorityGesture on the full VStack (tooltip + track)
             // ensures the seek-bar drag beats any child-view tap gestures (e.g.
             // chapter-marker hit areas) and activates even when the touch lands on
             // the invisible tooltip strip above the visible progress bar.
@@ -152,7 +152,7 @@ extension PlayerControlsOverlay {
                     .onEnded { _ in vm.commitScrub() }
             )
         }
-        .frame(height: 60)
+        .frame(height: timelineLabelHeight + 4 + 28)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityID.playerProgressBar)
     }

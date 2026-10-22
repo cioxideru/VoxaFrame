@@ -6,7 +6,8 @@ enum AccessibilityID {
     static var playerHoldSpeedBadge: String { "player.holdSpeedBadge" }
     static var playerMoreMenuCancelButton: String { "player.moreMenu.cancel" }
     static var playerMoreMenuDescriptionRow: String { "player.moreMenu.descriptionRow" }
-    static var playerMoreMenuUpNextRow: String { "player.moreMenu.upNextRow" }
+    static var playerQuickUpNextButton: String { "player.quickAccess.upNext" }
+    static var playerQuickAccessScrollView: String { "player.quickAccess.scrollView" }
     static var playerUpNextPanel: String { "player.upNextPanel" }
     static var playerUpNextPanelCancel: String { "player.upNextPanel.cancel" }
     static func playerUpNextVideo(_ videoID: String, queueIndex: Int? = nil) -> String {

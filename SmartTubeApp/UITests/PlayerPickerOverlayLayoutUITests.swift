@@ -226,7 +226,10 @@ final class PlayerOptionPanelBoundsUITests: XCTestCase {
             let menu = element(AccessibilityID.playerMoreMenu)
             XCTAssertFalse(menu.staticTexts["preload-0"].exists, "More must not repeat the video title")
             XCTAssertFalse(menu.staticTexts["Local fixture"].exists, "More must not repeat the channel name")
-            openUpNextFromMore()
+            XCTAssertFalse(menu.buttons["Up next"].exists, "Up Next must move out of More")
+            app.buttons[AccessibilityID.playerMoreMenuCancelButton].firstMatch.tap()
+            assertDismissed(menu)
+            openUpNext()
             let panel = element(AccessibilityID.playerUpNextPanel)
             let next = app.buttons[AccessibilityID.playerUpNextVideo("preload-1")].firstMatch
             assertPanel(panel, firstChoice: next, in: app.frame)
@@ -245,8 +248,7 @@ final class PlayerOptionPanelBoundsUITests: XCTestCase {
             "--uitesting-inject-queue-video-ids=preload-0,preload-1,preload-1,preload-2",
             "--uitesting-inject-related-video-ids=preload-3",
         ])
-        openMoreMenu()
-        openUpNextFromMore()
+        openUpNext()
         let first = app.buttons[AccessibilityID.playerUpNextVideo("preload-1", queueIndex: 1)].firstMatch
         let second = app.buttons[AccessibilityID.playerUpNextVideo("preload-1", queueIndex: 2)].firstMatch
         XCTAssertTrue(first.waitForExistence(timeout: 5))
@@ -256,8 +258,7 @@ final class PlayerOptionPanelBoundsUITests: XCTestCase {
         second.tap()
         assertDismissed(element(AccessibilityID.playerUpNextPanel))
 
-        openMoreMenu()
-        openUpNextFromMore()
+        openUpNext()
         let remaining = app.buttons[AccessibilityID.playerUpNextVideo("preload-2", queueIndex: 3)].firstMatch
         XCTAssertTrue(remaining.waitForExistence(timeout: 5))
         XCTAssertFalse(first.exists)
@@ -270,8 +271,7 @@ final class PlayerOptionPanelBoundsUITests: XCTestCase {
         launch(playerArguments: [
             "--uitesting-deeplink-video=preload-0", "--uitesting-inject-related-video-ids=",
         ])
-        openMoreMenu()
-        openUpNextFromMore()
+        openUpNext()
         let panel = element(AccessibilityID.playerUpNextPanel)
         XCTAssertTrue(panel.staticTexts["Nothing up next."].waitForExistence(timeout: 10))
         let cancel = app.buttons[AccessibilityID.playerUpNextPanelCancel].firstMatch
@@ -282,14 +282,88 @@ final class PlayerOptionPanelBoundsUITests: XCTestCase {
         XCTAssertTrue(app.buttons[AccessibilityID.playerMoreMenuCancelButton].firstMatch.isHittable)
     }
 
-    private func openUpNextFromMore() {
-        let row = app.buttons[AccessibilityID.playerMoreMenuUpNextRow].firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 5))
-        let scroll = app.scrollViews[AccessibilityID.playerMoreMenuScrollView].firstMatch
-        for _ in 0..<6 where !row.isHittable { scroll.swipeUp() }
-        assertReady(row)
-        row.tap()
-        assertDismissed(element(AccessibilityID.playerMoreMenu))
+    func testPlayerControlsMatchLayoutInBothOrientations() {
+        launch(playerArguments: [
+            "--uitesting-deeplink-video=preload-0",
+            "--uitesting-inject-related-video-ids=preload-1,preload-2",
+        ])
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
+            rotate(to: orientation)
+            let play = app.buttons[AccessibilityID.playerPlayPauseButton].firstMatch
+            XCTAssertTrue(play.waitForExistence(timeout: 20))
+            assertReady(play)
+            let window = app.frame
+            let centered = XCTNSPredicateExpectation(
+                predicate: NSPredicate { _, _ in
+                    abs(play.frame.midX - window.midX) < 2 && abs(play.frame.midY - window.midY) < 2
+                }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [centered], timeout: 5), .completed)
+
+            let timeline = element(AccessibilityID.playerProgressBar)
+            let duration = app.staticTexts[AccessibilityID.playerDurationLabel].firstMatch
+            XCTAssertLessThan(duration.frame.maxY, timeline.frame.midY, "Time must sit above the track")
+            XCTAssertEqual(duration.frame.maxX, timeline.frame.maxX - 20, accuracy: 2)
+            let speed = app.buttons[AccessibilityID.playerQuickSpeedButton].firstMatch
+            let audioOnly = app.buttons[AccessibilityID.playerAudioOnlyButton].firstMatch
+            XCTAssertEqual(speed.frame.midY, audioOnly.frame.midY, accuracy: 2, "Bottom groups must align")
+            XCTAssertLessThan(timeline.frame.maxY, speed.frame.minY)
+            XCTAssertLessThan(play.frame.maxY, timeline.frame.minY, "The timeline must clear the centered controls")
+
+            revealUpNext()
+            let offline = app.buttons[AccessibilityID.playerQuickOfflineButton].firstMatch
+            let upNext = app.buttons[AccessibilityID.playerQuickUpNextButton].firstMatch
+            XCTAssertGreaterThan(upNext.frame.minX, offline.frame.maxX, "Up Next follows Offline")
+            XCTAssertEqual(upNext.frame.midY, audioOnly.frame.midY, accuracy: 2)
+            XCTAssertTrue(window.contains(upNext.frame))
+            if UIDevice.current.userInterfaceIdiom == .phone && !orientation.isLandscape {
+                for identifier in [
+                    AccessibilityID.playerQuickSpeedButton, AccessibilityID.playerQuickQualityButton,
+                    AccessibilityID.playerQuickOfflineButton, AccessibilityID.playerQuickUpNextButton,
+                ] {
+                    let button = app.buttons[identifier].firstMatch
+                    XCTAssertLessThanOrEqual(button.frame.width, button.frame.height + 4, "Narrow controls use icons")
+                }
+            }
+            let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            screenshot.name = "Player layout - \(orientation.isLandscape ? "landscape" : "portrait")"
+            screenshot.lifetime = .keepAlways
+            add(screenshot)
+
+            upNext.tap()
+            let panel = element(AccessibilityID.playerUpNextPanel)
+            let cancel = app.buttons[AccessibilityID.playerUpNextPanelCancel].firstMatch
+            assertPanel(panel, firstChoice: cancel, in: window)
+            cancel.tap()
+            assertDismissed(panel)
+        }
+    }
+
+    func testLargeTextTimerStaysAboveTimeline() {
+        launch(playerArguments: [
+            "--uitesting-deeplink-video=preload-0",
+            "-UIPreferredContentSizeCategoryName", UIContentSizeCategory.accessibilityExtraExtraExtraLarge.rawValue,
+        ])
+        let duration = app.staticTexts[AccessibilityID.playerDurationLabel].firstMatch
+        XCTAssertTrue(duration.waitForExistence(timeout: 20))
+        XCTAssertGreaterThan(duration.frame.height, 28, "The check must use enlarged text")
+        let timeline = element(AccessibilityID.playerProgressBar)
+        XCTAssertLessThan(duration.frame.maxY, timeline.frame.maxY - 28, "Large time text must clear the track")
+        revealUpNext()
+    }
+
+    private func revealUpNext() {
+        let button = app.buttons[AccessibilityID.playerQuickUpNextButton].firstMatch
+        XCTAssertTrue(button.waitForExistence(timeout: 20))
+        let scroll = app.scrollViews[AccessibilityID.playerQuickAccessScrollView].firstMatch
+        if scroll.exists {
+            for _ in 0..<6 where !button.isHittable || !scroll.frame.contains(button.frame) { scroll.swipeLeft() }
+        }
+        assertReady(button)
+    }
+
+    private func openUpNext() {
+        revealUpNext()
+        app.buttons[AccessibilityID.playerQuickUpNextButton].firstMatch.tap()
         XCTAssertTrue(element(AccessibilityID.playerUpNextPanel).waitForExistence(timeout: 5))
     }
 

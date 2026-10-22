@@ -69,7 +69,7 @@ extension PlayerView {
             .playerOptionPanel(isPresented: $showMoreMenu, trigger: .more, onDismiss: moreMenuDidDismiss) {
                 moreMenuPanel
             }
-            .playerOptionPanel(isPresented: $showUpNextSheet, trigger: nil) { upNextPanel }
+            .playerOptionPanel(isPresented: $showUpNextSheet, trigger: .upNext) { upNextPanel }
         #else
         playerContentBase
         #endif

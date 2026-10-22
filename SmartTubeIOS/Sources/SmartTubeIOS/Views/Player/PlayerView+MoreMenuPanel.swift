@@ -4,7 +4,7 @@ import SwiftUI
 enum PlayerMoreMenuDestination {
     case offline(Video), sleepTimer, captions, audioTrack, description, comments
     #if os(iOS)
-    case share(URL), upNext
+    case share(URL)
     #endif
 }
 
@@ -32,7 +32,6 @@ extension PlayerView {
             loadComments()
         #if os(iOS)
         case .share(let url): presentShareSheet(url: url)
-        case .upNext: showUpNextSheet = true
         #endif
         }
     }
@@ -64,7 +63,6 @@ extension PlayerView {
                         moreMenuAudioTrackRow
                     }
                     moreMenuGroup {
-                        moreMenuUpNextRow
                         moreMenuDescriptionRow
                         moreMenuCommentsRow
                         moreMenuStatsForNerdsRow
@@ -78,24 +76,6 @@ extension PlayerView {
             .background(VFColor.surface)
         }
         .accessibilityIdentifier(AccessibilityID.playerMoreMenu)
-    }
-
-    private var moreMenuUpNextRow: some View {
-        Button {
-            openMoreMenuDestination(.upNext)
-        } label: {
-            Label {
-                Text("Up next", bundle: .module)
-            } icon: {
-                Image(systemName: AppSymbol.queue)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-            .contentShape(Rectangle())
-        }
-        .playerMenuRowButtonStyle()
-        .foregroundStyle(.primary)
-        .accessibilityIdentifier(AccessibilityID.playerMoreMenuUpNextRow)
     }
 
     private func moreMenuGroup<Content: View>(@ViewBuilder content: () -> Content) -> some View {

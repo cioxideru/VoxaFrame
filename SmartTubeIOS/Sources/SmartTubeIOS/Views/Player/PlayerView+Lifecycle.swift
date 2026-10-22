@@ -550,6 +550,7 @@ extension PlayerView {
             pipController: playerState.pipController,
             isPiPActive: playerState.isPiPActive,
             isLandscapeLocked: $isLandscapeLocked,
+            showUpNextSheet: $showUpNextSheet,
             showQualityPicker: $showQualityPicker,
             showSpeedPicker: $showSpeedPicker,
             showAudioTrackPicker: $showAudioTrackPicker,

@@ -210,7 +210,7 @@ private struct OptionPanelChrome: ViewModifier {
 /// The control a popover points at. Panels opened from the More menu, or whose own button is not shown, point
 /// at the More button.
 enum PlayerOptionPanelTrigger: Hashable {
-    case speed, quality, audio, sleepTimer, more
+    case speed, quality, audio, sleepTimer, upNext, more
 }
 
 /// Where each trigger is, collected from the controls overlay up to the view that presents the panels.
