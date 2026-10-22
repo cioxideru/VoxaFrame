@@ -69,6 +69,7 @@ extension PlayerView {
             .playerOptionPanel(isPresented: $showMoreMenu, trigger: .more, onDismiss: moreMenuDidDismiss) {
                 moreMenuPanel
             }
+            .playerOptionPanel(isPresented: $showUpNextSheet, trigger: nil) { upNextPanel }
         #else
         playerContentBase
         #endif
@@ -79,7 +80,7 @@ extension PlayerView {
             showSpeedPicker || showQualityPicker || showCaptionPicker || showAudioTrackPicker || showSleepTimerPicker
             || showDescriptionSheet || showCommentsSheet
         #if os(iOS)
-        return pickerOpen || showMoreMenu || moreMenuDestination != nil
+        return pickerOpen || showMoreMenu || showUpNextSheet || moreMenuDestination != nil
         #else
         return pickerOpen
         #endif
@@ -97,6 +98,7 @@ extension PlayerView {
         showSleepTimerPicker = false
         showDescriptionSheet = false
         showCommentsSheet = false
+        showUpNextSheet = false
     }
     #endif
 

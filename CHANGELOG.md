@@ -6,6 +6,10 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Fixed
+
+- iPhone and iPad player More menus offer Up Next, sharing the Mac inspector's remaining queue and recommendations. Selecting a video starts it and closes the panel. The More menu no longer repeats the video title and channel heading (PLAN-0042).
+
 ## [5.19] – 2026-10-21
 
 VoxaFrame 5.19 (41). Source release; no signed binaries are attached.

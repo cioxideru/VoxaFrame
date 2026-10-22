@@ -7,24 +7,6 @@ enum PlayerInspectorTab: Hashable {
     case upNext, description, comments
 }
 
-/// What the Up next list depends on: the playing video and, for a Current Queue item, its position,
-/// so consecutive duplicates ([A, A, B]) still refresh. Mirrors the queue check in `playNext()`.
-struct UpNextSource: Hashable {
-    let videoID: String?
-    let queueIndex: Int?
-
-    init(_ video: Video?) {
-        videoID = video?.id
-        queueIndex = video?.playlistId == CurrentQueueStore.playlistID ? video?.playlistIndex : nil
-    }
-
-    /// The queue items `playNext()` walks after this position; empty outside the queue.
-    func remainingQueue(in store: CurrentQueueStore = .shared) async -> [Video] {
-        guard let queueIndex else { return [] }
-        return await store.remainingVideos(after: queueIndex)
-    }
-}
-
 /// Visibility of the focused window's player inspector; set by `PlayerView`,
 /// read by the View menu item in `MacWindowCommands`, so menu and toolbar share one state.
 private struct PlayerInspectorVisibleKey: FocusedValueKey {
@@ -107,7 +89,7 @@ extension PlayerView {
             Divider()
             Group {
                 switch inspectorTab {
-                case .upNext: ScrollView { upNextList }
+                case .upNext: PlayerUpNextList(vm: vm) { vm.load(video: $0) }
                 case .description: ScrollView { descriptionContent }
                 case .comments:
                     // Never show another video's list while this one's request is pending.
@@ -126,63 +108,7 @@ extension PlayerView {
         .onChange(of: inspectorTab == .comments ? activeVideoID : nil, initial: true) { _, videoID in
             if let videoID { vm.comments.load(videoId: videoID) }
         }
-        // Same order as `playNext()`: the rest of the Current Queue, otherwise suggestions.
-        .task(id: UpNextSource(vm.currentVideo)) {
-            let queue = await UpNextSource(vm.currentVideo).remainingQueue()
-            if !Task.isCancelled { upNextQueue = queue }
-        }
-    }
-
-    @ViewBuilder private var upNextList: some View {
-        let videos = upNextQueue.isEmpty ? vm.relatedVideos : upNextQueue
-        if videos.isEmpty {
-            if vm.isLoading {
-                ProgressView().padding(VFSpace.s32)
-            } else {
-                Text("Nothing up next.", bundle: .module)
-                    .foregroundStyle(.secondary)
-                    .padding(VFSpace.s32)
-            }
-        } else {
-            LazyVStack(alignment: .leading, spacing: VFSpace.s8) {
-                ForEach(Array(videos.enumerated()), id: \.offset) { _, item in
-                    Button {
-                        vm.load(video: item)
-                    } label: {
-                        UpNextRow(video: item)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding()
-        }
     }
 }
 
-private struct UpNextRow: View {
-    let video: Video
-
-    var body: some View {
-        HStack(alignment: .top, spacing: VFSpace.s8) {
-            ThumbnailFillView(primaryURL: video.thumbnailURL)
-                .frame(width: 120, height: 120 * 9 / 16)
-                .clipShape(RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous))
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: VFSpace.s4) {
-                Text(video.title)
-                    .font(.callout)
-                    .lineLimit(2)
-                if !video.channelTitle.isEmpty {
-                    Text(video.channelTitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .frame(minHeight: VFTarget.pointer)
-        .contentShape(Rectangle())
-    }
-}
 #endif

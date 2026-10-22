@@ -129,8 +129,8 @@ struct CommentsControllerTests {
 
 // MARK: - Up next follows the queue position
 
-#if os(macOS)
-@Suite("Mac inspector Up next")
+#if os(iOS) || os(macOS)
+@Suite("Player Up next")
 struct UpNextSourceTests {
     private let videoA = Video(id: "aaa11111111", title: "A", channelTitle: "")
     private let videoB = Video(id: "bbb22222222", title: "B", channelTitle: "")

@@ -33,8 +33,6 @@ public struct PlayerView: View {
     /// Windowed preference, retained while a narrow window or full screen temporarily hides the inspector.
     @State var showInspector = true
     @State var inspectorTab = PlayerInspectorTab.upNext
-    /// Remaining Current Queue items after the playing one; empty when the video is not from the queue.
-    @State var upNextQueue: [Video] = []
     #endif
     @State var showSpeedPicker = false
     @State var showQualityPicker = false
@@ -61,6 +59,7 @@ public struct PlayerView: View {
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     #if os(iOS)
     @State var moreMenuDestination: PlayerMoreMenuDestination?
+    @State var showUpNextSheet = false
     @State var isLandscapeLocked = false
     var playerLayer: AVPlayerLayer { playerState.playerHostView.playerLayer }
     @Environment(\.horizontalSizeClass) var horizontalSizeClass

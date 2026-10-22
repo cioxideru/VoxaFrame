@@ -223,6 +223,7 @@ extension PlayerView {
                     isEnabled: !vm.isScrubbing && !isTransitioning && !vm.hasVisibleEndCards
                         && !showMoreMenu && !showQualityPicker && !showSpeedPicker && !showCaptionPicker
                         && !showAudioTrackPicker && !showSleepTimerPicker && !showDescriptionSheet && !showCommentsSheet
+                        && !showUpNextSheet
                 )
                 .ignoresSafeArea()
                 .accessibilityHidden(true)

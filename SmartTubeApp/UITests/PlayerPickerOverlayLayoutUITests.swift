@@ -214,7 +214,88 @@ final class PlayerOptionPanelBoundsUITests: XCTestCase {
         }
     }
 
-    private func launch(shorts: Bool = false) {
+    func testUpNextRecommendationsPlayAndMoreOmitsRepeatedHeading() {
+        launch(playerArguments: [
+            "--uitesting-deeplink-video=preload-0",
+            "--uitesting-inject-related-video-ids=preload-1,preload-2",
+        ])
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        for orientation in isPad ? [UIDeviceOrientation.portrait, .landscapeLeft] : [.portrait] {
+            rotate(to: orientation)
+            openMoreMenu()
+            let menu = element(AccessibilityID.playerMoreMenu)
+            XCTAssertFalse(menu.staticTexts["preload-0"].exists, "More must not repeat the video title")
+            XCTAssertFalse(menu.staticTexts["Local fixture"].exists, "More must not repeat the channel name")
+            openUpNextFromMore()
+            let panel = element(AccessibilityID.playerUpNextPanel)
+            let next = app.buttons[AccessibilityID.playerUpNextVideo("preload-1")].firstMatch
+            assertPanel(panel, firstChoice: next, in: app.frame)
+            XCTAssertTrue(app.buttons[AccessibilityID.playerUpNextVideo("preload-2")].exists)
+            next.tap()
+            assertDismissed(panel)
+            let title = element(AccessibilityID.playerTitleLabel)
+            let selected = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "label == %@", "preload-1"), object: title)
+            XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 10), .completed)
+        }
+    }
+
+    func testUpNextQueueKeepsDuplicatePositionsAndRefreshesAfterSelection() {
+        launch(playerArguments: [
+            "--uitesting-inject-queue-video-ids=preload-0,preload-1,preload-1,preload-2",
+            "--uitesting-inject-related-video-ids=preload-3",
+        ])
+        openMoreMenu()
+        openUpNextFromMore()
+        let first = app.buttons[AccessibilityID.playerUpNextVideo("preload-1", queueIndex: 1)].firstMatch
+        let second = app.buttons[AccessibilityID.playerUpNextVideo("preload-1", queueIndex: 2)].firstMatch
+        XCTAssertTrue(first.waitForExistence(timeout: 5))
+        XCTAssertTrue(second.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons[AccessibilityID.playerUpNextVideo("preload-3")].exists)
+        assertReady(second)
+        second.tap()
+        assertDismissed(element(AccessibilityID.playerUpNextPanel))
+
+        openMoreMenu()
+        openUpNextFromMore()
+        let remaining = app.buttons[AccessibilityID.playerUpNextVideo("preload-2", queueIndex: 3)].firstMatch
+        XCTAssertTrue(remaining.waitForExistence(timeout: 5))
+        XCTAssertFalse(first.exists)
+        XCTAssertFalse(second.exists)
+        app.buttons[AccessibilityID.playerUpNextPanelCancel].firstMatch.tap()
+        assertDismissed(element(AccessibilityID.playerUpNextPanel))
+    }
+
+    func testUpNextEmptyStateAndCancel() {
+        launch(playerArguments: [
+            "--uitesting-deeplink-video=preload-0", "--uitesting-inject-related-video-ids=",
+        ])
+        openMoreMenu()
+        openUpNextFromMore()
+        let panel = element(AccessibilityID.playerUpNextPanel)
+        XCTAssertTrue(panel.staticTexts["Nothing up next."].waitForExistence(timeout: 10))
+        let cancel = app.buttons[AccessibilityID.playerUpNextPanelCancel].firstMatch
+        assertPanel(panel, firstChoice: cancel, in: app.frame)
+        cancel.tap()
+        assertDismissed(panel)
+        openMoreMenu()
+        XCTAssertTrue(app.buttons[AccessibilityID.playerMoreMenuCancelButton].firstMatch.isHittable)
+    }
+
+    private func openUpNextFromMore() {
+        let row = app.buttons[AccessibilityID.playerMoreMenuUpNextRow].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        let scroll = app.scrollViews[AccessibilityID.playerMoreMenuScrollView].firstMatch
+        for _ in 0..<6 where !row.isHittable { scroll.swipeUp() }
+        assertReady(row)
+        row.tap()
+        assertDismissed(element(AccessibilityID.playerMoreMenu))
+        XCTAssertTrue(element(AccessibilityID.playerUpNextPanel).waitForExistence(timeout: 5))
+    }
+
+    private func launch(
+        shorts: Bool = false, playerArguments: [String] = ["--uitesting-deeplink-video=preload-0"]
+    ) {
         app.launchArguments = [
             "--uitesting", "--uitesting-reset-settings", "--uitesting-sign-out",
             "--uitesting-disable-sponsorblock", "--uitesting-show-controls",
@@ -223,7 +304,7 @@ final class PlayerOptionPanelBoundsUITests: XCTestCase {
         if shorts {
             app.launchArguments += ["--uitesting-shorts", "--uitesting-shorts-ids=preload-0,preload-1"]
         } else {
-            app.launchArguments.append("--uitesting-deeplink-video=preload-0")
+            app.launchArguments += playerArguments
         }
         app.launchEnvironment["SHORTS_TEST_MEDIA_URL"] = mediaURL
         app.launchEnvironment["OFFLINE_TEST_MEDIA_URL"] = mediaURL

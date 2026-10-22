@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0042: Up Next on iPhone and iPad](completed/player-up-next.md) — shared queue/recommendations panel, compact More menu; native checks, iOS/tvOS builds and eight simulator UI tests passed.
+
 - [PLAN-0041: One card menu on every screen](completed/unified-card-menu.md) — Shorts cards share the full video card menu and More button; Don't Like This Video asks first; focused UI tests passed.
 
 - [PLAN-0040: Channel subscription in card menus](completed/card-channel-subscription.md) — avatar-only player channel row; Go to Channel and subscription status in video and Shorts card menus; checks and focused UI tests passed.

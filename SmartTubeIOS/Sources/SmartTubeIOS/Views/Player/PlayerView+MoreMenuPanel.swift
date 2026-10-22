@@ -4,7 +4,7 @@ import SwiftUI
 enum PlayerMoreMenuDestination {
     case offline(Video), sleepTimer, captions, audioTrack, description, comments
     #if os(iOS)
-    case share(URL)
+    case share(URL), upNext
     #endif
 }
 
@@ -32,6 +32,7 @@ extension PlayerView {
             loadComments()
         #if os(iOS)
         case .share(let url): presentShareSheet(url: url)
+        case .upNext: showUpNextSheet = true
         #endif
         }
     }
@@ -44,26 +45,12 @@ extension PlayerView {
     }
 
     var moreMenuPanel: some View {
-        let currentVideo = vm.playerInfo?.video ?? video
-        return PlayerOptionPanel(
+        PlayerOptionPanel(
             title: Text("More", bundle: .module), isPresented: $showMoreMenu,
             cancelAccessibilityIdentifier: AccessibilityID.playerMoreMenuCancelButton
         ) {
             ScrollView {
                 VStack(spacing: VFSpace.s12) {
-                    VStack(spacing: VFSpace.s4) {
-                        OfflineSavedTitle(title: currentVideo.title, videoID: currentVideo.id, spacing: VFSpace.s8)
-                            .font(.headline)
-                        if !currentVideo.channelTitle.isEmpty {
-                            Text(currentVideo.channelTitle)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, VFSpace.s8)
-
                     moreMenuGroup { moreMenuChannelRow }
                     moreMenuGroup {
                         moreMenuLikeDislikeRow
@@ -77,6 +64,7 @@ extension PlayerView {
                         moreMenuAudioTrackRow
                     }
                     moreMenuGroup {
+                        moreMenuUpNextRow
                         moreMenuDescriptionRow
                         moreMenuCommentsRow
                         moreMenuStatsForNerdsRow
@@ -90,6 +78,24 @@ extension PlayerView {
             .background(VFColor.surface)
         }
         .accessibilityIdentifier(AccessibilityID.playerMoreMenu)
+    }
+
+    private var moreMenuUpNextRow: some View {
+        Button {
+            openMoreMenuDestination(.upNext)
+        } label: {
+            Label {
+                Text("Up next", bundle: .module)
+            } icon: {
+                Image(systemName: AppSymbol.queue)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .contentShape(Rectangle())
+        }
+        .playerMenuRowButtonStyle()
+        .foregroundStyle(.primary)
+        .accessibilityIdentifier(AccessibilityID.playerMoreMenuUpNextRow)
     }
 
     private func moreMenuGroup<Content: View>(@ViewBuilder content: () -> Content) -> some View {

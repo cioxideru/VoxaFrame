@@ -2,6 +2,23 @@ import SmartTubeIOSCore
 import SwiftUI
 
 extension PlayerView {
+    #if os(iOS)
+    var upNextPanel: some View {
+        PlayerOptionPanel(
+            title: Text("Up next", bundle: .module), isPresented: $showUpNextSheet,
+            cancelAccessibilityIdentifier: AccessibilityID.playerUpNextPanelCancel,
+            preferredWidth: VFColumn.readableMaximum
+        ) {
+            PlayerUpNextList(vm: vm) { item in
+                vm.load(video: item)
+                showUpNextSheet = false
+            }
+            .background(VFColor.surface)
+        }
+        .accessibilityIdentifier(AccessibilityID.playerUpNextPanel)
+    }
+    #endif
+
     // MARK: - Description panel
 
     /// Same container and header as the More menu; see `playerOptionPanel`.
