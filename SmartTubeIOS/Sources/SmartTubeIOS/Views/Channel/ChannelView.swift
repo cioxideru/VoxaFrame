@@ -45,10 +45,14 @@ public struct ChannelView: View {
             }
         }
         .navigationTitle(vm.channel?.title ?? "Channel")
-        .task(id: auth.accessToken) {
+        .task(id: auth.sessionState) {
             await api.setAuthToken(auth.accessToken)
-            vm.load(channelId: channelId, signedIn: auth.isSignedIn)
+            await vm.load(
+                channelId: channelId,
+                auth: ChannelViewModel.AuthState(
+                    sessionID: auth.sessionGeneration, signedIn: auth.isSignedIn, accessToken: auth.accessToken))
         }
+        .onDisappear { vm.screenDidDisappear() }
         #if !os(iOS) && !os(macOS)
         .fullScreenCover(item: $selectedVideo) { video in
             PlayerView(video: video, api: api)

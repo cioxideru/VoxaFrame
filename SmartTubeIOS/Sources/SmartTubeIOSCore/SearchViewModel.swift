@@ -270,6 +270,7 @@ public final class ChannelViewModel {
     private var signedIn = false
     private var loadTask: Task<Void, Never>?
     private var nextPageToken: String?
+    private var lastAuthLoad: (channelId: String, auth: AuthState)?
     private var hideObserverTasks: [Task<Void, Never>] = []
 
     public init(
@@ -289,6 +290,46 @@ public final class ChannelViewModel {
     public func refresh(channelId: String, signedIn: Bool) async {
         load(channelId: channelId, signedIn: signedIn)
         await loadTask?.value
+    }
+
+    public struct AuthState: Equatable, Sendable {
+        public let sessionID: Int
+        public let signedIn: Bool
+        public let accessToken: String?
+
+        public init(sessionID: Int, signedIn: Bool, accessToken: String?) {
+            self.sessionID = sessionID
+            self.signedIn = signedIn
+            self.accessToken = accessToken
+        }
+
+        /// A new access token for the same signed-in session.
+        func isTokenRefresh(of old: AuthState) -> Bool {
+            sessionID == old.sessionID && signedIn == old.signedIn && accessToken != nil
+                && old.accessToken != nil && accessToken != old.accessToken
+        }
+    }
+
+    /// Loads the page for the given account state. A token refresh within the same session, while
+    /// the page stays on screen, keeps a fully loaded page: its videos, continuation and
+    /// subscription state stay valid.
+    public func load(channelId: String, auth: AuthState) async {
+        // The page left the screen while its caller was suspended: load nothing and keep the
+        // state `screenDidDisappear()` cleared, so the next appearance loads the page.
+        guard !Task.isCancelled else { return }
+        let previous = lastAuthLoad
+        lastAuthLoad = (channelId, auth)
+        if let previous, previous.channelId == channelId, auth.isTokenRefresh(of: previous.auth),
+            isSubscriptionLoaded, error == nil
+        {
+            return
+        }
+        await refresh(channelId: channelId, signedIn: auth.signedIn)
+    }
+
+    /// The page left the screen: its next appearance loads it again, whatever the token is.
+    public func screenDidDisappear() {
+        lastAuthLoad = nil
     }
 
     func loadAsync(channelId: String, signedIn: Bool = false) async {

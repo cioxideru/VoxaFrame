@@ -195,6 +195,9 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   launch, longer sessions and cold/warm tap-to-play using the same account and network.
   Investigate the audio-session/priority-inversion leads if they recur in the slow scenario.
   The targeted fixes and short device checks do not prove the whole-app report resolved.
+- [PLAN-0044](exec-plans/completed/app-performance-candidates.md) fixed redundant settings saves and
+  channel-page reloads on token refresh; Home feed preparation and the widget write were measured
+  (milliseconds, not per frame) and left unchanged. No device profile; the whole-app report stays open.
 
 ## OQ-0014 — Firebase removal: Xcode project and App Store follow-up
 
@@ -437,3 +440,13 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   (live feed, stale `home.shortsRow` lookup) and the `MixedFeedLayoutUITests` history fixture test fail on master.
 - Evidence gaps: every HIG finding and fix was judged from source; nothing was rendered for contrast, Dynamic Type
   at accessibility sizes, tvOS focus or the macOS menu bar. The macOS app target is not built by the scripts.
+
+## OQ-0021 — iCloud sync disabled after launch
+
+- Status: open; owner: settings / sync maintainer; basis: [PLAN-0044](exec-plans/completed/app-performance-candidates.md).
+- The app entry points (`SmartTubeApp/Sources/AppEntry.swift`, tvOS `Smart_TubeApp.swift`) show `RootView` and never
+  set `iCloudSyncManager.shared.syncEnabled` at launch; only `SettingsStore.save()` does. Sync therefore stays off
+  until the user changes any setting. The package's unused `SmartTubeApp` scene sets it and starts the listener.
+  Found by reading during PLAN-0044; not reproduced on a device.
+- Next step: set the flag and start the listener from the real launch path, with a test that a fresh store enables
+  sync without a save.

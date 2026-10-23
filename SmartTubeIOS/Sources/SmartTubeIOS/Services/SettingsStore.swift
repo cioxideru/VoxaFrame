@@ -27,8 +27,11 @@ public final class SettingsStore {
 
     private static let key = "smarttube_app_settings"
 
-    public init() {
-        if let data = UserDefaults.standard.data(forKey: Self.key),
+    @ObservationIgnored private let defaults: UserDefaults
+
+    public init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        if let data = defaults.data(forKey: Self.key),
             let decoded = try? JSONDecoder().decode(AppSettings.self, from: data)
         {
             self.settings = decoded
@@ -63,9 +66,17 @@ public final class SettingsStore {
         #endif
     }
 
+    /// Applies several changes with one save: every `settings.x = …` assignment
+    /// encodes and writes the whole struct on the main actor.
+    public func update(_ change: (inout AppSettings) -> Void) {
+        var updated = settings
+        change(&updated)
+        settings = updated
+    }
+
     private func save() {
         if let data = try? JSONEncoder().encode(settings) {
-            UserDefaults.standard.set(data, forKey: Self.key)
+            defaults.set(data, forKey: Self.key)
         }
         iCloudSyncManager.shared.syncEnabled = settings.iCloudSyncEnabled
     }

@@ -172,9 +172,11 @@ public struct SettingsView: View {
             Picker(
                 selection: Binding(
                     get: { store.settings.preferredQuality },
-                    set: {
-                        store.settings.preferredQuality = $0
-                        store.settings.lastVideoQuality = nil
+                    set: { quality in
+                        store.update {
+                            $0.preferredQuality = quality
+                            $0.lastVideoQuality = nil
+                        }
                     }
                 )
             ) {
@@ -346,21 +348,28 @@ extension SettingsView {
 
     // MARK: - UI
 
-    private enum ThumbnailStyle: Hashable {
+    /// UI-only view over the two independent `compactThumbnails` / `highResThumbnails` flags.
+    enum ThumbnailStyle: Hashable {
         case standard, highResolution, compact
+
+        init(_ settings: AppSettings) {
+            if settings.compactThumbnails {
+                self = .compact
+            } else {
+                self = settings.highResThumbnails ? .highResolution : .standard
+            }
+        }
+
+        func apply(to settings: inout AppSettings) {
+            settings.compactThumbnails = self == .compact
+            settings.highResThumbnails = self == .highResolution
+        }
     }
 
-    /// UI-only view over the two independent `compactThumbnails` / `highResThumbnails` flags.
     private var thumbnailStyle: Binding<ThumbnailStyle> {
         Binding(
-            get: {
-                if store.settings.compactThumbnails { return .compact }
-                return store.settings.highResThumbnails ? .highResolution : .standard
-            },
-            set: { style in
-                store.settings.compactThumbnails = style == .compact
-                store.settings.highResThumbnails = style == .highResolution
-            }
+            get: { ThumbnailStyle(store.settings) },
+            set: { style in store.update { style.apply(to: &$0) } }
         )
     }
 

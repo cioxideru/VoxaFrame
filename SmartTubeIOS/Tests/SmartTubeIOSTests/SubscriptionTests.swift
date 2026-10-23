@@ -302,6 +302,101 @@ struct SubscriptionStateTests {
         #expect(!mock.calls.contains { $0.method == "setSubscribed" })
     }
 
+    @Test("An access-token refresh in the same session keeps the loaded channel page")
+    func tokenRefreshKeepsPage() async {
+        let mock = MockInnerTubeAPI()
+        let channel = Channel(id: "UCtarget", title: "Target")
+        mock.channelResult = (channel, VideoGroup(videos: [], nextPageToken: "page-2"))
+        mock.channelsResult = [channel]
+        let vm = ChannelViewModel(api: mock)
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-a"))
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-b"))
+        #expect(mock.calls.filter { $0.method == "fetchChannel" }.count == 1)
+        #expect(mock.calls.filter { $0.method == "fetchSubscribedChannels" }.count == 1)
+        #expect(vm.channel?.isSubscribed == true)
+        #expect(vm.isSubscriptionLoaded)
+    }
+
+    @Test("Returning to the channel page with a new token loads the page")
+    func returnWithNewTokenReloadsPage() async {
+        let mock = MockInnerTubeAPI()
+        let channel = Channel(id: "UCtarget", title: "Target")
+        mock.channelResult = (channel, VideoGroup(videos: []))
+        mock.channelsResult = [channel]
+        let vm = ChannelViewModel(api: mock)
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-a"))
+        vm.screenDidDisappear()
+        // The membership changed elsewhere while the page was hidden, then the token rotated.
+        mock.channelsResult = []
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-b"))
+        #expect(mock.calls.filter { $0.method == "fetchChannel" }.count == 2)
+        #expect(mock.calls.filter { $0.method == "fetchSubscribedChannels" }.count == 2)
+        #expect(vm.channel?.isSubscribed == false)
+        // Back on screen, a rotation keeps the page again.
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-c"))
+        #expect(mock.calls.filter { $0.method == "fetchChannel" }.count == 2)
+    }
+
+    @Test("Leaving the channel page while a new token is applied loads nothing; returning loads the page")
+    func cancelledAppearanceLoadsOnReturn() async throws {
+        let mock = MockInnerTubeAPI()
+        let channel = Channel(id: "UCtarget", title: "Target")
+        mock.channelResult = (channel, VideoGroup(videos: []))
+        mock.channelsResult = [channel]
+        let vm = ChannelViewModel(api: mock)
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-a"))
+        // The token rotates on screen; like ChannelView's task, this one applies the token first.
+        var tokenApplied: CheckedContinuation<Void, Never>?
+        defer { tokenApplied?.resume() }
+        let appearance = Task {
+            await withCheckedContinuation { tokenApplied = $0 }
+            await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-b"))
+        }
+        await waitForTasks { tokenApplied != nil }
+        let finishTokenApply = try #require(tokenApplied)
+        tokenApplied = nil
+        // The user leaves before the token is applied: the page is forgotten and its task cancelled.
+        vm.screenDidDisappear()
+        appearance.cancel()
+        finishTokenApply.resume()
+        await appearance.value
+        #expect(mock.calls.filter { $0.method == "fetchChannel" }.count == 1)
+        // The membership changed elsewhere and the token rotated again before the user returns.
+        mock.channelsResult = []
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-c"))
+        #expect(mock.calls.filter { $0.method == "fetchChannel" }.count == 2)
+        #expect(mock.calls.filter { $0.method == "fetchSubscribedChannels" }.count == 2)
+        #expect(vm.channel?.isSubscribed == false)
+    }
+
+    @Test("Appearing again, a new session, a first token, sign-out or a failed load reload the channel page")
+    func accountChangesReloadPage() async {
+        let mock = MockInnerTubeAPI()
+        let channel = Channel(id: "UCtarget", title: "Target")
+        mock.channelResult = (channel, VideoGroup(videos: []))
+        mock.channelsResult = [channel]
+        let vm = ChannelViewModel(api: mock)
+        func fetches() -> Int { mock.calls.filter { $0.method == "fetchChannel" }.count }
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: nil))
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-a"))
+        #expect(fetches() == 2)
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 1, signedIn: true, accessToken: "token-a"))
+        #expect(fetches() == 3)
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 2, signedIn: true, accessToken: "token-b"))
+        #expect(fetches() == 4)
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 3, signedIn: false, accessToken: nil))
+        #expect(fetches() == 5)
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 4, signedIn: true, accessToken: "token-c"))
+        mock.errorToThrow = APIError.httpError(401)
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 4, signedIn: true, accessToken: "token-c"))
+        #expect(vm.error != nil)
+        mock.errorToThrow = nil
+        await vm.load(channelId: channel.id, auth: .init(sessionID: 4, signedIn: true, accessToken: "token-d"))
+        #expect(fetches() == 8)
+        #expect(vm.error == nil)
+        #expect(vm.isSubscriptionLoaded)
+    }
+
     @Test("Removing one account channel preserves the list on failure and removes only that channel on success")
     func listMutation() async {
         let mock = MockInnerTubeAPI()
