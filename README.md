@@ -118,7 +118,7 @@ SmartTube.xcworkspace/ Xcode workspace (references both above)
 | iOS / iPadOS | 18.0 |
 | macOS (native) | 15.0 |
 | tvOS | 18.0 |
-| Xcode | 27.1 (project toolchain) |
+| Xcode | 27.2 (project toolchain) |
 | Swift | 6.0 |
 
 ---
