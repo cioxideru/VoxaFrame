@@ -251,11 +251,13 @@ struct OfflineDetailPresentationTests {
             OfflineTrack(id: "new", kind: .audio, label: "Audio · AAC 50 kbps"),
             OfflineTrack(id: "empty", kind: .audio, label: "Audio · AAC 70 kbps", language: ""),
         ]
+        // The word comes from the app's catalog, so the test holds in any host language.
+        let audio = String(localized: "Audio", bundle: .module)
         for track in tracks {
-            #expect(OfflineDetailPresentation.audioLabel(track, locale: english) == "Audio")
+            #expect(OfflineDetailPresentation.audioLabel(track, locale: english) == audio)
             let options = OfflineDetailPresentation.audioOptions(
                 for: video("silent", hasAudio: false), saved: [track], locale: english)
-            #expect(options.first?.label == "Audio · \(OfflineDetailPresentation.audioDetail(track) ?? "")")
+            #expect(options.first?.label == "\(audio) · \(OfflineDetailPresentation.audioDetail(track) ?? "")")
         }
         let options = OfflineDetailPresentation.audioOptions(
             for: video("silent", hasAudio: false), saved: tracks, locale: english)

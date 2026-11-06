@@ -15,7 +15,8 @@ import Testing
 @Suite("TokenManager")
 struct TokenManagerTests {
 
-    private func requireKeychainAccess() throws {
+    /// Result of writing a probe item to this test host's Keychain.
+    private static let keychainProbe: OSStatus = {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: "test-tm-host-probe-\(UUID().uuidString)",
@@ -25,7 +26,16 @@ struct TokenManagerTests {
         insertion[kSecValueData] = Data([0])
         insertion[kSecAttrAccessible] = kSecAttrAccessibleAfterFirstUnlock
         let status = SecItemAdd(insertion as CFDictionary, nil)
-        defer { SecItemDelete(query as CFDictionary) }
+        SecItemDelete(query as CFDictionary)
+        return status
+    }()
+
+    /// A host without a Keychain entitlement (package tests in the iOS Simulator) skips the roundtrip;
+    /// any other Keychain error still fails it.
+    private static var hostHasKeychainEntitlement: Bool { keychainProbe != errSecMissingEntitlement }
+
+    private func requireKeychainAccess() throws {
+        let status = Self.keychainProbe
         try #require(
             status == errSecSuccess,
             "Test host cannot write Keychain: OSStatus=\(status), \(SecCopyErrorMessageString(status, nil) as String? ?? "unknown")"
@@ -34,7 +44,9 @@ struct TokenManagerTests {
 
     // MARK: - 1. Keychain roundtrip
 
-    @Test("setToken persists all fields to Keychain across instances")
+    @Test(
+        "setToken persists all fields to Keychain across instances",
+        .enabled(if: hostHasKeychainEntitlement, "The test host has no Keychain entitlement"))
     func setTokenPersistsToKeychain() async throws {
         try requireKeychainAccess()
         let service = "test-tm-\(UUID().uuidString)"

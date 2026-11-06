@@ -32,12 +32,18 @@ struct PlayerTimelineTests {
     func accessibilityValue() {
         let chapters = [Chapter(title: "Intro", startTime: 0), Chapter(title: "Valley", startTime: 60)]
         let segments = [SponsorSegment(start: 70, end: 80, category: .sponsor)]
+        // Expected text comes from the app's catalog, so the test holds in any host language.
+        func position(_ time: String, _ duration: String) -> String {
+            String(localized: "\(time) of \(duration)", bundle: .module)
+        }
         #expect(
             PlayerTimeline.accessibilityValue(time: 75, duration: 120, chapters: chapters, segments: segments)
-                == "1:15 of 2:00, Valley, Sponsor")
+                == "\(position("1:15", "2:00")), Valley, \(SponsorSegment.Category.sponsor.displayName)")
         #expect(
             PlayerTimeline.accessibilityValue(time: 30, duration: 120, chapters: chapters, segments: segments)
-                == "0:30 of 2:00, Intro")
-        #expect(PlayerTimeline.accessibilityValue(time: 5, duration: 9, chapters: [], segments: []) == "0:05 of 0:09")
+                == "\(position("0:30", "2:00")), Intro")
+        #expect(
+            PlayerTimeline.accessibilityValue(time: 5, duration: 9, chapters: [], segments: [])
+                == position("0:05", "0:09"))
     }
 }
