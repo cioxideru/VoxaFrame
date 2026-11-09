@@ -467,5 +467,14 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Brand Accounts: NOT RUN. Needs a Google account with a Brand Account: switch in Settings › Account on the iPad,
   then check that Home, Subscriptions, playlists and a watched video belong to the selected channel, and that a
   relaunch keeps the choice.
-- Playback without AndroidVR: NOT RUN on hardware. Check an rqh=1 video that reaches the exhaustive retry and
-  audio-only mode on the iPad and Apple TV; the logs should show no `[AndroidVR]` attempt and no longer start-up.
+- Playback without AndroidVR: passed on the iPad on 2026-11-09 (plan evidence). NOT RUN on Apple TV: check a video
+  that reaches the exhaustive retry and Audio-Only there; the log should show no `AndroidVR` line.
+
+## OQ-0024 — Audio-only setting ignored when VisionOS HLS starts a video
+
+- Status: open; owner: playback maintainer; basis: iPad log of 2026-11-09 ([PLAN-0049](exec-plans/completed/upstream-fork-candidates.md)).
+- With Audio-Only on in settings (`--uitesting-audio-only-mode`), `dQw4w9WgXcQ` started on VisionOS HLS and logged no
+  `Audio-only` line: `loadAudioOnlyItemIfEnabled` runs only in `beginInitialPlayback` (the iOS-client path), and the
+  VisionOS branch of `loadPrimaryStream` returns before it. Toggling Audio-Only in the player works.
+- Next step: load the audio-only item after any successful initial start, not only on the iOS-client path, with a
+  unit test at that seam.

@@ -29,7 +29,7 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
-- [PLAN-0049: Candidates from upstream and its forks](completed/upstream-fork-candidates.md) — channel Videos-tab pagination, SponsorBlock end tolerance and watchable skipped segments, Brand Account switching, local search ordering and AndroidVR removal; subscriptions needed no change; package checks and all builds passed, device checks in OQ-0023.
+- [PLAN-0049: Candidates from upstream and its forks](completed/upstream-fork-candidates.md) — channel Videos-tab pagination, SponsorBlock end tolerance and watchable skipped segments, Brand Account switching, local search ordering and AndroidVR removal; subscriptions needed no change; package checks, all builds and an iPad playback check passed; Brand Account and Apple TV checks in OQ-0023.
 
 - [PLAN-0048: Live streams in watch history](completed/live-stream-history.md) — a ready item with an indefinite duration is tracked as a live stream: pings with `len=0`, no final ping, no resume position; package checks and a signed-in iPad history check.
 
