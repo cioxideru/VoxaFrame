@@ -16,6 +16,11 @@ public enum SponsorSkipDecision: Equatable {
 }
 
 public enum SponsorBlockDecisionEngine {
+    /// How close to a segment's end counts as past it. Player times are rounded to a timescale, so a
+    /// seek to the end can land a fraction of a millisecond before it; skipping again from there would
+    /// land in the same place forever.
+    public static let segmentEndTolerance: Double = 0.1
+
     /// Pure function: given the current time, loaded segments, settings, and
     /// whether a skip is already in flight, decide what should happen.
     /// `duration <= 0` disables the end-of-video special case (treated as
@@ -28,7 +33,7 @@ public enum SponsorBlockDecisionEngine {
         duration: Double
     ) -> SponsorSkipDecision {
         guard settings.sponsorBlockEnabled else { return .clearToast }
-        guard let seg = segments.first(where: { time >= $0.start && time < $0.end }) else {
+        guard let seg = segments.first(where: { time >= $0.start && time < $0.end - segmentEndTolerance }) else {
             return .clearToast
         }
         switch settings.sponsorAction(for: seg.category) {

@@ -48,6 +48,22 @@ struct SponsorBlockDecisionEngineTests {
         #expect(result == .skip(to: 30, segment: seg))
     }
 
+    @Test("a seek that lands just before the segment end does not skip again")
+    func landingJustBeforeEndDoesNotRepeat() {
+        let seg = SponsorSegment(start: 10, end: 30, category: .sponsor)
+        // CMTime(seconds: 30, preferredTimescale: 600) can report 29.9992.
+        let landed = SponsorBlockDecisionEngine.decide(
+            at: 29.9992, segments: [seg], settings: settings([.sponsor: .skip]),
+            isSkipInProgress: false, duration: 100
+        )
+        #expect(landed == .clearToast)
+        let inside = SponsorBlockDecisionEngine.decide(
+            at: 30 - SponsorBlockDecisionEngine.segmentEndTolerance - 0.01, segments: [seg],
+            settings: settings([.sponsor: .skip]), isSkipInProgress: false, duration: 100
+        )
+        #expect(inside == .skip(to: 30, segment: seg))
+    }
+
     @Test("skip already in progress returns none")
     func skipInProgressReturnsNone() {
         let seg = SponsorSegment(start: 10, end: 30, category: .sponsor)

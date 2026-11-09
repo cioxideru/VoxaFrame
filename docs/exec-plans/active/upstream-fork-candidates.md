@@ -45,3 +45,4 @@ forks' tvOS-only rewrites and rebranding. Candidate 8 of the review (launch scre
 |---|---|---|
 | Review | upstream log, PRs, issues, 14 forks compared on 2026-11-09 | done |
 | 1. Channel pagination | `ChannelVideosPaginationTests` (6); `scripts/ci.sh`, SwiftLint, ast-grep rules | passed |
+| 2. Segment-end tolerance | `SponsorBlockDecisionEngineTests` (new landing case); `scripts/ci.sh`, SwiftLint, ast-grep rules | passed |

@@ -12,6 +12,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- SponsorBlock no longer skips the same segment over and over when a seek lands a fraction of a millisecond before its end (PLAN-0049, from the NewTube-iOS fork).
 - Channel pages load past the first ~50 videos: the list pages the channel's Videos tab instead of the Home shelves, whose continuations return nothing; Shorts come from the Home shelf (PLAN-0049, upstream #138).
 - Live streams watched while signed in appear in the account's YouTube watch history. Before, the app sent YouTube nothing for a stream because it has no length (PLAN-0048).
 - The player's related videos and end cards appear again; YouTube had moved them out of the responses the app read. Music, Gaming, News, Live and Sports show their YouTube pages instead of search results and load further pages. Live and upcoming streams no longer appear as Shorts (PLAN-0047).
