@@ -27,7 +27,6 @@ public enum StreamMethodProbeSupport {
         "websafari",
         "mweb",
         "android",
-        "android-vr",
         "visionos",
         "web-creator",
         "web-auth",

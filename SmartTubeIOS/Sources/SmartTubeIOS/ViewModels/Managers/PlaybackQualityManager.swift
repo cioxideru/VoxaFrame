@@ -364,7 +364,7 @@ extension PlaybackQualityManager {
         // successfully played) rather than using availableFormats' URL directly.
         // Reason: availableFormats may retain URLs from a different client than
         // playerInfo due to the max-count policy (e.g. TVAuth has 113 entries vs
-        // AndroidVR's 23, so TVAuth formats are preserved for picker display but
+        // another client's 23, so TVAuth formats are preserved for picker display but
         // their URLs return SABR binary data → AVFoundationErrorDomain -11828).
         // Using playerInfo.formats guarantees the URL comes from the working client.
         let videoURL: URL?

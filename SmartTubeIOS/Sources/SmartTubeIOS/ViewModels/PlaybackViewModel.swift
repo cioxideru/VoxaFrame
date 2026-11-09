@@ -431,8 +431,7 @@ public final class PlaybackViewModel {
     var phase2Task: Task<Void, Never>?
     /// This load's account data sources. Every Phase 2 launch reads it, whichever stream path won (PLAN-0046).
     @ObservationIgnored var accountPlayerSource: AccountPlayerSource?
-    /// Background prefetch task: either fetches AndroidVR playerInfo (muxed fallback)
-    /// or pre-warms AVAssetTrack arrays for the user's preferred quality tier.
+    /// Background prefetch task: pre-warms AVAssetTrack arrays for the user's preferred quality tier.
     /// Cancelled on every new video load.
     var prefetchTask: Task<Void, Never>?
     /// Early WKWebView HLS extraction task, started concurrently with the primary iOS
@@ -446,8 +445,7 @@ public final class PlaybackViewModel {
     var wkHLSEarlyTaskVideoId: String?
     #endif
     /// fix2/fix30: TVEmbedded PlayerInfo pre-fetch started concurrently with the race paths.
-    /// On tvOS: started inside tryAllStreams alongside the AndroidVR rqh=1 timeout (fix2).
-    /// On iOS: started at the beginning of exhaustiveRetry alongside the race group (fix30).
+    /// Started at the beginning of exhaustiveRetry alongside the race group (fix30).
     /// By the time exhaustiveRetry reaches Phase 1, the result is typically ready —
     /// eliminating the sequential ~0.5 s Phase 1 network fetch.
     var tvEmbeddedEarlyTask: Task<PlayerInfo?, Never>?

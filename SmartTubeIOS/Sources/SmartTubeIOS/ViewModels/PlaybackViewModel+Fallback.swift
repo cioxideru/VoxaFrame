@@ -29,8 +29,6 @@ extension PlaybackViewModel {
 
         let assetHeaders = compositionHeaders(context: context, label: label)
 
-        guard await compositionProbeAccepted(videoURL: videoURL, context: context, label: label) else { return false }
-
         let videoAsset = AVURLAsset(url: videoURL, options: ["AVURLAssetHTTPHeaderFieldsKey": assetHeaders])
         let audioAsset = AVURLAsset(url: audioURL, options: ["AVURLAssetHTTPHeaderFieldsKey": assetHeaders])
 
@@ -150,13 +148,12 @@ extension PlaybackViewModel {
         // hasMintedPoToken is set in exhaustiveRetry when BotGuardWebViewRunner succeeds
         // with a full getMinter-minted token — those ARE accepted by the CDN.
         let isTVAuthBearer = label.contains("TVAuth") && hasAuthToken && currentAuthToken != nil
-        let isAndroidVR = clientParam == "ANDROID_VR"
         #if canImport(WebKit)
         let isBotGuardMinted = label == "BotGuardWV" && hasMintedPoToken
         #else
         let isBotGuardMinted = false
         #endif
-        if videoRqh && !isTVAuthBearer && !isAndroidVR && !isBotGuardMinted {
+        if videoRqh && !isTVAuthBearer && !isBotGuardMinted {
             playerLog.notice("[\(label)/adaptive] skipping rqh=1 (client=\(clientParam)) — not exempt")
             return nil
         }
@@ -169,7 +166,6 @@ extension PlaybackViewModel {
         }
         let ua: String
         switch clientParam {
-        case "ANDROID_VR": ua = InnerTubeClients.AndroidVR.userAgent
         case "ANDROID": ua = InnerTubeClients.Android.userAgent
         case "VISIONOS": ua = InnerTubeClients.VisionOS.userAgent
         case "TVHTML5": ua = InnerTubeClients.TV.userAgent
@@ -233,58 +229,6 @@ extension PlaybackViewModel {
         return assetHeaders
     }
 
-    private func compositionProbeAccepted(
-        videoURL: URL, context: CompositionRequestContext, label: String
-    ) async -> Bool {
-        let videoRqh = context.videoRqh
-        let isAndroidVR = context.clientParam == "ANDROID_VR"
-        let ua = context.userAgent
-        // CDN probe for Android VR rqh=1 — avoids loadTracks timeout when CDN enforces
-        // SABR at the content level. URLSession.data(for:) accumulates the full response
-        // body before returning; if the CDN stalls mid-body the 1.5s timeout fires → nil.
-        //
-        // Range must cover the moov atom. The CDN returns HTTP 206 for small byte ranges
-        // (including bytes=0-0 and bytes=0-1023) even for SABR-enforced videos — it
-        // serves the initial container bytes (ftyp box, partial moov header) freely —
-        // but then stalls larger sequential reads that AVURLAsset.loadTracks needs to
-        // parse track metadata. The moov atom for a typical YouTube 720p video is
-        // 20–200 KB; using bytes=0-131071 (128 KB) ensures we cover it. A stalling CDN
-        // delivers a few KB then hangs; URLSession.data(for:) won't return until the
-        // complete 128 KB body arrives, so the 1.5s timeout fires and we bail early.
-        //
-        // Timing: 128 KB at 148 Mbps ≈ 7 ms; at 10 Mbps ≈ 100 ms; stall → 1.5s.
-        // TVAuth with Bearer is intentionally excluded — injecting an OAuth token into
-        // a bare URLSession changes CDN session state, separate from AVURLAsset context.
-        if videoRqh && isAndroidVR {
-            var probeReq = URLRequest(url: videoURL)
-            probeReq.setValue(ua, forHTTPHeaderField: "User-Agent")
-            probeReq.setValue("bytes=0-131071", forHTTPHeaderField: "Range")
-            probeReq.timeoutInterval = PlaybackTuning.adaptiveProbeTimeout
-            if let (_, probeResp) = try? await URLSession(configuration: .ephemeral).data(for: probeReq),
-                let http = probeResp as? HTTPURLResponse
-            {
-                if http.statusCode == 403 || http.statusCode == 401 {
-                    playerLog.notice(
-                        "❌ [\(label)/adaptive] rqh=1 probe: HTTP \(http.statusCode) — CDN enforcing rqh, skipping composition"
-                    )
-                    return false
-                }
-                playerLog.notice(
-                    "[\(label)/adaptive] rqh=1 probe: HTTP \(http.statusCode) 128KB delivered — moov atom accessible, proceeding"
-                )
-            } else {
-                // CDN stalled before delivering 128 KB. This predicts loadTracks failure
-                // (moov atom not accessible), so bail immediately rather than waiting 2s.
-                playerLog.notice(
-                    "⚠️ [\(label)/adaptive] rqh=1 probe: timeout after 1.5s (128KB stall) — CDN enforcing SABR, skipping composition"
-                )
-                return false
-            }
-        }
-
-        return true
-    }
-
     private func loadCompositionTracks(
         videoAsset: AVURLAsset, audioAsset: AVURLAsset, context: CompositionRequestContext, label: String
     ) async -> LoadedAssetTracks? {
@@ -292,24 +236,13 @@ extension PlaybackViewModel {
         let videoRqh = context.videoRqh
         do {
             // Timeout — prevents indefinite CDN hang for rqh=1 Bearer experiments.
-            // On tvOS/iOS: AndroidVR gets 2s — the firstByte probe (Range: bytes=0-0) is a
-            // false positive for rqh=1 CDN enforcement: the CDN serves the first byte (206)
-            // but stalls actual AVURLAsset segment requests. fast non-rqh videos complete
-            // loadTracks in ~0.4s, so 2s is a safe margin on both platforms.
-            // fix1/tvOS: 2s validated correct. fix_task240: apply same 2s cap to iOS — log
-            // shows 8s × 2 (race + serial) = 16s wasted on `cnsKl2JouOc` class of video.
-            let isVRAttempt = clientParam == "ANDROID_VR"
             #if os(tvOS)
-            let timeoutNs: UInt64 =
-                isVRAttempt ? PlaybackTuning.adaptiveVRTimeoutNanoseconds : PlaybackTuning.adaptiveTVTimeoutNanoseconds
+            let timeoutNs = PlaybackTuning.adaptiveTVTimeoutNanoseconds
             #else
-            // fix30 (task #230): 1.5s for non-VR iOS first-video loads.
-            // fix_task240: 2s for AndroidVR (was 8s) — false-positive probe scenario.
-            let timeoutNs: UInt64 =
-                isVRAttempt
-                ? PlaybackTuning.adaptiveVRTimeoutNanoseconds
-                : (needsQuickStartup
-                    ? PlaybackTuning.adaptiveStartupTimeoutNanoseconds : PlaybackTuning.adaptiveTimeoutNanoseconds)
+            // fix30 (task #230): 1.5s for iOS first-video loads.
+            let timeoutNs =
+                needsQuickStartup
+                ? PlaybackTuning.adaptiveStartupTimeoutNanoseconds : PlaybackTuning.adaptiveTimeoutNanoseconds
             #endif
 
             if let box = await loadTracksRacingTimeout(
@@ -318,10 +251,9 @@ extension PlaybackViewModel {
                 return box
             } else {
                 #if os(tvOS)
-                let timeoutSec = isVRAttempt ? 2 : 3
+                let timeoutSec = 3
                 #else
-                // VR=2s (fix_task240), non-VR quick=1.5s (fix30)
-                let timeoutSec = isVRAttempt ? 2 : (needsQuickStartup ? 1 : 8)
+                let timeoutSec = needsQuickStartup ? 1 : 8
                 #endif
                 let reason = "timed out after \(timeoutSec)s or loadTracks failed"
                 playerLog.error("❌ [\(label)/adaptive] loadTracks \(reason) (rqh=\(videoRqh))")

@@ -1,6 +1,8 @@
 # PLAN-0049: Candidates from upstream and its forks
 
-Status: active
+Status: completed (2026-11-09)
+Resolution: candidates 1–4, 6 and 7 delivered; 5 needed no change. Device checks for Brand Accounts and for
+playback without AndroidVR were not run; they are tracked in [OQ-0023](../../OPEN_QUESTIONS.md#oq-0023--upstream-port-device-checks).
 
 - Owner: coordinator (single session), candidates done one at a time.
 - Git boundary: local `master`, after PLAN-0048 (`d90656c9`); one commit per candidate, merged into `master`.
@@ -51,3 +53,5 @@ forks' tvOS-only rewrites and rebranding. Candidate 8 of the review (launch scre
 | 4. Brand Accounts on a device | switch to a Brand Account on the iPad: Home, Subscriptions and watch history belong to it | NOT RUN (needs an account with a Brand Account) |
 | 5. Full subscriptions list | not ported: upstream #177 comes from upstream's guide-based list; ours pages `FEsubscriptions` navigation since PLAN-0017, whose iPad acceptance loaded 338 channels repeatedly | no change needed |
 | 6. Search sort | live WEB search for `bmw i3 neue klasse` returned the same order with and without `CAI=` (2026-11-09); `SearchLocalOrderTests` (4); `scripts/ci.sh`, SwiftLint, ast-grep rules | passed |
+| 7. AndroidVR removal | live check 2026-11-09: ANDROID_VR `/player` for `jAf0hEe13LI` answered OK; adaptive video and audio gave 206 for bytes 0–100000 and 403 from byte 3000000; muxed 360p read fully (other clients already supply muxed). Removed race path C, serial step 6, the muxed-fallback upgrade and prefetch, the audio-only retry, the probe method and the client; tvOS now starts the TVEmbedded prefetch with the race. `scripts/ci.sh` (1451 tests), SwiftLint, ast-grep rules; iOS, tvOS and UI-test builds | passed |
+| 7. Playback on a device | fallback playback of an rqh=1 video and audio-only mode on the iPad and Apple TV | NOT RUN |

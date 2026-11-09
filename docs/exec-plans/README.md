@@ -19,8 +19,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0049: Candidates from upstream and its forks](active/upstream-fork-candidates.md) — channel pagination, SponsorBlock, Brand Accounts, subscriptions, search sort and AndroidVR removal, one at a time.
-
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
@@ -30,6 +28,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0049: Candidates from upstream and its forks](completed/upstream-fork-candidates.md) — channel Videos-tab pagination, SponsorBlock end tolerance and watchable skipped segments, Brand Account switching, local search ordering and AndroidVR removal; subscriptions needed no change; package checks and all builds passed, device checks in OQ-0023.
 
 - [PLAN-0048: Live streams in watch history](completed/live-stream-history.md) — a ready item with an indefinite duration is tracked as a live stream: pings with `len=0`, no final ping, no resume position; package checks and a signed-in iPad history check.
 

@@ -80,12 +80,9 @@ extension PlaybackViewModel {
                 url, userAgent: InnerTubeClients.iOS.userAgent, videoId: info.video.id, seekTo: seekTime,
                 liveToggle: liveToggle)
             if success { return }
-            guard audioOnlySwapStillWanted(for: info.video.id) else { return }
-            audioOnlyLog.notice("Audio-only: iOS client URL failed, retrying with android_vr")
         }
-
-        // Attempt 2: android_vr client — no PO Token required for unauthenticated users.
-        await retryAudioOnlyWithAndroidVR(videoId: info.video.id, seekTo: seekTime, liveToggle: liveToggle)
+        // No second client: android_vr audio answers 403 past the first megabytes (PLAN-0049).
+        audioOnlyAttemptsFailed(videoId: info.video.id, liveToggle: liveToggle)
     }
 
     /// Builds an `AVURLAsset` for the given audio URL, checks playability, and replaces
@@ -172,26 +169,9 @@ extension PlaybackViewModel {
         return true
     }
 
-    /// Fetches player info with the android_vr client and retries loading the audio URL.
-    /// Falls back to the existing HLS item (already in player) on any failure.
-    private func retryAudioOnlyWithAndroidVR(
-        videoId: String, seekTo seekTime: TimeInterval = 0, liveToggle: Bool = false
-    ) async {
-        do {
-            let vrInfo = try await api.fetchPlayerInfoAndroidVR(videoId: videoId)
-            guard audioOnlySwapStillWanted(for: videoId) else { return }
-            if let url = vrInfo.bestAdaptiveAudioURL {
-                let success = await tryLoadAudioURL(
-                    url, userAgent: InnerTubeClients.AndroidVR.userAgent, videoId: videoId, seekTo: seekTime,
-                    liveToggle: liveToggle)
-                if success { return }
-            }
-        } catch {
-            audioOnlyLog.error("Audio-only: android_vr fetch failed: \(ViewModelLogger.errorSummary(error))")
-        }
-
+    /// The audio-only URL could not be loaded; the existing HLS item stays in the player.
+    private func audioOnlyAttemptsFailed(videoId: String, liveToggle: Bool) {
         guard audioOnlySwapStillWanted(for: videoId) else { return }
-        // Both attempts failed.
         audioOnlyItemActive = false
         if liveToggle {
             // Live toggle: keep overlay showing with HLS audio underneath.

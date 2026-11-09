@@ -117,35 +117,6 @@ extension InnerTubeAPI {
         return try parsePlayerInfo(from: data, videoId: videoId)
     }
 
-    /// Fetches player info using the Android VR (Oculus) client.
-    /// Uses the correct Android VR transport (nameID=28, Oculus UA on googleapis.com)
-    /// so YouTube identifies the request as an Oculus Quest client — not a Web client.
-    /// Per yt-dlp (May 2026): android_vr returns `hlsManifestUrl` (no rqh=1 required)
-    /// when the request includes `html5Preference: HTML5_PREF_WANTS` — yt-dlp injects
-    /// this via `_generate_player_context` for ALL clients. Without it, YouTube returns
-    /// `serverAbrStreamingUrl` (SABR only, not AVPlayer-compatible).
-    public func fetchPlayerInfoAndroidVR(videoId: String) async throws -> PlayerInfo {
-        // Mirror yt-dlp's _generate_player_context: send html5Preference for all clients.
-        // Also inject visitorData so YouTube session resolution works (matches yt-dlp's
-        // X-Goog-Visitor-Id header → client visitorData field).
-        var clientFields = (androidVRClientContext["client"] as? [String: Any]) ?? [:]
-        if let vd = visitorData { clientFields["visitorData"] = vd }
-
-        // android_vr has REQUIRE_JS_PLAYER=False → sts may be nil; that is fine.
-        // yt-dlp still passes sts when available, so we do the same.
-        let sts = await fetchSignatureTimestampIfNeeded()
-        var cpbc: [String: Any] = ["html5Preference": "HTML5_PREF_WANTS"]
-        if let sts { cpbc["signatureTimestamp"] = sts }
-
-        var body = makeBody(client: ["client": clientFields])
-        body["videoId"] = videoId
-        body["racyCheckOk"] = true
-        body["contentCheckOk"] = true
-        body["playbackContext"] = ["contentPlaybackContext": cpbc]
-        let data = try await postAndroidVR(body: body)
-        return try parsePlayerInfo(from: data, videoId: videoId)
-    }
-
     /// Fetches player data using current yt-dlp's primary JS-less visionOS client.
     public func fetchPlayerInfoVisionOS(videoId: String) async throws -> PlayerInfo {
         #if DEBUG

@@ -170,27 +170,6 @@ public actor InnerTubeAPI {
         ]
     ]
 
-    /// The Android VR (Oculus Quest) client context used for audio-only fallback.
-    /// Per yt-dlp research (May 2026), this client does not require a PO token for
-    /// adaptive audio streams. Used exclusively by `fetchPlayerInfoAndroidVR`.
-    ///
-    /// IMPORTANT: must match yt-dlp's `android_vr` INNERTUBE_CONTEXT exactly:
-    ///  - `userAgent` belongs INSIDE the client body (not just as a request header)
-    ///  - NO hl, gl, utcOffsetMinutes, userInterfaceTheme — yt-dlp omits all of these
-    ///  - Using clientVersion > 1.65 returns SABR-only streams (yt-dlp comment)
-    let androidVRClientContext: [String: Any] = [
-        "client": [
-            "clientName": InnerTubeClients.AndroidVR.name,
-            "clientVersion": InnerTubeClients.AndroidVR.version,
-            "deviceMake": "Oculus",
-            "deviceModel": "Quest 3",
-            "androidSdkVersion": 32,
-            "userAgent": InnerTubeClients.AndroidVR.userAgent,
-            "osName": "Android",
-            "osVersion": "12L",
-        ]
-    ]
-
     /// visionOS context mirrored from current yt-dlp. Kept separate from the
     /// running platform intentionally: this is an InnerTube client identity.
     let visionOSClientContext: [String: Any] = [

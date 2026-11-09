@@ -34,7 +34,6 @@ import XCTest
 //   websafari     WEB + macOS Safari UA — HLS for embedding-disabled content
 //   mweb          MWEB (iPad Safari UA) — HLS, not subject to embed restriction
 //   android       Android client — CDN-signed adaptive, used for muxed fallback
-//   android-vr    Oculus Quest client (nameID=28) — CDN-exempt from rqh=1/pot=
 //   web-creator   WEB_CREATOR / YouTube Studio — rqh=1 exempt, requires Bearer
 //   web-auth      WEB + Bearer (mirrors yt-dlp oauth) — no rqh=1 for signed-in users
 //   wkwebview-hls WKWebView HLS extraction — reliable for rqh=1, slow (~3–9 s cold)
@@ -243,17 +242,6 @@ final class StreamMethodProbeUITests: XCTestCase {
     func testProbe_android__y9R5a76HPbU() { probe("android", "y9R5a76HPbU") }
     func testProbe_android__Dy9ki9Q5nXs() { probe("android", "Dy9ki9Q5nXs") }
     func testProbe_android__jNQXAC9IVRw() { probe("android", "jNQXAC9IVRw") }
-
-    // MARK: - android-vr
-
-    func testProbe_androidvr__dQw4w9WgXcQ() { probe("android-vr", "dQw4w9WgXcQ") }
-    func testProbe_androidvr__9bZkp7q19f0() { probe("android-vr", "9bZkp7q19f0") }
-    func testProbe_androidvr__LSMQ3U1Thzw() { probe("android-vr", "LSMQ3U1Thzw") }
-    func testProbe_androidvr__v2ZtAi2rDzA() { probe("android-vr", "v2ZtAi2rDzA") }
-    func testProbe_androidvr__Wu8xNx4njoM() { probe("android-vr", "Wu8xNx4njoM") }
-    func testProbe_androidvr__y9R5a76HPbU() { probe("android-vr", "y9R5a76HPbU") }
-    func testProbe_androidvr__Dy9ki9Q5nXs() { probe("android-vr", "Dy9ki9Q5nXs") }
-    func testProbe_androidvr__jNQXAC9IVRw() { probe("android-vr", "jNQXAC9IVRw") }
 
     // MARK: - web-creator
 

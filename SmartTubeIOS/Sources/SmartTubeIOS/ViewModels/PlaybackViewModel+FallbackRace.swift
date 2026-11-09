@@ -221,36 +221,17 @@ extension PlaybackViewModel {
     }
     #endif  // canImport(WebKit)
 
-    /// Path C of the exhaustiveRetry race: Android VR (Oculus Quest) adaptive path.
-    /// CDN-exempt from rqh=1 / pot= token requirements. Runs concurrently with Path A and B.
-    /// Returns `true` if adaptive composition reached `readyToPlay`.
-    func racePathC(video: Video) async -> Bool {
-        guard !Task.isCancelled else { return false }
-        do {
-            let vrInfo = try await api.fetchPlayerInfoAndroidVR(videoId: video.id)
-            if await tryAllStreams(video: video, info: vrInfo, label: "AndroidVR/race", skipMuxed: true) {
-                playerLog.notice("[AndroidVR] ✅ Path C won — AndroidVR adaptive composition")
-                return true
-            }
-        } catch {
-            playerLog.notice("[AndroidVR] ⚠️ Path C fetch failed: \(ViewModelLogger.errorSummary(error))")
-        }
-        playerLog.notice("[AndroidVR] Path C done — AndroidVR adaptive failed")
-        return false
-    }
-
-    /// Background quality upgrade after AndroidVR wins the race at low quality (maxH < 480).
+    /// Background quality upgrade after the muxed 360p last resort starts playing.
     ///
-    /// Called from the `raceWon / case 2` block when AndroidVR composes at e.g. 240p for
-    /// rqh=1 worst-case videos. Fires after a 700 ms stabilisation delay so the initial
-    /// `readyToPlay` playback is already running. Tries:
+    /// Fires after a 700 ms stabilisation delay so the initial `readyToPlay` playback is
+    /// already running. Tries:
     ///   1. TVEmbedded HLS (WEB_EMBEDDED_PLAYER — HLS for most embeddable videos)
     ///   2. MWEB HLS (m.youtube.com — no pot= for HLS, wider coverage than TVEmbedded)
     ///
     /// On success, replaces the current AVPlayerItem at the current playback position so
     /// the user sees no gap (position is saved to `savedPositionToRestore` just before
     /// calling `attemptURL`, and consumed by `attemptURL`'s `.readyToPlay` handler).
-    /// On failure, stays on the AndroidVR quality silently — no error shown to the user.
+    /// On failure, stays on the muxed stream silently — no error shown to the user.
     func scheduleBackgroundQualityUpgrade(video: Video) {
         guard !Task.isCancelled, isPlaying, currentVideo?.id == video.id else { return }
         cancelBackgroundQualityUpgrade()
@@ -285,7 +266,7 @@ extension PlaybackViewModel {
             let mwebInfo = try await api.fetchPlayerInfoMWEB(videoId: video.id)
             guard !Task.isCancelled, currentVideo?.id == video.id else { return }
             if let hlsURL = mwebInfo.hlsURL {
-                playerLog.notice("[VR→HLS/upgrade] MWEB HLS available — upgrading from AndroidVR quality")
+                playerLog.notice("[VR→HLS/upgrade] MWEB HLS available — upgrading from the muxed stream")
                 let pos = currentTime
                 if pos > 0.5 { savedPositionToRestore = pos }
                 if await attemptURL(hlsURL, for: video, info: mwebInfo, label: "VR→HLS/upgrade/MWEB") {
@@ -299,8 +280,6 @@ extension PlaybackViewModel {
             playerLog.notice("[VR→HLS/upgrade] MWEB fetch failed: \(ViewModelLogger.errorSummary(error))")
         }
 
-        if await upgradeWithAndroidVR(video: video) { return }
-
         playerLog.notice("[upgrade] no quality upgrade available — staying on muxed stream")
     }
 
@@ -309,7 +288,7 @@ extension PlaybackViewModel {
             let tvEmbedInfo = try await api.fetchPlayerInfoTVEmbedded(videoId: video.id)
             guard !Task.isCancelled, currentVideo?.id == video.id else { return true }
             if let hlsURL = tvEmbedInfo.hlsURL {
-                playerLog.notice("[VR→HLS/upgrade] TVEmbedded HLS available — upgrading from AndroidVR quality")
+                playerLog.notice("[VR→HLS/upgrade] TVEmbedded HLS available — upgrading from the muxed stream")
                 // Capture position right before replacement so the stale window is minimal.
                 let pos = currentTime
                 if pos > 0.5 { savedPositionToRestore = pos }
@@ -324,46 +303,6 @@ extension PlaybackViewModel {
         } catch {
             playerLog.notice("[VR→HLS/upgrade] TVEmbedded fetch failed: \(ViewModelLogger.errorSummary(error))")
         }
-        return false
-    }
-
-    private func upgradeWithAndroidVR(video: Video) async -> Bool {
-        // 3. Try AndroidVR adaptive (CDN-exempt rqh=1, no HLS needed).
-        // Useful when muxed (360p) is playing and AndroidVR can deliver 1080p+ via adaptive
-        // composition. The 2s loadTracks timeout applies — if CDN stalls we bail quickly.
-        // Position is saved so the upgraded stream resumes from current playback point.
-        //
-        // On failure: keep availableFormats = AndroidVR's format list (so the quality picker
-        // shows e.g. 1080p/720p options). Also restore isMuxedFallback = true because
-        // tryAllStreams() unconditionally sets it to false via the label check. Without this
-        // restoration, tapping a quality routes through reloadDASHItem (silent rqh=1 failure)
-        // instead of triggering retryWith403Recovery → exhaustiveRetry.
-        guard !Task.isCancelled, currentVideo?.id == video.id else { return true }
-        do {
-            let vrInfo = try await api.fetchPlayerInfoAndroidVR(videoId: video.id)
-            guard !Task.isCancelled, currentVideo?.id == video.id else { return true }
-            let vrPos = currentTime
-            if vrPos > 0.5 { savedPositionToRestore = vrPos }
-            if await tryAllStreams(
-                video: video, info: vrInfo,
-                label: "muxed→upgrade/AndroidVR", skipMuxed: true)
-            {
-                playerLog.notice("[upgrade] ✅ quality upgrade via AndroidVR adaptive complete")
-                return true
-            }
-            guard !Task.isCancelled, currentVideo?.id == video.id else { return true }
-            savedPositionToRestore = nil
-            // Upgrade failed: availableFormats now has AndroidVR's list (set by attemptComposition)
-            // which is correct — user can see quality options and tap to trigger a retry.
-            // Restore isMuxedFallback so quality taps route to retryWith403Recovery.
-            qualityManager.isMuxedFallback = true
-            playerLog.notice(
-                "[upgrade] AndroidVR adaptive failed — isMuxedFallback restored, \(availableFormats.count) formats visible in picker"
-            )
-        } catch {
-            playerLog.notice("[upgrade] AndroidVR fetch failed: \(ViewModelLogger.errorSummary(error))")
-        }
-
         return false
     }
 

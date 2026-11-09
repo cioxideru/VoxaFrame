@@ -184,45 +184,33 @@ extension PlaybackViewModel {
         //   in-flight). Bypasses the 6 s BotGuard wait on cold starts. Fast for rqh=1 videos
         //   where the CDN probe returns 403 (~3–4 s from loadAsync start).
         //
-        // Path C — AndroidVR adaptive: fetches playerInfo via the ANDROID_VR (Oculus Quest)
-        //   client, which is CDN-exempt from rqh=1 / pot= token requirements. Runs concurrently
-        //   with Path A and B. Expected ~2–3 s cold; beats serial WKWebView extraction (~3–5 s).
+        // The AndroidVR path is gone (PLAN-0049): since 2026-08-17 its adaptive formats answer 403
+        //   past the first megabytes without a GVS PO token, so it only delayed the fallback.
         //
-        // fix30 (task #230): Pre-fetch TVEmbedded playerInfo in parallel with the race on iOS.
+        // fix30 (task #230): Pre-fetch TVEmbedded playerInfo in parallel with the race.
         // If all race paths fail, Phase 1 (TVEmbedded serial) can consume the already-resolved
         // result instead of waiting an additional ~0.5–1 s for a fresh network request.
-        // tvOS already starts tvEmbeddedEarlyTask inside tryAllStreams (fix2); on iOS we fire
-        // it here so the prefetch begins as soon as the race paths do.
-        #if !os(tvOS)
+        // tvOS used to start it beside the AndroidVR attempt (fix2); with that client gone it
+        // starts here on every platform.
         if tvEmbeddedEarlyTask == nil {
             let prefetchVideoId = video.id
             tvEmbeddedEarlyTask = Task { [weak self] in
                 guard let self else { return nil }
                 return try? await self.api.fetchPlayerInfoTVEmbedded(videoId: prefetchVideoId)
             }
-            playerLog.notice("[TVEmbedded] fix30: started iOS TVEmbedded early pre-fetch alongside race paths")
+            playerLog.notice("[TVEmbedded] fix30: started TVEmbedded early pre-fetch alongside race paths")
         }
-        #endif
         //
         // Key safety property: all paths are @MainActor, so `player.replaceCurrentItem` and
         // `itemObserverTask` mutations are always serialised. Losing paths' status streams
         // exit via task cancellation.
         var winningPath: Int?
         await withTaskGroup(of: (Bool, Int).self) { raceGroup in
-            // Path A, B, C are @MainActor methods — calling them via `await self.`
+            // Path A and B are @MainActor methods — calling them via `await self.`
             // from these nonisolated closures hops to the main actor for each path.
             // They interleave cooperatively at every `await` suspension point.
             raceGroup.addTask { (await self.racePathA(video: video), 0) }
             raceGroup.addTask { (await self.racePathB(video: video), 1) }
-            #if os(tvOS)
-            // fix2: Skip racePathC on tvOS. A fresh AndroidVR fetch hits the same rqh=1
-            // timeout (2s) for the same video — wasting 2s just to fail again. The
-            // TVEmbedded pre-fetch (tvEmbeddedEarlyTask) already runs concurrently from
-            // tryAllStreams; Phase 1 will consume it instantly after the race.
-            raceGroup.addTask { (false, 2) }
-            #else
-            raceGroup.addTask { (await self.racePathC(video: video), 2) }
-            #endif
             for await (result, path) in raceGroup where result {
                 winningPath = path
                 raceGroup.cancelAll()
@@ -242,28 +230,10 @@ extension PlaybackViewModel {
             // tryWebViewHLS does not call launchPhase2 internally — do it here so Phase 2
             // metadata (nextVideo, endCards, sponsorSegments) is fetched and cached data is used.
             if let playerInfo { launchPhase2(video: video, info: playerInfo, cached: cached) }
-        case 2:
-            playerLog.notice("[AndroidVR] ✅ Path C won — AndroidVR adaptive — exhaustiveRetry done")
-            // attemptComposition already called launchPhase2(vrInfo) with the correct AndroidVR
-            // playerInfo. Do NOT call it again — a second call would cancel the first phase2Task
-            // and restart it with the stale iOS playerInfo, reverting availableFormats to
-            // rqh=1-blocked streams and breaking quality switches.
-            //
-            // If AndroidVR composed at low quality (maxH < 480 and below user's preferred),
-            // schedule a background HLS quality upgrade via TVEmbedded or MWEB while the
-            // video is already playing at the lower quality. Does not affect readyToPlay timing.
-            let vrMaxH = availableFormats.map(\.height).max() ?? 0
-            let preferredH = effectiveQuality.height ?? Self.displayMaxVideoHeight()
-            if vrMaxH > 0 && vrMaxH < min(preferredH, 480) {
-                playerLog.notice(
-                    "[AndroidVR] maxH=\(vrMaxH) < preferred \(min(preferredH, 480))p — scheduling background HLS quality upgrade"
-                )
-                scheduleBackgroundQualityUpgrade(video: video)
-            }
         default:
             playerLog.notice("[BotGuardWV] ✅ adaptive streaming via minted BotGuard token — exhaustiveRetry done")
-        // attemptComposition / attemptURL already called launchPhase2(webInfo). Same
-        // reasoning as Path C: don't override with stale playerInfo.
+        // attemptComposition / attemptURL already called launchPhase2(webInfo); calling it again
+        // would restart Phase 2 with the stale iOS playerInfo.
         }
     }
 
@@ -447,12 +417,6 @@ extension PlaybackViewModel {
             }
         }
 
-        // 6 — AndroidVR (CDN-exempt rqh=1, 2s composition timeout)
-        group.addTask {
-            guard let info = try? await self.api.fetchPlayerInfoAndroidVR(videoId: video.id) else { return nil }
-            return .result(
-                FallbackFetchedStream(priority: 6, label: "AndroidVR[\(attempt)]", info: info, skipMuxed: true))
-        }
     }
 
     private func retryFallbackClients(video: Video, attempt: Int) async -> Bool {
@@ -465,7 +429,7 @@ extension PlaybackViewModel {
         // Evict the stale cache entry so each attempt gets fresh signed URLs.
         await VideoPreloadCache.shared.invalidatePlayerInfo(for: video.id)
 
-        // --- Parallel fetch: fire all 7 API calls concurrently ---
+        // --- Parallel fetch: fire all six API calls concurrently ---
         //
         // Each fetchPlayerInfo* is an independent network round-trip (~0.5–1 s).
         // Running them serially added 3.5–7 s of unnecessary latency on every load
@@ -479,7 +443,7 @@ extension PlaybackViewModel {
         //    regardless of which fetch finished first.
         //
         // Priority (lower = higher priority, mirrors proven probe data 2026-06-05):
-        //   0 TVAuth  1 MWEB  2 TVEmbedded  3 WebSafari  4 iOS  5 Android  6 AndroidVR
+        //   0 TVAuth  1 MWEB  2 TVEmbedded  3 WebSafari  4 iOS  5 Android
 
         let fetched = await fetchFallbackResults(video: video, attempt: attempt)
         let parallelPlaySucceeded = fetched.parallelPlaySucceeded
@@ -498,12 +462,6 @@ extension PlaybackViewModel {
         guard !Task.isCancelled else { return true }
 
         // Try non-HLS results (adaptive-only) in priority order.
-        //
-        // AndroidVR (priority=6) is skipped when a muxed fallback is available:
-        // its 2s loadTracks timeout would delay muxed play with no gain when all
-        // other methods already failed. Instead, muxed plays immediately and
-        // backgroundQualityUpgrade retries AndroidVR (+ TVEmbedded/MWEB) in the
-        // background — upgrading to higher quality while the video is already playing.
         pendingNonHLS.sort { $0.priority < $1.priority }
         let hasMuxedFallback = androidInfoForMuxed?.bestMuxedDownloadURL != nil
         playerLog.notice(
@@ -511,13 +469,6 @@ extension PlaybackViewModel {
         )
         for candidate in pendingNonHLS {
             guard !Task.isCancelled else { return true }
-            // Skip AndroidVR when muxed is available — see comment above.
-            if hasMuxedFallback && candidate.label.hasPrefix("AndroidVR[") {
-                playerLog.notice(
-                    "[parallel fetch] skipping \(candidate.label) (muxed available — background upgrade will retry)"
-                )
-                continue
-            }
             if await tryAllStreams(
                 video: video, info: candidate.info,
                 label: candidate.label, skipMuxed: candidate.skipMuxed)
@@ -531,7 +482,7 @@ extension PlaybackViewModel {
         // --- Muxed direct MP4 (360p last resort) ---
         // Only reached when ALL HLS + adaptive attempts above failed.
         // On success: schedule backgroundQualityUpgrade to try TVEmbedded/MWEB HLS
-        // and AndroidVR adaptive in the background while the video is already playing.
+        // in the background while the video is already playing.
         if let androidInfo = androidInfoForMuxed, androidInfo.bestMuxedDownloadURL != nil {
             isLoading = true
             retryStatusMessage = "Using fallback stream\u{2026}"

@@ -15,8 +15,9 @@ Naming a new module after a concept not listed here requires adding the term in 
 - **Stream source / Stream method** — one way of resolving a playable URL for a video (e.g. iOS
   HLS, DASH composition, embed, yt-dlp-style, n-descrambled). *Rejected*: "playback method",
   "fallback path" — both blur the distinction between a method and the cascade that orders them.
-- **Client profile** — an InnerTube client context: WEB, iOS, TVHTML5, MWEB, Android, AndroidVR,
-  VisionOS, WebSafari, WebCreator. Each has its own auth rules, API key, and available fields.
+- **Client profile** — an InnerTube client context: WEB, iOS, TVHTML5, MWEB, Android, VisionOS,
+  WebSafari, WebCreator. Each has its own auth rules, API key, and available fields. AndroidVR was
+  removed in PLAN-0049: its adaptive streams answer 403 past the first megabytes without a PO token.
 - **PoToken / BotGuard** — the proof-of-origin token YouTube requires for some playback requests,
   and the JS-challenge-solving pipeline (`BotGuardWebViewRunner`, `BotGuardClient`) that obtains it.
 - **TOS player** — historical: the WKWebView-hosted YouTube IFrame embed player, removed by

@@ -460,3 +460,12 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   Don't Recommend Channel say YouTube offers no feedback for them.
 - Decided 2026-11-09 (owner): Don't Like This Video is shown only where the feed sent its `DISLIKE` token, so it is
   absent from every TV card; it no longer falls back to a dislike rating.
+
+## OQ-0023 — Upstream port device checks
+
+- Status: open; owner: playback / account maintainer; basis: [PLAN-0049](exec-plans/completed/upstream-fork-candidates.md).
+- Brand Accounts: NOT RUN. Needs a Google account with a Brand Account: switch in Settings › Account on the iPad,
+  then check that Home, Subscriptions, playlists and a watched video belong to the selected channel, and that a
+  relaunch keeps the choice.
+- Playback without AndroidVR: NOT RUN on hardware. Check an rqh=1 video that reaches the exhaustive retry and
+  audio-only mode on the iPad and Apple TV; the logs should show no `[AndroidVR]` attempt and no longer start-up.

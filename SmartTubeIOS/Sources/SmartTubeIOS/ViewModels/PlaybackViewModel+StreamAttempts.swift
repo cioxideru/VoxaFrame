@@ -54,31 +54,8 @@ extension PlaybackViewModel {
                 // so CDN auth may succeed — attempt composition before falling through.
             } else if info.containsRqhAdaptiveFormats {
                 let hasPot = await api.hasPoToken(for: video.id)
-                // ANDROID_VR is exempt from CDN rqh=1 enforcement (no GVS_PO_TOKEN_POLICY
-                // defined for android_vr per yt-dlp source). attemptComposition also has
-                // this exemption via isAndroidVR, but it was unreachable from here because
-                // this guard returned early before calling it. Allow VR through directly.
-                let isAndroidVRLabel = label.contains("AndroidVR") || label.contains("ANDROID_VR")
-                if hasPot || isAndroidVRLabel {
-                    #if os(tvOS)
-                    // fix2: Pre-fetch TVEmbedded concurrently while AndroidVR rqh=1 composition
-                    // times out (2s on tvOS). By the time the timeout fires and exhaustiveRetry
-                    // reaches Phase 1, the result is ready — eliminating the sequential ~0.5s fetch.
-                    // Fire for all AndroidVR attempts regardless of hasPot: the pot= token doesn't
-                    // prevent the CDN from enforcing rqh=1 at the segment level (only firstByte
-                    // probe returns 206; actual segments still reject with rqh=1).
-                    if isAndroidVRLabel, tvEmbeddedEarlyTask == nil {
-                        let prefetchVideoId = video.id
-                        tvEmbeddedEarlyTask = Task { [weak self] in
-                            guard let self else { return nil }
-                            return try? await self.api.fetchPlayerInfoTVEmbedded(videoId: prefetchVideoId)
-                        }
-                        playerLog.notice("[\(label)] fix2: started TVEmbedded early pre-fetch alongside rqh=1 timeout")
-                    }
-                    #endif
-                    playerLog.notice(
-                        "[\(label)] rqh=1 but \(hasPot ? "pot= token available" : "ANDROID_VR exempt") — attempting adaptive composition"
-                    )
+                if hasPot {
+                    playerLog.notice("[\(label)] rqh=1 but pot= token available — attempting adaptive composition")
                     if await attemptComposition(
                         videoURL: videoURL, audioURL: audioURL,
                         for: video, info: info, label: label)

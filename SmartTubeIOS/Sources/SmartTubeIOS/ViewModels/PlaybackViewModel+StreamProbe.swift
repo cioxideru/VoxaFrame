@@ -57,9 +57,6 @@ extension PlaybackViewModel {
             case "android":
                 info = try await api.fetchPlayerInfoAndroid(videoId: video.id)
 
-            case "android-vr":
-                info = try await api.fetchPlayerInfoAndroidVR(videoId: video.id)
-
             case "visionos":
                 info = try await api.fetchPlayerInfoVisionOS(videoId: video.id)
 

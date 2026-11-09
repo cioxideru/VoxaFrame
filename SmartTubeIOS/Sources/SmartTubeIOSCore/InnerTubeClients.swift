@@ -47,19 +47,6 @@ package enum InnerTubeClients {
         package static let userAgent = "com.google.android.youtube/\(version) (Linux; U; Android 11) gzip"
     }
 
-    /// Android VR client (Oculus Quest identity) — used as an unauthenticated fallback
-    /// for audio-only mode. Per yt-dlp research (May 2026), this client does not require
-    /// a Proof-of-Origin (PO) token for adaptive streams. Monitor for future enforcement.
-    /// Note: clientVersion must not exceed 1.65 — higher versions return SABR streams only.
-    package enum AndroidVR {
-        package static let name = "ANDROID_VR"
-        package static let nameID = "28"
-        package static let version = "1.65.10"
-        // eureka-user build string matches yt-dlp's android_vr UA exactly (May 2026).
-        package static let userAgent =
-            "com.google.android.apps.youtube.vr.oculus/\(version) (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip"
-    }
-
     /// visionOS client — the JS-less client NewPipeExtractor (2026-10) takes all streams
     /// from. Needs no GVS PO token and returns a plain HLS master, so it is the first
     /// AVPlayer source on every platform. Identity mirrors NewPipe's ClientsConstants.

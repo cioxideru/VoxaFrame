@@ -10,7 +10,6 @@ import Testing
 //   2. PlayerInfo.bestAdaptiveAudioURL returns the highest-bitrate audio/mp4 URL.
 //   3. bestAdaptiveAudioURL returns nil when no audio/mp4 formats are present.
 //   4. isLive guard: live videos have no adaptive audio URL to try (no format added).
-//   5. InnerTubeClients.AndroidVR constants are populated correctly.
 
 @Suite("Audio-Only Mode")
 struct AudioOnlyModeTests {
@@ -111,25 +110,5 @@ struct AudioOnlyModeTests {
         )
         let info = makeInfo(formats: [fmt])
         #expect(info.bestAdaptiveAudioURL == nil)
-    }
-
-    // MARK: - InnerTubeClients.AndroidVR
-
-    @Test("AndroidVR client name is ANDROID_VR")
-    func androidVRClientName() {
-        #expect(InnerTubeClients.AndroidVR.name == "ANDROID_VR")
-    }
-
-    @Test("AndroidVR nameID is 28")
-    func androidVRNameID() {
-        #expect(InnerTubeClients.AndroidVR.nameID == "28")
-    }
-
-    @Test("AndroidVR userAgent contains version and platform")
-    func androidVRUserAgent() {
-        let ua = InnerTubeClients.AndroidVR.userAgent
-        #expect(ua.contains("com.google.android.apps.youtube.vr.oculus"))
-        #expect(ua.contains(InnerTubeClients.AndroidVR.version))
-        #expect(ua.contains("Android 12"))
     }
 }

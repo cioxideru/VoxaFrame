@@ -166,7 +166,7 @@ extension PlaybackViewModel {
         }
         // When the iOS client has no HLS URL (non-embeddable videos return only muxed
         // 360p), playing streamURL directly would settle for 360p without ever
-        // trying AndroidVR adaptive (which works for these videos via visitorData).
+        // trying the other adaptive and HLS clients.
         // Route through exhaustiveRetry first; it will try all adaptive paths and fall
         // back to muxed 360p as Phase 2 if all adaptive attempts fail.
         // VISIONOS HLS needs its own policy (codec-filtered master, visionOS UA) —
