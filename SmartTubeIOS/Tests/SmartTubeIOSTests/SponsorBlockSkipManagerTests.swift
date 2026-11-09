@@ -248,4 +248,78 @@ struct SponsorBlockSkipManagerTests {
         #expect(manager.currentToastSegment == nil)
         #expect(manager.isSkippingSegment == false)
     }
+
+    // MARK: - 6. A skipped or entered segment can be watched
+
+    /// The manager holds its delegate weakly, so the fixture keeps it alive.
+    @MainActor private struct Fixture {
+        let manager = SponsorBlockSkipManager()
+        let player = SeekSpy()
+        let delegate = SpyDelegate()
+
+        init(_ segment: SponsorSegment, action: AppSettings.SponsorBlockAction = .skip) {
+            delegate.settings.sponsorBlockActions[segment.category] = action
+            manager.waitAfterSeek = {}
+            manager.delegate = delegate
+            manager.player = player
+            manager.sponsorSegments = [segment]
+        }
+    }
+
+    @Test("Seeking back into a skipped segment offers the button instead of skipping again")
+    @MainActor func skippedSegmentCanBeWatched() async {
+        let segment = SponsorSegment(id: UUID(), start: 10, end: 30, category: .sponsor)
+        let fixture = Fixture(segment)
+        let manager = fixture.manager
+        manager.checkSponsorSkip(at: 9.5)
+        #expect(manager.checkSponsorSkip(at: 10))
+        await waitForTasks { !manager.isSkippingSegment }
+        #expect(!manager.checkSponsorSkip(at: 12))
+        #expect(manager.currentToastSegment == segment)
+        #expect(fixture.player.targets == [30])
+    }
+
+    @Test("A user seek into a segment offers the button; playing into one still skips")
+    @MainActor func userSeekIntoSegmentDoesNotSkip() {
+        let segment = SponsorSegment(id: UUID(), start: 10, end: 30, category: .sponsor)
+        let fixture = Fixture(segment)
+        let manager = fixture.manager
+        manager.checkSponsorSkip(at: 2)
+        #expect(!manager.checkSponsorSkip(at: 20))
+        #expect(manager.currentToastSegment == segment)
+        #expect(fixture.player.targets.isEmpty)
+
+        let other = SponsorSegment(id: UUID(), start: 40, end: 50, category: .sponsor)
+        manager.sponsorSegments = [segment, other]
+        manager.checkSponsorSkip(at: 39.5)
+        #expect(manager.checkSponsorSkip(at: 40))
+    }
+
+    @Test("The skip button leaves after a few seconds inside the segment and returns on re-entry")
+    @MainActor func skipButtonTimesOut() {
+        let segment = SponsorSegment(id: UUID(), start: 10, end: 30, category: .sponsor)
+        let fixture = Fixture(segment, action: .showToast)
+        let manager = fixture.manager
+        let limit = PlaybackTuning.sponsorSkipButtonDuration
+        manager.checkSponsorSkip(at: 10)
+        manager.checkSponsorSkip(at: 10 + limit - 0.5)
+        #expect(manager.currentToastSegment == segment)
+        manager.checkSponsorSkip(at: 10 + limit)
+        #expect(manager.currentToastSegment == nil)
+        manager.checkSponsorSkip(at: 31)
+        manager.checkSponsorSkip(at: 15)
+        #expect(manager.currentToastSegment == segment)
+    }
+
+    @Test("reset() forgets handled segments")
+    @MainActor func resetForgetsHandledSegments() {
+        let segment = SponsorSegment(id: UUID(), start: 10, end: 30, category: .sponsor)
+        let fixture = Fixture(segment)
+        let manager = fixture.manager
+        manager.checkSponsorSkip(at: 2)
+        manager.checkSponsorSkip(at: 20)
+        #expect(manager.handledSegmentIDs == [segment.id])
+        manager.reset()
+        #expect(manager.handledSegmentIDs.isEmpty)
+    }
 }

@@ -2,6 +2,11 @@ import Foundation
 
 /// Shared timing values for initial playback, fallback attempts and quality changes.
 enum PlaybackTuning {
+    /// The SponsorBlock skip button takes the tvOS remote's focus; like Skip Intro, it leaves after this
+    /// much playback inside the segment.
+    static let sponsorSkipButtonDuration: TimeInterval = 5
+    /// Time observer ticks are 0.5 s apart (1 s of video at the top 2× speed); a larger jump is a seek.
+    static let sponsorSeekDetectionStep: TimeInterval = 2.5
     static let voiceAlignmentTolerance: TimeInterval = 0.35
     static let voiceSeekTolerance: TimeInterval = 0.1
     static let voiceDriftThreshold: TimeInterval = 1.5

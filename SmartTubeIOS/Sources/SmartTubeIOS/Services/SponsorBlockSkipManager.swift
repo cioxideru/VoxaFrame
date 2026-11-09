@@ -49,6 +49,11 @@ public final class SponsorBlockSkipManager {
     /// True while a SponsorBlock auto-skip seek is in-flight. Guards against the
     /// periodic time observer re-triggering before the seek completes.
     public private(set) var isSkippingSegment: Bool = false
+    /// Segments that no longer skip automatically: already skipped once, or moved into by the user.
+    private(set) var handledSegmentIDs: Set<UUID> = []
+    private var lastCheckedTime: TimeInterval?
+    private var skipButtonSegmentID: UUID?
+    private var skipButtonShownAt: TimeInterval = 0
 
     // MARK: - Dependencies
 
@@ -79,6 +84,9 @@ public final class SponsorBlockSkipManager {
         sponsorSegments = []
         currentToastSegment = nil
         isSkippingSegment = false
+        handledSegmentIDs = []
+        lastCheckedTime = nil
+        skipButtonSegmentID = nil
     }
 
     /// Called from the time observer. Handles per-category actions:
@@ -92,27 +100,42 @@ public final class SponsorBlockSkipManager {
             currentToastSegment = nil
             return false
         }
+        // Moving into a segment on purpose means watching it, not skipping straight back out.
+        if let lastCheckedTime, abs(time - lastCheckedTime) > PlaybackTuning.sponsorSeekDetectionStep,
+            let segment = sponsorSegments.first(where: { time >= $0.start && time < $0.end })
+        {
+            handledSegmentIDs.insert(segment.id)
+        }
+        lastCheckedTime = time
         let effectiveDuration = player?.sponsorBlockDuration ?? delegate.duration
         let decision = SponsorBlockDecisionEngine.decide(
             at: time,
             segments: sponsorSegments,
             settings: delegate.settings,
             isSkipInProgress: isSkippingSegment,
-            duration: effectiveDuration
+            duration: effectiveDuration,
+            handledSegmentIDs: handledSegmentIDs
         )
         switch decision {
         case .clearToast:
             currentToastSegment = nil
+            skipButtonSegmentID = nil
             return false
         case .showToast(let seg):
-            currentToastSegment = seg
+            if skipButtonSegmentID != seg.id {
+                skipButtonSegmentID = seg.id
+                skipButtonShownAt = time
+            }
+            let isButtonDue = time - skipButtonShownAt < PlaybackTuning.sponsorSkipButtonDuration
+            currentToastSegment = isButtonDue ? seg : nil
             return false
         case .skipToPlaybackEnd:
             currentToastSegment = nil
             delegate.handlePlaybackEnd()
             return true
-        case .skip(let target, _):
+        case .skip(let target, let segment):
             currentToastSegment = nil
+            handledSegmentIDs.insert(segment.id)
             guard let player else { return true }
             isSkippingSegment = true
             let waitAfterSeek = waitAfterSeek
@@ -124,7 +147,11 @@ public final class SponsorBlockSkipManager {
                     toleranceAfter: CMTime(seconds: 0.5, preferredTimescale: 600)
                 )
                 guard !Task.isCancelled else { return }
-                if finished { self?.delegate?.snapCurrentTime(to: target) }
+                if finished {
+                    self?.delegate?.snapCurrentTime(to: target)
+                    // The skip's own seek is not the user moving into a segment.
+                    self?.lastCheckedTime = target
+                }
                 do { try await waitAfterSeek() } catch { return }
                 guard !Task.isCancelled else { return }
                 self?.isSkippingSegment = false

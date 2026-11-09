@@ -1,3 +1,5 @@
+import Foundation
+
 // MARK: - SponsorBlockDecisionEngine
 //
 // Pure "what should happen at this playback time" decision logic, used by
@@ -24,13 +26,15 @@ public enum SponsorBlockDecisionEngine {
     /// Pure function: given the current time, loaded segments, settings, and
     /// whether a skip is already in flight, decide what should happen.
     /// `duration <= 0` disables the end-of-video special case (treated as
-    /// "unknown duration").
+    /// "unknown duration"). `handledSegmentIDs` were already skipped once or moved into by the
+    /// user: they offer the skip button instead of skipping, so a segment can still be watched.
     public static func decide(
         at time: Double,
         segments: [SponsorSegment],
         settings: AppSettings,
         isSkipInProgress: Bool,
-        duration: Double
+        duration: Double,
+        handledSegmentIDs: Set<UUID> = []
     ) -> SponsorSkipDecision {
         guard settings.sponsorBlockEnabled else { return .clearToast }
         guard let seg = segments.first(where: { time >= $0.start && time < $0.end - segmentEndTolerance }) else {
@@ -39,6 +43,7 @@ public enum SponsorBlockDecisionEngine {
         switch settings.sponsorAction(for: seg.category) {
         case .skip:
             guard !isSkipInProgress else { return .none }
+            if handledSegmentIDs.contains(seg.id) { return .showToast(seg) }
             if duration > 0 && seg.end >= duration - 2.0 {
                 return .skipToPlaybackEnd(segment: seg)
             }
