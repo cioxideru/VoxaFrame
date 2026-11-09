@@ -32,6 +32,8 @@ struct OfflineStorageNotice: View {
 struct OfflineCover: View {
     let url: URL?
     let width: CGFloat
+    /// Watched fraction from `VideoStateStore`, drawn like the video cards' bar.
+    var progress: Double?
 
     var body: some View {
         Group {
@@ -44,6 +46,9 @@ struct OfflineCover: View {
             }
         }
         .aspectRatio(16 / 9, contentMode: .fit)
+        .overlay(alignment: .bottom) {
+            if let progress, progress > 0 { WatchProgressBar(fraction: progress) }
+        }
         .frame(width: width)
         .clipShape(RoundedRectangle(cornerRadius: VFRadius.small, style: .continuous))
         .accessibilityHidden(true)
@@ -56,6 +61,7 @@ struct OfflineEntryLabel: View {
     let isSelected: Bool
     let status: OfflinePresentation.EntryStatus
     let tracks: [OfflinePresentation.TrackBadge]
+    var progress: Double?
     @Environment(\.dynamicTypeSize) private var typeSize
 
     #if os(tvOS)
@@ -73,7 +79,7 @@ struct OfflineEntryLabel: View {
             : AnyLayout(VStackLayout(alignment: .leading, spacing: VFSpace.s8))
         return VStack(alignment: .leading, spacing: VFSpace.s8) {
             layout {
-                OfflineCover(url: entry.video.thumbnailURL, width: Self.thumbnailWidth)
+                OfflineCover(url: entry.video.thumbnailURL, width: Self.thumbnailWidth, progress: progress)
                 VStack(alignment: .leading, spacing: VFSpace.s4) {
                     Text(title).font(.headline).lineLimit(compact ? 3 : nil)
                         .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.primary))

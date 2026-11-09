@@ -34,12 +34,15 @@ struct OfflineVideosView: View {
     /// Set once a video has filled the detail column; from then on only the person's choice is kept.
     @State private var hasShownVideo = false
     @State private var contentWidth: CGFloat = 0
+    /// Watched fraction per saved video, as the video cards show it.
+    @State private var watchProgress: [String: Double] = [:]
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.innerTubeAPI) private var api
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(PlayerRouter.self) private var router
+    @Environment(PlayerStateStore.self) private var playerState
     #else
     @State private var playbackVideo: Video?
     #endif
@@ -136,6 +139,7 @@ struct OfflineVideosView: View {
             .toolbar { ToolbarItem(placement: sponsorPlacement) { updateSponsorBlockButton } }
             .toast(message: $sponsorToast)
             .task { coordinator.start() }
+            .task(id: progressRefresh) { await loadWatchProgress() }
             .offlineSizes($assetSizes, store: coordinator.store, snapshot: snapshot)
             .sheet(item: $downloads) { filter in OfflineDownloadsSheet(filter: filter) }
             #if os(macOS)
@@ -171,6 +175,27 @@ struct OfflineVideosView: View {
                     "This removes the video, all downloaded audio and translations, and its pending downloads.",
                     bundle: .module)
             }
+    }
+
+    /// Saved positions change while the player is open, so read them again when it opens or closes and when
+    /// the library changes.
+    private var progressRefresh: [String] {
+        #if os(iOS)
+        let player = "\(playerState.presentation)|\(playerState.currentVideo?.id ?? "")"
+        #else
+        let player = playbackVideo?.id ?? ""
+        #endif
+        return [player] + snapshot.entries.map(\.id)
+    }
+
+    private func loadWatchProgress() async {
+        var progress: [String: Double] = [:]
+        for entry in snapshot.entries {
+            let saved = await VideoStateStore.shared.state(for: entry.id)?.watchedFraction
+            if let fraction = saved ?? entry.video.watchProgress { progress[entry.id] = fraction }
+        }
+        guard !Task.isCancelled else { return }
+        watchProgress = progress
     }
 
     private func syncSelection() {
@@ -257,16 +282,23 @@ struct OfflineVideosView: View {
         }
     }
 
-    /// Storage failure above saved content, and the pending removal that holds every other change.
-    @ViewBuilder private var notices: some View {
-        if let error = coordinator.error { OfflineStorageNotice(message: error) }
+    /// The pending removal that holds every other change. It floats over the list instead of becoming a list
+    /// section: a section inserted above the rows and removed again made the list jump to its top on every delete.
+    @ViewBuilder private var removalNotice: some View {
         if isRemoving {
-            Section {
-                HStack(spacing: VFSpace.s12) {
-                    ProgressView()
-                    Text("Deleting… Other offline actions wait until it finishes.", bundle: .module)
-                }
+            HStack(spacing: VFSpace.s12) {
+                ProgressView()
+                Text("Deleting… Other offline actions wait until it finishes.", bundle: .module)
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(.horizontal, VFSpace.s16)
+            .padding(.vertical, VFSpace.s12)
+            .frame(maxWidth: VFColumn.readableMaximum)
+            .background(VFColor.elevated, in: RoundedRectangle(cornerRadius: VFRadius.card))
+            .padding(VFSpace.s16)
+            .accessibilityElement(children: .combine)
+            .allowsHitTesting(false)
         }
     }
 
@@ -274,52 +306,13 @@ struct OfflineVideosView: View {
 
     private var libraryList: some View {
         List(selection: showsColumns ? $selectedVideoID : nil) {
-            notices
-            ForEach(snapshot.entries) { entry in
-                let isSelected = showsColumns && selectedVideoID == entry.id
-                let title = OfflinePresentation.title(of: entry.id, in: snapshot.entries)
-                let entryLabel = OfflineEntryLabel(
-                    entry: entry, title: title, isSelected: isSelected,
-                    status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs),
-                    tracks: OfflinePresentation.trackBadges(entry, jobs: snapshot.jobs))
-                OfflinePlaybackControls(entry: entry) { video in
-                    #if os(iOS)
-                    router.open(video: video, api: api)
-                    #else
-                    playbackVideo = video
-                    #endif
-                } content: {
-                    if showsColumns {
-                        Button {
-                            selectedVideoID = entry.id
-                        } label: {
-                            entryLabel.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
-                        }
-                        .buttonStyle(.borderless)
-                        // Reset the selected List row's white foreground before applying text/chip hierarchy.
-                        .foregroundStyle(Color.primary)
-                        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-                        .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
-                    } else {
-                        NavigationLink {
-                            OfflineVideoDetail(videoID: entry.id)
-                        } label: {
-                            entryLabel
-                        }
-                        .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
-                    }
-                }
-                .offlineDeleteActions(
-                    Text("Delete video and files", bundle: .module), isDisabled: isLocked,
-                    identifier: AccessibilityID.offlineDeleteEntry(entry.id)
-                ) {
-                    deletion = entry
-                }
-                .tag(entry.id)
-                // List caches this background across theme changes; refresh it without resetting the list.
-                .listRowBackground(isSelected ? VFColor.surface.id(colorScheme) : nil)
+            if let error = coordinator.error { OfflineStorageNotice(message: error) }
+            // An explicit section keeps the rows in one section whether or not the storage notice is shown.
+            Section {
+                entryRows
             }
         }
+        .overlay(alignment: .bottom) { removalNotice }
         .accessibilityIdentifier(AccessibilityID.offlineLibraryList)
         #if os(macOS)
         .onDeleteCommand {
@@ -329,6 +322,54 @@ struct OfflineVideosView: View {
             deletion = snapshot.entries.first { $0.id == videoID }
         }
         #endif
+    }
+
+    private var entryRows: some View {
+        ForEach(snapshot.entries) { entry in
+            let isSelected = showsColumns && selectedVideoID == entry.id
+            let title = OfflinePresentation.title(of: entry.id, in: snapshot.entries)
+            let entryLabel = OfflineEntryLabel(
+                entry: entry, title: title, isSelected: isSelected,
+                status: OfflinePresentation.entryStatus(entry, jobs: snapshot.jobs),
+                tracks: OfflinePresentation.trackBadges(entry, jobs: snapshot.jobs),
+                progress: watchProgress[entry.id])
+            OfflinePlaybackControls(entry: entry) { video in
+                #if os(iOS)
+                router.open(video: video, api: api)
+                #else
+                playbackVideo = video
+                #endif
+            } content: {
+                if showsColumns {
+                    Button {
+                        selectedVideoID = entry.id
+                    } label: {
+                        entryLabel.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    // Reset the selected List row's white foreground before applying text/chip hierarchy.
+                    .foregroundStyle(Color.primary)
+                    .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+                    .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
+                } else {
+                    NavigationLink {
+                        OfflineVideoDetail(videoID: entry.id)
+                    } label: {
+                        entryLabel
+                    }
+                    .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
+                }
+            }
+            .offlineDeleteActions(
+                Text("Delete video and files", bundle: .module), isDisabled: isLocked,
+                identifier: AccessibilityID.offlineDeleteEntry(entry.id)
+            ) {
+                deletion = entry
+            }
+            .tag(entry.id)
+            // List caches this background across theme changes; refresh it without resetting the list.
+            .listRowBackground(isSelected ? VFColor.surface.id(colorScheme) : nil)
+        }
     }
 
 }

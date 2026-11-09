@@ -349,7 +349,7 @@ extension VideoCardView {
             .overlay(thumbnailView.clipped())
             .overlay(alignment: .bottom) {
                 if let progress = effectiveProgress, progress > 0 {
-                    watchProgressBar(progress)
+                    WatchProgressBar(fraction: progress)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
@@ -481,18 +481,6 @@ extension VideoCardView {
                 .font(.title2)
                 .foregroundStyle(.secondary)
         }
-    }
-
-    /// The fill runs on an opaque track in the page background, so it keeps its contrast over any frame: every accent
-    /// reaches 4.5:1 on `background` in both themes (DesignTokenTests.accentPairsAreReadable).
-    private func watchProgressBar(_ fraction: Double) -> some View {
-        GeometryReader { geo in
-            Rectangle()
-                .fill(.tint)
-                .frame(width: geo.size.width * min(max(fraction, 0), 1))
-        }
-        .frame(height: VFSpace.s4)
-        .background(.background)
     }
 
     /// #39: shown when this video was saved to Watch Later via this app. See
