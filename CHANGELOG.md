@@ -12,6 +12,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- Not Interested, Don't Like and Don't Recommend Channel work again for a signed-in account instead of reporting "Couldn't send feedback". Cards read YouTube's TV menu tokens, including the menu panel newer feeds load separately; Don't Like rates the video down when the feed offers no feedback item for it. A card YouTube offers no feedback for says so instead of asking to try again (PLAN-0045).
 - iPhone and iPad players offer Up Next, sharing the Mac inspector's remaining queue and recommendations. Selecting a video starts it and closes the panel. The More menu no longer repeats the video title and channel heading (PLAN-0042).
 
 ## [5.19] – 2026-10-21

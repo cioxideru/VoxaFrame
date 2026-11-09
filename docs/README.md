@@ -30,8 +30,9 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [design/claude-design/README.md](design/claude-design/README.md) | DESIGN-0001: VoxaFrame Claude Design import bundle and visual references | current | 2026-10-17 |
 | [design/claude-design/HANDOFF.ru.md](design/claude-design/HANDOFF.ru.md) | Colleague handoff: import files, save the system and check the four platforms | current | 2026-10-17 |
 | [design/claude-design/CLAUDE_IMPORT.md](design/claude-design/CLAUDE_IMPORT.md) | Apple 27 design-system specification, platform rules, components and provenance | current | 2026-10-17 |
-| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0019) | current | 2026-10-17 |
+| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0022) | current | 2026-11-09 |
 | [exec-plans/completed/offline-ipad-cleanup.md](exec-plans/completed/offline-ipad-cleanup.md) | PLAN-0028: physical iPad offline download and cleanup | current | 2026-10-17 |
+| [exec-plans/completed/card-feedback-tokens.md](exec-plans/completed/card-feedback-tokens.md) | PLAN-0045: card feedback tokens from TV menus and `get_panel` | completed | 2026-11-09 |
 | [exec-plans/completed/app-performance-candidates.md](exec-plans/completed/app-performance-candidates.md) | PLAN-0044: app performance candidates, settings saves and channel reloads | completed | 2026-10-23 |
 | [exec-plans/completed/player-controls-layout.md](exec-plans/completed/player-controls-layout.md) | PLAN-0043: player control placement and direct Up Next button | completed | 2026-10-22 |
 | [exec-plans/completed/player-up-next.md](exec-plans/completed/player-up-next.md) | PLAN-0042: mobile Up Next and compact player More menu | completed | 2026-10-22 |

@@ -39,6 +39,8 @@ public struct Video: Identifiable, Hashable, Codable, Sendable {
     public var notInterestedToken: String?  // "Not interested" — hide this video
     public var dontLikeToken: String?  // "Don't like this video"
     public var hideChannelToken: String?  // "Don't recommend channel"
+    /// The TV menu panel that holds the tokens when the feed sent none inline (TV tiles since 2026-09).
+    public var feedbackPanel: FeedbackPanel?
     // MARK: DeArrow overrides (applied from VideoPreloadCache after cache consume)
     public var deArrowTitle: String?
     public var deArrowThumbnailTimestamp: Double?
@@ -60,7 +62,7 @@ public struct Video: Identifiable, Hashable, Codable, Sendable {
         case id, title, channelTitle, channelId, description, thumbnailURL, duration
         case viewCount, publishedAt, publishedTimeText, isLive, isUpcoming, isShort, hasPortraitThumbnail
         case watchProgress, playlistId, playlistIndex, setVideoId, badges
-        case notInterestedToken, dontLikeToken, hideChannelToken
+        case notInterestedToken, dontLikeToken, hideChannelToken, feedbackPanel
         case deArrowTitle, deArrowThumbnailTimestamp
         // localFileURL intentionally omitted — runtime only, never persisted to cache JSON
     }
@@ -87,7 +89,8 @@ public struct Video: Identifiable, Hashable, Codable, Sendable {
         badges: [String] = [],
         notInterestedToken: String? = nil,
         dontLikeToken: String? = nil,
-        hideChannelToken: String? = nil
+        hideChannelToken: String? = nil,
+        feedbackPanel: FeedbackPanel? = nil
     ) {
         self.id = id
         self.title = title
@@ -111,6 +114,7 @@ public struct Video: Identifiable, Hashable, Codable, Sendable {
         self.notInterestedToken = notInterestedToken
         self.dontLikeToken = dontLikeToken
         self.hideChannelToken = hideChannelToken
+        self.feedbackPanel = feedbackPanel
     }
 }
 

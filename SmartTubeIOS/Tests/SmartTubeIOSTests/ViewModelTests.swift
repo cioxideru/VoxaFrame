@@ -230,8 +230,9 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
         if let error = errorToThrow { throw error }
     }
 
-    func sendFeedbackForVideo(videoId: String, iconType: String) async throws {
-        calls.append(Call(method: "sendFeedbackForVideo", args: [videoId, iconType]))
+    // Keep the async protocol witness signature. swiftlint:disable:next async_without_await
+    func sendFeedback(_ action: VideoFeedbackAction, for video: Video) async throws {
+        calls.append(Call(method: "sendFeedbackAction", args: [video.id, String(describing: action)]))
         if let error = errorToThrow { throw error }
     }
 }

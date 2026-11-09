@@ -53,10 +53,9 @@ public protocol InnerTubeAPIProtocol: AnyObject, Sendable {
     func addToPlaylist(playlistId: String, videoId: String) async throws
     func removeFromPlaylist(playlistId: String, setVideoId: String) async throws
     func sendFeedback(token: String) async throws
-    /// On-demand feedback when no pre-fetched token is available (TV-client home feed).
-    /// `iconType` is one of `"NOT_INTERESTED"`, `"DISLIKE"`, or `"BLOCK_CHANNEL"`.
+    /// A card feedback command: the card's token, else its TV menu panel's; Don't Like falls back to a dislike.
     /// Throws `InnerTubeAPI.VideoFeedbackError.tokenUnavailable` when there was nothing to send.
-    func sendFeedbackForVideo(videoId: String, iconType: String) async throws
+    func sendFeedback(_ action: VideoFeedbackAction, for video: Video) async throws
 }
 
 // MARK: - Default-parameter convenience wrappers

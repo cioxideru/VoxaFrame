@@ -293,9 +293,7 @@ private struct VideoCardMenuPresenter: ViewModifier {
             .cardChannelSubscription(channel: Channel.ofCard(video), pending: $state.pendingUnsubscribe)
             .alert(Text("Not Interested", bundle: .module), isPresented: $state.confirmsNotInterested) {
                 Button(role: .destructive) {
-                    CardFeedback.hideVideo(
-                        video, token: video.notInterestedToken, iconType: "NOT_INTERESTED", api: api,
-                        showToast: showToast)
+                    CardFeedback.hideVideo(video, action: .notInterested, api: api, showToast: showToast)
                 } label: {
                     Text("Not Interested", bundle: .module)
                 }
@@ -306,8 +304,7 @@ private struct VideoCardMenuPresenter: ViewModifier {
             }
             .alert(Text("Don't Like This Video", bundle: .module), isPresented: $state.confirmsDontLike) {
                 Button(role: .destructive) {
-                    CardFeedback.hideVideo(
-                        video, token: video.dontLikeToken, iconType: "DISLIKE", api: api, showToast: showToast)
+                    CardFeedback.hideVideo(video, action: .dontLike, api: api, showToast: showToast)
                 } label: {
                     Text("Don't Like This Video", bundle: .module)
                 }
@@ -365,16 +362,12 @@ private struct VideoCardMenuPresenter: ViewModifier {
         guard let channelId = video.channelId, !channelId.isEmpty else { return }
         Task {
             do {
-                if let token = video.hideChannelToken {
-                    try await api.sendFeedback(token: token)
-                } else {
-                    try await api.sendFeedbackForVideo(videoId: video.id, iconType: "BLOCK_CHANNEL")
-                }
+                try await api.sendFeedback(.dontRecommendChannel, for: video)
                 store.settings.blockedChannels[channelId] = video.channelTitle
                 NotificationCenter.default.post(
                     name: .hideChannelFromFeed, object: nil, userInfo: ["channelId": channelId])
             } catch {
-                showToast(CardFeedback.failedText)
+                showToast(CardFeedback.failureText(for: error))
             }
         }
     }
@@ -393,25 +386,23 @@ private struct VideoCardMenuPresenter: ViewModifier {
 }
 
 @MainActor private enum CardFeedback {
-    static var failedText: String {
-        String(localized: "Couldn't send feedback. Try again.", bundle: .module)
+    /// A card YouTube offers no feedback for (no menu token) is not a network failure, so it does not say "Try again".
+    static func failureText(for error: Error) -> String {
+        if case InnerTubeAPI.VideoFeedbackError.tokenUnavailable = error {
+            return String(localized: "YouTube doesn't offer this feedback for this video.", bundle: .module)
+        }
+        return String(localized: "Couldn't send feedback. Try again.", bundle: .module)
     }
 
-    /// Not Interested and Don't Like This Video: the menu token when the feed sent one, else the icon type. Hides the
-    /// card only once YouTube accepted the feedback; a failure keeps it and says so.
-    static func hideVideo(
-        _ video: Video, token: String?, iconType: String, api: InnerTubeAPI, showToast: ShowToastAction
-    ) {
+    /// Not Interested and Don't Like This Video. Hides the card only once YouTube accepted the feedback; a failure
+    /// keeps it and says so.
+    static func hideVideo(_ video: Video, action: VideoFeedbackAction, api: InnerTubeAPI, showToast: ShowToastAction) {
         Task {
             do {
-                if let token {
-                    try await api.sendFeedback(token: token)
-                } else {
-                    try await api.sendFeedbackForVideo(videoId: video.id, iconType: iconType)
-                }
+                try await api.sendFeedback(action, for: video)
                 NotificationCenter.default.post(name: .hideVideoFromFeed, object: nil, userInfo: ["videoId": video.id])
             } catch {
-                showToast(failedText)
+                showToast(failureText(for: error))
             }
         }
     }

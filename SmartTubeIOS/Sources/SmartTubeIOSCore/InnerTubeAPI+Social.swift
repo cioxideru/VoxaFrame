@@ -14,7 +14,7 @@ extension InnerTubeAPI {
     public func like(videoId: String) async throws {
         var body = makeBody(client: tvClientContext)
         body["target"] = ["videoId": videoId]
-        _ = try await postTV(endpoint: "like/like", body: body)
+        try Self.checkRatingResponse(try await postTV(endpoint: "like/like", body: body))
     }
 
     /// Sends a dislike for the given video (requires authentication).
@@ -22,7 +22,7 @@ extension InnerTubeAPI {
     public func dislike(videoId: String) async throws {
         var body = makeBody(client: tvClientContext)
         body["target"] = ["videoId": videoId]
-        _ = try await postTV(endpoint: "like/dislike", body: body)
+        try Self.checkRatingResponse(try await postTV(endpoint: "like/dislike", body: body))
     }
 
     /// Removes any existing like or dislike for the given video (requires authentication).
@@ -30,7 +30,14 @@ extension InnerTubeAPI {
     public func removeLike(videoId: String) async throws {
         var body = makeBody(client: tvClientContext)
         body["target"] = ["videoId": videoId]
-        _ = try await postTV(endpoint: "like/removelike", body: body)
+        try Self.checkRatingResponse(try await postTV(endpoint: "like/removelike", body: body))
+    }
+
+    /// A rating that YouTube answered with an error did not apply; callers roll back or keep the card.
+    private static func checkRatingResponse(_ response: [String: Any]) throws {
+        if let error = response["error"] as? [String: Any] {
+            throw APIError.unavailable(error["message"] as? String ?? "Could not rate this video.")
+        }
     }
 
     /// Adds a video to the authenticated user's Watch Later playlist (id "WL").
@@ -98,72 +105,84 @@ extension InnerTubeAPI {
 
     /// Why a feedback action did not reach YouTube.
     public enum VideoFeedbackError: Error, Equatable {
-        /// `/next` offered no feedback token for the requested action, so no request was sent.
+        /// Neither the card nor its TV menu panel offered a token for the action, so no request was sent.
         case tokenUnavailable
+        /// YouTube answered but did not apply the feedback.
+        case rejected
     }
 
     /// Sends a feed feedback signal to YouTube.
-    /// Used for "Not interested", "Don't like this video", and "Don't recommend channel" —
-    /// all three actions share this endpoint and differ only in their `feedbackToken`.
-    /// Tokens are parsed from `videoRenderer.menu.menuRenderer.items` in the feed response.
-    /// Requires authentication.
+    /// "Not interested", "Hide" and "Don't recommend channel" share this endpoint and differ only in their
+    /// `feedbackToken`. Requires authentication.
     public func sendFeedback(token: String) async throws {
         var body = makeBody(client: tvClientContext)
         body["feedbackTokens"] = [token]
-        _ = try await postTV(endpoint: "feedback", body: body)
-        tubeLog.notice("sendFeedback token=\(token.prefix(20), privacy: .public)…")
-    }
-
-    /// Sends a feed feedback signal when no pre-fetched token is available.
-    ///
-    /// The TV client home feed omits per-video feedback menu items, so
-    /// `Video.notInterestedToken` / `dontLikeToken` / `hideChannelToken` are `nil`
-    /// for authenticated home-feed results. This method fetches the token on-demand
-    /// via a WEB client `/next` request for the given video, then calls `sendFeedback`.
-    ///
-    /// - Parameters:
-    ///   - videoId: The YouTube video ID to act on.
-    ///   - iconType: The InnerTube icon type string identifying the action:
-    ///     `"NOT_INTERESTED"`, `"DISLIKE"`, or `"BLOCK_CHANNEL"`.
-    ///
-    /// Throws `VideoFeedbackError.tokenUnavailable` when YouTube's response has no matching
-    /// token: nothing was sent, so callers must not hide the video or block the channel.
-    public func sendFeedbackForVideo(videoId: String, iconType: String) async throws {
-        var body = makeBody(client: webClientContext)
-        body["videoId"] = videoId
-        let nextData = try await post(endpoint: "next", body: body)
-        guard let token = parseFeedbackToken(iconType: iconType, from: nextData) else {
-            tubeLog.warning(
-                "sendFeedbackForVideo: no \(iconType, privacy: .public) token in /next for videoId=\(videoId, privacy: .public)"
-            )
-            throw VideoFeedbackError.tokenUnavailable
+        let response = try await postTV(endpoint: "feedback", body: body)
+        if response["error"] != nil { throw VideoFeedbackError.rejected }
+        // `feedbackResponses` is optional; when present, one of them must report the token as processed.
+        if let results = response["feedbackResponses"] as? [[String: Any]], !results.isEmpty,
+            !results.contains(where: { $0["isProcessed"] as? Bool == true })
+        {
+            throw VideoFeedbackError.rejected
         }
-        try await sendFeedback(token: token)
+        tubeLog.notice("sendFeedback accepted")
     }
 
-    /// Walks a `/next` (WEB) response and returns the first `feedbackEndpoint` token
-    /// whose `menuServiceItemRenderer.icon.iconType` matches `iconType`.
-    private func parseFeedbackToken(iconType: String, from json: [String: Any]) -> String? {
-        var found: String? = nil
-        func walk(_ obj: Any, depth: Int = 0) {
-            guard found == nil, depth < 50 else { return }
-            if let dict = obj as? [String: Any] {
-                if let svc = dict["menuServiceItemRenderer"] as? [String: Any],
-                    let endpoint = svc["serviceEndpoint"] as? [String: Any],
-                    let token = (endpoint["feedbackEndpoint"] as? [String: Any])?["feedbackToken"] as? String,
-                    let type = (svc["icon"] as? [String: Any])?["iconType"] as? String,
-                    type == iconType
-                {
-                    found = token
-                    return
-                }
-                for value in dict.values { walk(value, depth: depth + 1) }
-            } else if let arr = obj as? [Any] {
-                for item in arr { walk(item, depth: depth + 1) }
+    /// Sends a card's feedback command (PLAN-0045).
+    ///
+    /// Not Interested and Don't Recommend Channel use the card's inline token, else the token its TV menu panel
+    /// (`get_panel`) offers. Don't Like This Video uses the feed's `DISLIKE` token when a WEB feed sent one; TV menus
+    /// have no such item, so it otherwise rates the video down with `like/dislike`.
+    ///
+    /// Throws `VideoFeedbackError.tokenUnavailable` when there was nothing to send: callers must not hide the video
+    /// or block the channel.
+    public func sendFeedback(_ action: VideoFeedbackAction, for video: Video) async throws {
+        if action == .dontLike, video.dontLikeToken == nil {
+            try await dislike(videoId: video.id)
+            return
+        }
+        try await sendFeedback(token: try await feedbackToken(action, for: video))
+    }
+
+    private func feedbackToken(_ action: VideoFeedbackAction, for video: Video) async throws -> String {
+        if let token = Self.inlineFeedbackToken(action, of: video) { return token }
+        if action != .dontLike, let panel = video.feedbackPanel {
+            let tokens = try await fetchFeedbackTokens(panel: panel)
+            if let token = action == .notInterested ? tokens.notInterested : tokens.dontRecommendChannel {
+                return token
             }
         }
-        walk(json)
-        return found
+        tubeLog.warning(
+            "sendFeedback: no \(String(describing: action), privacy: .public) token for videoId=\(video.id, privacy: .public) panel=\(video.feedbackPanel != nil, privacy: .public)"
+        )
+        throw VideoFeedbackError.tokenUnavailable
+    }
+
+    private static func inlineFeedbackToken(_ action: VideoFeedbackAction, of video: Video) -> String? {
+        switch action {
+        case .notInterested: video.notInterestedToken
+        case .dontLike: video.dontLikeToken
+        case .dontRecommendChannel: video.hideChannelToken
+        }
+    }
+
+    /// Loads a card's TV menu (`get_panel`, TV client) and returns its feedback tokens.
+    /// Mirrors Android's `PanelService.getFeedbackTokens` (MediaServiceCore, 2026-09-20).
+    func fetchFeedbackTokens(panel: FeedbackPanel) async throws -> TVMenuFeedbackTokens {
+        var body = makeBody(client: tvClientContext)
+        body["panelId"] = panel.id
+        body["params"] = panel.params
+        let response = try await postTV(endpoint: "get_panel", body: body)
+        if response["error"] != nil { throw VideoFeedbackError.rejected }
+        let section = (response["content"] as? [String: Any])?["engagementPanelSectionListRenderer"] as? [String: Any]
+        let list = (section?["content"] as? [String: Any])?["listViewModel"] as? [String: Any]
+        let tokens = TVMenuFeedbackTokens(menuItems: list?["listItems"] as? [[String: Any]] ?? [])
+        let hasVideo = tokens.notInterested != nil
+        let hasChannel = tokens.dontRecommendChannel != nil
+        tubeLog.notice(
+            "get_panel \(panel.id, privacy: .public): notInterested=\(hasVideo, privacy: .public) channel=\(hasChannel, privacy: .public)"
+        )
+        return tokens
     }
 
     // MARK: - Next (related videos / SuggestionsController equivalent)

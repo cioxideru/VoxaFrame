@@ -113,19 +113,61 @@ final class SubscriptionUITestProtocol: URLProtocol, @unchecked Sendable {
                 "contents": [:],
             ]
         }
-        if path.hasSuffix("/next") {
-            // The fixture feed has no per-card tokens, so card feedback fetches them here.
-            return ["contents": ["NOT_INTERESTED", "DISLIKE", "BLOCK_CHANNEL"].map(Self.feedbackMenuItem)]
+        if path.hasSuffix("/get_panel") {
+            // Cards without inline tokens load their TV menu panel, shaped like YouTube's 2026-09 response.
+            let params = body["params"] as? String ?? ""
+            return [
+                "content": [
+                    "engagementPanelSectionListRenderer": [
+                        "content": ["listViewModel": ["listItems": Self.panelMenuItems(params: params)]]
+                    ]
+                ]
+            ]
         }
         return ["responseContext": [:]]
     }
 
-    private static func feedbackMenuItem(_ iconType: String) -> [String: Any] {
-        [
-            "menuServiceItemRenderer": [
-                "icon": ["iconType": iconType],
-                "serviceEndpoint": ["feedbackEndpoint": ["feedbackToken": "fixture-\(iconType)"]],
+    private static func panelMenuItems(params: String) -> [[String: Any]] {
+        func item(_ title: String, _ command: [String: Any]) -> [String: Any] {
+            [
+                "listItemViewModel": [
+                    "title": ["content": title],
+                    "rendererContext": ["commandContext": ["onTap": ["innertubeCommand": command]]],
+                ]
             ]
+        }
+        let notInterested: [String: Any] = [
+            "feedbackToken": "fixture-panel-not-interested-\(params)",
+            "actions": [["openClientOverlayAction": ["type": "CLIENT_OVERLAY_TYPE_DISMISSAL_FOLLOW_UP"]]],
+        ]
+        let confirm: [String: Any] = [
+            "compactLinkRenderer": [
+                "serviceEndpoint": [
+                    "commandExecutorCommand": [
+                        "commands": [["feedbackEndpoint": ["feedbackToken": "fixture-panel-channel-\(params)"]]]
+                    ]
+                ]
+            ]
+        ]
+        let popup: [String: Any] = [
+            "popup": [
+                "overlaySectionRenderer": [
+                    "overlay": [
+                        "overlayTwoPanelRenderer": [
+                            "actionPanel": [
+                                "overlayPanelRenderer": [
+                                    "content": ["overlayPanelItemListRenderer": ["items": [confirm]]]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+        return [
+            item("Play", ["watchEndpoint": ["videoId": params]]),
+            item("Not interested", ["feedbackEndpoint": notInterested]),
+            item("Don't recommend channel", ["openPopupAction": popup]),
         ]
     }
 }

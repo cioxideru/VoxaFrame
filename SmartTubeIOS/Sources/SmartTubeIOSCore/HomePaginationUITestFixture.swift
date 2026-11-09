@@ -46,6 +46,18 @@ enum HomePaginationUITestFixture {
         }
     }
 
+    private static var feedbackMenu: [String: Any] {
+        let items = ["NOT_INTERESTED", "BLOCK_CHANNEL"].map { icon in
+            [
+                "menuServiceItemRenderer": [
+                    "icon": ["iconType": icon],
+                    "serviceEndpoint": ["feedbackEndpoint": ["feedbackToken": "fixture-\(icon)"]],
+                ]
+            ]
+        }
+        return ["menuRenderer": ["items": items]]
+    }
+
     /// UI pagination must cross the parser boundary, including competing navigation/shelf cursors.
     static func browseResponse(for group: VideoGroup) -> [String: Any] {
         func renderer(_ video: Video) -> [String: Any] {
@@ -57,6 +69,8 @@ enum HomePaginationUITestFixture {
             if video.isShort {
                 fields["navigationEndpoint"] = ["reelWatchEndpoint": ["videoId": video.id]]
             }
+            // WEB cards carry their feedback tokens inline; fixture Shorts (`shortsPage`) use a TV menu panel instead.
+            fields["menu"] = feedbackMenu
             if let progress = video.watchProgress {
                 fields["thumbnailOverlays"] = [
                     [
@@ -203,7 +217,8 @@ enum HomePaginationUITestFixture {
                 Video(
                     id: "\(prefix)-short-\($0)", title: "\(prefix) short \($0)", channelTitle: "Fixture",
                     channelId: "UCfixture-\(prefix)-short-\($0)", isShort: true,
-                    watchProgress: progress(at: $0))
+                    watchProgress: progress(at: $0),
+                    feedbackPanel: FeedbackPanel(id: "PAcontext_menu", params: "fixture-\(prefix)-short-\($0)"))
             },
             nextPageToken: nextToken
         )

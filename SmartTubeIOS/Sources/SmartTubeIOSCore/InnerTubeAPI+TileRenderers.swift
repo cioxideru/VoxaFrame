@@ -162,7 +162,7 @@ extension InnerTubeAPI {
             watchProgress: watchProgress,
             setVideoId: setVideoId,
             badges: []
-        )
+        ).addingTVMenuFeedback(of: tile)
     }
 
     /// Depth-limited search for a playlist-entry token (`playlistSetVideoId` or `setVideoId`)
