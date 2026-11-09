@@ -218,6 +218,8 @@ extension PlaybackViewModel {
         qualityManager.reset()
         phase2Task?.cancel()
         phase2Task = nil
+        trackingURLSource?.accountFetch?.cancel()
+        trackingURLSource = nil
         prefetchTask?.cancel()
         prefetchTask = nil
         AVAssetTrackCache.shared.clear()
@@ -405,6 +407,8 @@ extension PlaybackViewModel {
         isLoading = false
         phase2Task?.cancel()
         phase2Task = nil
+        trackingURLSource?.accountFetch?.cancel()
+        trackingURLSource = nil
         prefetchTask?.cancel()
         prefetchTask = nil
         AVAssetTrackCache.shared.clear()
@@ -473,12 +477,21 @@ extension PlaybackViewModel {
     /// Fetches data that is not needed to start AVPlayer: related videos, end cards,
     /// SponsorBlock segments (cache miss only), tracking URLs, and neighbour prefetch.
     /// All property assignments happen on @MainActor because PlaybackViewModel is @MainActor.
+    /// The tracking URLs one load can use. The VISIONOS HLS path and the fallbacks start Phase 2 from
+    /// `launchPhase2` without the load's context, so the context lives on the view model (PLAN-0046).
+    struct TrackingURLSource {
+        let videoId: String
+        /// From `VideoPreloadCache`; a prefetch stores the anonymous player's URLs.
+        let cached: PlaybackTrackingURLs?
+        /// The authenticated TV `/player` fetch, started with the primary player request; nil when the cached URLs
+        /// are account-bound and for Shorts.
+        let accountFetch: Task<PlaybackTrackingURLs?, Never>?
+    }
+
     func loadAsyncPhase2(
         video: Video,
         cached: CachedVideoData,
         info: PlayerInfo,
-        cachedTrackingURLs: PlaybackTrackingURLs?,
-        authTrackingTask: Task<PlaybackTrackingURLs?, Never>?,
         sponsorCached: Bool
     ) async {
         guard !Task.isCancelled else { return }
@@ -489,7 +502,9 @@ extension PlaybackViewModel {
 
         if isShortsPlayer {
             // Shorts has its own feed; /next and end cards are unused here.
-            let tracking = recordsHistory ? await api.fetchAuthenticatedTrackingURLs(videoId: video.id) : nil
+            let tracking =
+                recordsHistory
+                ? await api.fetchAuthenticatedTrackingURLs(videoId: video.id, cpn: tracker.currentCPN) : nil
             guard !Task.isCancelled, currentVideo?.id == video.id else { return }
             tracker.setTrackingURLs(tracking ?? info.trackingURLs)
             return
@@ -532,17 +547,22 @@ extension PlaybackViewModel {
         guard !Task.isCancelled else { return }
 
         // --- Tracking URLs ---
+        let source = trackingURLSource?.videoId == video.id ? trackingURLSource : nil
         let resolvedTrackingURLs: PlaybackTrackingURLs?
-        if let cachedTracking = cachedTrackingURLs {
+        if let cachedTracking = source?.cached, cachedTracking.isAccountBound {
             resolvedTrackingURLs = cachedTracking
             playerLog.notice("cache HIT: trackingURLs")
         } else {
-            resolvedTrackingURLs = await authTrackingTask?.value ?? info.trackingURLs
+            // Anonymous URLs are the last resort: their pings never reach the account's history.
+            resolvedTrackingURLs = PlaybackTrackingURLs.preferred(
+                fetched: await source?.accountFetch?.value, cached: source?.cached, player: info.trackingURLs)
             await VideoPreloadCache.shared.store(trackingURLs: resolvedTrackingURLs, for: video.id)
         }
         guard !Task.isCancelled else { return }
         tracker.setTrackingURLs(resolvedTrackingURLs)  // incognito: session id is empty, never flushed
-        playerLog.notice("activeTrackingURLs resolved: \(resolvedTrackingURLs != nil ? "account-bound" : "none")")
+        let trackingKind =
+            resolvedTrackingURLs.map { $0.isAccountBound ? "account-bound" : "anonymous" } ?? "none"
+        playerLog.notice("activeTrackingURLs resolved: \(trackingKind)")
 
         prefetchNeighboursIfNeeded(info: info)
     }

@@ -12,6 +12,7 @@ extension PlaybackViewModel {
     /// The shared InnerTubeAPI instance already carries the updated token.
     public func updateAuthToken(_ token: String?) {
         let wasAuthenticated = hasAuthToken
+        let previousToken = currentAuthToken
         hasAuthToken = token != nil
         currentAuthToken = token
         // Propagate the token to the PlaybackViewModel's own API instance so that
@@ -24,11 +25,10 @@ extension PlaybackViewModel {
         if wasAuthenticated, token == nil {
             // Signed out: evict account-bound cache data
             Task { await VideoPreloadCache.shared.evictAuthSensitiveData() }
-        } else if wasAuthenticated, token != nil {
-            // Token refreshed: tracking URLs bound to the old token are stale.
-            // BUG-016 fix: also clear WatchtimeTracker so any in-flight checkpoint between
-            // the token refresh and the next video load uses nil URLs rather than stale ones.
-            tracker.setTrackingURLs(nil)
+        } else if wasAuthenticated, token != nil, token != previousToken {
+            // Token refreshed. The player view pushes the same token on every appearance, which is not a refresh.
+            // The current session keeps its URLs: their ei/vm/of belong to the account and this playback, and the
+            // pings carry the new token. Clearing them dropped the rest of the session's history (PLAN-0046).
             Task { await VideoPreloadCache.shared.evictTrackingURLs() }
         }
     }

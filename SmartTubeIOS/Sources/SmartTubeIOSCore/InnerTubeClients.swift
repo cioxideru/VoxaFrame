@@ -125,6 +125,15 @@ package enum InnerTubeClients {
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15,gzip(gfe)"
     }
 
+    /// The TV identity Android sends for authenticated `/player` (MediaServiceCore `AppClient.TV_DOWNGRADED`): an old
+    /// Cobalt User-Agent gets the regular, non-TCL player and its 5-digit signature timestamp. With the 7.x identity
+    /// the same request answers UNPLAYABLE "The page needs to be reloaded" (iPad log, 2026-11-09; PLAN-0046).
+    package enum TVDowngraded {
+        package static let version = "5.20260901"
+        package static let userAgent =
+            "Mozilla/5.0 (DirectFB; Linux x86_64) Cobalt/4.13031-qa (unlike Gecko) Starboard/1"
+    }
+
     package enum TV {
         package static let name = "TVHTML5"
         package static let nameID = "7"

@@ -33,6 +33,11 @@ import Testing
 //    X-Goog-Visitor-Id, so the rebuild is what makes a ping attributable at all.
 //    Pings without `ei`/`vm`/`of` are now skipped instead of fired blindly.
 //
+// PLAN-0046 (iPad log, 2026-11-09): the device-code token cannot be exchanged for a SAPISID cookie (OAuthLogin and
+// Multilogin answer 403), and the WEB client answers the Bearer token with HTTP 400. Every view was therefore
+// reported with the anonymous player's URLs. Like Android, the TV client now posts /player to www.youtube.com with
+// the Bearer token and no API key; the WEB client is tried only with a SAPISID cookie.
+//
 // The auth context is already in place: AuthService.fetchYouTubeWebCookies()
 // (called from AuthService+DeviceFlow.swift:71 after every sign-in) obtains
 // the YouTube.com SAPISID cookie and stores it on the InnerTubeAPI actor
@@ -50,12 +55,15 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var capturedURLs: [String: URL] = [:]
     /// Captured request headers keyed by URL substring match.
     nonisolated(unsafe) static var capturedHeaders: [String: [String: String]] = [:]
+    /// Every request URL in order, for asserting how many requests were sent.
+    nonisolated(unsafe) static var requestedURLs: [URL] = []
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
         let url = request.url?.absoluteString ?? ""
+        if let requestURL = request.url { Self.requestedURLs.append(requestURL) }
         for key in Self.responses.keys where url.contains(key) {
             if let body = request.httpBodyOrAccumulated() {
                 Self.capturedBodies[key] = body
@@ -231,18 +239,76 @@ struct AuthenticatedTrackingURLsTests {
         )
     }
 
-    @Test("fetchAuthenticatedTrackingURLs falls back to Bearer when SAPISID is absent")
-    func trackingFetchUsesBearerWithoutSAPISID() async {
+    @Test("without SAPISID the TV client sends the Bearer token to www.youtube.com, with no API key (PLAN-0046)")
+    func trackingFetchUsesTVClientWithBearer() async throws {
         StubURLProtocol.responses = [
             "youtube.com/": (200, Data("\"STS\":12345".utf8)),
             "youtubei/v1/player": (200, Data("{}".utf8)),
         ]
         StubURLProtocol.capturedHeaders = [:]
+        StubURLProtocol.capturedBodies = [:]
+        StubURLProtocol.capturedURLs = [:]
         let api = makeAPI()
         _ = await api.fetchAuthenticatedTrackingURLs(videoId: "testvid123")
 
-        let auth = StubURLProtocol.capturedHeaders["youtubei/v1/player"]?["Authorization"]
-        #expect(auth == "Bearer fake-token")
+        let headers = try #require(StubURLProtocol.capturedHeaders["youtubei/v1/player"])
+        #expect(headers["Authorization"] == "Bearer fake-token")
+        #expect(headers["X-YouTube-Client-Name"] == InnerTubeClients.TV.nameID)
+        #expect(headers["User-Agent"]?.contains("Cobalt") == true)
+        let url = try #require(StubURLProtocol.capturedURLs["youtubei/v1/player"])
+        #expect(url.host == "www.youtube.com")
+        #expect(url.query?.contains("key=") != true, "Android sends no API key with the Bearer token")
+        let bodyData = try #require(StubURLProtocol.capturedBodies["youtubei/v1/player"])
+        let body = try #require(try JSONSerialization.jsonObject(with: bodyData) as? [String: Any])
+        let client = (body["context"] as? [String: Any])?["client"] as? [String: Any]
+        #expect(client?["clientName"] as? String == InnerTubeClients.TV.name)
+    }
+
+    @Test("without SAPISID TV failures are not retried with the WEB client, which rejects the Bearer token")
+    func noWebBearerAttempt() async {
+        StubURLProtocol.responses = [
+            "youtube.com/": (200, Data("\"STS\":12345".utf8)),
+            "youtubei/v1/player": (400, Data("{}".utf8)),
+        ]
+        StubURLProtocol.requestedURLs = []
+        let api = makeAPI()
+        let result = await api.fetchAuthenticatedTrackingURLs(videoId: "testvid123")
+        #expect(result == nil)
+        let players = StubURLProtocol.requestedURLs.filter { $0.path.hasSuffix("/player") }
+        #expect(!players.isEmpty)
+        // The WEB client always adds the API key; the TV attempts with a Bearer token never do.
+        #expect(players.allSatisfy { $0.query?.contains("key=") != true })
+    }
+
+    @Test("URLs from the authenticated response are account-bound")
+    func fetchedURLsAreAccountBound() async throws {
+        let response: [String: Any] = [
+            "playbackTracking": [
+                "videostatsPlaybackUrl": ["baseUrl": "https://s.youtube.com/api/stats/playback?ei=e&vm=v&of=o"],
+                "videostatsWatchtimeUrl": ["baseUrl": "https://s.youtube.com/api/stats/watchtime?ei=e&vm=v&of=o"],
+            ]
+        ]
+        StubURLProtocol.responses = [
+            "youtube.com/": (200, Data("\"STS\":12345".utf8)),
+            "youtubei/v1/player": (200, try JSONSerialization.data(withJSONObject: response)),
+        ]
+        let result = try #require(await makeAPI().fetchAuthenticatedTrackingURLs(videoId: "testvid123"))
+        #expect(result.isAccountBound)
+        #expect(InnerTubeAPI.trackingSession(from: result) != nil)
+    }
+
+    @Test("a playback prefers account-bound URLs, and anonymous ones only as the last resort")
+    func preferredTrackingURLs() throws {
+        let url = try #require(URL(string: "https://www.youtube.com/api/stats/watchtime?ei=e&vm=v&of=o"))
+        let account = PlaybackTrackingURLs(playbackURL: url, watchtimeURL: url, isAccountBound: true)
+        let anonymous = PlaybackTrackingURLs(playbackURL: url, watchtimeURL: url)
+        let player = PlaybackTrackingURLs(playbackURL: url, watchtimeURL: url)
+        #expect(PlaybackTrackingURLs.preferred(fetched: nil, cached: account, player: player)?.isAccountBound == true)
+        #expect(
+            PlaybackTrackingURLs.preferred(fetched: account, cached: anonymous, player: player)?.isAccountBound == true)
+        #expect(
+            PlaybackTrackingURLs.preferred(fetched: nil, cached: anonymous, player: player)?.isAccountBound == false)
+        #expect(PlaybackTrackingURLs.preferred(fetched: nil, cached: nil, player: nil) == nil)
     }
 
     @Test("WebSafari playback fetch never sends Bearer (www.youtube.com rejects it; PR #129)")

@@ -97,109 +97,117 @@ extension InnerTubeAPI {
         )
     }
 
-    /// Fetches account-bound playback tracking URLs by making an authenticated WEB-client
-    /// `/player` request. The iOS-client player request (used for HLS stream URLs) is
-    /// unauthenticated, so its `playbackTracking` URLs carry no account context. A WEB-client
-    /// request on www.youtube.com (the same endpoint the IFrame player and youtube.com use)
-    /// returns URLs that YouTube has pre-bound to the signed-in account server-side — pinging
-    /// those URLs records the view in watch history.
+    /// Fetches account-bound playback tracking URLs (PLAN-0046).
     ///
-    /// Endpoint: `https://www.youtube.com/youtubei/v1/player` via `postWebSafari`. The web
-    /// client uses **SAPISIDHASH** auth when `self.sapisid` is set (obtained from
-    /// `AuthService.fetchYouTubeWebCookies()` after every device-code sign-in — see
-    /// `AuthService+DeviceFlow.swift:71`), or falls back to Bearer+X-Goog-AuthUser when no
-    /// SAPISID is available. Both are legitimate web-session auth schemes from YouTube's
-    /// perspective.
-    ///
-    /// Why not the TV client on googleapis.com (the previous implementation): the
-    /// googleapis.com InnerTube surface is a restricted API that exposes
-    /// streamingData/playabilityStatus/videoDetails but does NOT include `playbackTracking`
-    /// in the response. Confirmed live (user retest after #288's three fixes, 2026-07-08):
-    /// the TV endpoint returned videoDetails/playabilityStatus but the `playbackTracking`
-    /// key was always absent. The www.youtube.com web endpoint reliably returns it.
-    ///
-    /// Called in parallel with the primary iOS player fetch; only the tracking URLs are kept.
-    public func fetchAuthenticatedTrackingURLs(videoId: String) async -> PlaybackTrackingURLs? {
-        guard authToken != nil || sapisid != nil else {
-            return nil
+    /// The stats server credits a ping to the account only when its `ei`/`vm`/`of` come from an authenticated player
+    /// response. Like Android (MediaServiceCore `VideoInfoService.getAuthVideoInfo` with `AppClient.TV_DOWNGRADED`),
+    /// a TV client posts `/player` to www.youtube.com with the device-code Bearer token and no API key. The WEB client
+    /// rejects the Bearer token with HTTP 400 (iPad log, 2026-11-09), so it is tried only with a SAPISID cookie.
+    /// `cpn` is the tracker's playback nonce, which Android also sends in the player request.
+    public func fetchAuthenticatedTrackingURLs(videoId: String, cpn: String? = nil) async -> PlaybackTrackingURLs? {
+        if authToken != nil {
+            let body = buildTVTrackingBody(
+                videoId: videoId, cpn: cpn, sts: await fetchSignatureTimestampIfNeeded())
+            if let urls = await tvTrackingAttempt(body: body, videoId: videoId) { return urls }
         }
+        guard sapisid != nil else { return nil }
         do {
-            let body = await buildTrackingURLsBody(videoId: videoId)
-            let data = try await postWebSafari(body: body, allowBearerFallback: true)
-            guard
-                let tracking = data["playbackTracking"] as? [String: Any],
-                let pbStr = (tracking["videostatsPlaybackUrl"] as? [String: Any])?["baseUrl"] as? String,
-                let wtStr = (tracking["videostatsWatchtimeUrl"] as? [String: Any])?["baseUrl"] as? String,
-                let pbURL = URL(string: pbStr),
-                let wtURL = URL(string: wtStr)
-            else {
-                tubeLog.notice(
-                    "fetchAuthenticatedTrackingURLs: no tracking data in WEB player response for \(videoId, privacy: .public)"
-                )
-                return nil
-            }
-            tubeLog.notice(
-                "fetchAuthenticatedTrackingURLs: account-bound URLs obtained for \(videoId, privacy: .public)")
-            return PlaybackTrackingURLs(playbackURL: pbURL, watchtimeURL: wtURL)
+            let body = await buildTrackingURLsBody(videoId: videoId, client: webSafariClientContext)
+            let data = try await postWebSafari(body: body)
+            return Self.accountTrackingURLs(in: data, source: "web", videoId: videoId)
         } catch {
             tubeLog.error(
-                "fetchAuthenticatedTrackingURLs failed for \(videoId, privacy: .public): \(error, privacy: .public)")
+                "fetchAuthenticatedTrackingURLs [web] failed for \(videoId, privacy: .public): \(error, privacy: .public)"
+            )
             return nil
         }
     }
 
-    /// Same as `fetchAuthenticatedTrackingURLs(videoId:)` but uses the supplied token directly
-    /// instead of reading `self.authToken`. Use this when the caller holds the token but cannot
-    /// guarantee that `setAuthToken` has already propagated to the actor (e.g. prefetch tasks
-    /// that start before `PlaybackViewModel.updateAuthToken` has had a chance to run).
+    /// The TV `/player` request; logs what YouTube answered so a missing `playbackTracking` can be explained.
+    private func tvTrackingAttempt(body: [String: Any], videoId: String) async -> PlaybackTrackingURLs? {
+        let source = "tv-downgraded"
+        do {
+            let data = try await postTV(
+                endpoint: "player", body: body,
+                youTubeHostIdentity: (InnerTubeClients.TVDowngraded.version, InnerTubeClients.TVDowngraded.userAgent))
+            let playability = data["playabilityStatus"] as? [String: Any]
+            let status = playability?["status"] as? String ?? "none"
+            let reason = (playability?["reason"] as? String).map { String($0.prefix(80)) } ?? ""
+            let streaming = data["streamingData"] != nil
+            let tracking = data["playbackTracking"] != nil
+            tubeLog.notice(
+                "tracking [\(source, privacy: .public)] \(videoId, privacy: .public): status=\(status, privacy: .public) reason='\(reason, privacy: .public)' streaming=\(streaming, privacy: .public) playbackTracking=\(tracking, privacy: .public)"
+            )
+            return Self.accountTrackingURLs(in: data, source: source, videoId: videoId)
+        } catch {
+            tubeLog.error(
+                "tracking [\(source, privacy: .public)] failed for \(videoId, privacy: .public): \(error, privacy: .public)"
+            )
+            return nil
+        }
+    }
+
+    /// The TV `/player` body Android sends (MediaServiceCore `QueryBuilder`): the client with screen, User-Agent,
+    /// region and visitor data, safety mode, the playback nonce and the TV playback capabilities.
+    private func buildTVTrackingBody(videoId: String, cpn: String?, sts: Int?) -> [String: Any] {
+        var client = (tvClientContext["client"] as? [String: Any]) ?? [:]
+        client["clientVersion"] = InnerTubeClients.TVDowngraded.version
+        client["clientScreen"] = "WATCH"
+        client["userAgent"] = InnerTubeClients.TVDowngraded.userAgent
+        client["utcOffsetMinutes"] = TimeZone.current.secondsFromGMT() / 60
+        if let vd = visitorData { client["visitorData"] = vd }
+        var content: [String: Any] = [
+            "html5Preference": "HTML5_PREF_WANTS", "lactMilliseconds": 60_000, "isInlinePlaybackNoAd": true,
+        ]
+        if let sts { content["signatureTimestamp"] = sts }
+
+        var body = makeBody(client: ["client": client, "user": ["lockedSafetyMode": false]])
+        body["videoId"] = videoId
+        body["racyCheckOk"] = true
+        body["contentCheckOk"] = true
+        if let cpn { body["cpn"] = cpn }
+        body["playbackContext"] = [
+            "contentPlaybackContext": content,
+            "devicePlaybackCapabilities": ["supportsVp9Encoding": true, "supportXhr": false],
+        ]
+        return body
+    }
+
+    /// Same as `fetchAuthenticatedTrackingURLs(videoId:)` for a caller that holds the token before
+    /// `setAuthToken` has reached the actor (e.g. a prefetch that starts first).
     public func fetchAuthenticatedTrackingURLs(videoId: String, usingToken token: String) async -> PlaybackTrackingURLs?
     {
-        do {
-            let body = await buildTrackingURLsBody(videoId: videoId)
-            // Mirror the with-token path: postWebSafari reads authToken / sapisid from the
-            // actor for its auth-scheme dispatch. The actor's authToken should already be set
-            // by the time prefetch runs (PlaybackViewModel's updateAuthToken is called before
-            // prefetch in the standard path). If the caller has a token but the actor doesn't
-            // yet, seed it here so postWebSafari can use Bearer+AuthUser as a fallback when
-            // SAPISIDHASH is unavailable.
-            if authToken == nil { authToken = token }
-            let data = try await postWebSafari(body: body, allowBearerFallback: true)
-            guard
-                let tracking = data["playbackTracking"] as? [String: Any],
-                let pbStr = (tracking["videostatsPlaybackUrl"] as? [String: Any])?["baseUrl"] as? String,
-                let wtStr = (tracking["videostatsWatchtimeUrl"] as? [String: Any])?["baseUrl"] as? String,
-                let pbURL = URL(string: pbStr),
-                let wtURL = URL(string: wtStr)
-            else {
-                tubeLog.notice(
-                    "fetchAuthenticatedTrackingURLs: no tracking data in WEB player response for \(videoId, privacy: .public)"
-                )
-                return nil
-            }
-            tubeLog.notice(
-                "fetchAuthenticatedTrackingURLs: account-bound URLs obtained for \(videoId, privacy: .public)")
-            return PlaybackTrackingURLs(playbackURL: pbURL, watchtimeURL: wtURL)
-        } catch {
-            tubeLog.error(
-                "fetchAuthenticatedTrackingURLs failed for \(videoId, privacy: .public): \(error, privacy: .public)")
-            return nil
-        }
+        if authToken == nil { authToken = token }
+        return await fetchAuthenticatedTrackingURLs(videoId: videoId)
     }
 
-    /// Builds the WEB-client `/player` body for a tracking-URLs-only request on
-    /// www.youtube.com (via postWebSafari). Mirrors `fetchPlayerInfoWebSafari`'s body shape:
-    /// the web client + `playbackContext.contentPlaybackContext` (with optional
-    /// `signatureTimestamp`). The web endpoint does not use the TV `att/get` attestation
-    /// (`fetchAttestationToken` would fail on the web transport), so the previous
-    /// `serviceIntegrityDimensions.poToken` line is removed.
-    ///
-    /// History: an earlier version of this function used the TV client on googleapis.com
-    /// (a restricted API that does not return `playbackTracking` at all), then was updated
-    /// to use a richer body shape with the TV client — which still didn't return
-    /// `playbackTracking`. The actual fix is the endpoint, not the body — confirmed live
-    /// (user retest 2026-07-08).
-    private func buildTrackingURLsBody(videoId: String) async -> [String: Any] {
-        var clientFields = (webSafariClientContext["client"] as? [String: Any]) ?? [:]
+    private static func accountTrackingURLs(
+        in data: [String: Any], source: String, videoId: String
+    ) -> PlaybackTrackingURLs? {
+        guard
+            let tracking = data["playbackTracking"] as? [String: Any],
+            let pbStr = (tracking["videostatsPlaybackUrl"] as? [String: Any])?["baseUrl"] as? String,
+            let wtStr = (tracking["videostatsWatchtimeUrl"] as? [String: Any])?["baseUrl"] as? String,
+            let pbURL = URL(string: pbStr),
+            let wtURL = URL(string: wtStr)
+        else {
+            tubeLog.notice(
+                "fetchAuthenticatedTrackingURLs [\(source, privacy: .public)]: no playbackTracking for \(videoId, privacy: .public)"
+            )
+            return nil
+        }
+        let urls = PlaybackTrackingURLs(playbackURL: pbURL, watchtimeURL: wtURL, isAccountBound: true)
+        let hasSession = trackingSession(from: urls) != nil
+        tubeLog.notice(
+            "fetchAuthenticatedTrackingURLs [\(source, privacy: .public)]: account URLs for \(videoId, privacy: .public) session=\(hasSession, privacy: .public)"
+        )
+        return urls
+    }
+
+    /// The `/player` body for a tracking-URLs-only request: the client with visitor data, `contentPlaybackContext`
+    /// (with `signatureTimestamp` when known) and the content checks, as in `fetchPlayerInfoAuthenticated`.
+    private func buildTrackingURLsBody(videoId: String, client: [String: Any]) async -> [String: Any] {
+        var clientFields = (client["client"] as? [String: Any]) ?? [:]
         if let vd = visitorData { clientFields["visitorData"] = vd }
         let sts = await fetchSignatureTimestampIfNeeded()
         var cpbc: [String: Any] = ["html5Preference": "HTML5_PREF_WANTS"]
@@ -207,6 +215,8 @@ extension InnerTubeAPI {
 
         var body = makeBody(client: ["client": clientFields])
         body["videoId"] = videoId
+        body["racyCheckOk"] = true
+        body["contentCheckOk"] = true
         body["playbackContext"] = ["contentPlaybackContext": cpbc]
         return body
     }
@@ -215,7 +225,7 @@ extension InnerTubeAPI {
 
     /// Account-bound session params YouTube mints into the `playbackTracking` URLs.
     /// Without all three the stats server silently drops the ping (Android bails out too).
-    struct TrackingSession: Sendable {
+    struct TrackingSession: Equatable, Sendable {
         let eventId: String
         let visitorMonitoring: String
         let ofParam: String

@@ -12,6 +12,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- Videos watched while signed in appear in the account's YouTube watch history with their progress again. Tracking now comes from the same TV player request Android SmartTube uses, reaches the player on every stream path, and survives the player reappearing (PLAN-0046).
 - Not Interested, Don't Like and Don't Recommend Channel work again for a signed-in account instead of reporting "Couldn't send feedback". Cards read YouTube's TV menu tokens, including the menu panel newer feeds load separately. Don't Like appears only where YouTube offers it, which TV feeds never do. A card YouTube offers no feedback for says so instead of asking to try again (PLAN-0045).
 - iPhone and iPad players offer Up Next, sharing the Mac inspector's remaining queue and recommendations. Selecting a video starts it and closes the panel. The More menu no longer repeats the video title and channel heading (PLAN-0042).
 

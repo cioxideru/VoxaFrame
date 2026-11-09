@@ -42,7 +42,7 @@ public final class WatchtimeTracker {
 
     private var videoId: String = ""
     private var cpn: String = ""
-    private var trackingURLs: PlaybackTrackingURLs?
+    private(set) var trackingURLs: PlaybackTrackingURLs?
     /// Nil until the first checkpoint() — the lazy segment start.
     /// First checkpoint sets this and fires reportPlaybackStarted.
     private var segmentStart: TimeInterval?
@@ -126,12 +126,21 @@ public final class WatchtimeTracker {
     /// Store authenticated tracking URLs once they resolve in `loadAsync`.
     /// Safe to call any time between `transition` and the first `checkpoint`.
     public func setTrackingURLs(_ urls: PlaybackTrackingURLs?) {
+        let session = InnerTubeAPI.trackingSession(from: urls)
+        // New session params need their own watch record: YouTube ignores watchtime pings without one. A second Phase 2
+        // of the same playback sets the same params again and keeps the record it opened (PLAN-0046).
+        if session != InnerTubeAPI.trackingSession(from: trackingURLs) { recordOpenedAt = nil }
         trackingURLs = urls
-        let hasSession = InnerTubeAPI.trackingSession(from: urls) != nil
+        let hasSession = session != nil
+        let accountBound = urls?.isAccountBound == true
         trackerLog.notice(
-            "setTrackingURLs: \(urls != nil ? "received" : "nil", privacy: .public) accountBound=\(hasSession, privacy: .public)"
+            "setTrackingURLs: \(urls != nil ? "received" : "nil", privacy: .public) accountBound=\(accountBound, privacy: .public) session=\(hasSession, privacy: .public)"
         )
     }
+
+    /// The client playback nonce of the current session; the player request that mints the tracking URLs sends it
+    /// too, as Android does.
+    public var currentCPN: String { cpn }
 
     /// Indicates whether the tracker has the session parameters required by YouTube.
     public var hasTrackingSession: Bool {
@@ -210,7 +219,9 @@ public final class WatchtimeTracker {
         } else {
             segmentStart = position
         }
-        if needsNewRecord || isFinal {
+        // Without session params the playback ping is skipped, so the record stays unopened and the next checkpoint
+        // with URLs opens it; otherwise every later watchtime ping would be ignored (PLAN-0046).
+        if needsNewRecord || isFinal, InnerTubeAPI.trackingSession(from: localURLs) != nil {
             recordOpenedAt = Date()
         }
 

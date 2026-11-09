@@ -233,8 +233,7 @@ struct PlayerRouterQueueTests {
         // Run the actual enrichment stage without stream resolution or decoding.
         let phase2 = Task { @MainActor in
             await state.vm.loadAsyncPhase2(
-                video: playing, cached: cached, info: info, cachedTrackingURLs: nil,
-                authTrackingTask: nil, sponsorCached: true)
+                video: playing, cached: cached, info: info, sponsorCached: true)
         }
         state.vm.phase2Task = phase2
         defer {

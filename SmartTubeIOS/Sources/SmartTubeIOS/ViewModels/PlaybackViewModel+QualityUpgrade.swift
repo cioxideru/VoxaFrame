@@ -34,7 +34,6 @@ extension PlaybackViewModel {
                 )
             await self?.loadAsyncPhase2(
                 video: video, cached: p2Cached, info: info,
-                cachedTrackingURLs: cached?.trackingURLs ?? nil, authTrackingTask: nil,
                 sponsorCached: cached?.sponsorSegments != nil
             )
         }

@@ -427,6 +427,8 @@ public final class PlaybackViewModel {
     /// Phase 2 background work: nextInfo, endCards, trackingURLs, neighbour prefetch.
     /// Cancelled at the start of every new load() and in stop().
     var phase2Task: Task<Void, Never>?
+    /// This load's tracking URL sources. Every Phase 2 launch reads it, whichever stream path won (PLAN-0046).
+    @ObservationIgnored var trackingURLSource: TrackingURLSource?
     /// Background prefetch task: either fetches AndroidVR playerInfo (muxed fallback)
     /// or pre-warms AVAssetTrack arrays for the user's preferred quality tier.
     /// Cancelled on every new video load.

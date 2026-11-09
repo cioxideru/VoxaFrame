@@ -507,15 +507,20 @@ extension InnerTubeAPI {
     /// Android alignment: when Bearer token is present, no ?key= param is sent
     /// (mirrors RetrofitOkHttpHelper — authHeaders non-empty → skip key, apply Bearer headers).
     /// When unauthenticated, the WEB key is used as on all other clients.
+    ///
+    /// `youTubeHostIdentity` posts the TV request to www.youtube.com with that client version, User-Agent and the
+    /// visitor ID, as Android does for `/player`: only that host returns account-bound `playbackTracking` (PLAN-0046).
     func postTV(
         endpoint: String,
         body: [String: Any],
         useAuth: Bool = true,
-        explicitBearerToken: String? = nil
+        explicitBearerToken: String? = nil,
+        youTubeHostIdentity: (version: String, userAgent: String)? = nil
     ) async throws -> [String: Any] {
+        let onYouTubeHost = youTubeHostIdentity != nil
         guard
             var comps = URLComponents(
-                url: playerBaseURL.appendingPathComponent(endpoint),
+                url: (onYouTubeHost ? baseURL : playerBaseURL).appendingPathComponent(endpoint),
                 resolvingAgainstBaseURL: false)
         else {
             throw APIError.invalidURL(endpoint)
@@ -532,13 +537,22 @@ extension InnerTubeAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(InnerTubeClients.TV.nameID, forHTTPHeaderField: "X-YouTube-Client-Name")
-        request.setValue(InnerTubeClients.TV.version, forHTTPHeaderField: "X-YouTube-Client-Version")
+        request.setValue(
+            youTubeHostIdentity?.version ?? InnerTubeClients.TV.version, forHTTPHeaderField: "X-YouTube-Client-Version")
         if let token = resolvedToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
+        if let youTubeHostIdentity {
+            request.setValue(youTubeHostIdentity.userAgent, forHTTPHeaderField: "User-Agent")
+            request.setValue("https://www.youtube.com/tv", forHTTPHeaderField: "Referer")
+            if let visitorData { request.setValue(visitorData, forHTTPHeaderField: "X-Goog-Visitor-Id") }
+        }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let authLabel = shouldAuthenticate ? "yes" : "no"
-        tubeLog.notice("POST /\(endpoint, privacy: .public) [TV] auth=\(authLabel, privacy: .public)")
+        let host = onYouTubeHost ? "www" : "googleapis"
+        tubeLog.notice(
+            "POST /\(endpoint, privacy: .public) [TV] host=\(host, privacy: .public) auth=\(authLabel, privacy: .public)"
+        )
         let (data, response) = try await session.data(for: request)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {

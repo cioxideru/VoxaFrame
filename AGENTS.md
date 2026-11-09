@@ -45,6 +45,7 @@ text and IDs; put unresolved work in the register, and closed outcomes in the ch
 - Xcode 27.2 ships no Simulator.app: rotate a simulator only from a UI test (`XCUIDevice.shared.orientation`); the orientation stays after the test ends. README screenshots are taken in guest mode, dark theme, never with a personal account.
 - WKWebView `evaluateJavaScript` has no user activation: PiP/fullscreen cannot be triggered from Swift.
 - Authenticated InnerTube calls use the TVHTML5 client on youtubei.googleapis.com with a Bearer token and no API key; the WEB client rejects Bearer tokens. Never call `/oauth2/v3/userinfo` for account info (the TV OAuth client isn't Data-API-v3-enabled) — use `account/accounts` with the TVHTML5 context instead.
+- Watch-history tracking (`ei`/`vm`/`of`) needs `/player` on www.youtube.com with Bearer and the `TV_DOWNGRADED` identity (`InnerTubeClients.TVDowngraded`); the 7.x TV identity answers UNPLAYABLE there, and youtubei.googleapis.com returns no `playbackTracking`.
 - The 16 GB build Mac stalls with > 3 parallel simulator clones; the scripts cap UI workers at 3.
 - YouTube HLS variant URLs carry per-request tokens: a second load of the same master returns new URLs. Offline downloads match a variant by URL first, then by size, codec, frame rate and peak bit rate.
 - Playback fallback code (`PlaybackViewModel+Fallback.swift`) is under active decomposition (WS4). Do not add branches to the legacy cascade; the proposed adapter boundary is [ADR-0005](docs/adr/0005-stream-source-pipeline.md) and is not implemented yet.

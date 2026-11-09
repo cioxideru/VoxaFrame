@@ -84,6 +84,22 @@ public struct PlaybackTrackingURLs: Sendable {
     public let playbackURL: URL
     /// Fire periodically during playback and on stop — records watched intervals.
     public let watchtimeURL: URL
+    /// `true` only for URLs from an authenticated player response. Anonymous URLs carry an anonymous visitor's
+    /// `ei`/`vm`/`of`, so their pings never reach the account's history (PLAN-0046).
+    public let isAccountBound: Bool
+
+    public init(playbackURL: URL, watchtimeURL: URL, isAccountBound: Bool = false) {
+        self.playbackURL = playbackURL
+        self.watchtimeURL = watchtimeURL
+        self.isAccountBound = isAccountBound
+    }
+
+    /// The URLs a playback reports to: account-bound ones first (just fetched, then cached), anonymous ones last.
+    public static func preferred(
+        fetched: PlaybackTrackingURLs?, cached: PlaybackTrackingURLs?, player: PlaybackTrackingURLs?
+    ) -> PlaybackTrackingURLs? {
+        [fetched, cached].compactMap { $0 }.first(where: \.isAccountBound) ?? fetched ?? cached ?? player
+    }
 }
 
 public struct PlayerInfo: Sendable {

@@ -105,16 +105,20 @@ extension PlaybackViewModel {
         // primary iOS player fetch when the cache doesn't already have tracking URLs.
         // cached.trackingURLs is PlaybackTrackingURLs?? — .some(nil) means the prefetch
         // ran before auth was ready; treat that as a miss so we still get live URLs.
+        // A prefetch caches the anonymous player's URLs; only account-bound ones make the fetch unnecessary (PLAN-0046).
         let cachedTrackingURLs: PlaybackTrackingURLs? = cached.trackingURLs.flatMap { $0 }
-        let authTrackingTask: Task<PlaybackTrackingURLs?, Never>?
-        if cachedTrackingURLs != nil || isShortsPlayer {
-            // Tracking URLs came from the cache; no need for a parallel TV-client call.
-            authTrackingTask = nil
+        let accountFetch: Task<PlaybackTrackingURLs?, Never>?
+        if cachedTrackingURLs?.isAccountBound == true || isShortsPlayer {
+            // Account-bound tracking URLs came from the cache; no need for a parallel TV-client call.
+            accountFetch = nil
         } else {
-            authTrackingTask = Task<PlaybackTrackingURLs?, Never> { [api = self.api] in
-                await api.fetchAuthenticatedTrackingURLs(videoId: video.id)
+            accountFetch = Task<PlaybackTrackingURLs?, Never> { [api = self.api, cpn = tracker.currentCPN] in
+                await api.fetchAuthenticatedTrackingURLs(videoId: video.id, cpn: cpn)
             }
         }
+        trackingURLSource?.accountFetch?.cancel()
+        trackingURLSource = TrackingURLSource(
+            videoId: video.id, cached: cachedTrackingURLs, accountFetch: accountFetch)
 
         // Reuse a prefetched VISIONOS response before trying the legacy client chain.
         let (info, visionOSHLSInfo) = try await initialPlayerInfo(video: video, cached: cached)
@@ -204,8 +208,7 @@ extension PlaybackViewModel {
         await beginInitialPlayback(
             video: video,
             context: InitialPlaybackContext(
-                cached: cached, info: info, cachedTrackingURLs: cachedTrackingURLs,
-                authTrackingTask: authTrackingTask, sponsorCached: sponsorCached))
+                cached: cached, info: info, sponsorCached: sponsorCached))
     }
 
     private func prepareStreamLoading(video: Video) {
@@ -495,16 +498,12 @@ extension PlaybackViewModel {
     private struct InitialPlaybackContext {
         let cached: CachedVideoData
         let info: PlayerInfo
-        let cachedTrackingURLs: PlaybackTrackingURLs?
-        let authTrackingTask: Task<PlaybackTrackingURLs?, Never>?
         let sponsorCached: Bool
     }
 
     private func beginInitialPlayback(video: Video, context: InitialPlaybackContext) async {
         let cached = context.cached
         let info = context.info
-        let cachedTrackingURLs = context.cachedTrackingURLs
-        let authTrackingTask = context.authTrackingTask
         let sponsorCached = context.sponsorCached
         // Audio-only mode: if enabled, replace the HLS item with an audio-only asset.
         // Falls back to HLS (already in player) on any failure. No-op when disabled.
@@ -538,8 +537,6 @@ extension PlaybackViewModel {
         // or stop() so stale network callbacks never write to a new video's state.
         let p2Cached = cached
         let p2Info = info
-        let p2CachedTracking = cachedTrackingURLs
-        let p2AuthTask = authTrackingTask
         let p2SponsorCached = sponsorCached
         let p2Video = video
         phase2Task = Task(priority: .utility) { [weak self] in
@@ -547,8 +544,6 @@ extension PlaybackViewModel {
                 video: p2Video,
                 cached: p2Cached,
                 info: p2Info,
-                cachedTrackingURLs: p2CachedTracking,
-                authTrackingTask: p2AuthTask,
                 sponsorCached: p2SponsorCached
             )
         }
