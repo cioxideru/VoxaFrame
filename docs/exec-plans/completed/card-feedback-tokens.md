@@ -2,8 +2,9 @@
 
 Status: completed
 
-Resolution: delivered in one commit on local `master`. Package checks passed; live acceptance on a signed-in
-account and the remaining gaps are open in [OQ-0022](../../OPEN_QUESTIONS.md#oq-0022--card-feedback-live-acceptance).
+Resolution: delivered on local `master`; package checks, fixture UI tests and a signed-in physical iPad check passed.
+Cards from WEB responses and the Don't Like decision are open in
+[OQ-0022](../../OPEN_QUESTIONS.md#oq-0022--card-feedback-on-web-cards-and-dont-like).
 
 - Owner: coordinator (single session).
 - Git boundary: local `master`, one commit; the pre-existing `Localizable.xcstrings` change is not part of it.
@@ -48,7 +49,7 @@ Every card feedback action shows "Couldn't send feedback. Try again." for a sign
 - Unit tests: tile parsing (both forms), panel classification, resolution order, Don't Like fallback,
   no request when nothing is available.
 - `scripts/ci.sh`, SwiftLint, iOS and tvOS builds.
-- Live: a signed-in Not Interested hides a Home card without the error (open: OQ-0022).
+- Live: a signed-in Not Interested hides a Home card without the error.
 
 ## Checkpoints
 
@@ -60,4 +61,4 @@ Every card feedback action shows "Couldn't send feedback. Try again." for a sign
 | Lint and rules | SwiftLint (baseline) and ast-grep rules: no new findings | passed |
 | Builds | `scripts/verify.sh` 2026-11-09: ci, SwiftLint, iOS and tvOS simulator builds | passed |
 | Fixture UI tests | `VideoFeedbackConfirmationUITests` 2026-11-09: 7 of 7 passed; app log shows 4 inline-token `feedback` posts and 2 `like/dislike`, no `get_panel` (fixture Home cards carry inline tokens; the panel path is covered by unit tests only) | passed |
-| Live acceptance | signed-in Home card on a device | NOT RUN (OQ-0022) |
+| Live acceptance | iPad Pro 11-inch (M5), signed-in account, Profile build of `10000b70`, 2026-11-09: user ran the card actions; app log shows 6 `get_panel` (youtubei.googleapis.com, TV client, HTTP 200, both tokens found), 6 `feedback` accepted with `feedbackResponses`, 1 `like/dislike` HTTP 200, no API errors | passed |

@@ -29,7 +29,7 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
-- [PLAN-0045: Card feedback from TV feed menus](completed/card-feedback-tokens.md) — feedback tokens from TV tile menus and `get_panel`; Don't Like falls back to a dislike; package checks passed, live acceptance open (OQ-0022).
+- [PLAN-0045: Card feedback from TV feed menus](completed/card-feedback-tokens.md) — feedback tokens from TV tile menus and `get_panel`; Don't Like falls back to a dislike; package checks and a signed-in iPad check passed; WEB cards open (OQ-0022).
 
 - [PLAN-0044: App performance candidates](completed/app-performance-candidates.md) — one save per settings action, no channel-page reload on token refresh; other candidates measured and unchanged; package checks and all builds passed.
 

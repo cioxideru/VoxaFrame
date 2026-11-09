@@ -451,12 +451,11 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Next step: set the flag and start the listener from the real launch path, with a test that a fresh store enables
   sync without a save.
 
-## OQ-0022 — Card feedback live acceptance
+## OQ-0022 — Card feedback on WEB cards and Don't Like
 
 - Status: open; owner: feed / account maintainer; basis: [PLAN-0045](exec-plans/completed/card-feedback-tokens.md).
-- Not run live: Not Interested, Don't Like and Don't Recommend Channel on a signed-in Home, Subscriptions and Shorts
-  card. The `get_panel` request shape follows Android SmartTube (2026-09-20) and goes to youtubei.googleapis.com like
-  every other TV Bearer call; Android posts it to www.youtube.com. Neither host was tried with a real account.
+- Signed-in Home cards were checked on a physical iPad (2026-11-09): `get_panel` on youtubei.googleapis.com returned
+  both tokens and YouTube accepted every feedback. Subscriptions and Shorts cards were not checked separately.
 - Cards from WEB responses (search, channel pages, related videos) carry no feedback tokens: Not Interested and
   Don't Recommend Channel say YouTube offers no feedback for them. Don't Like there rates the video down.
 - Decision for the owner: Don't Like This Video now sends a dislike rating when the feed has no `DISLIKE` feedback
