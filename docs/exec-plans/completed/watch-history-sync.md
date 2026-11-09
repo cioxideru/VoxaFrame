@@ -1,6 +1,6 @@
 # PLAN-0046: Watch history sync with YouTube
 
-Status: active
+Status: completed
 
 - Owner: coordinator (single session).
 - Git boundary: local `master`.
@@ -64,4 +64,4 @@ the same account. The Hide Watched Videos filter therefore never sees that progr
 | Implementation | changes 1–5 | done |
 | Checks | `scripts/ci.sh` (1415 tests), SwiftLint, ast-grep rules; `scripts/verify.sh` | passed; verify: package tests, SwiftLint, iOS and tvOS builds (Smoke stage skipped, OQ-0003) |
 | iPad log | `tracking [tv-downgraded] … status=OK playbackTracking=true`, `activeTrackingURLs resolved: account-bound`, `/api/stats/playback` then `/api/stats/watchtime` every 30 s | passed |
-| Live acceptance | progress and history in the official YouTube app | NOT RUN |
+| Live acceptance | `_WwYb_Pa_10` and the autoplayed `LojWAvuHUkI` resolved account-bound; the user saw them in the official YouTube app's history on the same account (2026-11-09) | passed |

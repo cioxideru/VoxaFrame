@@ -19,8 +19,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0046: Watch history sync with YouTube](active/watch-history-sync.md) — account-bound tracking URLs from the downgraded TV client; package checks and iPad log passed; official-app check pending.
-
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
@@ -30,6 +28,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0046: Watch history sync with YouTube](completed/watch-history-sync.md) — account-bound tracking URLs from the downgraded TV client reach the player on every stream path; package checks, all builds and a signed-in iPad check in the official app passed.
 
 - [PLAN-0045: Card feedback from TV feed menus](completed/card-feedback-tokens.md) — feedback tokens from TV tile menus and `get_panel`; Don't Like only where YouTube offers it; package checks and a signed-in iPad check passed; WEB cards open (OQ-0022).
 
