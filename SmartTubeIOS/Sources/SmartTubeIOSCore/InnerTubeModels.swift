@@ -79,6 +79,17 @@ public struct EndCard: Sendable, Identifiable, Codable {
 /// Tracking URLs returned by the YouTube `/player` endpoint.
 /// Pinging these records the video in the user's official YouTube watch history.
 /// Mirrors Android's `VideoStatsPlaybackUrl` / `VideoStatsWatchtimeUrl` in MediaServiceCore.
+/// What the account's TV `/player` response gives the player besides streams (PLAN-0046, PLAN-0047).
+public struct AccountPlayerResponse: Sendable {
+    public let trackingURLs: PlaybackTrackingURLs?
+    public let endCards: [EndCard]
+
+    public init(trackingURLs: PlaybackTrackingURLs?, endCards: [EndCard]) {
+        self.trackingURLs = trackingURLs
+        self.endCards = endCards
+    }
+}
+
 public struct PlaybackTrackingURLs: Sendable {
     /// Fire once (GET) when playback begins — records the view in watch history.
     public let playbackURL: URL

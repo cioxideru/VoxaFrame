@@ -300,30 +300,6 @@ extension InnerTubeAPI {
         return info
     }
 
-    /// Resolves watch-history tracking data through the authenticated player clients.
-    /// Device-code accounts reject the authenticated iOS client with HTTP 400, while
-    /// the TV or WEB client may still return playbackTracking for the same account.
-    public func fetchHistoryTrackingURLs(videoId: String) async -> PlaybackTrackingURLs? {
-        let clients: [(String, () async throws -> PlayerInfo)] = [
-            ("tv-auth", { try await self.fetchPlayerInfoAuthenticated(videoId: videoId) }),
-            ("web-auth", { try await self.fetchPlayerInfoWebAuthenticated(videoId: videoId) }),
-            ("ios-auth", { try await self.fetchPlayerInfoiOSAuthenticated(videoId: videoId) }),
-        ]
-        for (client, fetch) in clients {
-            do {
-                let info = try await fetch()
-                if let urls = info.trackingURLs,
-                    Self.trackingSession(from: urls) != nil
-                {
-                    return urls
-                }
-            } catch {
-                tubeLog.debug("History tracking unavailable via \(client): \(error)")
-            }
-        }
-        return nil
-    }
-
     public func fetchPlayerInfoAuthenticated(videoId: String) async throws -> PlayerInfo {
         // Build a TV client context that includes visitorData when available.
         // YouTube's TV auth endpoint needs visitorData inside context.client to correctly
@@ -403,20 +379,6 @@ extension InnerTubeAPI {
         }
 
         return try parsePlayerInfo(from: firstData, videoId: videoId)
-    }
-
-    /// Fetches end-screen cards for a video using the Web client.
-    /// The iOS player client typically omits `endscreen` data; the Web client reliably includes it.
-    /// Returns an empty array if no end cards are available or the request fails.
-    public func fetchEndCards(videoId: String) async throws -> [EndCard] {
-        var body = makeBody(client: webClientContext)
-        body["videoId"] = videoId
-        body["racyCheckOk"] = true
-        body["contentCheckOk"] = true
-        let data = try await post(endpoint: "player", body: body)
-        let cards = parseEndCards(from: data)
-        tubeLog.notice("fetchEndCards id=\(videoId, privacy: .public) → \(cards.count, privacy: .public) cards")
-        return cards
     }
 
     // MARK: - Private player helpers
@@ -632,11 +594,11 @@ extension InnerTubeAPI {
 
     // MARK: – End cards parser
 
-    private func parseEndCards(from json: [String: Any]) -> [EndCard] {
+    func parseEndCards(from json: [String: Any]) -> [EndCard] {
         guard let endscreen = (json["endscreen"] as? [String: Any])?["endscreenRenderer"] as? [String: Any],
             let elements = endscreen["elements"] as? [[String: Any]]
         else {
-            tubeLog.notice("parseEndCards: no endscreen key in response (normal for iOS client)")
+            tubeLog.debug("parseEndCards: no endscreen key in response (normal for iOS and VISIONOS)")
             return []
         }
 

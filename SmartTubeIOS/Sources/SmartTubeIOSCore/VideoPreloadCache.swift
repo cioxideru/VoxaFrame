@@ -278,16 +278,17 @@ public actor VideoPreloadCache {
     }
 
     /// Data types allowed for prefetch on the current network path.
-    /// Cellular/expensive paths skip large cosmetic fetches (endCards, deArrow).
+    /// Cellular/expensive paths skip the cosmetic DeArrow fetch. End cards come only from the account player
+    /// response in Phase 2 (PLAN-0047), so they are never prefetched.
     var allowedPrefetchDataTypes: Set<String> {  // internal for tests
         guard let path = currentPath, path.status == .satisfied else {
             return currentPath == nil
-                ? ["playerInfo", "nextInfo", "sponsorSegments", "endCards", "deArrowBranding"] : []
+                ? ["playerInfo", "nextInfo", "sponsorSegments", "deArrowBranding"] : []
         }
         if path.isConstrained || path.isExpensive {
             return ["playerInfo", "nextInfo", "sponsorSegments"]
         }
-        return ["playerInfo", "nextInfo", "sponsorSegments", "endCards", "deArrowBranding"]
+        return ["playerInfo", "nextInfo", "sponsorSegments", "deArrowBranding"]
     }
 
     // MARK: - Public: in-flight coalescing
@@ -538,19 +539,17 @@ public actor VideoPreloadCache {
         let playerFetchTask = getOrFetchPlayerInfo(videoId: videoId)
         // Gate optional fetches on the current network path (Phase K).
         async let nextResult = allowed.contains("nextInfo") ? (try? await api.fetchNextInfo(videoId: videoId)) : nil
-        async let endCardsResult = allowed.contains("endCards") ? (try? await api.fetchEndCards(videoId: videoId)) : nil
         async let sponsorResult = await sponsorBlock.fetchSegments(videoId: videoId, categories: sponsorCategories)
         async let deArrowResult =
             allowed.contains("deArrowBranding") ? await deArrow.fetchBranding(videoId: videoId) : nil
 
         // Pass the caller-supplied token directly — no dependency on api.authToken being set —
         // eliminating the actor-timing race that caused tracking=false on browse-phase prefetch.
-        // This runs concurrently with the 5 child tasks above (all are in flight by this point).
+        // This runs concurrently with the child tasks above (all are in flight by this point).
         //
         // Reuse tracking URLs from the prefetched player response.
 
-        let (next, cards, sponsor, dearrow) =
-            await (nextResult, endCardsResult, sponsorResult, deArrowResult)
+        let (next, sponsor, dearrow) = await (nextResult, sponsorResult, deArrowResult)
         guard !Task.isCancelled else { return }
         let player = await playerFetchTask.value
 
@@ -562,12 +561,11 @@ public actor VideoPreloadCache {
         let tracking: PlaybackTrackingURLs? = player?.trackingURLs
         store(trackingURLs: tracking, for: videoId)
         if let next { store(nextInfo: next, for: videoId) }
-        if let cards { store(endCards: cards, for: videoId) }
         store(sponsorSegments: sponsor, for: videoId)
         if let dearrow { store(deArrowBranding: dearrow, for: videoId) }
 
         cacheLog.notice(
-            "[prefetch] DONE \(videoId, privacy: .public) elapsed=\(elapsed, privacy: .public) playerInfo=\(player != nil, privacy: .public) tracking=\(tracking != nil, privacy: .public) next=\(next != nil, privacy: .public) endCards=\(cards != nil, privacy: .public) sponsor=\(sponsor.count, privacy: .public) deArrow=\(dearrow != nil, privacy: .public)"
+            "[prefetch] DONE \(videoId, privacy: .public) elapsed=\(elapsed, privacy: .public) playerInfo=\(player != nil, privacy: .public) tracking=\(tracking != nil, privacy: .public) next=\(next != nil, privacy: .public) sponsor=\(sponsor.count, privacy: .public) deArrow=\(dearrow != nil, privacy: .public)"
         )
     }
 

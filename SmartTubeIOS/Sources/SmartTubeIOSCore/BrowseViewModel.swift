@@ -402,23 +402,23 @@ extension BrowseViewModel {
             }
 
         case .music:
-            let group = try await api.fetchMusic()
+            let group = try await api.fetchMusic(continuationToken: nil)
             if !Task.isCancelled { videoGroups = [group] }
 
         case .gaming:
-            let group = try await api.fetchGaming()
+            let group = try await api.fetchGaming(continuationToken: nil)
             if !Task.isCancelled { videoGroups = [group] }
 
         case .news:
-            let group = try await api.fetchNews()
+            let group = try await api.fetchNews(continuationToken: nil)
             if !Task.isCancelled { videoGroups = [group] }
 
         case .live:
-            let group = try await api.fetchLive()
+            let group = try await api.fetchLive(continuationToken: nil)
             if !Task.isCancelled { videoGroups = [group] }
 
         case .sports:
-            let group = try await api.fetchSports()
+            let group = try await api.fetchSports(continuationToken: nil)
             if !Task.isCancelled { videoGroups = [group] }
 
         case .watchLater:
@@ -473,15 +473,15 @@ extension BrowseViewModel {
         case .shorts:
             return try await fetchShortsGroup(continuationToken: token)
         case .music:
-            return try await api.fetchMusic()
+            return try await api.fetchMusic(continuationToken: token)
         case .gaming:
-            return try await api.fetchGaming()
+            return try await api.fetchGaming(continuationToken: token)
         case .news:
-            return try await api.fetchNews()
+            return try await api.fetchNews(continuationToken: token)
         case .live:
-            return try await api.fetchLive()
+            return try await api.fetchLive(continuationToken: token)
         case .sports:
-            return try await api.fetchSports()
+            return try await api.fetchSports(continuationToken: token)
         default:
             return nil
         }

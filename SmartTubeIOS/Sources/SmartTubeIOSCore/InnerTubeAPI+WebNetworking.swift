@@ -200,9 +200,7 @@ extension InnerTubeAPI {
     /// Unlike the Chrome-UA WEB client, this returns `hlsManifestUrl` for non-embeddable
     /// videos. Uses the same www.youtube.com endpoint as postMWEB; no Bearer auth
     /// (cookie-based auth in yt-dlp, but HLS manifest works without auth for VOD).
-    func postWebSafari(
-        body: [String: Any], visitorIdOverride: String? = nil, allowBearerFallback: Bool = false
-    ) async throws -> [String: Any] {
+    func postWebSafari(body: [String: Any], visitorIdOverride: String? = nil) async throws -> [String: Any] {
         guard
             var comps = URLComponents(
                 url: baseURL.appendingPathComponent("player"),
@@ -225,19 +223,12 @@ extension InnerTubeAPI {
         // adaptive stream URLs that the CDN serves without pot= enforcement.
         // Without auth, YouTube returns rqh=1 URLs that require pot= and still 403 on the
         // CDN probe when match=false (webVD ≠ apiVD). With SAPISID, Path A wins reliably.
-        // Bearer is opt-in: for playback, www.youtube.com is documented throughout this file as
-        // rejecting the TV device-code Bearer token with HTTP 400, and PR #129 removed an
-        // unconditional Bearer fallback here while fixing playback. Only the tracking-URL fetch
-        // opts in, where a 400 just means no account-bound URLs rather than broken playback.
+        // No Bearer: WEB clients reject the TV device-code token with HTTP 400 (PR #129, PLAN-0046).
         let authStatus: String
         if let sid = sapisid {
             request.setValue(InnerTubeAPI.sapisidhash(sapisid: sid), forHTTPHeaderField: "Authorization")
             request.setValue("1", forHTTPHeaderField: "X-Origin")
             authStatus = "SAPISIDHASH"
-        } else if allowBearerFallback, let token = authToken {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            request.setValue("0", forHTTPHeaderField: "X-Goog-AuthUser")
-            authStatus = "Bearer"
         } else {
             authStatus = "unauthenticated"
         }

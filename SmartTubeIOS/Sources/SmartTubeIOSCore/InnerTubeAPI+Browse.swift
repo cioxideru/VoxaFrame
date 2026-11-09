@@ -279,63 +279,57 @@ extension InnerTubeAPI {
 
     // MARK: - Category sections
 
-    public func fetchMusic() async throws -> VideoGroup {
-        do {
-            // FEmusic_home is the TVHTML5 browse ID for the music category page.
-            var body = makeBody(client: tvClientContext)
-            body["browseId"] = "FEmusic_home"
-            let data = try await postTVCategory(endpoint: "browse", body: body)
-            let group = try parseVideoGroup(from: data, title: "Music")
-            if !group.videos.isEmpty { return group }
-        } catch {
-            tubeLog.notice("fetchMusic browse failed, falling back to search: \(error, privacy: .public)")
-        }
-        return try await search(query: "music")
+    public func fetchMusic(continuationToken: String? = nil) async throws -> VideoGroup {
+        try await fetchCategory(
+            browseId: "FEtopics_music", title: "Music", fallbackQuery: "music", continuationToken: continuationToken)
     }
 
-    public func fetchGaming() async throws -> VideoGroup {
-        do {
-            // FEgaming requires TVHTML5 context on www.youtube.com (not googleapis.com).
-            var body = makeBody(client: tvClientContext)
-            body["browseId"] = "FEgaming"
-            let data = try await postTVCategory(endpoint: "browse", body: body)
-            let group = try parseVideoGroup(from: data, title: "Gaming")
-            if !group.videos.isEmpty { return group }
-        } catch {
-            tubeLog.notice("fetchGaming browse failed, falling back to search: \(error, privacy: .public)")
-        }
-        return try await search(query: "gaming")
+    public func fetchGaming(continuationToken: String? = nil) async throws -> VideoGroup {
+        try await fetchCategory(
+            browseId: "FEtopics_gaming", title: "Gaming", fallbackQuery: "gaming", continuationToken: continuationToken)
     }
 
-    public func fetchNews() async throws -> VideoGroup {
-        // FEnews is not a valid InnerTube browse ID — use search directly.
-        return try await search(query: "news today")
+    public func fetchNews(continuationToken: String? = nil) async throws -> VideoGroup {
+        try await fetchCategory(
+            browseId: "FEtopics_news", title: "News", fallbackQuery: "news today",
+            continuationToken: continuationToken)
     }
 
-    public func fetchLive() async throws -> VideoGroup {
-        do {
-            var body = makeBody(client: tvClientContext)
-            body["browseId"] = "FElive_home"
-            let data = try await postTVCategory(endpoint: "browse", body: body)
-            let group = try parseVideoGroup(from: data, title: "Live")
-            if !group.videos.isEmpty { return group }
-        } catch {
-            tubeLog.notice("fetchLive browse failed, falling back to search: \(error, privacy: .public)")
-        }
-        return try await search(query: "live stream")
+    public func fetchLive(continuationToken: String? = nil) async throws -> VideoGroup {
+        try await fetchCategory(
+            browseId: "FEtopics_live", title: "Live", fallbackQuery: "live stream", continuationToken: continuationToken
+        )
     }
 
-    public func fetchSports() async throws -> VideoGroup {
+    public func fetchSports(continuationToken: String? = nil) async throws -> VideoGroup {
+        try await fetchCategory(
+            browseId: "FEtopics_sports", title: "Sports", fallbackQuery: "sports", continuationToken: continuationToken)
+    }
+
+    /// A TV category page (`FEtopics_*`), or a search when the first page is empty or fails (PLAN-0047).
+    ///
+    /// A signed-in account browses with the TV client and its token on youtubei.googleapis.com, like Home; without
+    /// one the request goes to www.youtube.com. The older IDs (`FEmusic_home`, `FEgaming`, `FElive_home`,
+    /// `FEsportsau`) answer HTTP 400 on both hosts, with or without the token (iPad log and probes, 2026-11-09).
+    /// A continuation that fails ends the section: the token may belong to the search fallback.
+    private func fetchCategory(
+        browseId: String, title: String, fallbackQuery: String, continuationToken: String?
+    ) async throws -> VideoGroup {
         do {
-            // FEsportsau is the known TVHTML5 browse ID for the sports category.
-            var body = makeBody(client: tvClientContext)
-            body["browseId"] = "FEsportsau"
-            let data = try await postTVCategory(endpoint: "browse", body: body)
-            let group = try parseVideoGroup(from: data, title: "Sports")
-            if !group.videos.isEmpty { return group }
+            var body = makeBody(client: tvClientContext, continuationToken: continuationToken)
+            if continuationToken == nil { body["browseId"] = browseId }
+            let data =
+                authToken != nil
+                ? try await postTV(endpoint: "browse", body: body)
+                : try await postTVCategory(endpoint: "browse", body: body)
+            let group = try parseVideoGroup(from: data, title: title)
+            if !group.videos.isEmpty || continuationToken != nil { return group }
+            tubeLog.notice("\(browseId, privacy: .public) browse returned no videos, falling back to search")
         } catch {
-            tubeLog.notice("fetchSports browse failed, falling back to search: \(error, privacy: .public)")
+            guard continuationToken == nil else { return VideoGroup(title: title) }
+            tubeLog.notice(
+                "\(browseId, privacy: .public) browse failed, falling back to search: \(error, privacy: .public)")
         }
-        return try await search(query: "sports")
+        return try await search(query: fallbackQuery)
     }
 }

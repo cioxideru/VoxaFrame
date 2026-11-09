@@ -473,22 +473,27 @@ extension InnerTubeAPI {
                 return height > width && width > 0
             } ?? false
 
+        let overlayStyle =
+            overlays?.compactMap {
+                ($0["thumbnailOverlayTimeStatusRenderer"] as? [String: Any])?["style"] as? String
+            }.first ?? "nil"
+        // Live and upcoming streams have no duration either, and FEtopics_live tiles carry GgIIBQ== (PLAN-0047).
+        let isStream = overlayStyle == "LIVE" || overlayStyle == "UPCOMING"
         let ustreamerConfig = watchEndpoint?["ustreamerConfig"] as? String
         // GgIIBQ== encodes CONTENT_TYPE_SHORTS, but YouTube also attaches it to long-form
         // videos that appear in Shorts-adjacent shelves (subscription Shorts shelf, history,
         // home recommendations). Guard with a 180 s ceiling — the maximum YouTube Shorts
         // length — so only genuine Shorts are matched. When duration is unknown (nil),
-        // default to trusting the signal.
-        let isUstreamerShorts = ustreamerConfig == "GgIIBQ==" && (duration.map { $0 <= 180 } ?? true)
+        // default to trusting the signal, except for streams.
+        let isUstreamerShorts =
+            ustreamerConfig == "GgIIBQ==" && (duration.map { $0 <= 180 } ?? !isStream)
 
         let isShort =
             (tile["style"] as? String) == "TILE_STYLE_YTLR_SHORTS"
             || reelWatchEndpoint != nil
-            || overlays?.contains {
-                ($0["thumbnailOverlayTimeStatusRenderer"] as? [String: Any])?["style"] as? String == "SHORTS"
-            } ?? false
+            || overlayStyle == "SHORTS"
             || isUstreamerShorts
-            || (isVerticalThumbnail && (duration.map { $0 <= 180 } ?? true))
+            || (isVerticalThumbnail && (duration.map { $0 <= 180 } ?? !isStream))
 
         if isUstreamerShorts {
             tubeLog.debug(
@@ -498,10 +503,6 @@ extension InnerTubeAPI {
 
         // Diagnostic: log every TV-feed tile's Short signals so Console shows exactly
         // which signals are (or aren't) present, even for non-Short tiles.
-        let overlayStyle =
-            overlays?.compactMap {
-                ($0["thumbnailOverlayTimeStatusRenderer"] as? [String: Any])?["style"] as? String
-            }.first ?? "nil"
         let durationStr = duration.map { Int($0).description } ?? "nil"
         tubeLog.debug(
             "tileRenderer id=\(videoId, privacy: .public) tileStyle=\(tile["style"] as? String ?? "nil", privacy: .public) reelEp=\(reelWatchEndpoint != nil, privacy: .public) overlayStyle=\(overlayStyle, privacy: .public) dur=\(durationStr, privacy: .public) vertThumb=\(isVerticalThumbnail, privacy: .public) ustreamerShorts=\(isUstreamerShorts, privacy: .public) → isShort=\(isShort, privacy: .public)"

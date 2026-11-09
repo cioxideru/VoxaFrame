@@ -107,18 +107,18 @@ extension PlaybackViewModel {
         // ran before auth was ready; treat that as a miss so we still get live URLs.
         // A prefetch caches the anonymous player's URLs; only account-bound ones make the fetch unnecessary (PLAN-0046).
         let cachedTrackingURLs: PlaybackTrackingURLs? = cached.trackingURLs.flatMap { $0 }
-        let accountFetch: Task<PlaybackTrackingURLs?, Never>?
+        let accountFetch: Task<AccountPlayerResponse?, Never>?
         if cachedTrackingURLs?.isAccountBound == true || isShortsPlayer {
             // Account-bound tracking URLs came from the cache; no need for a parallel TV-client call.
             accountFetch = nil
         } else {
-            accountFetch = Task<PlaybackTrackingURLs?, Never> { [api = self.api, cpn = tracker.currentCPN] in
-                await api.fetchAuthenticatedTrackingURLs(videoId: video.id, cpn: cpn)
+            accountFetch = Task<AccountPlayerResponse?, Never> { [api = self.api, cpn = tracker.currentCPN] in
+                await api.fetchAccountPlayerResponse(videoId: video.id, cpn: cpn)
             }
         }
-        trackingURLSource?.accountFetch?.cancel()
-        trackingURLSource = TrackingURLSource(
-            videoId: video.id, cached: cachedTrackingURLs, accountFetch: accountFetch)
+        accountPlayerSource?.accountFetch?.cancel()
+        accountPlayerSource = AccountPlayerSource(
+            videoId: video.id, cachedTrackingURLs: cachedTrackingURLs, accountFetch: accountFetch)
 
         // Reuse a prefetched VISIONOS response before trying the legacy client chain.
         let (info, visionOSHLSInfo) = try await initialPlayerInfo(video: video, cached: cached)

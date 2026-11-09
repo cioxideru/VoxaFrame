@@ -218,8 +218,8 @@ extension PlaybackViewModel {
         qualityManager.reset()
         phase2Task?.cancel()
         phase2Task = nil
-        trackingURLSource?.accountFetch?.cancel()
-        trackingURLSource = nil
+        accountPlayerSource?.accountFetch?.cancel()
+        accountPlayerSource = nil
         prefetchTask?.cancel()
         prefetchTask = nil
         AVAssetTrackCache.shared.clear()
@@ -407,8 +407,8 @@ extension PlaybackViewModel {
         isLoading = false
         phase2Task?.cancel()
         phase2Task = nil
-        trackingURLSource?.accountFetch?.cancel()
-        trackingURLSource = nil
+        accountPlayerSource?.accountFetch?.cancel()
+        accountPlayerSource = nil
         prefetchTask?.cancel()
         prefetchTask = nil
         AVAssetTrackCache.shared.clear()
@@ -477,15 +477,16 @@ extension PlaybackViewModel {
     /// Fetches data that is not needed to start AVPlayer: related videos, end cards,
     /// SponsorBlock segments (cache miss only), tracking URLs, and neighbour prefetch.
     /// All property assignments happen on @MainActor because PlaybackViewModel is @MainActor.
-    /// The tracking URLs one load can use. The VISIONOS HLS path and the fallbacks start Phase 2 from
-    /// `launchPhase2` without the load's context, so the context lives on the view model (PLAN-0046).
-    struct TrackingURLSource {
+    /// The account data one load can use: cached tracking URLs and the account's TV player response. The VISIONOS
+    /// HLS path and the fallbacks start Phase 2 from `launchPhase2` without the load's context, so the context lives
+    /// on the view model (PLAN-0046, PLAN-0047).
+    struct AccountPlayerSource {
         let videoId: String
         /// From `VideoPreloadCache`; a prefetch stores the anonymous player's URLs.
-        let cached: PlaybackTrackingURLs?
+        let cachedTrackingURLs: PlaybackTrackingURLs?
         /// The authenticated TV `/player` fetch, started with the primary player request; nil when the cached URLs
         /// are account-bound and for Shorts.
-        let accountFetch: Task<PlaybackTrackingURLs?, Never>?
+        let accountFetch: Task<AccountPlayerResponse?, Never>?
     }
 
     func loadAsyncPhase2(
@@ -515,47 +516,39 @@ extension PlaybackViewModel {
         guard !Task.isCancelled else { return }
 
         // --- End cards ---
-        if let cachedCards = cached.endCards, !cached.staleFields.contains(.endCards) {
+        // Only the account's TV player response carries them now: the anonymous WEB player answers "Video unavailable"
+        // (PLAN-0047). Empty cached lists are older WEB results, not answers.
+        let source = accountPlayerSource?.videoId == video.id ? accountPlayerSource : nil
+        let cachedCards = cached.endCards.flatMap { $0.isEmpty ? nil : $0 }
+        if let cachedCards, !cached.staleFields.contains(.endCards) {
             playerLog.notice("cache HIT: endCards (skipping network)")
             endCards = cachedCards
-        } else if let staleCards = cached.endCards, cached.staleFields.contains(.endCards) {
-            playerLog.notice("SWR: endCards stale — using cached, revalidating in background")
-            endCards = staleCards
-            let videoId = video.id
-            Task(priority: .background) { [api = self.api] in
-                if let fresh = try? await api.fetchEndCards(videoId: videoId) {
-                    await VideoPreloadCache.shared.store(endCards: fresh, for: videoId)
-                }
-            }
         } else if !info.endCards.isEmpty {
             endCards = info.endCards
             playerLog.notice("endCards: \(info.endCards.count) from primary response")
             await VideoPreloadCache.shared.store(endCards: info.endCards, for: video.id)
+        } else if let accountCards = await source?.accountFetch?.value?.endCards, !accountCards.isEmpty {
+            guard !Task.isCancelled else { return }
+            endCards = accountCards
+            playerLog.notice("endCards: \(accountCards.count) from account player response")
+            await VideoPreloadCache.shared.store(endCards: accountCards, for: video.id)
         } else {
-            do {
-                let webCards = try await api.fetchEndCards(videoId: video.id)
-                guard !Task.isCancelled else { return }
-                endCards = webCards
-                playerLog.notice("endCards: \(webCards.count) from web client fallback")
-                await VideoPreloadCache.shared.store(endCards: webCards, for: video.id)
-            } catch {
-                playerLog.error("endCards fetch failed: \(ViewModelLogger.errorSummary(error))")
-                endCards = []
-            }
+            endCards = cachedCards ?? []
+            playerLog.notice("endCards: \(self.endCards.count) (no fresh source)")
         }
 
         guard !Task.isCancelled else { return }
 
         // --- Tracking URLs ---
-        let source = trackingURLSource?.videoId == video.id ? trackingURLSource : nil
         let resolvedTrackingURLs: PlaybackTrackingURLs?
-        if let cachedTracking = source?.cached, cachedTracking.isAccountBound {
+        if let cachedTracking = source?.cachedTrackingURLs, cachedTracking.isAccountBound {
             resolvedTrackingURLs = cachedTracking
             playerLog.notice("cache HIT: trackingURLs")
         } else {
             // Anonymous URLs are the last resort: their pings never reach the account's history.
             resolvedTrackingURLs = PlaybackTrackingURLs.preferred(
-                fetched: await source?.accountFetch?.value, cached: source?.cached, player: info.trackingURLs)
+                fetched: await source?.accountFetch?.value?.trackingURLs, cached: source?.cachedTrackingURLs,
+                player: info.trackingURLs)
             await VideoPreloadCache.shared.store(trackingURLs: resolvedTrackingURLs, for: video.id)
         }
         guard !Task.isCancelled else { return }

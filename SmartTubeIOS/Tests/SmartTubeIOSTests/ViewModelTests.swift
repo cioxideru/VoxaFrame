@@ -114,32 +114,32 @@ final class MockInnerTubeAPI: InnerTubeAPIProtocol {
         return shortsMoreResult
     }
 
-    func fetchMusic() async throws -> VideoGroup {
-        calls.append(Call(method: "fetchMusic", args: []))
+    func fetchMusic(continuationToken: String?) throws -> VideoGroup {
+        calls.append(Call(method: "fetchMusic", args: [continuationToken ?? ""]))
         if let error = errorToThrow { throw error }
         return musicResult
     }
 
-    func fetchGaming() async throws -> VideoGroup {
-        calls.append(Call(method: "fetchGaming", args: []))
+    func fetchGaming(continuationToken: String?) throws -> VideoGroup {
+        calls.append(Call(method: "fetchGaming", args: [continuationToken ?? ""]))
         if let error = errorToThrow { throw error }
         return gamingResult
     }
 
-    func fetchNews() async throws -> VideoGroup {
-        calls.append(Call(method: "fetchNews", args: []))
+    func fetchNews(continuationToken: String?) throws -> VideoGroup {
+        calls.append(Call(method: "fetchNews", args: [continuationToken ?? ""]))
         if let error = errorToThrow { throw error }
         return newsResult
     }
 
-    func fetchLive() async throws -> VideoGroup {
-        calls.append(Call(method: "fetchLive", args: []))
+    func fetchLive(continuationToken: String?) throws -> VideoGroup {
+        calls.append(Call(method: "fetchLive", args: [continuationToken ?? ""]))
         if let error = errorToThrow { throw error }
         return liveResult
     }
 
-    func fetchSports() async throws -> VideoGroup {
-        calls.append(Call(method: "fetchSports", args: []))
+    func fetchSports(continuationToken: String?) throws -> VideoGroup {
+        calls.append(Call(method: "fetchSports", args: [continuationToken ?? ""]))
         if let error = errorToThrow { throw error }
         return sportsResult
     }

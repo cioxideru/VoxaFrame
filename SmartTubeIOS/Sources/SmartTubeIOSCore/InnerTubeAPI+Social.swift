@@ -202,7 +202,7 @@ extension InnerTubeAPI {
             webBody["videoId"] = videoId
             let tvData = try await postTV(endpoint: "next", body: tvBody)
             let webData = try await post(endpoint: "next", body: webBody)
-            let videos = parseRelatedVideos(from: webData)  // WEB client has compactVideoRenderer; TV client does not
+            let videos = parseRelatedVideos(from: webData)  // the TV response has no secondaryResults
             let status = parseLikeStatus(from: tvData)
             let chapters = parseChapters(from: webData)
             tubeLog.notice(
@@ -287,9 +287,10 @@ extension InnerTubeAPI {
         return found ?? .none
     }
 
-    /// Parses related / suggested videos from a `/next` response.
-    /// Related videos appear as `compactVideoRenderer` in `secondaryResults`.
-    private func parseRelatedVideos(from json: [String: Any]) -> [Video] {
+    /// Parses related / suggested videos from a WEB `/next` response.
+    /// Related videos appear in `secondaryResults` as video `lockupViewModel`s (2026-11) or the older
+    /// `compactVideoRenderer`s; playlist and mix lockups are skipped (PLAN-0047).
+    func parseRelatedVideos(from json: [String: Any]) -> [Video] {
         var videos: [Video] = []
         var rendererKeysFound: Set<String> = []
         func walk(_ obj: Any, depth: Int = 0) {
@@ -301,6 +302,11 @@ extension InnerTubeAPI {
                     let v = parseVideoRenderer(r)
                 {
                     videos.append(v)
+                } else if let lockup = dict["lockupViewModel"] as? [String: Any] {
+                    let contentType = lockup["contentType"] as? String ?? "LOCKUP_CONTENT_TYPE_VIDEO"
+                    if contentType == "LOCKUP_CONTENT_TYPE_VIDEO", let video = parseLockupViewModel(lockup) {
+                        videos.append(video)
+                    }
                 } else {
                     for value in dict.values { walk(value, depth: depth + 1) }
                 }

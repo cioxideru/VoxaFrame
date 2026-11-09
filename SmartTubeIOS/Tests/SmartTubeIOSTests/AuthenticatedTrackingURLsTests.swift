@@ -297,6 +297,32 @@ struct AuthenticatedTrackingURLsTests {
         #expect(InnerTubeAPI.trackingSession(from: result) != nil)
     }
 
+    @Test("the account player response carries the end cards from its endscreen (PLAN-0047)")
+    func accountResponseCarriesEndCards() async throws {
+        let card: [String: Any] = [
+            "endscreenElementRenderer": [
+                "id": "card-1", "style": "VIDEO", "title": ["simpleText": "Next video"],
+                "endpoint": ["watchEndpoint": ["videoId": "nextvideo01"]],
+                "left": 10.0, "top": 20.0, "width": 30.0, "aspectRatio": 1.7778, "startMs": "1000", "endMs": "9000",
+            ]
+        ]
+        let response: [String: Any] = [
+            "playbackTracking": [
+                "videostatsPlaybackUrl": ["baseUrl": "https://s.youtube.com/api/stats/playback?ei=e&vm=v&of=o"],
+                "videostatsWatchtimeUrl": ["baseUrl": "https://s.youtube.com/api/stats/watchtime?ei=e&vm=v&of=o"],
+            ],
+            "endscreen": ["endscreenRenderer": ["elements": [card]]],
+        ]
+        StubURLProtocol.responses = [
+            "youtube.com/": (200, Data("\"STS\":12345".utf8)),
+            "youtubei/v1/player": (200, try JSONSerialization.data(withJSONObject: response)),
+        ]
+        let result = try #require(await makeAPI().fetchAccountPlayerResponse(videoId: "testvid123"))
+        #expect(result.trackingURLs?.isAccountBound == true)
+        #expect(result.endCards.map(\.videoId) == ["nextvideo01"])
+        #expect(result.endCards.first?.startMs == 1000)
+    }
+
     @Test("a playback prefers account-bound URLs, and anonymous ones only as the last resort")
     func preferredTrackingURLs() throws {
         let url = try #require(URL(string: "https://www.youtube.com/api/stats/watchtime?ei=e&vm=v&of=o"))

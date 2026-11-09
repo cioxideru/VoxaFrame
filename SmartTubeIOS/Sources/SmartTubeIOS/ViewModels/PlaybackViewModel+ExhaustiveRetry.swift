@@ -423,16 +423,10 @@ extension PlaybackViewModel {
                 FallbackFetchedStream(priority: 3, label: "WebSafari[\(attempt)]", info: info, skipMuxed: true))
         }
 
-        // 4 — iOS (authenticated preferred; IP-block detection)
-        let hasAuth4 = hasAuth
+        // 4 — iOS (IP-block detection). Anonymous only: the iOS client rejects the TV device-code token with HTTP 400.
         group.addTask {
             do {
-                let info: PlayerInfo
-                if hasAuth4, let auth = try? await self.api.fetchPlayerInfoiOSAuthenticated(videoId: video.id) {
-                    info = auth
-                } else {
-                    info = try await self.api.fetchPlayerInfo(videoId: video.id)
-                }
+                let info = try await self.api.fetchPlayerInfo(videoId: video.id)
                 return .result(
                     FallbackFetchedStream(priority: 4, label: "iOS[\(attempt)]", info: info, skipMuxed: true))
             } catch {

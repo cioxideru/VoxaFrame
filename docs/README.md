@@ -32,6 +32,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [design/claude-design/CLAUDE_IMPORT.md](design/claude-design/CLAUDE_IMPORT.md) | Apple 27 design-system specification, platform rules, components and provenance | current | 2026-10-17 |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0022) | current | 2026-11-09 |
 | [exec-plans/completed/offline-ipad-cleanup.md](exec-plans/completed/offline-ipad-cleanup.md) | PLAN-0028: physical iPad offline download and cleanup | current | 2026-10-17 |
+| [exec-plans/completed/anonymous-request-fixes.md](exec-plans/completed/anonymous-request-fixes.md) | PLAN-0047: related videos, end cards, category pages and live tiles fixed after the request audit | completed | 2026-11-09 |
 | [exec-plans/completed/watch-history-sync.md](exec-plans/completed/watch-history-sync.md) | PLAN-0046: watch history and progress credited to the signed-in account | completed | 2026-11-09 |
 | [exec-plans/completed/card-feedback-tokens.md](exec-plans/completed/card-feedback-tokens.md) | PLAN-0045: card feedback tokens from TV menus and `get_panel` | completed | 2026-11-09 |
 | [exec-plans/completed/app-performance-candidates.md](exec-plans/completed/app-performance-candidates.md) | PLAN-0044: app performance candidates, settings saves and channel reloads | completed | 2026-10-23 |

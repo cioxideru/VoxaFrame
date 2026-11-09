@@ -97,34 +97,49 @@ extension InnerTubeAPI {
         )
     }
 
-    /// Fetches account-bound playback tracking URLs (PLAN-0046).
+    /// Fetches the account's player response: tracking URLs and end cards (PLAN-0046, PLAN-0047).
     ///
     /// The stats server credits a ping to the account only when its `ei`/`vm`/`of` come from an authenticated player
     /// response. Like Android (MediaServiceCore `VideoInfoService.getAuthVideoInfo` with `AppClient.TV_DOWNGRADED`),
     /// a TV client posts `/player` to www.youtube.com with the device-code Bearer token and no API key. The WEB client
     /// rejects the Bearer token with HTTP 400 (iPad log, 2026-11-09), so it is tried only with a SAPISID cookie.
+    /// The same TV response carries the `endscreen` that the anonymous WEB `/player` no longer returns.
     /// `cpn` is the tracker's playback nonce, which Android also sends in the player request.
-    public func fetchAuthenticatedTrackingURLs(videoId: String, cpn: String? = nil) async -> PlaybackTrackingURLs? {
+    public func fetchAccountPlayerResponse(videoId: String, cpn: String? = nil) async -> AccountPlayerResponse? {
+        var endCards: [EndCard] = []
         if authToken != nil {
             let body = buildTVTrackingBody(
                 videoId: videoId, cpn: cpn, sts: await fetchSignatureTimestampIfNeeded())
-            if let urls = await tvTrackingAttempt(body: body, videoId: videoId) { return urls }
+            if let data = await tvAccountPlayer(body: body, videoId: videoId) {
+                endCards = parseEndCards(from: data)
+                if let urls = Self.accountTrackingURLs(in: data, source: "tv-downgraded", videoId: videoId) {
+                    return AccountPlayerResponse(trackingURLs: urls, endCards: endCards)
+                }
+            }
         }
-        guard sapisid != nil else { return nil }
+        guard sapisid != nil else {
+            return endCards.isEmpty ? nil : AccountPlayerResponse(trackingURLs: nil, endCards: endCards)
+        }
         do {
             let body = await buildTrackingURLsBody(videoId: videoId, client: webSafariClientContext)
             let data = try await postWebSafari(body: body)
-            return Self.accountTrackingURLs(in: data, source: "web", videoId: videoId)
+            return AccountPlayerResponse(
+                trackingURLs: Self.accountTrackingURLs(in: data, source: "web", videoId: videoId), endCards: endCards)
         } catch {
             tubeLog.error(
-                "fetchAuthenticatedTrackingURLs [web] failed for \(videoId, privacy: .public): \(error, privacy: .public)"
+                "fetchAccountPlayerResponse [web] failed for \(videoId, privacy: .public): \(error, privacy: .public)"
             )
-            return nil
+            return endCards.isEmpty ? nil : AccountPlayerResponse(trackingURLs: nil, endCards: endCards)
         }
     }
 
+    /// The account-bound tracking URLs alone, for Shorts.
+    public func fetchAuthenticatedTrackingURLs(videoId: String, cpn: String? = nil) async -> PlaybackTrackingURLs? {
+        await fetchAccountPlayerResponse(videoId: videoId, cpn: cpn)?.trackingURLs
+    }
+
     /// The TV `/player` request; logs what YouTube answered so a missing `playbackTracking` can be explained.
-    private func tvTrackingAttempt(body: [String: Any], videoId: String) async -> PlaybackTrackingURLs? {
+    private func tvAccountPlayer(body: [String: Any], videoId: String) async -> [String: Any]? {
         let source = "tv-downgraded"
         do {
             let data = try await postTV(
@@ -135,10 +150,11 @@ extension InnerTubeAPI {
             let reason = (playability?["reason"] as? String).map { String($0.prefix(80)) } ?? ""
             let streaming = data["streamingData"] != nil
             let tracking = data["playbackTracking"] != nil
+            let endscreen = data["endscreen"] != nil
             tubeLog.notice(
-                "tracking [\(source, privacy: .public)] \(videoId, privacy: .public): status=\(status, privacy: .public) reason='\(reason, privacy: .public)' streaming=\(streaming, privacy: .public) playbackTracking=\(tracking, privacy: .public)"
+                "tracking [\(source, privacy: .public)] \(videoId, privacy: .public): status=\(status, privacy: .public) reason='\(reason, privacy: .public)' streaming=\(streaming, privacy: .public) playbackTracking=\(tracking, privacy: .public) endscreen=\(endscreen, privacy: .public)"
             )
-            return Self.accountTrackingURLs(in: data, source: source, videoId: videoId)
+            return data
         } catch {
             tubeLog.error(
                 "tracking [\(source, privacy: .public)] failed for \(videoId, privacy: .public): \(error, privacy: .public)"
@@ -173,14 +189,6 @@ extension InnerTubeAPI {
         return body
     }
 
-    /// Same as `fetchAuthenticatedTrackingURLs(videoId:)` for a caller that holds the token before
-    /// `setAuthToken` has reached the actor (e.g. a prefetch that starts first).
-    public func fetchAuthenticatedTrackingURLs(videoId: String, usingToken token: String) async -> PlaybackTrackingURLs?
-    {
-        if authToken == nil { authToken = token }
-        return await fetchAuthenticatedTrackingURLs(videoId: videoId)
-    }
-
     private static func accountTrackingURLs(
         in data: [String: Any], source: String, videoId: String
     ) -> PlaybackTrackingURLs? {
@@ -192,14 +200,14 @@ extension InnerTubeAPI {
             let wtURL = URL(string: wtStr)
         else {
             tubeLog.notice(
-                "fetchAuthenticatedTrackingURLs [\(source, privacy: .public)]: no playbackTracking for \(videoId, privacy: .public)"
+                "fetchAccountPlayerResponse [\(source, privacy: .public)]: no playbackTracking for \(videoId, privacy: .public)"
             )
             return nil
         }
         let urls = PlaybackTrackingURLs(playbackURL: pbURL, watchtimeURL: wtURL, isAccountBound: true)
         let hasSession = trackingSession(from: urls) != nil
         tubeLog.notice(
-            "fetchAuthenticatedTrackingURLs [\(source, privacy: .public)]: account URLs for \(videoId, privacy: .public) session=\(hasSession, privacy: .public)"
+            "fetchAccountPlayerResponse [\(source, privacy: .public)]: account URLs for \(videoId, privacy: .public) session=\(hasSession, privacy: .public)"
         )
         return urls
     }

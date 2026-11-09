@@ -56,19 +56,20 @@ struct NetworkThrottlingTests {
         }
     }
 
-    @Test("allowedPrefetchDataTypes on WiFi includes endCards and deArrowBranding")
+    @Test("allowedPrefetchDataTypes on WiFi includes deArrowBranding and never endCards")
     func allowedTypesOnWiFiIncludesAllTypes() async {
-        // We can't force WiFi in tests, but we can verify the full set has 5 items.
+        // We can't force WiFi in tests, but we can verify the full set has 4 items.
         // When running on a development machine (typically WiFi), this should pass.
         let allowed = await VideoPreloadCache.shared.allowedPrefetchDataTypes
-        if allowed.count == 5 {
-            #expect(allowed.contains("endCards"))
+        if allowed.count == 4 {
             #expect(allowed.contains("deArrowBranding"))
         }
-        // If cellular (3 items), endCards + deArrow are excluded — that's also valid.
+        // End cards come only from the account player response in Phase 2 (PLAN-0047).
+        #expect(!allowed.contains("endCards"))
+        // If cellular (3 items), deArrow is excluded — that's also valid.
         #expect(
-            allowed.count == 0 || allowed.count == 3 || allowed.count == 5,
-            "Expected 0 (offline), 3 (cellular), or 5 (WiFi) allowed types")
+            allowed.isEmpty || allowed.count == 3 || allowed.count == 4,
+            "Expected 0 (offline), 3 (cellular), or 4 (WiFi) allowed types")
     }
 
     // MARK: - Queue depth + cellular cap relationship
