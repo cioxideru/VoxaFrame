@@ -6,6 +6,10 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+## [5.20] – 2026-11-09
+
+VoxaFrame 5.20 (42). Source release; no signed binaries are attached.
+
 ### Changed
 
 - The player no longer tries the AndroidVR client. Since August 2026 its streams stop with HTTP 403 after the first megabytes, so its attempts only delayed the fallback to a working source; audio-only mode now falls back to the video stream at once when the audio stream fails (PLAN-0049, upstream PR #175).
