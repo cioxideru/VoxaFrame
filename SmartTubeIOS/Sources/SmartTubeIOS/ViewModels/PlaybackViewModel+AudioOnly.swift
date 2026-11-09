@@ -49,14 +49,33 @@ extension PlaybackViewModel {
         }
     }
 
+    /// Whether a started stream still needs the audio-only swap. Only the iOS-client path swaps before it
+    /// plays; VisionOS HLS, adaptive composition and the fallback start their own item (OQ-0024).
+    nonisolated static func needsAudioOnlySwapAfterStart(
+        isAudioOnlyMode: Bool, audioOnlyItemActive: Bool, hasError: Bool, isCurrentVideo: Bool, hasItem: Bool
+    ) -> Bool {
+        isAudioOnlyMode && !audioOnlyItemActive && !hasError && isCurrentVideo && hasItem
+    }
+
+    /// Applies audio-only after any successful start, at the position the stream reached.
+    func applyAudioOnlyAfterStart(video: Video) async {
+        guard !Task.isCancelled,
+            Self.needsAudioOnlySwapAfterStart(
+                isAudioOnlyMode: isAudioOnlyMode, audioOnlyItemActive: audioOnlyItemActive, hasError: error != nil,
+                isCurrentVideo: currentVideo?.id == video.id, hasItem: player.currentItem != nil)
+        else { return }
+        audioOnlyLog.notice("Audio-only: applying after the stream started")
+        await loadAudioOnlyItemIfEnabled(seekTo: currentTime)
+    }
+
     /// `false` once the user turned audio-only off, toggled again or moved to another video
     /// while a swap was awaiting.
     private func audioOnlySwapStillWanted(for videoId: String) -> Bool {
         isAudioOnlyMode && !Task.isCancelled && currentVideo?.id == videoId
     }
 
-    /// Entry point called from `loadAsync()` only when `isAudioOnlyMode == true`
-    /// and `playerInfo` is already populated by the normal fetch.
+    /// Entry point called before the iOS-client stream plays, and by `applyAudioOnlyAfterStart` after
+    /// any other start, when `isAudioOnlyMode == true` and `playerInfo` is populated.
     ///
     /// The existing HLS item is already loaded when this runs. If every audio-only
     /// attempt fails the HLS item remains active — the user gets video silently.

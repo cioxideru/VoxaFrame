@@ -469,12 +469,3 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   relaunch keeps the choice.
 - Playback without AndroidVR: passed on the iPad on 2026-11-09 (plan evidence). NOT RUN on Apple TV: check a video
   that reaches the exhaustive retry and Audio-Only there; the log should show no `AndroidVR` line.
-
-## OQ-0024 — Audio-only setting ignored when VisionOS HLS starts a video
-
-- Status: open; owner: playback maintainer; basis: iPad log of 2026-11-09 ([PLAN-0049](exec-plans/completed/upstream-fork-candidates.md)).
-- With Audio-Only on in settings (`--uitesting-audio-only-mode`), `dQw4w9WgXcQ` started on VisionOS HLS and logged no
-  `Audio-only` line: `loadAudioOnlyItemIfEnabled` runs only in `beginInitialPlayback` (the iOS-client path), and the
-  VisionOS branch of `loadPrimaryStream` returns before it. Toggling Audio-Only in the player works.
-- Next step: load the audio-only item after any successful initial start, not only on the iOS-client path, with a
-  unit test at that seam.

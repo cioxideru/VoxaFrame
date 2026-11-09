@@ -24,6 +24,7 @@ extension PlaybackViewModel {
 
         do {
             try await loadPrimaryStream(video: video)
+            await applyAudioOnlyAfterStart(video: video)
         } catch {
             guard !Task.isCancelled, currentVideo?.id == video.id else { return }
             isLoading = false
@@ -66,6 +67,7 @@ extension PlaybackViewModel {
                 exhaustiveRetryTask?.cancel()
                 exhaustiveRetryTask = Task { [weak self] in
                     await self?.exhaustiveRetry(video: video, originalError: error)
+                    await self?.applyAudioOnlyAfterStart(video: video)
                     if !Task.isCancelled { self?.exhaustiveRetryTask = nil }
                 }
             } else {
@@ -218,6 +220,8 @@ extension PlaybackViewModel {
         // load()/loadAsync() rather than resume(). Idempotent — safe to call even
         // when already set up.
         setupRateObserver()
+        // The previous video's audio-only item is gone once this load replaces the item.
+        audioOnlyItemActive = false
         isLoading = true
         stallCount = 0
         firstRapidStallTime = nil

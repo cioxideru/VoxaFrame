@@ -15,6 +15,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- Audio-Only turned on in Settings works again for videos that start on the visionOS stream or a fallback source: the player switches to the audio stream right after the video starts, not only on the iOS-client path (PLAN-0049).
 - Search sorted by upload date or view count is ordered again: YouTube ignores the sort option for the app's client, so each loaded page is ordered newest or most viewed first on the device, and cards already shown keep their place (PLAN-0049, upstream issue #178).
 - SponsorBlock no longer skips the same segment over and over when a seek lands a fraction of a millisecond before its end (PLAN-0049, from the NewTube-iOS fork).
 - Channel pages load past the first ~50 videos: the list pages the channel's Videos tab instead of the Home shelves, whose continuations return nothing; Shorts come from the Home shelf (PLAN-0049, upstream #138).
