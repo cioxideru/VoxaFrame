@@ -131,16 +131,12 @@ extension InnerTubeAPI {
     /// Sends a card's feedback command (PLAN-0045).
     ///
     /// Not Interested and Don't Recommend Channel use the card's inline token, else the token its TV menu panel
-    /// (`get_panel`) offers. Don't Like This Video uses the feed's `DISLIKE` token when a WEB feed sent one; TV menus
-    /// have no such item, so it otherwise rates the video down with `like/dislike`.
+    /// (`get_panel`) offers. Don't Like This Video exists only where a feed sent its `DISLIKE` token; TV menus have
+    /// no such item, and the card menu then hides it.
     ///
     /// Throws `VideoFeedbackError.tokenUnavailable` when there was nothing to send: callers must not hide the video
     /// or block the channel.
     public func sendFeedback(_ action: VideoFeedbackAction, for video: Video) async throws {
-        if action == .dontLike, video.dontLikeToken == nil {
-            try await dislike(videoId: video.id)
-            return
-        }
         try await sendFeedback(token: try await feedbackToken(action, for: video))
     }
 

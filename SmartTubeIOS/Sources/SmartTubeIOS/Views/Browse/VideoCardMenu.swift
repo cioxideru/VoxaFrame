@@ -101,12 +101,15 @@ struct VideoCardMenuItems: View {
                     menuLabel("Not Interested", AppSymbol.notInterested)
                 }
                 .accessibilityIdentifier(AccessibilityID.videoNotInterested)
-                Button(role: .destructive) {
-                    state.confirmsDontLike = true
-                } label: {
-                    menuLabel("Don't Like", AppSymbol.thumbsDown)
+                // YouTube offers Don't Like This Video only in some WEB feeds; TV menus never have it.
+                if video.dontLikeToken != nil {
+                    Button(role: .destructive) {
+                        state.confirmsDontLike = true
+                    } label: {
+                        menuLabel("Don't Like", AppSymbol.thumbsDown)
+                    }
+                    .accessibilityIdentifier(AccessibilityID.videoDontLike)
                 }
-                .accessibilityIdentifier(AccessibilityID.videoDontLike)
                 if Channel.ofCard(video) != nil {
                     Button(role: .destructive) {
                         state.confirmsDontRecommendChannel = true

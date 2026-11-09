@@ -451,12 +451,12 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Next step: set the flag and start the listener from the real launch path, with a test that a fresh store enables
   sync without a save.
 
-## OQ-0022 — Card feedback on WEB cards and Don't Like
+## OQ-0022 — Card feedback on WEB cards
 
 - Status: open; owner: feed / account maintainer; basis: [PLAN-0045](exec-plans/completed/card-feedback-tokens.md).
 - Signed-in Home cards were checked on a physical iPad (2026-11-09): `get_panel` on youtubei.googleapis.com returned
   both tokens and YouTube accepted every feedback. Subscriptions and Shorts cards were not checked separately.
 - Cards from WEB responses (search, channel pages, related videos) carry no feedback tokens: Not Interested and
-  Don't Recommend Channel say YouTube offers no feedback for them. Don't Like there rates the video down.
-- Decision for the owner: Don't Like This Video now sends a dislike rating when the feed has no `DISLIKE` feedback
-  item (TV menus never have one). Keep it, or show the item only where YouTube offers it.
+  Don't Recommend Channel say YouTube offers no feedback for them.
+- Decided 2026-11-09 (owner): Don't Like This Video is shown only where the feed sent its `DISLIKE` token, so it is
+  absent from every TV card; it no longer falls back to a dislike rating.

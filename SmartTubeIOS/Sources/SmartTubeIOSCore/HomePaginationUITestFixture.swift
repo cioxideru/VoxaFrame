@@ -47,7 +47,7 @@ enum HomePaginationUITestFixture {
     }
 
     private static var feedbackMenu: [String: Any] {
-        let items = ["NOT_INTERESTED", "BLOCK_CHANNEL"].map { icon in
+        let items = ["NOT_INTERESTED", "DISLIKE", "BLOCK_CHANNEL"].map { icon in
             [
                 "menuServiceItemRenderer": [
                     "icon": ["iconType": icon],

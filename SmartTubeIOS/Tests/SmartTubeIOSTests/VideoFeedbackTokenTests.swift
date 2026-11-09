@@ -295,14 +295,14 @@ struct VideoFeedbackTokenTests {
         #expect(FeedbackStubProtocol.paths == ["get_panel"])
     }
 
-    @Test("Don't Like without a token rates the video down")
-    func dontLikeDislikes() async throws {
-        FeedbackStubProtocol.reset()
-        try await makeAPI().sendFeedback(
-            .dontLike, for: Video(id: "v1", title: "", channelTitle: "", feedbackPanel: panel))
-        #expect(FeedbackStubProtocol.paths == ["like/dislike"])
-        let target = FeedbackStubProtocol.requests.first?.body["target"] as? [String: Any]
-        #expect(target?["videoId"] as? String == "v1")
+    @Test("Don't Like without a token throws and sends nothing, not even a dislike")
+    func dontLikeWithoutToken() async {
+        FeedbackStubProtocol.reset(["get_panel": Menu.homePanel])
+        await #expect(throws: InnerTubeAPI.VideoFeedbackError.tokenUnavailable) {
+            try await makeAPI().sendFeedback(
+                .dontLike, for: Video(id: "v1", title: "", channelTitle: "", feedbackPanel: panel))
+        }
+        #expect(FeedbackStubProtocol.requests.isEmpty)
     }
 
     @Test("Don't Like sends the feed's DISLIKE token when there is one")
@@ -334,7 +334,7 @@ struct VideoFeedbackTokenTests {
     func rejectedDislike() async {
         FeedbackStubProtocol.reset(["like/dislike": ["error": ["message": "Login required."]]])
         await #expect(throws: APIError.self) {
-            try await makeAPI().sendFeedback(.dontLike, for: Video(id: "v1", title: "", channelTitle: ""))
+            try await makeAPI().dislike(videoId: "v1")
         }
     }
 }
