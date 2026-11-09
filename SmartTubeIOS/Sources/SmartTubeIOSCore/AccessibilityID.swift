@@ -151,6 +151,7 @@ public enum AccessibilityID {
     public static var settingsForm: String { "settings.form" }
     public static func settingsCategory(_ group: String) -> String { "settings.category.\(group)" }
     public static var settingsSignInButton: String { "settings.signInButton" }
+    public static var settingsChannelPicker: String { "settings.channelPicker" }
     public static var settingsHideShortsToggle: String { "settings.hideShortsToggle" }
     public static var settingsShowQueueTabToggle: String { "settings.showQueueTabToggle" }
     public static var settingsPreferredQualityPicker: String { "settings.preferredQualityPicker" }

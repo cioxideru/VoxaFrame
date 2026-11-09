@@ -38,6 +38,9 @@ Naming a new module after a concept not listed here requires adding the term in 
   `SponsorBlockDecisionEngine.decide` returns for a given playback position (skip / show toast /
   do nothing).
 - **DeArrow branding** — community-submitted alternative titles/thumbnails from the DeArrow API.
+- **Brand Account / active channel** — another channel of the signed-in Google account. The OAuth
+  token stays the primary account's; the selected channel (`ActiveChannel`) travels as
+  `X-Goog-Pageid` on authenticated requests, and switching it starts a new auth session.
 - **Local subscription** — a followed channel that doesn't require Google sign-in (as opposed to
   a YouTube-account subscription).
 - **RSS feed** — a channel feed added by RSS URL rather than by subscribing via YouTube.

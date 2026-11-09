@@ -105,6 +105,14 @@ public final class BrowseViewModel {
                     self.removeChannel(id: channelId)
                 }
             })
+        // Another channel of the same account keeps the token, so no token change reloads the section.
+        hideObserverTasks.append(
+            Task { [weak self] in
+                for await _ in NotificationCenter.default.notifications(named: .activeChannelDidChange) {
+                    guard let self, self.hasAuthToken else { continue }
+                    self.loadContent(refresh: true, source: "channelSwitch")
+                }
+            })
     }
 
     public func removeVideo(id: String) {

@@ -46,6 +46,10 @@ public final class AuthService {
     public internal(set) var isSignedIn: Bool = false
     public internal(set) var accountName: String?
     public internal(set) var accountAvatarURL: URL?
+    /// Every channel of the signed-in account (primary + Brand Accounts), from accounts_list.
+    public internal(set) var channels: [YouTubeChannel] = []
+    /// The selected Brand Account; nil = the primary account. Mirrored into `activeChannelState`.
+    public internal(set) var activePageId: String?
     public var error: Error?
 
     /// Non-nil while waiting for the user to enter the code at youtube.com/activate.
@@ -101,6 +105,11 @@ public final class AuthService {
     private var isSigningIn: Bool = false
 
     public let tokenManager: TokenManager
+    /// Read by every InnerTubeAPI instance while building authenticated requests.
+    let activeChannelState: ActiveChannel
+    let notificationCenter: NotificationCenter
+    /// Drops the player's account-bound data (tracking URLs, like status) after a channel switch.
+    var evictAccountPlayerData: @Sendable () async -> Void = { await VideoPreloadCache.shared.evictAuthSensitiveData() }
 
     // MARK: - Static endpoint URLs (known-valid literals)
 
@@ -108,8 +117,15 @@ public final class AuthService {
     static let tokenURL = URL(string: "https://oauth2.googleapis.com/token")!
     static let accountsListURL = URL(string: "https://www.youtube.com/youtubei/v1/account/accounts_list")!
 
-    public init() {
-        tokenManager = TokenManager()
+    public convenience init() {
+        self.init(tokenManager: TokenManager(), activeChannel: .shared, notificationCenter: .default)
+    }
+
+    /// Tests pass their own Keychain service, channel state and notification center.
+    init(tokenManager: TokenManager, activeChannel: ActiveChannel, notificationCenter: NotificationCenter) {
+        self.tokenManager = tokenManager
+        activeChannelState = activeChannel
+        self.notificationCenter = notificationCenter
         #if DEBUG
         if SubscriptionUITestFixture.isEnabled {
             accessToken = "subscription-fixture"
@@ -254,6 +270,7 @@ public final class AuthService {
         tokenExpiry = nil
         accountName = nil
         accountAvatarURL = nil
+        resetChannels()
         isSignedIn = false
         pendingActivation = nil
         clearKeychain()
@@ -275,6 +292,7 @@ public final class AuthService {
         tokenExpiry = nil
         accountName = nil
         accountAvatarURL = nil
+        resetChannels()
         isSignedIn = false
         pendingActivation = nil
     }

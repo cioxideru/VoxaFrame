@@ -20,4 +20,7 @@ public extension Notification.Name {
     /// so an open Watch Later list updates without a refresh (#157).
     /// userInfo keys: "videoId" (String), "added" (Bool)
     static let watchLaterDidChange = Notification.Name("com.smarttube.watchLaterDidChange")
+    /// Posted by AuthService when the user switches to another channel (Brand Account) of the
+    /// signed-in account, so signed-in screens reload under the new identity.
+    static let activeChannelDidChange = Notification.Name("com.smarttube.activeChannelDidChange")
 }

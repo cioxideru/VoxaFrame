@@ -53,6 +53,7 @@ extension InnerTubeAPI {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             request.setValue("0", forHTTPHeaderField: "X-Goog-AuthUser")
         }
+        if sapisid != nil || authToken != nil { activeChannel.apply(to: &request) }
         let authStatus: String
         if sapisid != nil {
             authStatus = "SAPISIDHASH"
@@ -228,6 +229,7 @@ extension InnerTubeAPI {
         if let sid = sapisid {
             request.setValue(InnerTubeAPI.sapisidhash(sapisid: sid), forHTTPHeaderField: "Authorization")
             request.setValue("1", forHTTPHeaderField: "X-Origin")
+            activeChannel.apply(to: &request)
             authStatus = "SAPISIDHASH"
         } else {
             authStatus = "unauthenticated"
@@ -290,6 +292,7 @@ extension InnerTubeAPI {
         // yt-dlp web OAuth pattern: Bearer + X-Goog-AuthUser:0 for www.youtube.com endpoints.
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("0", forHTTPHeaderField: "X-Goog-AuthUser")
+        activeChannel.apply(to: &request)
         if let vd = visitorData {
             request.setValue(vd, forHTTPHeaderField: "X-Goog-Visitor-Id")
         }

@@ -139,6 +139,7 @@ extension InnerTubeAPI {
         request.setValue(InnerTubeClients.TV.nameID, forHTTPHeaderField: "X-YouTube-Client-Name")
         request.setValue(InnerTubeClients.TV.version, forHTTPHeaderField: "X-YouTube-Client-Version")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        activeChannel.apply(to: &request)
         request.timeoutInterval = 8
         var clientFields = (tvClientContext["client"] as? [String: Any]) ?? [:]
         if let vd = visitorData { clientFields["visitorData"] = vd }
@@ -235,6 +236,7 @@ extension InnerTubeAPI {
         request.setValue(InnerTubeClients.iOS.nameID, forHTTPHeaderField: "X-YouTube-Client-Name")
         request.setValue(InnerTubeClients.iOS.version, forHTTPHeaderField: "X-YouTube-Client-Version")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        activeChannel.apply(to: &request)
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let playerVideoId = body["videoId"] as? String ?? ""
         tubeLog.notice("POST /player (iOS, auth) videoId=\(playerVideoId, privacy: .public)")
@@ -428,6 +430,7 @@ extension InnerTubeAPI {
         request.setValue(InnerTubeClients.Web.version, forHTTPHeaderField: "X-YouTube-Client-Version")
         if let token = resolvedToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            activeChannel.apply(to: &request)
         }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let authLabel = resolvedToken != nil ? "yes" : "no"
@@ -541,6 +544,7 @@ extension InnerTubeAPI {
             youTubeHostIdentity?.version ?? InnerTubeClients.TV.version, forHTTPHeaderField: "X-YouTube-Client-Version")
         if let token = resolvedToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            activeChannel.apply(to: &request)
         }
         if let youTubeHostIdentity {
             request.setValue(youTubeHostIdentity.userAgent, forHTTPHeaderField: "User-Agent")

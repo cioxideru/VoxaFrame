@@ -47,3 +47,5 @@ forks' tvOS-only rewrites and rebranding. Candidate 8 of the review (launch scre
 | 1. Channel pagination | `ChannelVideosPaginationTests` (6); `scripts/ci.sh`, SwiftLint, ast-grep rules | passed |
 | 2. Segment-end tolerance | `SponsorBlockDecisionEngineTests` (new landing case); `scripts/ci.sh`, SwiftLint, ast-grep rules | passed |
 | 3. Watch a skipped segment | `SponsorBlockSkipManagerTests` (4 new), `SponsorBlockDecisionEngineTests` (handled segments); `scripts/ci.sh`, SwiftLint, ast-grep rules | passed |
+| 4. Brand Accounts | `BrandAccountChannelTests` (11: parsing, header on Bearer/none/unauthenticated, switch, fallback, sign-out); `scripts/ci.sh`, SwiftLint, ast-grep rules; iOS and tvOS builds. Keychain persistence of the page ID is not unit-tested (the test process has no Keychain entitlement) | passed |
+| 4. Brand Accounts on a device | switch to a Brand Account on the iPad: Home, Subscriptions and watch history belong to it | NOT RUN (needs an account with a Brand Account) |

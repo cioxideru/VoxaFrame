@@ -96,6 +96,10 @@ struct MainTabView: View {
             .onReceive(NotificationCenter.default.publisher(for: .navigateToSearch)) { _ in
                 selectedTab = .section(.search)
             }
+            // The feed of the newly selected channel, as SmartTube Android does.
+            .onReceive(NotificationCenter.default.publisher(for: .activeChannelDidChange)) { _ in
+                selectedTab = .section(.home)
+            }
             // "Open Channel" from the player: wait until the full-screen player is gone, then push the page on
             // the selected tab, unless that channel page is already showing.
             .onChange(of: playerState.presentation) { applyPendingChannel() }

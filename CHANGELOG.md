@@ -8,6 +8,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Changed
 
+- Brand Accounts: when the Google account has several channels, Settings › Account offers a Channel picker. The sign-in stays the same; the selected channel is sent with every signed-in request, so feeds, subscriptions, playlists and watch history belong to it, and switching returns to Home (PLAN-0049, upstream #172).
 - SponsorBlock skips a segment automatically only once: after a skip, or when you seek into a segment yourself, it shows the Skip button instead so the segment can be watched. The button leaves after 5 s of playback inside the segment and returns on the next entry, so it no longer holds the Apple TV remote's focus (PLAN-0049, from the NewTube-iOS fork).
 - Player transport controls stay centered independently of the bars. Time moves to the right above the lower timeline, with both bottom button groups aligned; mobile Up Next moves from More to the quick-access row after Offline. The left group uses icons only when labels do not fit (PLAN-0043).
 

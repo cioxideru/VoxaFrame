@@ -303,6 +303,7 @@ extension InnerTubeAPI {
         } else if let token = authToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
+        if sapisid != nil || authToken != nil { activeChannel.apply(to: &request) }
         if let vd = visitorData {
             request.setValue(vd, forHTTPHeaderField: "X-Goog-Visitor-Id")
         }

@@ -31,6 +31,8 @@ public actor InnerTubeAPI {
     /// SAPISID cookie value from YouTube.com web session (set via OAuthLogin/MergeSession).
     /// Used by postWebCreator to compute SAPISIDHASH for WEB_CREATOR requests on www.youtube.com.
     var sapisid: String?
+    /// Selected Brand Account, sent as `X-Goog-Pageid` on authenticated requests.
+    let activeChannel: ActiveChannel
 
     // MARK: - signatureTimestamp (STS) cache
     //
@@ -274,7 +276,10 @@ public actor InnerTubeAPI {
     /// Reported issue 709b3e91 showed a 2m48s hang when this was left at the OS default.
     static let requestTimeoutInterval: TimeInterval = 30
 
-    public init(authToken: String? = nil, poTokenProvider: (any PoTokenProvider)? = nil) {
+    public init(
+        authToken: String? = nil, poTokenProvider: (any PoTokenProvider)? = nil,
+        activeChannel: ActiveChannel = .shared
+    ) {
         let config = URLSessionConfiguration.default
         // NW-4-FIX: 30 s request timeout. Slow/throttled youtubei.googleapis.com requests
         // previously hung for over 2 minutes (Reported issue 709b3e91) because the OS default
@@ -289,6 +294,7 @@ public actor InnerTubeAPI {
         self.session = URLSession(configuration: config)
         self.authToken = authToken
         self.poTokenProvider = poTokenProvider
+        self.activeChannel = activeChannel
         // Start observing network path changes so visitorData is cleared on network transitions.
         // Callbacks arrive on pathMonitor's private queue; actor re-entry via Task is safe.
         pathMonitor.pathUpdateHandler = { [weak self] path in
@@ -299,9 +305,11 @@ public actor InnerTubeAPI {
 
     /// Package-internal initializer for testing only.
     /// Accepts a custom `URLSession` so tests can inject a mock via `URLProtocol`.
-    init(authToken: String?, session: URLSession) {
+    /// Tests get their own `ActiveChannel`, so a selection made in one test cannot reach another.
+    init(authToken: String?, session: URLSession, activeChannel: ActiveChannel = ActiveChannel()) {
         self.session = session
         self.authToken = authToken
+        self.activeChannel = activeChannel
         self.poTokenProvider = nil
     }
 

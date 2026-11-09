@@ -37,6 +37,10 @@ struct MainTVTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .navigateToSearch)) { _ in
             selectedTab = .search
         }
+        // The feed of the newly selected channel, as SmartTube Android does.
+        .onReceive(NotificationCenter.default.publisher(for: .activeChannelDidChange)) { _ in
+            selectedTab = .home
+        }
         .onReceive(NotificationCenter.default.publisher(for: .openChannel)) { note in
             guard let id = note.userInfo?["channelId"] as? String, !id.isEmpty,
                 channelPushes[selectedTab]?.channelId != id

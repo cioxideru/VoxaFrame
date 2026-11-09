@@ -39,6 +39,8 @@ extension AuthService {
             authLog.error("fetchUserInfo() — JSON parse failed")
             return
         }
+        applyChannels(YouTubeChannel.list(fromAccountsList: json))
+        authLog.notice("fetchUserInfo() — channels=\(self.channels.count)")
         let accountItem = extractAccountItem(from: json)
         guard let item = accountItem else {
             authLog.error("fetchUserInfo() — could not find accountItem; top-level keys=\(Array(json.keys))")
@@ -57,6 +59,10 @@ extension AuthService {
         {
             accountAvatarURL = URL(string: urlStr.hasPrefix("//") ? "https:\(urlStr)" : urlStr)
             authLog.notice("fetchUserInfo() — avatarURL=\(urlStr)")
+        }
+        if let channel = activeChannel, !channel.isPrimary {
+            accountName = channel.name
+            accountAvatarURL = channel.avatarURL
         }
         saveToKeychain()
     }

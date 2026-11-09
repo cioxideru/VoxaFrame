@@ -101,6 +101,16 @@ public struct SettingsView: View {
 
     // MARK: - Account
 
+    /// The selected channel; choosing another switches every signed-in request to it.
+    private var channelSelection: Binding<String> {
+        Binding(
+            get: { auth.activeChannel?.id ?? auth.channels.first(where: \.isPrimary)?.id ?? "" },
+            set: { id in
+                guard let channel = auth.channels.first(where: { $0.id == id }) else { return }
+                auth.selectChannel(channel)
+            })
+    }
+
     var accountSection: some View {
         Section {
             if auth.isSignedIn {
@@ -127,6 +137,17 @@ public struct SettingsView: View {
                     Text(auth.accountName ?? "Unknown")
                 }
                 .accessibilityElement(children: .combine)
+                // accounts_list runs at sign-in only; after a relaunch the channel list is loaded here.
+                .task { await auth.loadChannelsIfNeeded() }
+                // Brand Accounts of the same Google account; shown only when there is a choice.
+                if auth.channels.count > 1 {
+                    Picker("Channel", selection: channelSelection) {
+                        ForEach(auth.channels.filter(\.isPrimary) + auth.channels.filter { !$0.isPrimary }) { channel in
+                            Text(verbatim: channel.name).tag(channel.id)
+                        }
+                    }
+                    .accessibilityIdentifier(AccessibilityID.settingsChannelPicker)
+                }
                 Button("Sign Out", role: .destructive) { confirmsSignOut = true }
                     .confirmationDialog(
                         Text("Sign Out of YouTube?", bundle: .module), isPresented: $confirmsSignOut,
@@ -148,6 +169,9 @@ public struct SettingsView: View {
         } header: {
             Text("Account")
         } footer: {
+            if auth.channels.count > 1 {
+                Text("Switching the channel reloads Home for that channel.", bundle: .module)
+            }
             // The first of the three data areas (§17): what lives in the Google account, not on this device.
             if auth.isSignedIn {
                 Text(

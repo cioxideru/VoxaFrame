@@ -25926,6 +25926,9 @@
         }
       }
     },
+    "Switching the channel reloads Home for that channel." : {
+      "comment" : "Settings › Account footer shown when the account has Brand Accounts."
+    },
     "Sync to iCloud" : {
       "localizations" : {
         "ar" : {

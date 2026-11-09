@@ -45,6 +45,7 @@ text and IDs; put unresolved work in the register, and closed outcomes in the ch
 - Xcode 27.2 ships no Simulator.app: rotate a simulator only from a UI test (`XCUIDevice.shared.orientation`); the orientation stays after the test ends. README screenshots are taken in guest mode, dark theme, never with a personal account.
 - WKWebView `evaluateJavaScript` has no user activation: PiP/fullscreen cannot be triggered from Swift.
 - Authenticated InnerTube calls use the TVHTML5 client on youtubei.googleapis.com with a Bearer token and no API key; the WEB client rejects Bearer tokens. Never call `/oauth2/v3/userinfo` for account info (the TV OAuth client isn't Data-API-v3-enabled) — use `account/accounts` with the TVHTML5 context instead.
+- A selected Brand Account is `X-Goog-Pageid` from `ActiveChannel.shared` on every request that carries the account's Bearer or SAPISIDHASH; a new authenticated request site must call `activeChannel.apply(to:)`.
 - Watch-history tracking (`ei`/`vm`/`of`) needs `/player` on www.youtube.com with Bearer and the `TV_DOWNGRADED` identity (`InnerTubeClients.TVDowngraded`); the 7.x TV identity answers UNPLAYABLE there, and youtubei.googleapis.com returns no `playbackTracking`. The same response carries the end cards.
 - TV category pages are `FEtopics_music|gaming|news|sports|live`; `FEmusic_home`, `FEgaming`, `FElive_home` and `FEsportsau` answer HTTP 400. WEB `/next` lists related videos as `lockupViewModel`.
 - The 16 GB build Mac stalls with > 3 parallel simulator clones; the scripts cap UI workers at 3.

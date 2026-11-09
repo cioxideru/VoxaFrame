@@ -30,6 +30,8 @@ public actor TokenManager {
         public let accountAvatarURL: URL?
         /// YouTube.com SAPISID cookie for WEB_CREATOR SAPISIDHASH auth.
         public let sapisid: String?
+        /// Selected Brand Account (nil = the primary account).
+        public let pageId: String?
     }
 
     // MARK: - State
@@ -40,6 +42,7 @@ public actor TokenManager {
     private var accountName: String?
     private var accountAvatarURL: URL?
     private var sapisid: String?
+    private var pageId: String?
 
     private let service: String
 
@@ -78,7 +81,8 @@ public actor TokenManager {
             accountName: Self.kcGet(service: keychainService, key: "st_account_name"),
             accountAvatarURL: Self.kcGet(service: keychainService, key: "st_avatar_url")
                 .flatMap(URL.init(string:)),
-            sapisid: Self.kcGet(service: keychainService, key: "st_sapisid")
+            sapisid: Self.kcGet(service: keychainService, key: "st_sapisid"),
+            pageId: Self.kcGet(service: keychainService, key: "st_page_id")
         )
         initialSnapshot = snap
         accessToken = snap.accessToken
@@ -87,6 +91,7 @@ public actor TokenManager {
         accountName = snap.accountName
         accountAvatarURL = snap.accountAvatarURL
         sapisid = snap.sapisid
+        pageId = snap.pageId
     }
 
     // MARK: - Reads
@@ -96,6 +101,7 @@ public actor TokenManager {
     public func currentTokenExpiry() -> Date? { tokenExpiry }
     public func currentAccountName() -> String? { accountName }
     public func currentAvatarURL() -> URL? { accountAvatarURL }
+    public func currentPageId() -> String? { pageId }
     public func isSignedIn() -> Bool { accessToken != nil }
 
     // MARK: - Mutations
@@ -123,6 +129,12 @@ public actor TokenManager {
         Self.kcSet(service: service, key: "st_sapisid", value: value)
     }
 
+    /// Persists the selected Brand Account so it survives app restarts.
+    public func setPageId(_ value: String?) {
+        pageId = value
+        Self.kcSet(service: service, key: "st_page_id", value: value)
+    }
+
     public func clearToken() {
         accessToken = nil
         refreshToken = nil
@@ -130,6 +142,7 @@ public actor TokenManager {
         accountName = nil
         accountAvatarURL = nil
         sapisid = nil
+        pageId = nil
         deleteFromKeychain()
         continuation?.yield(.signedOut)
     }
@@ -148,7 +161,7 @@ public actor TokenManager {
     private func deleteFromKeychain() {
         for key in [
             "st_access_token", "st_refresh_token", "st_token_expiry",
-            "st_account_name", "st_avatar_url", "st_sapisid",
+            "st_account_name", "st_avatar_url", "st_sapisid", "st_page_id",
         ] {
             Self.kcDelete(service: service, key: key)
         }
