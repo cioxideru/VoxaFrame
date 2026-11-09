@@ -118,6 +118,33 @@ public struct SearchFilter: Sendable, Equatable {
         self.duration = duration
     }
 
+    // MARK: - Local ordering
+
+    /// YouTube ignores the sort field for the WEB client (a live check on 2026-11-09 returned the same
+    /// order with and without `CAI=`), so a page of results is ordered here: newest or most viewed
+    /// first. Videos without that value keep their order after the others. Each page is ordered on its
+    /// own, so the cards already on screen never move when the next page loads.
+    public func ordered(_ videos: [Video]) -> [Video] {
+        switch sortOrder {
+        case .uploadDate: return Self.stableDescending(videos) { $0.publishedAt?.timeIntervalSinceReferenceDate }
+        case .viewCount: return Self.stableDescending(videos) { $0.viewCount.map(Double.init) }
+        case .relevance, .rating: return videos
+        }
+    }
+
+    private static func stableDescending(_ videos: [Video], by key: (Video) -> Double?) -> [Video] {
+        videos.enumerated()
+            .sorted { lhs, rhs in
+                switch (key(lhs.element), key(rhs.element)) {
+                case let (left?, right?) where left != right: left > right
+                case (.some, nil): true
+                case (nil, .some): false
+                default: lhs.offset < rhs.offset
+                }
+            }
+            .map(\.element)
+    }
+
     // MARK: - Params encoding
     //
     // Produces the base64-encoded protobuf string consumed by

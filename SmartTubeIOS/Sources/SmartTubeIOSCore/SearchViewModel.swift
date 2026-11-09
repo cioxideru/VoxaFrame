@@ -198,10 +198,11 @@ public final class SearchViewModel {
                 try await api.search(query: query, continuationToken: continuationToken, filter: filter)
             }
             guard request == requestGeneration else { return }
+            let page = filter.ordered(group.videos)
             if continuationToken == nil {
-                results = group.videos
+                results = page
             } else {
-                results.append(contentsOf: group.videos)
+                results.append(contentsOf: page)
             }
             nextPageToken = group.nextPageToken
         } catch {
