@@ -259,7 +259,10 @@ public final class SearchViewModel {
 public final class ChannelViewModel {
 
     public private(set) var channel: Channel?
+    /// The channel's Videos tab, newest first: the only list that pages.
     public private(set) var videos: [Video] = []
+    /// Shorts from the channel's Home tab (the Videos tab lists none); not paged.
+    public private(set) var shorts: [Video] = []
     public private(set) var isLoading: Bool = false
     public var error: Error?
     public private(set) var isSubscriptionLoaded = false
@@ -339,11 +342,22 @@ public final class ChannelViewModel {
         error = nil
         defer { if !Task.isCancelled { isLoading = false } }
         do {
-            let (ch, group) = try await api.fetchChannel(channelId: channelId)
+            // A handle needs the resolved UC… ID first; a channel ID can request both tabs at once.
+            let knownID = channelId.hasPrefix("@") ? nil : channelId
+            async let earlyGrid = fetchVideosTab(channelId: knownID)
+            let (ch, home) = try await api.fetchChannel(channelId: channelId)
+            var grid = await earlyGrid
+            if knownID != ch.id { grid = await fetchVideosTab(channelId: ch.id) }
             try Task.checkCancellation()
             channel = ch
-            videos = group.videos
-            nextPageToken = group.nextPageToken
+            // Home's continuation tokens are per shelf and return no videos, so paging them stopped
+            // the list after the first page (upstream #138). Page the Videos tab instead and keep
+            // Home for the header and the Shorts shelf. Without a Videos tab, show Home as before.
+            let page = grid.flatMap { $0.videos.isEmpty ? nil : $0 } ?? home
+            videos = page.videos
+            nextPageToken = page.nextPageToken
+            var seen = Set<String>()
+            shorts = (home.videos + page.videos).filter { $0.isShort && seen.insert($0.id).inserted }
             let subscribed: Bool
             if signedIn {
                 let subscriptions = try await api.fetchSubscribedChannels()
@@ -380,20 +394,30 @@ public final class ChannelViewModel {
         }
     }
 
+    /// The first page of the Videos tab, or nil when it is missing or fails (the page falls back to Home).
+    private func fetchVideosTab(channelId: String?) async -> VideoGroup? {
+        guard let channelId else { return nil }
+        return try? await retryWithBackoff(label: "ChannelVM") {
+            try await api.fetchChannelVideos(channelId: channelId, continuationToken: nil)
+        }
+    }
+
     public func loadMore() {
+        Task { await loadMoreAsync() }
+    }
+
+    func loadMoreAsync() async {
         guard let id = channel?.id, let token = nextPageToken, !isLoading else { return }
-        Task {
-            isLoading = true
-            defer { isLoading = false }
-            do {
-                let group = try await retryWithBackoff(label: "ChannelVM") {
-                    try await api.fetchChannelVideos(channelId: id, continuationToken: token)
-                }
-                videos.append(contentsOf: group.videos)
-                nextPageToken = group.nextPageToken
-            } catch {
-                self.error = error
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let group = try await retryWithBackoff(label: "ChannelVM") {
+                try await api.fetchChannelVideos(channelId: id, continuationToken: token)
             }
+            videos.append(contentsOf: group.videos)
+            nextPageToken = group.nextPageToken
+        } catch {
+            self.error = error
         }
     }
 
@@ -405,6 +429,7 @@ public final class ChannelViewModel {
                 for await note in NotificationCenter.default.notifications(named: .hideVideoFromFeed) {
                     guard let self, let videoId = note.userInfo?["videoId"] as? String else { continue }
                     self.videos.removeAll { $0.id == videoId }
+                    self.shorts.removeAll { $0.id == videoId }
                 }
             })
         hideObserverTasks.append(
@@ -412,6 +437,7 @@ public final class ChannelViewModel {
                 for await note in NotificationCenter.default.notifications(named: .hideChannelFromFeed) {
                     guard let self, let channelId = note.userInfo?["channelId"] as? String else { continue }
                     self.videos.removeAll { $0.channelId == channelId }
+                    self.shorts.removeAll { $0.channelId == channelId }
                 }
             })
     }

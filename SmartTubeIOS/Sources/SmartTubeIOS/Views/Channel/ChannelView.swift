@@ -133,7 +133,7 @@ public struct ChannelView: View {
     private var filteredVideos: [Video] {
         switch filter {
         case .all: return vm.videos.filter { !store.settings.hideShorts || !$0.isShort }
-        case .shorts: return vm.videos.filter { $0.isShort }
+        case .shorts: return vm.shorts
         }
     }
 
@@ -218,9 +218,6 @@ public struct ChannelView: View {
                 VideoCardView(video: video)
                     .aspectRatio(9 / 16, contentMode: .fit)
                     .onTapGesture { selectShort(video, from: videos) }
-                    .onAppear {
-                        if video.id == vm.videos.last?.id { vm.loadMore() }
-                    }
             }
         }
         .padding(.horizontal)

@@ -12,6 +12,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- Channel pages load past the first ~50 videos: the list pages the channel's Videos tab instead of the Home shelves, whose continuations return nothing; Shorts come from the Home shelf (PLAN-0049, upstream #138).
 - Live streams watched while signed in appear in the account's YouTube watch history. Before, the app sent YouTube nothing for a stream because it has no length (PLAN-0048).
 - The player's related videos and end cards appear again; YouTube had moved them out of the responses the app read. Music, Gaming, News, Live and Sports show their YouTube pages instead of search results and load further pages. Live and upcoming streams no longer appear as Shorts (PLAN-0047).
 - Videos watched while signed in appear in the account's YouTube watch history with their progress again. Tracking now comes from the same TV player request Android SmartTube uses, reaches the player on every stream path, and survives the player reappearing (PLAN-0046).
