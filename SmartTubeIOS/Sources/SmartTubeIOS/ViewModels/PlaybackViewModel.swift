@@ -226,6 +226,8 @@ public final class PlaybackViewModel {
     public internal(set) var isIncognito: Bool = false
     /// Whether the current video's playback is recorded (history on, not incognito).
     var recordsHistory: Bool { !isIncognito && settings.historyState == .enabled }
+    /// Whether the tracker can report the current playback: a known length, or a live stream (PLAN-0048).
+    var tracksWatchTime: Bool { recordsHistory && (duration > 0 || tracker.isLiveStream) }
     /// On-device history (#150); a seam so tests can use an isolated store.
     var localHistory: LocalWatchHistoryStore = .shared
     /// Position tracked during a scrub drag; committed to AVPlayer on release.

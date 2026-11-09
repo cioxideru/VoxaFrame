@@ -153,7 +153,7 @@ extension PlaybackViewModel {
         // since stop()/suspend() are not called in that path. Uses the outgoing video's
         // incognito flag; an incognito video gets no tracker session (empty id), so
         // nothing is flushed or checkpointed for it later.
-        let flushPrevious = recordsHistory && duration > 0
+        let flushPrevious = tracksWatchTime
         isIncognito = incognito
         let flush = tracker.transition(
             to: incognito ? "" : video.id, cpn: InnerTubeAPI.generateCPN(),
@@ -282,7 +282,7 @@ extension PlaybackViewModel {
         playerLog.notice(
             "[suspend] suspend() called — currentVideo=\(self.currentVideo?.id ?? "nil") currentTime=\(Int(self.currentTime))s"
         )
-        if recordsHistory, duration > 0 {
+        if tracksWatchTime {
             let pos = self.currentTime
             let dur = self.duration
             Task {
@@ -376,7 +376,7 @@ extension PlaybackViewModel {
             "[stop] stop() called — currentVideo=\(self.currentVideo?.id ?? "nil") currentTime=\(Int(self.currentTime))s isLoading=\(self.isLoading)"
         )
         // Save watch position before stopping (mirrors VideoStateController)
-        if recordsHistory, duration > 0 {
+        if tracksWatchTime {
             let pos = self.currentTime
             let dur = self.duration
             Task {

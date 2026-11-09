@@ -52,6 +52,9 @@ public final class WatchtimeTracker {
     private var didReportFinal = false
     /// Throttle state for `checkpointIfDue`.
     private var lastCheckpointAt: Date?
+    /// A live stream has no length (PLAN-0048): its pings carry `len=0` and the player position, it never gets the
+    /// final ping (`isNearEnd` needs a length), and no resume position is saved for it.
+    public private(set) var isLiveStream = false
 
     // MARK: - Init
 
@@ -84,6 +87,7 @@ public final class WatchtimeTracker {
         let oldURLs = trackingURLs
         let oldSegStart = segmentStart
         let oldDidReportFinal = didReportFinal
+        let oldIsLive = isLiveStream
         let api = self.api
 
         // Reset to new session synchronously — no race with the returned closure.
@@ -94,27 +98,31 @@ public final class WatchtimeTracker {
         recordOpenedAt = nil
         didReportFinal = false
         lastCheckpointAt = nil
+        isLiveStream = false
 
         trackerLog.notice(
             "transition: \(oldVideoId, privacy: .public) → \(newVideoId, privacy: .public) cpn=\(newCPN.prefix(8), privacy: .public)…"
         )
 
         return {
-            guard !oldVideoId.isEmpty, flushDuration > 0, !oldDidReportFinal else { return }
+            guard !oldVideoId.isEmpty, flushDuration > 0 || oldIsLive, !oldDidReportFinal else { return }
             let segStart = oldSegStart ?? Self.initialSegmentStart(for: flushPosition)
             let isFinal = Self.isNearEnd(position: flushPosition, duration: flushDuration)
             trackerLog.notice(
                 "transition flush: videoId=\(oldVideoId, privacy: .public) st=\(Int(segStart))s et=\(Int(flushPosition))s final=\(isFinal, privacy: .public)"
             )
-            await VideoStateStore.shared.save(videoId: oldVideoId, position: flushPosition, duration: flushDuration)
+            let length = oldIsLive ? 0 : flushDuration
+            if !oldIsLive {
+                await VideoStateStore.shared.save(videoId: oldVideoId, position: flushPosition, duration: flushDuration)
+            }
             // The playback ping must precede the watchtime ping — YouTube ignores
             // standalone watchtime pings.
             await api.reportPlaybackStarted(
                 videoId: oldVideoId, cpn: oldCPN, trackingURLs: oldURLs,
-                lengthSeconds: flushDuration, startPosition: isFinal ? flushDuration : segStart, final: isFinal)
+                lengthSeconds: length, startPosition: isFinal ? flushDuration : segStart, final: isFinal)
             await api.reportWatchtime(
                 videoId: oldVideoId, cpn: oldCPN, trackingURLs: oldURLs,
-                lengthSeconds: flushDuration,
+                lengthSeconds: length,
                 segmentStart: isFinal ? flushDuration : segStart,
                 segmentEnd: isFinal ? flushDuration : flushPosition,
                 final: isFinal)
@@ -138,6 +146,13 @@ public final class WatchtimeTracker {
         )
     }
 
+    /// Marks the current video as a live stream; the player calls it once its item reports an indefinite duration.
+    public func markLiveStream() {
+        guard !isLiveStream, !videoId.isEmpty else { return }
+        isLiveStream = true
+        trackerLog.notice("tracking \(self.videoId, privacy: .public) as a live stream")
+    }
+
     /// The client playback nonce of the current session; the player request that mints the tracking URLs sends it
     /// too, as Android does.
     public var currentCPN: String { cpn }
@@ -156,7 +171,7 @@ public final class WatchtimeTracker {
         guard !didReportFinal else {
             return
         }
-        guard duration > 0 else {
+        guard duration > 0 || isLiveStream else {
             return
         }
         let isFinal = Self.isNearEnd(position: position, duration: duration)
@@ -182,7 +197,7 @@ public final class WatchtimeTracker {
         guard !videoId.isEmpty else {
             return
         }
-        guard duration > 0 else {
+        guard duration > 0 || isLiveStream else {
             return
         }
         guard !didReportFinal else {
@@ -225,7 +240,10 @@ public final class WatchtimeTracker {
             recordOpenedAt = Date()
         }
 
-        await VideoStateStore.shared.save(videoId: vid, position: position, duration: duration)
+        let length = isLiveStream ? 0 : duration
+        if !isLiveStream {
+            await VideoStateStore.shared.save(videoId: vid, position: position, duration: duration)
+        }
 
         if needsNewRecord || isFinal {
             trackerLog.notice(
@@ -233,7 +251,7 @@ public final class WatchtimeTracker {
             )
             await api.reportPlaybackStarted(
                 videoId: vid, cpn: localCPN, trackingURLs: localURLs,
-                lengthSeconds: duration, startPosition: isFinal ? duration : segStart, final: isFinal)
+                lengthSeconds: length, startPosition: isFinal ? duration : segStart, final: isFinal)
         }
 
         trackerLog.notice(
@@ -241,7 +259,7 @@ public final class WatchtimeTracker {
         )
         await api.reportWatchtime(
             videoId: vid, cpn: localCPN, trackingURLs: localURLs,
-            lengthSeconds: duration,
+            lengthSeconds: length,
             segmentStart: isFinal ? duration : segStart,
             segmentEnd: isFinal ? duration : position,
             final: isFinal)

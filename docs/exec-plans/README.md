@@ -29,6 +29,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0048: Live streams in watch history](completed/live-stream-history.md) — a ready item with an indefinite duration is tracked as a live stream: pings with `len=0`, no final ping, no resume position; package checks and a signed-in iPad history check.
+
 - [PLAN-0047: Features broken by anonymous or wrong-client requests](completed/anonymous-request-fixes.md) — related videos from lockups, end cards from the account player, `FEtopics_*` category pages, live tiles not Shorts, dead Bearer paths removed; package checks, all builds and a signed-in iPad check passed.
 
 - [PLAN-0046: Watch history sync with YouTube](completed/watch-history-sync.md) — account-bound tracking URLs from the downgraded TV client reach the player on every stream path; package checks, all builds and a signed-in iPad check in the official app passed.

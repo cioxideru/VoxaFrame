@@ -12,6 +12,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ### Fixed
 
+- Live streams watched while signed in appear in the account's YouTube watch history. Before, the app sent YouTube nothing for a stream because it has no length (PLAN-0048).
 - The player's related videos and end cards appear again; YouTube had moved them out of the responses the app read. Music, Gaming, News, Live and Sports show their YouTube pages instead of search results and load further pages. Live and upcoming streams no longer appear as Shorts (PLAN-0047).
 - Videos watched while signed in appear in the account's YouTube watch history with their progress again. Tracking now comes from the same TV player request Android SmartTube uses, reaches the player on every stream path, and survives the player reappearing (PLAN-0046).
 - Not Interested, Don't Like and Don't Recommend Channel work again for a signed-in account instead of reporting "Couldn't send feedback". Cards read YouTube's TV menu tokens, including the menu panel newer feeds load separately. Don't Like appears only where YouTube offers it, which TV feeds never do. A card YouTube offers no feedback for says so instead of asking to try again (PLAN-0045).

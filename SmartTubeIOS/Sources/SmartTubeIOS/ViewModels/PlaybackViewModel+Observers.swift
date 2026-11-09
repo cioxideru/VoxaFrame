@@ -12,6 +12,12 @@ private let playerLog = ViewModelLogger(category: "Player")
 
 extension PlaybackViewModel {
 
+    /// A live HLS item never reports a length (PLAN-0048). Every item's duration is indefinite until it is ready to
+    /// play, so only a ready item counts: on the iPad a 15-minute video was marked live 1 s before readyToPlay.
+    nonisolated static func isLiveStreamItem(status: AVPlayerItem.Status, duration: CMTime) -> Bool {
+        status == .readyToPlay && duration.isIndefinite
+    }
+
     func setupTimeObserver() {
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
         let source = player
@@ -34,7 +40,12 @@ extension PlaybackViewModel {
                 self.checkSponsorSkip(at: seconds)
                 self.updateCaptionCue(for: seconds)
                 if self.statsForNerdsVisible { self.updateStatsSnapshot() }
-                if self.isPlaying, self.recordsHistory, self.duration > 0 {
+                if let item = self.player.currentItem,
+                    Self.isLiveStreamItem(status: item.status, duration: item.duration)
+                {
+                    self.tracker.markLiveStream()
+                }
+                if self.isPlaying, self.tracksWatchTime {
                     await self.tracker.checkpointIfDue(position: seconds, duration: self.duration)
                 }
             }
