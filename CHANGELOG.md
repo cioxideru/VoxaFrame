@@ -6,6 +6,10 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Fixed
+
+- The player timeline no longer stays at 0:00 while a video plays. A quality switch pauses timeline updates until its new stream is ready; closing the player or opening another video before that left them paused for every later video until relaunch, and each close then saved the watch position as 0 s (PLAN-0049).
+
 ## [5.20] – 2026-11-09
 
 VoxaFrame 5.20 (42). Source release; no signed binaries are attached.

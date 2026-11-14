@@ -151,8 +151,7 @@ final class PlaybackQualityManager {
         hasAppliedH264Cap = false
         qualityTask?.cancel()
         qualityTask = nil
-        itemObserverTask?.cancel()
-        itemObserverTask = nil
+        cancelItemObserver()
         #if canImport(WebKit)
         webHLSProxyLoader = nil
         wkHLSMasterURL = nil
@@ -163,8 +162,15 @@ final class PlaybackQualityManager {
         qualityTask?.cancel()
         qualityTask = nil
         hasAppliedH264Cap = false
+        cancelItemObserver()
+    }
+
+    /// The observer is the only thing that ends a switch's time-observer freeze, so stopping it
+    /// ends the freeze too: otherwise every later video keeps a 0:00 timeline until relaunch.
+    private func cancelItemObserver() {
         itemObserverTask?.cancel()
         itemObserverTask = nil
+        delegate?.isQualityChangePending = false
     }
 
     /// Switch to a specific quality. Pass `.auto` to return to Auto (no resolution cap).
@@ -284,6 +290,7 @@ final class PlaybackQualityManager {
                 case .failed:
                     let err = ViewModelLogger.errorSummary(item.error)
                     playerLog.error("❌ Quality-switch AVPlayerItem failed: \(err)")
+                    self.delegate?.isQualityChangePending = false
                     await self.delegate?.qualityItemDidFail(
                         error: item.error,
                         quality: quality,
@@ -724,6 +731,7 @@ extension PlaybackQualityManager {
                 case .failed:
                     let err = ViewModelLogger.errorSummary(item.error)
                     playerLog.error("❌ [wkHLS quality] AVPlayerItem failed: \(err)")
+                    self.delegate?.isQualityChangePending = false
                     await MainActor.run { self.delegate?.toastMessage = "Quality unavailable" }
                 case .unknown: break
                 @unknown default: break
