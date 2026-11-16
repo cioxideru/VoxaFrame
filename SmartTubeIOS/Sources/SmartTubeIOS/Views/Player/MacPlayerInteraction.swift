@@ -128,7 +128,6 @@ struct MacPlayerClickSurface: View {
                         switch gesture {
                         case .first: windowState.toggleFullScreen()
                         case .second:
-                            guard !vm.hasVisibleEndCards else { return }
                             if vm.isPlaying { vm.toggleControls() } else { vm.showControls() }
                         }
                     }

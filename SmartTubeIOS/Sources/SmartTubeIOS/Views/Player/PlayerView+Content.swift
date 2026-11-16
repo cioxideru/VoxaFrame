@@ -177,10 +177,8 @@ extension PlayerView {
                             snapBack()
                         }
                     },
-                    onTap: {
-                        // Suppress toggle-controls when end cards are active — taps belong to the cards.
-                        if !vm.hasVisibleEndCards { vm.toggleControls() }
-                    },
+                    // End-card buttons sit above this surface and take their own taps.
+                    onTap: { vm.handleSurfaceTap() },
                     onDoubleTap: { normalizedX in
                         if normalizedX < 1.0 / 3.0 {
                             vm.seekRelative(seconds: -Double(store.settings.seekBackSeconds))
@@ -220,7 +218,7 @@ extension PlayerView {
                     onLevelChanged: { showLevelFeedback($0, value: $1) },
                     onLevelEnded: { finishLevelAdjustment() },
                     isActive: playerState.presentation == .fullScreen,
-                    isEnabled: !vm.isScrubbing && !isTransitioning && !vm.hasVisibleEndCards
+                    isEnabled: !vm.isScrubbing && !isTransitioning
                         && !showMoreMenu && !showQualityPicker && !showSpeedPicker && !showCaptionPicker
                         && !showAudioTrackPicker && !showSleepTimerPicker && !showDescriptionSheet && !showCommentsSheet
                         && !showUpNextSheet
