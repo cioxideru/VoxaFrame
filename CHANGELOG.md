@@ -6,7 +6,17 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+## [5.21] – 2026-11-16
+
+VoxaFrame 5.21. Source release; no signed binaries are attached.
+
+### Changed
+
+- README and the agent guide describe the app's iOS, iPadOS and macOS 27.2 target with the translucent Liquid Glass interface and its opaque fallback, and the offline mode: several video qualities, original/dubbed audio and Yandex voice-over per video, and the downloads manager.
+
 ### Fixed
+
+- Deleting a video from the Offline library keeps the list in place: the removal notice floats over the list instead of pushing it back to the top. Offline rows show watch progress like the video cards (PLAN-0049).
 
 - The player timeline no longer stays at 0:00 while a video plays. A quality switch pauses timeline updates until its new stream is ready; closing the player or opening another video before that left them paused for every later video until relaunch, and each close then saved the watch position as 0 s (PLAN-0049).
 - Tapping the player in the last seconds of a video shows the controls again. While YouTube end cards were on screen, the player ignored every tap outside the cards, so it looked frozen until the video ended (PLAN-0049).

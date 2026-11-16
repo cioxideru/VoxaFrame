@@ -1,6 +1,10 @@
 # VoxaFrame (SmartTube fork) — agent guide
 
 Native Swift/SwiftUI YouTube client for iOS/iPadOS (18+), native macOS (15+) and tvOS (18+).
+Current target: iOS/iPadOS/macOS 27.2 with the translucent Liquid Glass interface (`vfGlass`, `Views/DesignSystem/VFGlass.swift`:
+glass on chrome only, opaque fallback before 26, with Reduce Transparency or `AppSettings.disableLiquidGlass`).
+Offline mode is a core feature: several video qualities, original/dubbed audio and Yandex voice-over per video, a durable
+download queue and manager (`OfflineLibraryStore`, `OfflineCoordinator`; see [architecture](docs/architecture.md#playback)).
 Package `SmartTubeIOS/` (targets `SmartTubeIOSCore` = models/API/stores (Foundation-only boundary is the target),
 `SmartTubeIOS` = SwiftUI views, view models, services) + Xcode project `SmartTubeApp/`
 (iOS/iPadOS + native macOS app, tvOS app, Share/Safari extensions, Download widget, UI-test targets).

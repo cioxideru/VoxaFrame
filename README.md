@@ -5,9 +5,10 @@ Repository: [cioxideru/VoxaFrame](https://github.com/cioxideru/VoxaFrame).
 A maintained fork of [SmartTubeIOS by milika](https://github.com/milika/SmartTubeIOS), licensed under [GPLv3](LICENSE). The fork keeps upstream attribution and uses its own name and icon.
 
 A native Swift/SwiftUI YouTube client for **iPhone**, **iPad**, **macOS**, and **Apple TV**.  
-Zero ads. SponsorBlock auto-skip. DeArrow community titles. Google sign-in. Up to 8K.
+Zero ads. SponsorBlock auto-skip. DeArrow community titles. Google sign-in. Up to 8K.  
+Ready for iOS, iPadOS and macOS 27.2 with the translucent Liquid Glass interface. Full offline mode: save any video quality and several audio and voice-over tracks per video, then manage everything in one downloads manager.
 
-[![iOS 18+](https://img.shields.io/badge/iOS-18%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![tvOS 18+](https://img.shields.io/badge/tvOS-18%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![macOS 15+](https://img.shields.io/badge/macOS-15%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)](https://swift.org) [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/milikadelic)
+[![iOS 18+](https://img.shields.io/badge/iOS-18%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![tvOS 18+](https://img.shields.io/badge/tvOS-18%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![macOS 15+](https://img.shields.io/badge/macOS-15%2B-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![Liquid Glass](https://img.shields.io/badge/iOS%20%7C%20iPadOS%20%7C%20macOS-27.2%20Liquid%20Glass-black?logo=apple)](https://github.com/cioxideru/VoxaFrame) [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)](https://swift.org) [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/milikadelic)
 
 Build this fork with Xcode; the upstream App Store release is a separate product.
 
@@ -43,6 +44,21 @@ iPad in landscape:
 ---
 
 ## Features
+
+### Interface: iOS, iPadOS and macOS 27.2
+- Built with the Xcode 27.2 SDK for iOS, iPadOS and macOS 27.2; still runs on iOS/iPadOS 18+ and macOS 15+
+- Translucent Liquid Glass interface on iOS, iPadOS, macOS and tvOS 26 and later: tab bar, sidebar, player controls, toolbars and menus use system glass, while lists, cards and text stay on solid backgrounds for readability
+- Glass turns into opaque surfaces automatically when Reduce Transparency is on, or by hand with **Disable Liquid Glass** in Settings (applies at once, no restart); systems before 26 get the same opaque look
+- Native layouts per device: iPhone tabs, iPad landscape sidebar with two-column Settings, macOS windows with sidebar, inspector, menu commands and keyboard shortcuts
+
+### Offline Mode
+- Save videos for offline viewing in any quality YouTube offers for the video, including complete HLS packages on iOS
+- Several tracks per video: additional video qualities, the original audio, dubbed audio tracks and Yandex voice-over translations, each saved as its own file and chosen at playback time
+- Audio and voice-over downloads default to your Default Audio Language; the original audio is the fallback, the lowest suitable bitrate is preferred to save space
+- Downloads manager: a persistent queue that survives app restarts, background system downloads, parallel jobs with a configurable limit (1–4), retries, completion notifications and All / Active / Error / Video / Audio filters, newest first
+- Offline library: cards show saved and pending video, audio and voice-over variants as compact badges, watch progress and real file sizes; a floating progress card shows active downloads and errors while you scroll
+- Per-video management: add or delete single variants, pick which saved video and audio to play, and keep SponsorBlock segments for offline playback
+- Offline playback is fully local and never falls back to the network; downloads pause while online playback buffers, so watching always comes first
 
 ### Playback
 - Adaptive HLS and DASH streaming — up to 8K via AVPlayer; manual quality picker (144p → 4K)
@@ -85,19 +101,15 @@ iPad in landscape:
 - Google OAuth sign-in (YouTube TV device-code flow)
 - Safari Web Extension — auto-redirects YouTube, Shorts, and Music links to VoxaFrame
 - Share Extension — share YouTube links from any app directly into VoxaFrame
-- Offline videos with a persistent download queue, progress page and completion notifications
-- Offline SponsorBlock segments and measured file sizes for saved videos
-- Save additional video qualities, original/dubbed audio and Yandex voice-over tracks; play downloaded media locally
-- Variants grouped by type (video, audio, voice-over) and parallel downloads with a configurable limit
-- Downloads and speculative preloading yield while active playback prepares or buffers
+- Offline mode with its own downloads manager — see [Offline Mode](#offline-mode)
 - WatchTime reporting and Like / Dislike support
 - VPN / IP-block detection with a clear, non-retrying error banner
 - Comments, Stats for Nerds
 
 ### Platforms
-- **iPhone & iPad** — iOS/iPadOS 18+
-- **macOS** — native macOS 15+
-- **Apple TV** — tvOS 18+, full Siri Remote / d-pad navigation
+- **iPhone & iPad** — iOS/iPadOS 18+, ready for iOS/iPadOS 27.2 with Liquid Glass
+- **macOS** — native macOS 15+, ready for macOS 27.2 with Liquid Glass
+- **Apple TV** — tvOS 18+, full Siri Remote / d-pad navigation, Liquid Glass on tvOS 26+
 
 ---
 
@@ -118,6 +130,7 @@ SmartTube.xcworkspace/ Xcode workspace (references both above)
 | iOS / iPadOS | 18.0 |
 | macOS (native) | 15.0 |
 | tvOS | 18.0 |
+| SDK | iOS / iPadOS / macOS 27.2 |
 | Xcode | 27.2 (project toolchain) |
 | Swift | 6.0 |
 
