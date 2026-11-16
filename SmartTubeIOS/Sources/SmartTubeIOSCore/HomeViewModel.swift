@@ -313,7 +313,13 @@ public final class HomeViewModel {
             let token = sections[idx].nextPageToken,
             !sections[idx].isLoadingMore,
             !sections[idx].isLoading
-        else { return nil }
+        else {
+            let state = sections.first { $0.id == sectionId }
+            homeLog.notice(
+                "[home] loadMore skipped section=\(sectionId) token present=\(state?.nextPageToken != nil) loading=\(state?.isLoading == true) loadingMore=\(state?.isLoadingMore == true)"
+            )
+            return nil
+        }
         sections[idx].isLoadingMore = true
         let type = sections[idx].section.type
         let generation = loadGeneration
@@ -322,14 +328,20 @@ public final class HomeViewModel {
             var usedTokens: Set<String> = []
             var addedVideos = false
             var addedRegularVideo = false
+            var requestFailed = false
             // A recommendations page that adds no new regular video (empty, duplicates, Shorts only) shows no new
             // card to trigger the next page, so continue here, a bounded number of times per request.
             for _ in 0..<Self.maxEmptyPagesPerRequest {
                 guard isCurrentLoad(generation) else { return }
                 usedTokens.insert(token)
-                let (newVideos, fetchedToken) = await HomeViewModel.fetchMoreVideos(type: type, token: token, api: api)
+                let page = await HomeViewModel.fetchMoreVideos(type: type, token: token, api: api)
                 guard isCurrentLoad(generation), let idx = sections.firstIndex(where: { $0.id == sectionId })
                 else { return }
+                // A failed request keeps the cursor: clearing it ended the feed with no way to continue.
+                guard let (newVideos, fetchedToken) = page else {
+                    requestFailed = true
+                    break
+                }
                 // A token already sent would repeat the same pages forever.
                 let nextToken = fetchedToken.flatMap { usedTokens.contains($0) ? nil : $0 }
                 // Use a growing set so IDs that appear multiple times within
@@ -348,14 +360,21 @@ public final class HomeViewModel {
                 mergedVideos.append(contentsOf: added)
                 addedVideos = addedVideos || !added.isEmpty
                 addedRegularVideo = added.contains { !$0.isShort }
+                homeLog.notice(
+                    "[home] continuation page videos=\(newVideos.count) added=\(added.count) regular=\(addedRegularVideo) next token present=\(nextToken != nil)"
+                )
                 guard let nextToken, !addedRegularVideo else { break }
                 token = nextToken
             }
             if let idx = sections.firstIndex(where: { $0.id == sectionId }) {
                 sections[idx].isLoadingMore = false
                 if type == .home {
-                    // The scan limit ended with no new card to trigger the next page: the view offers More.
+                    // The scan limit or a failed request ended with no new card to trigger the next page:
+                    // the view offers More, which retries from the kept cursor.
                     recommendationsStalled = !addedRegularVideo && sections[idx].nextPageToken != nil
+                    if requestFailed {
+                        homeLog.error("[home] continuation request failed; cursor kept, More offered")
+                    }
                 }
             }
             // Automatic paging can turn an empty or Shorts-only first page into the real feed.
@@ -465,7 +484,7 @@ public final class HomeViewModel {
         {
             homeLog.notice("fetchOneShortsPage subs: fetching token=\(String(token.prefix(16)))\u{2026}")
             sections[idx].isLoadingMore = true
-            let more = await Self.fetchMoreVideos(type: .subscriptions, token: token, api: api)
+            let more = await Self.fetchMoreVideos(type: .subscriptions, token: token, api: api) ?? ([], nil)
             guard isCurrentLoad(generation) else { return false }
             sections[idx].isLoadingMore = false
             var seenIDs = Set(sections[idx].videos.map(\.id))
@@ -565,9 +584,10 @@ extension HomeViewModel {
         }
     }
 
+    /// One continuation page, or `nil` when the request failed (distinct from a last page with no cursor).
     private static func fetchMoreVideos(
         type: BrowseSection.SectionType, token: String, api: any InnerTubeAPIProtocol
-    ) async -> ([Video], String?) {
+    ) async -> ([Video], String?)? {
         do {
             switch type {
             case .subscriptions:
@@ -594,7 +614,7 @@ extension HomeViewModel {
             }
         } catch {
             homeLog.error("HomeViewModel loadMore \(String(describing: type)): \(ViewModelLogger.errorSummary(error))")
-            return ([], nil)
+            return nil
         }
     }
 }

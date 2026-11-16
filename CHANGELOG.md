@@ -9,6 +9,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 ### Fixed
 
 - The player timeline no longer stays at 0:00 while a video plays. A quality switch pauses timeline updates until its new stream is ready; closing the player or opening another video before that left them paused for every later video until relaunch, and each close then saved the watch position as 0 s (PLAN-0049).
+- Home no longer stops at the last loaded rows when loading the next page fails: the feed keeps its place in YouTube's recommendations and shows More to try again (PLAN-0049).
 
 ## [5.20] – 2026-11-09
 
