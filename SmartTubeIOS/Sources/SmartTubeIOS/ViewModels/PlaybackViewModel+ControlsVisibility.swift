@@ -33,6 +33,17 @@ extension PlaybackViewModel {
         }
     }
 
+    /// A tap on the bare player surface (no control or end card under the finger).
+    /// End cards are buttons layered above the surface and take their own taps, so a tap
+    /// anywhere else must still toggle the controls; otherwise the player looks frozen for
+    /// the whole end-screen window (often the last 5–20 s of a video).
+    public func handleSurfaceTap() {
+        playerLog.notice(
+            "[controls] surface tap — controlsVisible=\(self.controlsVisible) endCardsVisible=\(self.hasVisibleEndCards)"
+        )
+        toggleControls()
+    }
+
     func scheduleControlsHide() {
         // UI-testing: when --uitesting-show-controls is active, controls must never
         // auto-hide so XCUITest can always click player.nextBtn. Any call that restarts

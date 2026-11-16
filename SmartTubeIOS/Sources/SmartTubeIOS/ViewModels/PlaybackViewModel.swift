@@ -254,7 +254,8 @@ public final class PlaybackViewModel {
     }
 
     /// True when at least one VIDEO end card is within its display window at the current playhead.
-    /// Used by `PlayerView` to suppress swipe-overlay tap-to-toggle-controls so taps land on cards.
+    /// Diagnostic only: taps on the player surface toggle controls even while cards show
+    /// (the card buttons sit above the surface and take their own taps).
     public var hasVisibleEndCards: Bool {
         let ms = Int(currentTime * 1000)
         return endCards.contains { $0.style == .video && $0.videoId != nil && ms >= $0.startMs && ms <= $0.endMs }
