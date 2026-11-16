@@ -8,7 +8,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [5.21] – 2026-11-16
 
-VoxaFrame 5.21. Source release; no signed binaries are attached.
+VoxaFrame 5.21 (43). Source release; no signed binaries are attached.
 
 ### Changed
 
