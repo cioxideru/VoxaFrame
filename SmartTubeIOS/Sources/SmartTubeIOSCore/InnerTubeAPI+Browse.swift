@@ -65,7 +65,7 @@ extension InnerTubeAPI {
         if HomePaginationUITestFixture.isEnabled {
             let group = HomePaginationUITestFixture.regularPage(
                 subscriptions: false, continuationToken: continuationToken)
-            return parseVideoGroupRows(from: HomePaginationUITestFixture.browseResponse(for: group))
+            return parseHomeRows(from: HomePaginationUITestFixture.browseResponse(for: group))
         }
         #endif
         let isAuth = authToken != nil
@@ -81,7 +81,7 @@ extension InnerTubeAPI {
             ? try await postTV(endpoint: "browse", body: body)
             : try await post(endpoint: "browse", body: body)
         updateVisitorData(from: data)
-        let rows = parseVideoGroupRows(from: data)
+        let rows = parseHomeRows(from: data)
         tubeLog.notice("fetchHomeRows → \(rows.count, privacy: .public) shelves")
         let rowShortsDetail = rows.map { row -> String in
             let s = row.videos.filter { $0.isShort }.count
