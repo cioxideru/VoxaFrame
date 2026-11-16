@@ -98,6 +98,33 @@ struct HomeRecommendationsPagingTests {
         #expect(home.recommendations?.nextPageToken == nil)
     }
 
+    @Test("A failed continuation keeps the cursor and offers More instead of ending the feed")
+    func failedContinuationKeepsCursor() async {
+        let api = MockInnerTubeAPI()
+        api.homeRowsHandler = { token in
+            token == nil
+                ? [VideoGroup(videos: [makeVideo("first")], nextPageToken: "t1")]
+                : [VideoGroup(videos: [makeVideo("second")])]
+        }
+        let home = HomeViewModel(api: api)
+        defer { home.cancel() }
+        await home.refresh()
+
+        api.errorToThrow = APIError.httpError(500)
+        await home.loadMoreMerged()?.value
+        #expect(home.homeRegularVideos.map(\.id) == ["first"])
+        #expect(home.recommendations?.nextPageToken == "t1")
+        #expect(home.recommendations?.isLoadingMore == false)
+        // The feed's only trigger card already appeared: the view must offer More.
+        #expect(home.recommendationsStalled)
+
+        api.errorToThrow = nil
+        await home.loadMoreMerged()?.value
+        #expect(home.homeRegularVideos.map(\.id) == ["first", "second"])
+        #expect(api.calls.filter { $0.method == "fetchHomeRows" }.map(\.args) == [["nil"], ["t1"], ["t1"]])
+        #expect(!home.recommendationsStalled)
+    }
+
     @Test("A first page without regular videos continues the recommendations without a scroll trigger")
     func firstPageWithoutRegularVideosContinues() async {
         let api = MockInnerTubeAPI()
