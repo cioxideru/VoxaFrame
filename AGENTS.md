@@ -20,7 +20,7 @@ text and IDs; put unresolved work in the register, and closed outcomes in the ch
 - Canonical repository: [cioxideru/VoxaFrame](https://github.com/cioxideru/VoxaFrame); upstream: [milika/SmartTubeIOS](https://github.com/milika/SmartTubeIOS).
 - In the maintained local checkout, `fork` points to `https://github.com/cioxideru/VoxaFrame.git`. Check `git remote -v` before remote operations: a fresh clone uses `origin` for VoxaFrame.
 - The GitHub rename does not rename the Swift package, targets, workspace or existing local checkout (`SmartTubeIOS`). Keep their existing names and paths.
-- Users see "VoxaFrame" (`CFBundleName`/`CFBundleDisplayName` in the app Info.plists), but the product, executable and bundle ID stay `SmartTube` / `com.ibaranov.smarttube.app` so sign-in and saved data survive. Device logs therefore still name the process `SmartTube`.
+- Users see "VoxaFrame": the app product and executable are `VoxaFrame` (`VoxaFrame.app`, so Finder and Launchpad on macOS show it too). The bundle ID stays `com.ibaranov.smarttube.app` and the Swift module stays `SmartTube` (`PRODUCT_MODULE_NAME`) so sign-in, saved data and archived types survive. Device logs name the process `VoxaFrame` in builds after 5.21 (43).
 - Releases are a tag plus notes. Never commit a Team ID or attach a binary signed with a personal key.
 
 ## Commands (scripts in `scripts/`, safe from any cwd)

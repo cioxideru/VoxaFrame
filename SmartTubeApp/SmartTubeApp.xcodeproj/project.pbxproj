@@ -172,7 +172,7 @@
 		67E2B0732FAD1BBE005F70E6 /* MiniPlayerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniPlayerUITests.swift; sourceTree = "<group>"; };
 		67E2B0B12FADFE59005F70E6 /* PlayerDoubleTapUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerDoubleTapUITests.swift; sourceTree = "<group>"; };
 		67E6B67B2F9535CD00CD372F /* Smart Tube.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Smart Tube.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		6ACA5CEA633CF065619F786C /* SmartTube.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartTube.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6ACA5CEA633CF065619F786C /* VoxaFrame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoxaFrame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		79E77E6DD18B12CA7A5341D0 /* SmartTubeDownloadWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SmartTubeDownloadWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		8937147FE98F4B8490EB7D0A /* TVShortsDownNavigationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVShortsDownNavigationUITests.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E1F3 /* HomeFeedWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeFeedWidget.swift; sourceTree = "<group>"; };
@@ -449,7 +449,7 @@
 		5EF0B6AF2643BF476B25C7C0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6ACA5CEA633CF065619F786C /* SmartTube.app */,
+				6ACA5CEA633CF065619F786C /* VoxaFrame.app */,
 				DA3810E40296738F4C5E0B95 /* SmartTubeUITests.xctest */,
 				79E77E6DD18B12CA7A5341D0 /* SmartTubeDownloadWidget.appex */,
 				AA01000000000000000000A3 /* SmartTubeShareExtension.appex */,
@@ -560,7 +560,7 @@
 				B8401470D9A590E7F3685830 /* SmartTubeIOS */,
 			);
 			productName = SmartTube;
-			productReference = 6ACA5CEA633CF065619F786C /* SmartTube.app */;
+			productReference = 6ACA5CEA633CF065619F786C /* VoxaFrame.app */;
 			productType = "com.apple.product-type.application";
 		};
 		67A5E7F22FB3932400C53D61 /* SafariExtension */ = {
@@ -950,7 +950,8 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app;
-				PRODUCT_NAME = SmartTube;
+				PRODUCT_MODULE_NAME = SmartTube;
+				PRODUCT_NAME = VoxaFrame;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
@@ -1429,7 +1430,8 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ibaranov.smarttube.app;
-				PRODUCT_NAME = SmartTube;
+				PRODUCT_MODULE_NAME = SmartTube;
+				PRODUCT_NAME = VoxaFrame;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;

@@ -30,7 +30,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "5A4C56D3A7C36BE68C3C3CE0"
-               BuildableName = "SmartTube.app"
+               BuildableName = "VoxaFrame.app"
                BlueprintName = "SmartTube"
                ReferencedContainer = "container:SmartTubeApp.xcodeproj">
             </BuildableReference>
@@ -76,7 +76,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5A4C56D3A7C36BE68C3C3CE0"
-            BuildableName = "SmartTube.app"
+            BuildableName = "VoxaFrame.app"
             BlueprintName = "SmartTube"
             ReferencedContainer = "container:SmartTubeApp.xcodeproj">
          </BuildableReference>
@@ -101,7 +101,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5A4C56D3A7C36BE68C3C3CE0"
-            BuildableName = "SmartTube.app"
+            BuildableName = "VoxaFrame.app"
             BlueprintName = "SmartTube"
             ReferencedContainer = "container:SmartTubeApp.xcodeproj">
          </BuildableReference>
