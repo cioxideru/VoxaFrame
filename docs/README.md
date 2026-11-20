@@ -30,7 +30,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [design/claude-design/README.md](design/claude-design/README.md) | DESIGN-0001: VoxaFrame Claude Design import bundle and visual references | current | 2026-10-17 |
 | [design/claude-design/HANDOFF.ru.md](design/claude-design/HANDOFF.ru.md) | Colleague handoff: import files, save the system and check the four platforms | current | 2026-10-17 |
 | [design/claude-design/CLAUDE_IMPORT.md](design/claude-design/CLAUDE_IMPORT.md) | Apple 27 design-system specification, platform rules, components and provenance | current | 2026-10-17 |
-| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0023; OQ-0024 closed) | current | 2026-11-09 |
+| [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Unfinished work, debt, verification gaps and decisions (OQ-0001–0023, OQ-0025; OQ-0024 closed) | current | 2026-11-20 |
 | [exec-plans/completed/offline-ipad-cleanup.md](exec-plans/completed/offline-ipad-cleanup.md) | PLAN-0028: physical iPad offline download and cleanup | current | 2026-10-17 |
 | [exec-plans/completed/upstream-fork-candidates.md](exec-plans/completed/upstream-fork-candidates.md) | PLAN-0049: fixes and features ported from upstream and its forks | completed | 2026-11-09 |
 | [exec-plans/completed/live-stream-history.md](exec-plans/completed/live-stream-history.md) | PLAN-0048: live streams reported to the account's watch history | completed | 2026-11-09 |
@@ -53,7 +53,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [exec-plans/completed/offline-yandex-translation.md](exec-plans/completed/offline-yandex-translation.md) | PLAN-0031: verified Russian translation fix; Kazakh service refusal remains open | current | 2026-10-20 |
 | [exec-plans/completed/worktree-release-5-18.md](exec-plans/completed/worktree-release-5-18.md) | PLAN-0030: worktree integration and source release 5.18 | completed | 2026-10-20 |
 | [exec-plans/completed/ipad-sidebar-state-warning.md](exec-plans/completed/ipad-sidebar-state-warning.md) | PLAN-0033: sidebar warning and Queue identity fix; Split View acceptance remains open | completed | 2026-10-20 |
-| [exec-plans/active/upstream-small-fixes.md](exec-plans/active/upstream-small-fixes.md) | PLAN-0050: first visible Home section, remote completion over local position, six grid columns | current | 2026-11-20 |
+| [exec-plans/completed/upstream-small-fixes.md](exec-plans/completed/upstream-small-fixes.md) | PLAN-0050: first visible Home section, remote completion over local position, six grid columns, completed | current | 2026-11-20 |
 | [exec-plans/active/timeline-buffered-range.md](exec-plans/active/timeline-buffered-range.md) | PLAN-0051: buffered range on the player timeline | current | 2026-11-20 |
 | [exec-plans/active/shorts-personal-feed.md](exec-plans/active/shorts-personal-feed.md) | PLAN-0052: personalized Shorts feed from the account sequence | current | 2026-11-20 |
 | [exec-plans/active/voxaframe-redesign.md](exec-plans/active/voxaframe-redesign.md) | PLAN-0027: VoxaFrame redesign in SwiftUI, staged | current | 2026-10-17 |

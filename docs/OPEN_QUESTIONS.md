@@ -469,3 +469,10 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
   relaunch keeps the choice.
 - Playback without AndroidVR: passed on the iPad on 2026-11-09 (plan evidence). NOT RUN on Apple TV: check a video
   that reaches the exhaustive retry and Audio-Only there; the log should show no `AndroidVR` line.
+
+## OQ-0025 — Resume ignores YouTube's full completion
+
+- Status: open; owner: playback maintainer; basis: [PLAN-0050](exec-plans/completed/upstream-small-fixes.md) item 2.
+- Cards and Offline rows show 100 % when YouTube reports a full watch, but starting the video still resumes at the
+  older position saved on the device (a probe in PLAN-0050 restored 30 s of a 100 s video). Decide whether a full
+  remote watch should start from the beginning, then change the resume path with a test at the store seam.

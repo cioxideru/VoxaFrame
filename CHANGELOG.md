@@ -6,6 +6,15 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Changed
+
+- Video grids offer up to 6 columns in iPad and Mac landscape windows; Home, playlists and channels drop columns that do not fit. Saved column counts stay as they were (PLAN-0050).
+
+### Fixed
+
+- Home opens with the first section in Settings › Visible Sections instead of always with Home (upstream #194). Shortcuts that open a section still work (PLAN-0050).
+- A video YouTube reports as fully watched shows 100 % on its card and Offline row, also to VoiceOver, even when the device saved an earlier position (PLAN-0050).
+
 ## [5.21] – 2026-11-16
 
 VoxaFrame 5.21 (43). Source release; no signed binaries are attached.
