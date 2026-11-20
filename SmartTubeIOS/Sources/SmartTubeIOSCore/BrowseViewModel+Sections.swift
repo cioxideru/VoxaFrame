@@ -93,18 +93,37 @@ extension BrowseViewModel {
     }
 
     func fetchHistorySection() async throws {
-        // #150: YouTube doesn't reliably credit watches to the account for device-code
-        // sign-in, so the app keeps its own on-device history and shows it first, followed by whatever the account
-        // history returns (best-effort — failed fetches just yield local). A guest gets on-device records only.
-        let local = localHistory.videos
-        let remote: VideoGroup? = hasAuthToken ? (try? await api.fetchHistory()) : nil
-        if !Task.isCancelled {
-            let localIds = Set(local.map(\.id))
-            var group = remote ?? VideoGroup(title: "History", videos: [])
-            group.videos = local + group.videos.filter { !localIds.contains($0.id) }
-            isAuthRequired = group.videos.isEmpty
-            videoGroups = group.videos.isEmpty ? [] : [group]
+        // #150: the app keeps its own on-device history; a guest sees only that. Signed in, the account history
+        // leads and on-device entries it does not list yet are placed around it (`WatchHistoryMerge`, PLAN-0053).
+        // The account fetch is best-effort: a failure shows the on-device history.
+        // A load that kept the list (`loadContent(refresh: false)`, e.g. returning to the tab) refreshes its top
+        // and keeps the pages already loaded below, so the scroll position and pagination survive.
+        let previous = videoGroups.first
+        let local = localHistory.entries
+        var remote: VideoGroup?
+        if hasAuthToken {
+            do {
+                remote = try await api.fetchHistory()
+            } catch {
+                if !Task.isCancelled {
+                    browseLog.error(
+                        "History: account history failed, showing on-device history: \(ViewModelLogger.errorSummary(error))"
+                    )
+                }
+            }
         }
+        guard !Task.isCancelled else { return }
+        var group = remote ?? VideoGroup(title: "History", videos: [])
+        group.videos = WatchHistoryMerge.merge(local: local, remote: group.videos, now: Date())
+        if let previous, !previous.videos.isEmpty {
+            var seen = Set(group.videos.map(\.id))
+            group.videos += previous.videos.filter { seen.insert($0.id).inserted }
+            // The old token continues after the pages kept above; a list that had none (an earlier failed account
+            // fetch) paginates from the new page.
+            group.nextPageToken = previous.nextPageToken ?? group.nextPageToken
+        }
+        isAuthRequired = group.videos.isEmpty
+        videoGroups = group.videos.isEmpty ? [] : [group]
     }
 
     func fetchPlaylistsSection() async throws {

@@ -19,6 +19,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
+- [PLAN-0053: History follows the account order](active/history-account-order.md) — account history leads, unsynced local watches placed around it, refresh on return; iPad check pending.
+
 - [PLAN-0050: Small fixes from upstream, forks and Android](active/upstream-small-fixes.md) — first visible Home section, remote completion, six grid columns.
 
 - [PLAN-0051: Buffered range on the player timeline](active/timeline-buffered-range.md) — buffered part of the current item on every platform.

@@ -149,7 +149,11 @@ public final class BrowseViewModel {
 
     public func select(section: BrowseSection) {
         guard section != currentSection else {
-            browseLog.notice("select: already on section \(section.title) — ignored")
+            if section.type == .history {
+                refreshHistory(source: "select")
+            } else {
+                browseLog.notice("select: already on section \(section.title) — ignored")
+            }
             return
         }
         let fromTitle = currentSection.title
@@ -289,14 +293,30 @@ public final class BrowseViewModel {
 
     /// Refreshes the current section's feed if the last successful fetch was more than
     /// `threshold` seconds ago (default 15 min). The first load belongs to sign-in or selection.
+    /// History refreshes on every foreground instead (`refreshHistory`): videos watched in other apps meanwhile
+    /// would otherwise wait for the threshold.
     public func refreshIfStale(threshold: TimeInterval = 15 * 60) {
         guard fetchTask != nil, !isLoading else { return }
+        if currentSection.type == .history {
+            refreshHistory(source: "refreshIfStale")
+            return
+        }
         let age = loadedAt.map { Date().timeIntervalSince($0) } ?? .infinity
         guard age > threshold else { return }
         let ageDesc = age.isFinite ? "\(Int(age))s" : "never loaded"
         browseLog.notice(
             "refreshIfStale: age=\(ageDesc) > threshold=\(Int(threshold))s — refreshing \(currentSection.title)")
         loadContent(refresh: true, source: "refreshIfStale")
+    }
+
+    /// Reloads the shown History without clearing it, when the tab is shown again or the app returns to the
+    /// foreground: the top picks up videos watched since (here or in another app) and the pages already loaded
+    /// stay below (PLAN-0053). Does nothing before the first load or while a load or a page is in flight.
+    public func refreshHistory(source: String) {
+        guard currentSection.type == .history, historyEnabled, fetchTask != nil, !isLoading, !isLoadingMore else {
+            return
+        }
+        loadContent(refresh: false, source: "refreshHistory.\(source)")
     }
 
     /// Update whether history is enabled. If currently on the history section, reloads it.
