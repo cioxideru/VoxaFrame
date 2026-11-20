@@ -131,13 +131,18 @@ extension ShortsPlayerView {
                 .padding(.horizontal, VFSpace.s16)
 
             VStack(alignment: .leading, spacing: VFSpace.s4) {
-                Text(vm.currentVideo?.channelTitle ?? "")
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-                Text(vm.currentVideo?.title ?? "")
-                    .font(.headline)
-                    .lineLimit(2)
-                    .accessibilityIdentifier(AccessibilityID.shortsTitleLabel)
+                // A Short whose title lookup failed has none; draw nothing rather than an empty line (PLAN-0052).
+                if let channel = vm.currentVideo?.channelTitle, !channel.isEmpty {
+                    Text(channel)
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                }
+                if let title = vm.currentVideo?.title, !title.isEmpty {
+                    Text(title)
+                        .font(.headline)
+                        .lineLimit(2)
+                        .accessibilityIdentifier(AccessibilityID.shortsTitleLabel)
+                }
                 #if os(iOS)
                 ShortsSeekSlider(vm: vm)
                 #else
@@ -381,13 +386,17 @@ extension ShortsPlayerView {
                     videoScaleButton
                 }
                 .buttonStyle(.borderless)
-                Text(vm.currentVideo?.title ?? "")
-                    .font(.headline)
-                    .lineLimit(2)
-                    .accessibilityIdentifier(AccessibilityID.shortsTitleLabel)
-                Text(vm.currentVideo?.channelTitle ?? "")
-                    .font(.subheadline)
-                    .lineLimit(1)
+                if let title = vm.currentVideo?.title, !title.isEmpty {
+                    Text(title)
+                        .font(.headline)
+                        .lineLimit(2)
+                        .accessibilityIdentifier(AccessibilityID.shortsTitleLabel)
+                }
+                if let channel = vm.currentVideo?.channelTitle, !channel.isEmpty {
+                    Text(channel)
+                        .font(.subheadline)
+                        .lineLimit(1)
+                }
                 Text("\(formatDuration(vm.currentTime)) / \(formatDuration(vm.duration))")
                     .font(.caption.monospacedDigit())
                     .accessibilityIdentifier(AccessibilityID.shortsTimeLabel)

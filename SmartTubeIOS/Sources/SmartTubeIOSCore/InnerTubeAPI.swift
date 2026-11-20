@@ -28,6 +28,9 @@ public actor InnerTubeAPI {
     /// shared `visitorData`: one visitor across several clients raises the bot score.
     var visionOSVisitorData: String?
     var authToken: String?
+    /// The sign-in `authToken` belongs to: a token set after none (a sign-out sets nil) starts the next one, a
+    /// refreshed token keeps it. A Shorts sequence continuation is bound to it (PLAN-0052).
+    var signInSession = 0
     /// SAPISID cookie value from YouTube.com web session (set via OAuthLogin/MergeSession).
     /// Used by postWebCreator to compute SAPISIDHASH for WEB_CREATOR requests on www.youtube.com.
     var sapisid: String?
@@ -310,6 +313,7 @@ public actor InnerTubeAPI {
     public func setAuthToken(_ token: String?) {
         let msg = token != nil ? "token(\(token!.prefix(8))…)" : "nil"
         tubeLog.notice("setAuthToken: \(msg, privacy: .public)")
+        if authToken == nil, token != nil { signInSession += 1 }
         self.authToken = token
     }
 

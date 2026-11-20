@@ -110,6 +110,29 @@ picker writes only the active player's preferences. Both reuse the same Yandex s
 and Keychain token, and read the same persisted Fit/Fill setting.
 Account Shorts come from authenticated subscription
 pages plus Shorts present in Home recommendations; signed-out discovery uses search.
+Signed in, the full-screen Shorts player continues after the presented Shorts with the
+TV `reel/reel_watch_sequence` (`InnerTubeAPI.fetchShortsFeed`, parser `ShortsSequence`),
+seeded with the Short it opened at; an HTTP or JSON error, `logged_in=0` or a page
+without Shorts falls back to signed-out search, sent without cookies. Sequence entries
+carry only the video ID: before the page reaches the player, core looks up each Short's
+title, channel and channel ID with `reel/reel_item_watch` (same TV client), at most
+`InnerTubeAPI.shortsMetadataConcurrency` at once and all before one absolute deadline,
+`InnerTubeAPI.shortsMetadataTimeout` away (`ShortsMetadataDeadline`). The account and
+Brand Account are read once per page: that snapshot picks the page's source and signs
+the sequence request and its lookups, and a lookup is not sent once either has changed.
+A sequence continuation names the sign-in (`InnerTubeAPI.signInSession`: a token after a
+sign-out starts the next one, a refreshed token keeps it) and the Brand Account that got
+it, and is not sent for another one; a stored Brand Account the account no longer has
+falls back to the primary one as a new session, like a switch (`AuthService.applyChannels`).
+A failed or late lookup leaves that Short in place with empty fields, which the
+overlay does not draw. The player, history and SponsorBlock read the feed's video as
+before. Sequence pages go only at the end of the feed. `ShortsFeedWindow` reads a page's
+source from its tokens: `reel:` ones (also on the search a refusal moves the end to)
+keep the end's own cursor; every other page is the presentation's source, whose one
+cursor both ends share as before, and a `srch:` token continues the signed-out search
+whoever is signed in. When that source ended before the end's first page, the end asks
+with a bare `reel:`, which only starts the sequence. The window remembers every Short
+that stayed in it once added, and a page added at the end never repeats one.
 Home is the recommendations feed only (TV home browse and its continuations); the
 subscription shelf it loads feeds the Shorts rows and never adds regular videos to Home.
 The Shorts player retains source-tagged continuation tokens and discards them when

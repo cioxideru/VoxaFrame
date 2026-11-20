@@ -207,6 +207,19 @@ struct BrandAccountAuthServiceTests {
         #expect(channel.pageId == nil)
     }
 
+    @Test("Falling back to the primary account starts a new session and announces it once, as a switch does")
+    func missingChannelFallbackStartsNewSession() {
+        let (auth, _) = signedInAuth()
+        auth.selectChannel(brand)
+        let session = auth.sessionGeneration
+
+        #expect(changes(on: auth) { auth.applyChannels([primary]) } == 1)
+        #expect(auth.sessionGeneration == session + 1)
+
+        #expect(changes(on: auth) { auth.applyChannels([primary]) } == 0)  // Nothing left to fall back from.
+        #expect(auth.sessionGeneration == session + 1)
+    }
+
     @Test("Signing out clears the channels and the selected page ID")
     func signOutClearsSelection() {
         let (auth, channel) = signedInAuth()

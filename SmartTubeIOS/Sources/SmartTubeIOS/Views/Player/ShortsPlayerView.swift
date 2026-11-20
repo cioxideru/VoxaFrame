@@ -51,8 +51,6 @@ public struct ShortsPlayerView: View {
     @State var isMuted = false
     @State var showAudioTrackPicker = false
     @State var showSpeedPicker = false
-    @State var nextPageToken: String?
-    @State var hasLoadedFeed = false
     /// True while the app is backgrounded — guards onDisappear from calling stop()
     /// when iOS fires it as a side-effect of backgrounding rather than navigation.
     @State var isInBackground = false
