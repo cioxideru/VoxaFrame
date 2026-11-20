@@ -6,6 +6,10 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Added
+
+- The player timeline shows how much of the video has loaded ahead of the playhead: a lighter band between the played part and the empty track, on iPhone, iPad, Mac and Apple TV. Downloaded videos show the whole bar as loaded, and live streams show no band (PLAN-0051).
+
 ### Fixed
 
 - History follows the account order, so a video watched in the official YouTube app appears at the top instead of below every video played in VoxaFrame; a recent VoxaFrame watch YouTube has not listed yet stays on top. History refreshes when the tab or the app is shown again, keeping the pages already loaded (PLAN-0053).

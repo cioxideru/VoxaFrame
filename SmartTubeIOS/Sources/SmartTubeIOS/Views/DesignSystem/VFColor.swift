@@ -76,6 +76,9 @@ enum VFColor {
     static let onMedia = Color.white
     /// The unplayed part of a timeline over video: 3.7:1 on `scrim` over a white frame, 5.3:1 on black (non-text, 3:1).
     static let onMediaTrack = Color.white.opacity(0.5)
+    /// The buffered part of a timeline (VF/Timeline "buffered 50 %"), laid over `onMediaTrack`: the two make 75 % white,
+    /// between the 50 % track and the full `onMedia` played part. Fixed white like them, so the theme does not change it.
+    static let onMediaBuffered = Color.white.opacity(0.5)
 
     #if os(tvOS)
     // tvOS has no grouped-background roles, so these two use the reference values from tokens.json.

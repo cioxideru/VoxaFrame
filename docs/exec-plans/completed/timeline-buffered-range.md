@@ -1,6 +1,8 @@
 # PLAN-0051: Buffered range on the player timeline
 
-Status: active
+Status: completed (2026-11-20)
+Resolution: delivered; Codex review (two rounds) and Fable audit accepted. Visual checks other than the iOS
+simulator in the dark theme are tracked in [OQ-0019](../../OPEN_QUESTIONS.md#oq-0019--voxaframe-redesign-follow-ups).
 
 - Owner: coordinator; one executor.
 - Git boundary: worktree `wt/timeline-buffer-0051` from `master` after `a4a5e7bc`.
@@ -29,5 +31,7 @@ offline video shows the whole timeline as buffered. Live streams without a fixed
 | Step | Evidence | Result |
 |---|---|---|
 | Review | AxrTube commits read on 2026-11-20 | done |
-| Implementation | | NOT RUN |
-| Simulator check | | NOT RUN |
+| Implementation | `PlayerTimeline.bufferedSpan` and `bufferedSpanChanged` with `PlayerTimelineTests`; `PlaybackBufferedRangeTests` (measurement, local item, publish threshold; KVO delivery while paused of more loaded ranges, a length that turns finite and item swaps, without manual refresh; a replaced item is released); `ShortsPreloadingTests` covers player adoption; package tests, SwiftLint, iOS, tvOS and macOS builds passed on 2026-11-20 | done |
+| Simulator check | iPhone 17 simulator, dark theme, guest, H.264 video: the buffered band runs from the playhead at 0:21 to about 43 % of the bar, between the played part and the track (2026-11-20). Not observed: light theme, bright frames, Reduce Transparency, `disableLiquidGlass`, tvOS, offline items | done (iOS dark only) |
+| Review | Codex: round 1 two findings (late length while paused, tests bypassing KVO), round 2 clean | passed |
+| Audit | Fable high: accepted, four nits (comments, seek-refresh test, test helper notes, design README owner) | passed |

@@ -113,6 +113,7 @@ extension PlaybackViewModel {
             Task { @MainActor [weak self, weak item] in
                 guard finished, let self, let item, self.player.currentItem === item else { return }
                 self.currentTime = time
+                self.refreshBufferedSpan()
             }
         }
     }

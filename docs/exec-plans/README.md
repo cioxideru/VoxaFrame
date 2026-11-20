@@ -21,8 +21,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 - [PLAN-0050: Small fixes from upstream, forks and Android](active/upstream-small-fixes.md) — first visible Home section, remote completion, six grid columns.
 
-- [PLAN-0051: Buffered range on the player timeline](active/timeline-buffered-range.md) — buffered part of the current item on every platform.
-
 - [PLAN-0052: Personalized Shorts feed](active/shorts-personal-feed.md) — account `reel_watch_sequence` behind our Shorts player.
 
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
@@ -36,6 +34,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 ## Completed
 
 - [PLAN-0053: History follows the account order](completed/history-account-order.md) — account history leads, unsynced on-device watches placed around it, History refreshes on return; package checks, iOS/tvOS builds and a signed-in iPad check passed.
+
+- [PLAN-0051: Buffered range on the player timeline](completed/timeline-buffered-range.md) — buffered part of the current item on iOS, macOS and tvOS from `loadedTimeRanges` and the item length; package checks, all builds, Codex review and Fable audit passed; only the dark iOS simulator was seen (OQ-0019).
 
 - [PLAN-0049: Candidates from upstream and its forks](completed/upstream-fork-candidates.md) — channel Videos-tab pagination, SponsorBlock end tolerance and watchable skipped segments, Brand Account switching, local search ordering and AndroidVR removal; subscriptions needed no change; package checks, all builds and an iPad playback check passed; Brand Account and Apple TV checks in OQ-0023.
 

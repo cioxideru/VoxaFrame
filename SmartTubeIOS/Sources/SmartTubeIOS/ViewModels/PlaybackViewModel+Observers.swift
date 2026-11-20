@@ -26,6 +26,8 @@ extension PlaybackViewModel {
             let seconds = time.seconds
             Task { @MainActor [weak self, weak source] in
                 guard let self, self.player === source else { return }
+                // Measured from the item's own playhead, so it holds while scrubbing too (PLAN-0051).
+                self.refreshBufferedSpan()
                 // Don't overwrite the slider position or trigger SponsorBlock auto-seeks
                 // while the user is scrubbing. Auto-seeks call seek() → showControls() →
                 // scheduleControlsHide(), which cancels and restarts the 4 s hide-timer

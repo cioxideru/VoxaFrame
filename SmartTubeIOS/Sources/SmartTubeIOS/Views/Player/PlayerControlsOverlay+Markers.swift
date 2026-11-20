@@ -56,6 +56,30 @@ extension PlayerControlsOverlay {
     }
 }
 
+// MARK: - Buffered range
+
+/// The loaded stretch around the playhead (PLAN-0051), placed over the track and under the played part of both
+/// progress bars. It takes the track's width from its frame, draws nothing without a span and never takes input,
+/// so the bars' gestures, seeking and focus stay as they are.
+struct TimelineBufferedRange: View {
+    let span: ClosedRange<Double>?
+    let height: CGFloat
+
+    var body: some View {
+        GeometryReader { geo in
+            if let span {
+                let width = geo.size.width * CGFloat(span.upperBound - span.lowerBound)
+                Capsule()
+                    .fill(VFColor.onMediaBuffered)
+                    .frame(width: width, height: height)
+                    .position(x: geo.size.width * CGFloat(span.lowerBound) + width / 2, y: geo.size.height / 2)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 // MARK: - Progress bar (iPhone, iPad and Mac)
 
 #if !os(tvOS)
@@ -116,6 +140,7 @@ extension PlayerControlsOverlay {
                         Capsule()
                             .fill(VFColor.onMediaTrack)
                             .frame(height: Self.trackHeight)
+                        TimelineBufferedRange(span: vm.bufferedSpan, height: Self.trackHeight)
                         Capsule()
                             .fill(VFColor.onMedia)
                             .frame(width: max(played, 0), height: Self.trackHeight)

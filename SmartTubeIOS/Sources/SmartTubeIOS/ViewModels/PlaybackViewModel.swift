@@ -97,6 +97,9 @@ public final class PlaybackViewModel {
     var onPlaybackEnd: (@MainActor () -> Void)?
     public internal(set) var currentTime: TimeInterval = 0
     public internal(set) var duration: TimeInterval = 0
+    /// The loaded part of the current item around the playhead, as a part of the timeline (PLAN-0051).
+    /// Set by `refreshBufferedSpan()` only; `nil` for a live stream or while nothing around the playhead is loaded.
+    public internal(set) var bufferedSpan: ClosedRange<Double>?
 
     // MARK: - Forwarding computed properties (views unchanged)
 
@@ -292,6 +295,12 @@ public final class PlaybackViewModel {
     /// True while the video is being routed to an external display via AirPlay.
     public internal(set) var isAirPlaying: Bool = false
     @ObservationIgnored nonisolated(unsafe) var airPlayObserver: NSKeyValueObservation?
+    /// KVO on the current item's `loadedTimeRanges` and `duration`; same lifecycle as `rateObserver`.
+    @ObservationIgnored nonisolated(unsafe) var bufferedRangeObservers: [NSKeyValueObservation] = []
+    /// The item `bufferedSpan` was measured on; weak, so a replaced item is not kept alive.
+    @ObservationIgnored weak var bufferedSpanItem: AVPlayerItem?
+    /// The item `startLocalPlayback` installed: the whole file is on disk, so once ready it is buffered end to end.
+    @ObservationIgnored weak var localPlaybackItem: AVPlayerItem?
     /// Counts exhaustive retry cycles (0 = no retry yet). Set by exhaustiveRetry(video:originalError:).
     var retryAttempts: Int = 0
     /// The stream type that produced the current AVPlayerItem, set by each successful load path.
@@ -526,6 +535,7 @@ public final class PlaybackViewModel {
         player.allowsExternalPlayback = true
         setupTimeObserver()
         setupRateObserver()
+        setupBufferedRangeObserver()
         #if canImport(UIKit)
         setupRemoteCommandCenter()
         setupAudioSessionObserver()
@@ -553,6 +563,7 @@ public final class PlaybackViewModel {
         if let obs = timeObserver { obs.player.removeTimeObserver(obs.token) }
         rateObserver?.invalidate()
         airPlayObserver?.invalidate()
+        bufferedRangeObservers.forEach { $0.invalidate() }
         if let obs = audioSessionObserver { audioSessionNotificationCenter.removeObserver(obs) }
         if let obs = routeChangeObserver { NotificationCenter.default.removeObserver(obs) }
         #if canImport(UIKit)
