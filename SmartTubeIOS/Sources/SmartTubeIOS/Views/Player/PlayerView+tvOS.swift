@@ -283,6 +283,9 @@ extension PlayerControlsOverlay {
                         .frame(height: 6)
                         .padding(.horizontal, hPad)
 
+                    TimelineBufferedRange(span: vm.bufferedSpan, height: 6)
+                        .padding(.horizontal, hPad)
+
                     // Progress fill
                     HStack(spacing: 0) {
                         Capsule()

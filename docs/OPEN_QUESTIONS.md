@@ -395,8 +395,10 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
     recomputes `hasNext` from its captured video (`PlaybackViewModel+Loading.swift`, the queue fallback after related
     videos). With no related videos it can switch Next back off. The fix is to read `currentVideo` there, which needs a
     `PlaybackViewModel` change (WS4).
-  - Player logic the re-skin did not add: "now playing" next to the selected quality, buffering state and buffered range,
+  - Player logic the re-skin did not add: "now playing" next to the selected quality, buffering state,
     sleep-timer remaining time, end-of-video countdown, queue position, live variants, inline watch-page layout.
+  - Buffered range on the timeline (PLAN-0051): seen only on the iOS simulator in the dark theme; light theme, bright
+    frames, Reduce Transparency, `disableLiquidGlass`, tvOS, macOS and offline items are NOT RUN.
   - Russian UI: older labels (`Text` without `bundle: .module`) look up translations in the main bundle and stay English;
     "Parental Controls" has no ru string. Mac Settings pane heights are estimates.
   - Stage 8 on iOS 26: Queue can appear in the iPad top tabs; check selection when the window narrows (Queue → Library ›

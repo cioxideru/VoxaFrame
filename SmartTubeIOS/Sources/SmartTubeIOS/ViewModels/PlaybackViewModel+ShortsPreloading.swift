@@ -10,6 +10,7 @@ extension PlaybackViewModel {
         timeObserver = nil
         rateObserver?.invalidate()
         airPlayObserver?.invalidate()
+        invalidateBufferedRangeObservers()
         player = preparedPlayer
         updatePlaybackDemand()
         player.isMuted = wasMuted
@@ -21,6 +22,8 @@ extension PlaybackViewModel {
         shortsPreloader?.player = player
         setupTimeObserver()
         setupRateObserver()
+        setupBufferedRangeObserver()
+        refreshBufferedSpan()
         #if canImport(UIKit)
         setupAirPlayObserver()
         #endif

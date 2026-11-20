@@ -151,6 +151,8 @@ struct ShortsPreloadingTests {
         #expect(vm.qualityManager.player as AnyObject === incoming)
         #expect(vm.sponsorBlockManager.player as AnyObject === incoming)
         #expect(preloader.player === incoming)
+        // The buffered range is measured on the adopted player's item, not the outgoing one (PLAN-0051).
+        #expect(vm.bufferedSpanItem === item)
         #expect(outgoing.currentItem == nil)
         #expect(outgoing.rate == 0)
         vm.stop()

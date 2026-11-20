@@ -6,6 +6,10 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Added
+
+- The player timeline shows how much of the video has loaded ahead of the playhead: a lighter band between the played part and the empty track, on iPhone, iPad, Mac and Apple TV. Downloaded videos show the whole bar as loaded, and live streams show no band (PLAN-0051).
+
 ## [5.21] – 2026-11-16
 
 VoxaFrame 5.21 (43). Source release; no signed binaries are attached.

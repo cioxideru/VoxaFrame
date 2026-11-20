@@ -31,6 +31,7 @@ extension PlaybackViewModel {
                 item.audioTimePitchAlgorithm = .spectral
                 itemObserverTask = nil
                 observeLocalPlayerItem(item)
+                localPlaybackItem = item
                 player.replaceCurrentItem(with: item)
                 logLocalPlaybackStep("item installed")
                 observePlaybackEndAndStalls(for: item)
@@ -77,6 +78,7 @@ extension PlaybackViewModel {
                     self.lastSuccessfulStreamType = "local-file"
                     self.logLocalPlaybackStep("readyToPlay")
                     self.updateInitialItemDuration(item)
+                    self.refreshBufferedSpan()
                     // OfflineMedia already selected the saved audio; online language preferences must not replace it.
                     self.isLoading = false
                     self.applyOfflineTranslation()
