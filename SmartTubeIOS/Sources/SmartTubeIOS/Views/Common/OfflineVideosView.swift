@@ -192,7 +192,7 @@ struct OfflineVideosView: View {
         var progress: [String: Double] = [:]
         for entry in snapshot.entries {
             let saved = await VideoStateStore.shared.state(for: entry.id)?.watchedFraction
-            if let fraction = saved ?? entry.video.watchProgress { progress[entry.id] = fraction }
+            if let fraction = entry.video.displayedWatchProgress(saved: saved) { progress[entry.id] = fraction }
         }
         guard !Task.isCancelled else { return }
         watchProgress = progress
@@ -350,6 +350,7 @@ struct OfflineVideosView: View {
                     // Reset the selected List row's white foreground before applying text/chip hierarchy.
                     .foregroundStyle(Color.primary)
                     .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+                    .accessibilityValue(Text(entryLabel.watchedAccessibilityValue ?? ""))
                     .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
                 } else {
                     NavigationLink {
@@ -357,6 +358,7 @@ struct OfflineVideosView: View {
                     } label: {
                         entryLabel
                     }
+                    .accessibilityValue(Text(entryLabel.watchedAccessibilityValue ?? ""))
                     .accessibilityIdentifier(AccessibilityID.offlineEntry(entry.id))
                 }
             }

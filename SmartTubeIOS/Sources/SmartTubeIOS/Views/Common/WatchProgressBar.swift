@@ -15,4 +15,11 @@ struct WatchProgressBar: View {
         .frame(height: VFSpace.s4)
         .background(.background)
     }
+
+    /// What VoiceOver reads for the bar, which covers keep hidden: "N% watched", or nil before any progress.
+    static func accessibilityText(for fraction: Double?) -> String? {
+        guard let fraction, fraction > 0 else { return nil }
+        let percent = fraction.formatted(.percent.precision(.fractionLength(0)))
+        return String(localized: "\(percent) watched", bundle: .module)
+    }
 }
