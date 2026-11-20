@@ -19,8 +19,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0053: History follows the account order](active/history-account-order.md) — account history leads, unsynced local watches placed around it, refresh on return; iPad check pending.
-
 - [PLAN-0050: Small fixes from upstream, forks and Android](active/upstream-small-fixes.md) — first visible Home section, remote completion, six grid columns.
 
 - [PLAN-0051: Buffered range on the player timeline](active/timeline-buffered-range.md) — buffered part of the current item on every platform.
@@ -36,6 +34,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0053: History follows the account order](completed/history-account-order.md) — account history leads, unsynced on-device watches placed around it, History refreshes on return; package checks, iOS/tvOS builds and a signed-in iPad check passed.
 
 - [PLAN-0049: Candidates from upstream and its forks](completed/upstream-fork-candidates.md) — channel Videos-tab pagination, SponsorBlock end tolerance and watchable skipped segments, Brand Account switching, local search ordering and AndroidVR removal; subscriptions needed no change; package checks, all builds and an iPad playback check passed; Brand Account and Apple TV checks in OQ-0023.
 

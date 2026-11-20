@@ -1,6 +1,6 @@
 # PLAN-0053: History follows the account order
 
-Status: active
+Status: completed (2026-11-20)
 
 - Owner: coordinator (single session).
 - Git boundary: branch `fix/history-account-order`, merged into local `master`.
@@ -18,7 +18,7 @@ A video watched for a minute in the official YouTube app did not appear in VoxaF
 - `select(section:)` ignores the section already shown, and `refreshIfStale` waits 15 minutes, so returning to the
   History tab or to the app within that time showed the old list.
 - The account fetch was `try?`: a failure silently left only the on-device history, with no log line.
-- Not checked: whether the TV `FEhistory` request returns the new video for this account (needs the iPad's token).
+- The iPad check below confirmed that the TV `FEhistory` request returns a video just watched in the official app.
 
 ## Changes
 
@@ -40,8 +40,8 @@ A video watched for a minute in the official YouTube app did not appear in VoxaF
 
 | Step | Evidence | Result |
 |---|---|---|
-| Root cause | code above | confirmed in code; live request not checked |
+| Root cause | code above | confirmed |
 | Implementation | changes 1–3 | done |
 | Focused tests | `swift test --filter "WatchHistoryMerge\|BrowseViewModel"` (41 tests) | passed |
 | Checks | `scripts/ci.sh` (1471 tests), SwiftLint, ast-grep rules; `scripts/verify.sh` with iOS and tvOS builds (Smoke stage skipped, OQ-0003) | passed |
-| iPad check | official app watch, then History in VoxaFrame | NOT RUN |
+| iPad check | master `32039441` on the signed-in iPad: a video watched for a minute in the official app appeared at the top of History after returning to VoxaFrame | passed |

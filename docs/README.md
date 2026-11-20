@@ -56,7 +56,7 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [exec-plans/active/upstream-small-fixes.md](exec-plans/active/upstream-small-fixes.md) | PLAN-0050: first visible Home section, remote completion over local position, six grid columns | current | 2026-11-20 |
 | [exec-plans/active/timeline-buffered-range.md](exec-plans/active/timeline-buffered-range.md) | PLAN-0051: buffered range on the player timeline | current | 2026-11-20 |
 | [exec-plans/active/shorts-personal-feed.md](exec-plans/active/shorts-personal-feed.md) | PLAN-0052: personalized Shorts feed from the account sequence | current | 2026-11-20 |
-| [exec-plans/active/history-account-order.md](exec-plans/active/history-account-order.md) | PLAN-0053: History follows the account order and refreshes on return | current | 2026-11-20 |
+| [exec-plans/completed/history-account-order.md](exec-plans/completed/history-account-order.md) | PLAN-0053: History follows the account order and refreshes on return, accepted on iPad | completed | 2026-11-20 |
 | [exec-plans/active/voxaframe-redesign.md](exec-plans/active/voxaframe-redesign.md) | PLAN-0027: VoxaFrame redesign in SwiftUI, staged | current | 2026-10-17 |
 | [exec-plans/completed/offline-delete-all.md](exec-plans/completed/offline-delete-all.md) | PLAN-0026: delete all offline videos, tasks and cache | current | 2026-10-17 |
 | [exec-plans/completed/offline-selection-cleanup.md](exec-plans/completed/offline-selection-cleanup.md) | PLAN-0025: explicit offline streams, audio and file deletion | current | 2026-10-17 |

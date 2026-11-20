@@ -6,6 +6,10 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Fixed
+
+- History follows the account order, so a video watched in the official YouTube app appears at the top instead of below every video played in VoxaFrame; a recent VoxaFrame watch YouTube has not listed yet stays on top. History refreshes when the tab or the app is shown again, keeping the pages already loaded (PLAN-0053).
+
 ## [5.21] – 2026-11-16
 
 VoxaFrame 5.21 (43). Source release; no signed binaries are attached.
