@@ -123,6 +123,21 @@ public struct BrowseSection: Identifiable, Hashable, Sendable {
             BrowseSection(type: .sports),
             BrowseSection(type: .watchLater),
         ]
+
+    /// Home's chips: the order saved in Settings › Visible Sections (empty means `defaultSections`), without Shorts
+    /// while they are hidden.
+    public static func homeSections(enabled: [SectionType], hideShorts: Bool) -> [BrowseSection] {
+        let all: [BrowseSection] =
+            enabled.isEmpty
+            ? defaultSections
+            : enabled.compactMap { type in allSections.first { $0.type == type } }
+        return hideShorts ? all.filter { $0.type != .shorts } : all
+    }
+
+    /// The chip Home opens with (#194): the first visible one, or Home when the Shorts filter leaves none.
+    public static func homeStartSection(in visible: [BrowseSection]) -> BrowseSection {
+        visible.first ?? allSections[0]
+    }
 }
 
 // MARK: - SearchResult
