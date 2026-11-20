@@ -21,6 +21,7 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 - History follows the account order, so a video watched in the official YouTube app appears at the top instead of below every video played in VoxaFrame; a recent VoxaFrame watch YouTube has not listed yet stays on top. History refreshes when the tab or the app is shown again, keeping the pages already loaded (PLAN-0053).
 - Home opens with the first section in Settings › Visible Sections instead of always with Home (upstream #194). Shortcuts that open a section still work (PLAN-0050).
 - A video YouTube reports as fully watched shows 100 % on its card and Offline row, also to VoiceOver, even when the device saved an earlier position (PLAN-0050).
+- A video YouTube reports as fully watched starts from the beginning instead of resuming at an earlier position saved on the device; the saved position is dropped (PLAN-0054).
 
 ## [5.21] – 2026-11-16
 

@@ -59,6 +59,14 @@ public actor VideoStateStore: UserDefaultsBackedStore {
         states[videoId]
     }
 
+    /// The saved state playback resumes from for `video`. When YouTube reports the video as fully watched, the older
+    /// position saved on this device is dropped and playback starts from the beginning (OQ-0025).
+    public func resumeState(for video: Video) -> State? {
+        guard video.isFullyWatchedOnYouTube else { return states[video.id] }
+        if states[video.id] != nil { clear(videoId: video.id) }
+        return nil
+    }
+
     /// Persists watch position. Automatically prunes entries near the start
     /// (< 5 s) or near the end (> 95 %) — mirrors Android's RESTORE_POSITION_PERCENTS.
     public func save(videoId: String, position: TimeInterval, duration: TimeInterval) {
