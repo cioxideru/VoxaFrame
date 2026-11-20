@@ -478,3 +478,14 @@ Owners below are roles for follow-up, not evidence that someone has accepted a n
 - Cards and Offline rows show 100 % when YouTube reports a full watch, but starting the video still resumes at the
   older position saved on the device (a probe in PLAN-0050 restored 30 s of a 100 s video). Decide whether a full
   remote watch should start from the beginning, then change the resume path with a test at the store seam.
+
+## OQ-0026 — Personalized Shorts feed device check
+
+- Status: open; owner: account / Shorts maintainer; basis: [PLAN-0052](exec-plans/completed/shorts-personal-feed.md).
+- Signed-in device check: NOT RUN. On the iPad, open a Short from a shelf signed in and signed out and confirm that
+  after the shelf the signed-in feed differs and shows titles and channels; repeat with a Brand Account selected,
+  switch the channel and sign out and in with another account while the feed is open, and check the log for
+  `reel_watch_sequence` without a fallback to search.
+- Test debt (review and audit nits): the deadline test in `ShortsSequenceMetadataTests` counts `hasPassed` calls
+  instead of driving time; no direct test for the cancellation pass-through in `InnerTubeAPI+Shorts.swift`, for the
+  absence of the token and Page ID in `postTV` log lines, or for the overlay hiding an empty title.

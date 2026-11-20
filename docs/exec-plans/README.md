@@ -19,8 +19,6 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
-- [PLAN-0052: Personalized Shorts feed](active/shorts-personal-feed.md) — account `reel_watch_sequence` behind our Shorts player.
-
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.
@@ -30,6 +28,8 @@ tracks unfinished work, debt, missing verification, and decisions.
 - [PLAN-0003: BotGuard / PoToken](active/BotGuard.md) — implemented foundations; live acceptance and token lifetime remain open.
 
 ## Completed
+
+- [PLAN-0052: Personalized Shorts feed](completed/shorts-personal-feed.md) — signed in, the full-screen Shorts feed continues after the shelf with the account's `reel_watch_sequence` for the selected Brand Account, titles looked up in core, continuations bound to the sign-in and channel, search fallback without cookies; package checks, all builds, Codex review and Fable audit passed; device check in OQ-0026.
 
 - [PLAN-0053: History follows the account order](completed/history-account-order.md) — account history leads, unsynced on-device watches placed around it, History refreshes on return; package checks, iOS/tvOS builds and a signed-in iPad check passed.
 
