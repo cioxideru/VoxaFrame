@@ -213,8 +213,8 @@ struct BrowseViewModelTests {
         #expect(vm.videoGroups.first?.videos.first?.id == "histvid_AAAA")
     }
 
-    @Test("loadContent for .history shows local history first, then account history without duplicates (#150)")
-    func loadHistoryMergesLocalFirst() async throws {
+    @Test("History follows the account order, with a recent unsynced local watch on top and no duplicates")
+    func loadHistoryMergesWithAccountOrder() async throws {
         let mock = MockInnerTubeAPI()
         mock.historyResult = VideoGroup(
             title: "History", videos: [makeVideo("histvid_AAAA"), makeVideo("histvid_BBBB")])
@@ -228,7 +228,8 @@ struct BrowseViewModelTests {
         vm.loadContent(for: section, refresh: true, source: "test")
         await waitForTasks(until: { vm.videoGroups.first?.videos.count == 3 })
 
-        #expect(vm.videoGroups.first?.videos.map(\.id) == ["localonly_CCCC", "histvid_BBBB", "histvid_AAAA"])
+        // AAAA was watched in another app after BBBB, so it stays above BBBB (PLAN-0053).
+        #expect(vm.videoGroups.first?.videos.map(\.id) == ["localonly_CCCC", "histvid_AAAA", "histvid_BBBB"])
     }
 
     @Test("loadContent for .history shows local history even when the account fetch yields nothing (#150)")
