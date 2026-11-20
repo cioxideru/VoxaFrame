@@ -107,7 +107,7 @@ extension ShortsPlayerView {
     private func loadMore(prepending: Bool, advanceWhenReady: Bool) {
         let args = ProcessInfo.processInfo.arguments
         guard !args.contains("--uitesting") || args.contains("--uitesting-home-pagination"),
-            !isFetchingMore, !hasLoadedFeed || nextPageToken != nil
+            !isFetchingMore, window.canLoadMore(prepending: prepending)
         else { return }
         isFetchingMore = true
         let session = authService.sessionGeneration
@@ -116,38 +116,27 @@ extension ShortsPlayerView {
             // Bound empty/duplicate pages so a swipe never drains the account's entire feed.
             for _ in 0..<InnerTubeClients.maxShortsPagesPerRequest {
                 guard !Task.isCancelled, session == authService.sessionGeneration else { return }
-                let token = nextPageToken
+                let token = window.cursor(prepending: prepending)
                 let group: VideoGroup
                 do {
-                    if let token {
-                        group = try await api.fetchShortsMore(continuationToken: token)
-                    } else {
-                        group = try await api.fetchShorts()
-                    }
+                    group = try await api.fetchShortsFeed(
+                        seedVideoId: window.seedVideoId, continuationToken: token, prepending: prepending)
                 } catch { return }  // Keep the token so a later swipe can retry.
                 guard !Task.isCancelled, session == authService.sessionGeneration else { return }
-                hasLoadedFeed = true
-                nextPageToken = window.nextCursor(after: token, proposed: group.nextPageToken)
-                var seen = Set(videos.map(\.id))
-                let added = group.videos.filter { seen.insert($0.id).inserted }
-                if !added.isEmpty {
+                let wasAtStart = currentIndex == 0
+                let wasAtEnd = currentIndex == videos.count - 1
+                if window.accept(group, requestedWith: token, prepending: prepending) > 0 {
                     if prepending {
-                        let wasAtStart = currentIndex == 0
-                        window.insert(added, prepending: true)
                         if advanceWhenReady, wasAtStart {
                             performVerticalTransition(direction: 1) { goTo(currentIndex - 1) }
                         }
-                    } else {
-                        let wasAtEnd = currentIndex == videos.count - 1
-                        window.insert(added, prepending: false)
-                        if advanceWhenReady, wasAtEnd {
-                            performVerticalTransition(direction: -1) { goTo(currentIndex + 1) }
-                        }
+                    } else if advanceWhenReady, wasAtEnd {
+                        performVerticalTransition(direction: -1) { goTo(currentIndex + 1) }
                     }
                     preloadNextShort()
                     return
                 }
-                guard nextPageToken != nil else { return }
+                guard window.cursor(prepending: prepending) != nil else { return }
             }
         }
     }

@@ -31,5 +31,5 @@ from a shelf seeds the sequence with that Short.
 | Step | Evidence | Result |
 |---|---|---|
 | Review | PR #189 read on 2026-11-20 | done |
-| Implementation | | NOT RUN |
+| Implementation | `fetchShortsFeed` + `ShortsSequence` in core (one account snapshot per page picks the source and signs the sequence and its title and channel lookups from `reel/reel_item_watch`, before one absolute deadline and within a concurrency limit; continuations bound to their Brand Account; the fallback search without cookies), a cursor per source read from the page's tokens and the IDs of Shorts kept in the window in `ShortsFeedWindow`, the player's `loadMore`; `ShortsSequenceTests` (parser, seed, ends, trimming), `ShortsFeedRequestTests` (request, Brand Account binding, fallback and its cookies, guest paging, a token set between pages, an ended search), `ShortsSequenceMetadataTests` (overlay parser, lookups: Brand Account, snapshot, identity change, failure, deadline, limit, known fields) and existing Shorts suites pass, 2026-11-20 | done |
 | Signed-in device check | | NOT RUN |

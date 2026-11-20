@@ -90,7 +90,7 @@ iPad in landscape:
 - One card menu for videos and Shorts: Share, Channel with Subscribe / Subscribed, Watch Later, Offline watch, and Not Interested / Don't Like / Don't Recommend with confirmation
 - iPad landscape sidebar, two-column Settings and wide reading panels for Description and Comments
 - Grid columns per orientation: up to 4 in iPad landscape, up to 5 on Mac
-- Signed-in Shorts come from your subscriptions and the Shorts on YouTube's TV Home page; YouTube does not offer personal Shorts recommendations to the TV sign-in
+- Signed-in Shorts shelves come from your subscriptions and the Shorts on YouTube's TV Home page; after the shelf, the full-screen Shorts player continues with your account's own Shorts sequence, started from the Short you opened (signed-out Shorts search if YouTube refuses it)
 
 ### Ad & Sponsor Blocking
 - Zero ads, no tracking

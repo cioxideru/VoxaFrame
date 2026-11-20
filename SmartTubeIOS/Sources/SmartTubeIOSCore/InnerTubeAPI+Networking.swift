@@ -336,7 +336,12 @@ extension InnerTubeAPI {
         return json
     }
 
-    func post(endpoint: String, body: [String: Any], useAuth: Bool = false) async throws -> [String: Any] {
+    /// `useCookies: false` sends none of the cookie store's cookies: the full-screen Shorts feed's anonymous fallback
+    /// search (PLAN-0052). Such a request also logs an InnerTube `error` by its numeric code only, as its answer can
+    /// echo the continuation.
+    func post(
+        endpoint: String, body: [String: Any], useAuth: Bool = false, useCookies: Bool = true
+    ) async throws -> [String: Any] {
         guard var comps = URLComponents(url: baseURL.appendingPathComponent(endpoint), resolvingAgainstBaseURL: false)
         else {
             throw APIError.invalidURL(endpoint)
@@ -347,6 +352,7 @@ extension InnerTubeAPI {
         }
         guard let url = comps.url else { throw APIError.invalidURL(endpoint) }
         var request = URLRequest(url: url)
+        request.httpShouldHandleCookies = useCookies
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
@@ -370,7 +376,10 @@ extension InnerTubeAPI {
             throw APIError.decodingError("Root JSON is not a dictionary")
         }
         let topKeys = Array(json.keys.prefix(6))
-        if let error = json["error"] as? [String: Any] {
+        if let error = json["error"] as? [String: Any], !useCookies {
+            let code = (error["code"] as? Int).map(String.init) ?? "?"
+            tubeLog.error("❌ API error in /\(endpoint, privacy: .public): code=\(code, privacy: .public)")
+        } else if let error = json["error"] as? [String: Any] {
             tubeLog.error(
                 "❌ API error in /\(endpoint, privacy: .public): \(String(describing: error["message"] ?? error), privacy: .public)"
             )
@@ -442,7 +451,8 @@ extension InnerTubeAPI {
         body: [String: Any],
         useAuth: Bool = true,
         explicitBearerToken: String? = nil,
-        youTubeHostIdentity: (version: String, userAgent: String)? = nil
+        youTubeHostIdentity: (version: String, userAgent: String)? = nil,
+        brandAccount: ActiveChannel? = nil
     ) async throws -> [String: Any] {
         let onYouTubeHost = youTubeHostIdentity != nil
         guard
@@ -468,7 +478,8 @@ extension InnerTubeAPI {
             youTubeHostIdentity?.version ?? InnerTubeClients.TV.version, forHTTPHeaderField: "X-YouTube-Client-Version")
         if let token = resolvedToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            activeChannel.apply(to: &request)
+            // `brandAccount` pins the Brand Account a caller captured earlier; nil sends the selected one.
+            (brandAccount ?? activeChannel).apply(to: &request)
         }
         if let youTubeHostIdentity {
             request.setValue(youTubeHostIdentity.userAgent, forHTTPHeaderField: "User-Agent")
@@ -492,9 +503,9 @@ extension InnerTubeAPI {
             throw APIError.decodingError("Root JSON is not a dictionary")
         }
         if let error = json["error"] as? [String: Any] {
-            tubeLog.error(
-                "❌ API error in /\(endpoint, privacy: .public) [TV]: \(String(describing: error["message"] ?? error), privacy: .public)"
-            )
+            // Only the numeric code: the message and details can echo request data such as a continuation.
+            let code = (error["code"] as? Int).map(String.init) ?? "?"
+            tubeLog.error("❌ API error in /\(endpoint, privacy: .public) [TV]: code=\(code, privacy: .public)")
         } else {
             let topKeys = Array(json.keys.prefix(6))
             tubeLog.notice(

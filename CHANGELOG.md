@@ -6,6 +6,11 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 ## [Unreleased]
 
+### Changed
+
+- Signed in, the full-screen Shorts feed continues with the account's own Shorts recommendations. Opening a Short from a shelf keeps the shelf's Shorts and then follows YouTube's Shorts sequence started from that Short, for the selected Brand Account too. Signed out, the feed uses Shorts search as before, and when YouTube refuses the account request it switches to that search, sent without the account's cookies. Signed in but opened without a Short, it uses your subscriptions, as before. Each page's title and channel are looked up before it is shown; a Short whose lookup fails or takes longer than 4 seconds stays in the feed without them. Swiping back before the shelf loads earlier Shorts as before and does not use up the recommendations, and a recommended Short the feed already showed is not shown again. Shelves in Home and Browse are unchanged (PLAN-0052).
+- When the saved Brand Account is no longer in the account's channel list, the app switches to the main account the same way as choosing it by hand: Home and Browse reload, an open Shorts feed closes and the tabs return to Home (PLAN-0052).
+
 ## [5.21] – 2026-11-16
 
 VoxaFrame 5.21 (43). Source release; no signed binaries are attached.

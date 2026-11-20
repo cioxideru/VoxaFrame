@@ -166,6 +166,13 @@ extension InnerTubeAPI {
         continuationToken: String? = nil,
         filter: SearchFilter = .default
     ) async throws -> VideoGroup {
+        try await search(query: query, continuationToken: continuationToken, filter: filter, useCookies: true)
+    }
+
+    /// `useCookies: false`: see `post(endpoint:body:useAuth:useCookies:)`.
+    func search(
+        query: String, continuationToken: String?, filter: SearchFilter, useCookies: Bool
+    ) async throws -> VideoGroup {
         var body = makeBody(client: webClientContext, continuationToken: continuationToken)
         if continuationToken == nil {
             body["query"] = query
@@ -173,7 +180,7 @@ extension InnerTubeAPI {
                 body["params"] = params
             }
         }
-        let data = try await post(endpoint: "search", body: body)
+        let data = try await post(endpoint: "search", body: body, useCookies: useCookies)
         return try parseVideoGroup(from: data, title: "Search: \(query)")
     }
 
@@ -226,7 +233,7 @@ extension InnerTubeAPI {
     // MARK: - Shorts
 
     private static let shortsSubscriptionsPrefix = "subs:"
-    private static let shortsSearchPrefix = "srch:"
+    static let shortsSearchPrefix = "srch:"
 
     public func fetchShorts() async throws -> VideoGroup {
         #if DEBUG
@@ -267,9 +274,11 @@ extension InnerTubeAPI {
             nextPageToken: group.nextPageToken.map { Self.shortsSubscriptionsPrefix + $0 })
     }
 
-    private func fetchAnonymousShorts(continuationToken: String?) async throws -> VideoGroup {
+    /// Signed-out Shorts discovery; also the full-screen feed's fallback (`fetchShortsFeed`), sent without cookies.
+    func fetchAnonymousShorts(continuationToken: String?, useCookies: Bool = true) async throws -> VideoGroup {
         let group = try await search(
-            query: "#shorts", continuationToken: continuationToken, filter: SearchFilter(duration: .short))
+            query: "#shorts", continuationToken: continuationToken, filter: SearchFilter(duration: .short),
+            useCookies: useCookies)
         var shorts = group.videos.filter { $0.isShort || ($0.duration.map { $0 <= 180 } ?? false) }
         for index in shorts.indices { shorts[index].isShort = true }
         return VideoGroup(
