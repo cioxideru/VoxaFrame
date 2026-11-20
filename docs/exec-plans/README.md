@@ -19,6 +19,12 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Active
 
+- [PLAN-0050: Small fixes from upstream, forks and Android](active/upstream-small-fixes.md) — first visible Home section, remote completion, six grid columns.
+
+- [PLAN-0051: Buffered range on the player timeline](active/timeline-buffered-range.md) — buffered part of the current item on every platform.
+
+- [PLAN-0052: Personalized Shorts feed](active/shorts-personal-feed.md) — account `reel_watch_sequence` behind our Shorts player.
+
 - [PLAN-0027: VoxaFrame redesign](active/voxaframe-redesign.md) — staged SwiftUI rollout of the new interface; stage 0 in progress.
 
 - [PLAN-0004: Firebase removal review fixes](active/firebase-review-fixes.md) — review findings 2–6; coordinator owns build/test acceptance.

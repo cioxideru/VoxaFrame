@@ -1,0 +1,35 @@
+# PLAN-0052: Personalized Shorts feed for a signed-in account
+
+Status: active
+
+- Owner: coordinator; one executor.
+- Git boundary: worktree `wt/shorts-feed-0052` from `master` after `a4a5e7bc`.
+- Basis: upstream pull request [milika/SmartTubeIOS#189](https://github.com/milika/SmartTubeIOS/pull/189), its feed
+  part only (`InnerTubeAPI+Shorts.swift`, `ShortsSequence.swift`), review of 2026-11-20. Its player, tab, menus and
+  translations are not ported.
+- Constraints: our Shorts player, pager and settings stay as they are; the change is limited to the request and the
+  parser in `SmartTubeIOSCore` plus the smallest hook where our Shorts feed asks for the next page. Foundation-only
+  core; authenticated requests call `activeChannel.apply(to:)` (Brand Accounts).
+
+## Scope
+
+When the user is signed in, the next Shorts after the current one come from YouTube's TV `reel/reel_watch_sequence`
+sent with the account's Bearer token and the selected Brand Account, so the feed follows that account's
+recommendations. Signed out, or when YouTube rejects the signed-in request, the feed works as today. Opening a Short
+from a shelf seeds the sequence with that Short.
+
+## Acceptance
+
+- Parser tests on recorded JSON fixtures; request tests at the API seam: Bearer and `X-Goog-Pageid` present when
+  signed in, the current anonymous request when signed out, fallback to it on an error answer.
+- No new paths in the main video playback; existing Shorts tests pass unchanged or with stated reasons.
+- `scripts/ci.sh`, SwiftLint and the ast-grep rules; iOS, tvOS and macOS builds.
+- A signed-in device check that the feed differs from the signed-out one is recorded as `NOT RUN` until done.
+
+## Checkpoints
+
+| Step | Evidence | Result |
+|---|---|---|
+| Review | PR #189 read on 2026-11-20 | done |
+| Implementation | | NOT RUN |
+| Signed-in device check | | NOT RUN |

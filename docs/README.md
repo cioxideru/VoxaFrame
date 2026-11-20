@@ -53,6 +53,9 @@ closed outcomes go to [CHANGELOG](../CHANGELOG.md) or an [ADR](adr/README.md).
 | [exec-plans/completed/offline-yandex-translation.md](exec-plans/completed/offline-yandex-translation.md) | PLAN-0031: verified Russian translation fix; Kazakh service refusal remains open | current | 2026-10-20 |
 | [exec-plans/completed/worktree-release-5-18.md](exec-plans/completed/worktree-release-5-18.md) | PLAN-0030: worktree integration and source release 5.18 | completed | 2026-10-20 |
 | [exec-plans/completed/ipad-sidebar-state-warning.md](exec-plans/completed/ipad-sidebar-state-warning.md) | PLAN-0033: sidebar warning and Queue identity fix; Split View acceptance remains open | completed | 2026-10-20 |
+| [exec-plans/active/upstream-small-fixes.md](exec-plans/active/upstream-small-fixes.md) | PLAN-0050: first visible Home section, remote completion over local position, six grid columns | current | 2026-11-20 |
+| [exec-plans/active/timeline-buffered-range.md](exec-plans/active/timeline-buffered-range.md) | PLAN-0051: buffered range on the player timeline | current | 2026-11-20 |
+| [exec-plans/active/shorts-personal-feed.md](exec-plans/active/shorts-personal-feed.md) | PLAN-0052: personalized Shorts feed from the account sequence | current | 2026-11-20 |
 | [exec-plans/active/voxaframe-redesign.md](exec-plans/active/voxaframe-redesign.md) | PLAN-0027: VoxaFrame redesign in SwiftUI, staged | current | 2026-10-17 |
 | [exec-plans/completed/offline-delete-all.md](exec-plans/completed/offline-delete-all.md) | PLAN-0026: delete all offline videos, tasks and cache | current | 2026-10-17 |
 | [exec-plans/completed/offline-selection-cleanup.md](exec-plans/completed/offline-selection-cleanup.md) | PLAN-0025: explicit offline streams, audio and file deletion | current | 2026-10-17 |
