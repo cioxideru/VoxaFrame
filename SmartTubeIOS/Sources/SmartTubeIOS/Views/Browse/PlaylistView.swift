@@ -14,8 +14,11 @@ public struct PlaylistView: View {
     @Environment(SettingsStore.self) private var store
     @Environment(\.innerTubeAPI) private var api
     @Environment(\.isLandscapeLayout) private var isLandscapeLayout
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var vm: PlaylistViewModel
     @State private var selectedVideo: Video?
+    /// Width of the feed, for the columns that fit it (0 until measured).
+    @State private var feedWidth: CGFloat = 0
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
     #endif
@@ -151,10 +154,9 @@ public struct PlaylistView: View {
                 .padding(.horizontal)
                 .padding(.vertical, 8)
                 #else
-                LazyVGrid(
-                    columns: videoGridColumns(store.settings, landscape: isLandscapeLayout),
-                    spacing: videoGridRowSpacing
-                ) {
+                let columns = videoGridColumns(
+                    store.settings, landscape: isLandscapeLayout, width: feedWidth, dynamicTypeSize: dynamicTypeSize)
+                LazyVGrid(columns: columns, spacing: videoGridRowSpacing) {
                     ForEach(displayVideos) { video in
                         VideoCardView(video: video, compact: false, currentPlaylistId: playlistId)
                             .onTapGesture {
@@ -180,7 +182,8 @@ public struct PlaylistView: View {
                             .onAppear { vm.loadMoreIfNeeded(lastVideo: video) }
                     }
                 }
-                .id(isLandscapeLayout)  // reset on column-count change — see VideoGridSection (#82)
+                // Reset on column-count change — see VideoGridSection (#82).
+                .id("\(isLandscapeLayout)-\(columns.count)")
                 .padding(.horizontal)
                 .padding(.vertical, 8)
                 #endif
@@ -188,6 +191,11 @@ public struct PlaylistView: View {
                     ProgressView().frame(maxWidth: .infinity).padding()
                 }
             }
+        }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.width
+        } action: {
+            feedWidth = $0
         }
         .accessibilityIdentifier("playlistView.feed")
         .refreshable { vm.load(playlistId: playlistId, refresh: true) }

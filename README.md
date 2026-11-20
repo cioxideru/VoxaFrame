@@ -89,7 +89,7 @@ iPad in landscape:
 - Video publish date shown in search results and feed cards
 - One card menu for videos and Shorts: Share, Channel with Subscribe / Subscribed, Watch Later, Offline watch, and Not Interested / Don't Like / Don't Recommend with confirmation
 - iPad landscape sidebar, two-column Settings and wide reading panels for Description and Comments
-- Grid columns per orientation: up to 4 in iPad landscape, up to 5 on Mac
+- Grid columns per orientation: up to 6 in iPad and Mac landscape, 5 in Mac portrait, 3 in iPad portrait; on Home, playlists and channels a window too narrow for that many cards shows fewer columns
 - Signed-in Shorts come from your subscriptions and the Shorts on YouTube's TV Home page; YouTube does not offer personal Shorts recommendations to the TV sign-in
 
 ### Ad & Sponsor Blocking
