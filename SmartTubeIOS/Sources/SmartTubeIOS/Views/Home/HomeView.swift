@@ -28,8 +28,10 @@ public struct HomeView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
 
-    // "Home" is always first; its type is .home.
+    // Home until the first appearance picks the first visible section (#194).
     @State var selectedSection: BrowseSection = BrowseSection.allSections[0]
+    /// Set once the start section is chosen, or a shortcut opened one, so a later appearance keeps the user's chip.
+    @State private var startSectionChosen = false
     @State private var selectedVideo: Video?
     @State var selectedPlaylist: Video?
     @State private var shortsPresentation: ShortsPresentation?
@@ -57,15 +59,7 @@ public struct HomeView: View {
     #endif
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     private var visibleSections: [BrowseSection] {
-        let types = store.settings.enabledSections
-        let all: [BrowseSection] =
-            types.isEmpty
-            ? BrowseSection.defaultSections
-            : types.compactMap { type in BrowseSection.allSections.first { $0.type == type } }
-        if store.settings.hideShorts {
-            return all.filter { $0.type != .shorts }
-        }
-        return all
+        BrowseSection.homeSections(enabled: store.settings.enabledSections, hideShorts: store.settings.hideShorts)
     }
 
     public init(api: InnerTubeAPI) {
@@ -144,6 +138,7 @@ public struct HomeView: View {
             else { return }
             // Shortcuts saved before Home became the recommendations feed.
             if type == .recommended { type = .home }
+            startSectionChosen = true
             selectedSection =
                 visibleSections.first { $0.type == type }
                 ?? BrowseSection(id: type.rawValue, title: type.defaultTitle, type: type)
@@ -168,6 +163,11 @@ public struct HomeView: View {
             await sectionVM.updateAuthToken(auth.accessToken, reloadOnSignIn: selectedSection.type != .home)
         }
         .onAppear {
+            if !startSectionChosen {
+                startSectionChosen = true
+                let start = BrowseSection.homeStartSection(in: visibleSections)
+                if start != selectedSection { select(start) }
+            }
             if selectedSection.type == .channels && !sectionVM.isLoading {
                 sectionVM.loadContent(source: "channelsReturn")
             }

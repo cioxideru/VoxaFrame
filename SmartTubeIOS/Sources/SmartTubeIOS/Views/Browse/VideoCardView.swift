@@ -51,7 +51,7 @@ public struct VideoCardView: View {
     #endif
 
     private var effectiveProgress: Double? {
-        localProgress ?? video.watchProgress
+        video.displayedWatchProgress(saved: localProgress)
     }
 
     /// #125: falls back to `video.playlistId` when the caller doesn't explicitly pass
@@ -334,10 +334,7 @@ extension VideoCardView {
             parts.append(String(localized: "Saved to Watch Later", bundle: .module))
         }
         if isSavedOffline { parts.append(String(localized: "Saved offline", bundle: .module)) }
-        if let progress = effectiveProgress, progress > 0 {
-            let percent = progress.formatted(.percent.precision(.fractionLength(0)))
-            parts.append(String(localized: "\(percent) watched", bundle: .module))
-        }
+        if let watched = WatchProgressBar.accessibilityText(for: effectiveProgress) { parts.append(watched) }
         return Text(([displayTitle] + parts.filter { !$0.isEmpty }).joined(separator: ", "))
     }
 

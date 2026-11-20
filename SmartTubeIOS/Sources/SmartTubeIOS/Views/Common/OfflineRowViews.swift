@@ -64,6 +64,9 @@ struct OfflineEntryLabel: View {
     var progress: Double?
     @Environment(\.dynamicTypeSize) private var typeSize
 
+    /// The row's VoiceOver value: the cover with its progress bar is hidden, so the row reads the watched share.
+    var watchedAccessibilityValue: String? { WatchProgressBar.accessibilityText(for: progress) }
+
     #if os(tvOS)
     private static let thumbnailWidth: CGFloat = 240
     #else

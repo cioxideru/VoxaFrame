@@ -24,6 +24,9 @@ public struct ChannelView: View {
     @Environment(AuthService.self) private var auth
     private let api: InnerTubeAPI
     @Environment(\.isLandscapeLayout) private var isLandscapeLayout
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// Width of the channel page, for the video columns that fit it (0 until measured).
+    @State private var pageWidth: CGFloat = 0
     #if os(iOS)
     @Environment(PlayerRouter.self) private var playerRouter
     #endif
@@ -124,6 +127,11 @@ public struct ChannelView: View {
                 }
             }
         }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.size.width
+        } action: {
+            pageWidth = $0
+        }
         .refreshable { await vm.refresh(channelId: channelId, signedIn: auth.isSignedIn) }
         .accessibilityIdentifier("channel.view")
     }
@@ -186,10 +194,9 @@ public struct ChannelView: View {
                 }
                 .padding()
                 #else
-                LazyVGrid(
-                    columns: videoGridColumns(store.settings, landscape: isLandscapeLayout),
-                    spacing: videoGridRowSpacing
-                ) {
+                let columns = videoGridColumns(
+                    store.settings, landscape: isLandscapeLayout, width: pageWidth, dynamicTypeSize: dynamicTypeSize)
+                LazyVGrid(columns: columns, spacing: videoGridRowSpacing) {
                     ForEach(videos) { video in
                         VideoCardView(video: video, compact: false)
                             .onTapGesture {
@@ -204,7 +211,8 @@ public struct ChannelView: View {
                             }
                     }
                 }
-                .id(isLandscapeLayout)  // reset on column-count change — see VideoGridSection (#82)
+                // Reset on column-count change — see VideoGridSection (#82).
+                .id("\(isLandscapeLayout)-\(columns.count)")
                 .padding()
                 #endif
             }

@@ -197,6 +197,13 @@ public extension Video {
         return watchProgress >= threshold
     }
 
+    /// The progress cards and offline rows show, given the fraction saved on this device: YouTube's 100 % beats an
+    /// earlier saved position (Android SmartTube 348cbe28); otherwise the saved fraction, then YouTube's.
+    public func displayedWatchProgress(saved: Double?) -> Double? {
+        if let watchProgress, watchProgress >= 1 { return watchProgress }
+        return saved ?? watchProgress
+    }
+
     /// The URL the app's own Share actions hand to ShareLink/UIActivityViewController
     /// (#104). Deliberately just `watch?v=<id>` — no `si=` or other tracking query
     /// parameters — so this is the single place to check/fix if that ever regresses,

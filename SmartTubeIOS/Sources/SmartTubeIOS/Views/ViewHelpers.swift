@@ -36,14 +36,17 @@ let videoGridRowSpacing: CGFloat = 40
 #else
 let videoGridRowSpacing: CGFloat = 12
 
-/// Column counts this device offers: up to 5 on Mac, 4 in iPad landscape, otherwise 3.
+/// Column counts this device offers: up to 6 in iPad and Mac landscape, 5 in Mac portrait, otherwise 3. Home,
+/// Playlist and Channel drop columns that do not fit their width
+/// (`videoGridColumnCount(_:landscape:width:dynamicTypeSize:)`).
 @MainActor
 func gridColumnChoices(landscape: Bool) -> ClosedRange<Int> {
+    let columns = AppSettings.availableGridColumnCounts
     #if os(macOS)
-    return AppSettings.availableGridColumnCounts
+    return landscape ? columns : 1...5
     #else
     let isPad = UIDevice.current.userInterfaceIdiom == .pad
-    return 1...(isPad && landscape ? 4 : 3)
+    return isPad && landscape ? columns : 1...3
     #endif
 }
 
@@ -52,6 +55,16 @@ func gridColumnChoices(landscape: Bool) -> ClosedRange<Int> {
 func videoGridColumns(_ settings: AppSettings, landscape: Bool) -> [GridItem] {
     let stored = landscape ? settings.gridColumnsLandscape : settings.gridColumnsPortrait
     let count = min(stored, gridColumnChoices(landscape: landscape).upperBound)
+    return Array(repeating: GridItem(.flexible(), spacing: videoGridRowSpacing), count: count)
+}
+
+/// `videoGridColumns` for a screen `width` points wide (Playlist, Channel): still fixed columns, as many as
+/// `videoGridColumnCount(_:landscape:width:dynamicTypeSize:)` lets Home show at that width.
+@MainActor
+func videoGridColumns(
+    _ settings: AppSettings, landscape: Bool, width: CGFloat, dynamicTypeSize: DynamicTypeSize
+) -> [GridItem] {
+    let count = videoGridColumnCount(settings, landscape: landscape, width: width, dynamicTypeSize: dynamicTypeSize)
     return Array(repeating: GridItem(.flexible(), spacing: videoGridRowSpacing), count: count)
 }
 #endif

@@ -10,9 +10,15 @@ All notable changes to VoxaFrame and its SmartTube predecessor are documented he
 
 - The player timeline shows how much of the video has loaded ahead of the playhead: a lighter band between the played part and the empty track, on iPhone, iPad, Mac and Apple TV. Downloaded videos show the whole bar as loaded, and live streams show no band (PLAN-0051).
 
+### Changed
+
+- Video grids offer up to 6 columns in iPad and Mac landscape windows; Home, playlists and channels drop columns that do not fit. Saved column counts stay as they were (PLAN-0050).
+
 ### Fixed
 
 - History follows the account order, so a video watched in the official YouTube app appears at the top instead of below every video played in VoxaFrame; a recent VoxaFrame watch YouTube has not listed yet stays on top. History refreshes when the tab or the app is shown again, keeping the pages already loaded (PLAN-0053).
+- Home opens with the first section in Settings › Visible Sections instead of always with Home (upstream #194). Shortcuts that open a section still work (PLAN-0050).
+- A video YouTube reports as fully watched shows 100 % on its card and Offline row, also to VoiceOver, even when the device saved an earlier position (PLAN-0050).
 
 ## [5.21] – 2026-11-16
 
