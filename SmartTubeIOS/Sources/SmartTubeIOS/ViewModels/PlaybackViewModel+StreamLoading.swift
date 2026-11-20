@@ -136,8 +136,8 @@ extension PlaybackViewModel {
 
         let sponsorCached = applyInitialSponsorSegments(video: video, cached: cached)
 
-        // Restore saved watch position (mirrors VideoStateController)
-        let savedState = await VideoStateStore.shared.state(for: video.id)
+        // Restore saved watch position (mirrors VideoStateController); YouTube's full completion starts from 0.
+        let savedState = await VideoStateStore.shared.resumeState(for: video)
         try Task.checkCancellation()
         guard currentVideo?.id == video.id else { return }
         restoreSavedPosition(savedState, for: video)

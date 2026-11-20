@@ -2,7 +2,7 @@
 
 Status: completed (2026-11-20)
 Resolution: items 1–3 delivered; Codex review (three rounds) and Fable audit accepted. Resume still restores an older
-local position when YouTube reports a full watch; tracked in [OQ-0025](../../OPEN_QUESTIONS.md#oq-0025--resume-ignores-youtubes-full-completion).
+local position when YouTube reports a full watch; tracked as OQ-0025, closed by [PLAN-0054](remote-completion-resume.md).
 On-screen checks (Home start, VoiceOver, six columns on a real iPad or Mac width) are NOT RUN.
 
 - Owner: coordinator; one executor for all three items, one commit per item, merged into `master`.

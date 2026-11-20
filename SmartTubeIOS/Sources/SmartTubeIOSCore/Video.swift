@@ -200,8 +200,15 @@ public extension Video {
     /// The progress cards and offline rows show, given the fraction saved on this device: YouTube's 100 % beats an
     /// earlier saved position (Android SmartTube 348cbe28); otherwise the saved fraction, then YouTube's.
     public func displayedWatchProgress(saved: Double?) -> Double? {
-        if let watchProgress, watchProgress >= 1 { return watchProgress }
+        if isFullyWatchedOnYouTube, let watchProgress { return watchProgress }
         return saved ?? watchProgress
+    }
+
+    /// True when YouTube reports this video as 100 % watched; that completion beats a position saved on this device
+    /// on cards, Offline rows and on resume (OQ-0025).
+    var isFullyWatchedOnYouTube: Bool {
+        guard let watchProgress else { return false }
+        return watchProgress >= 1
     }
 
     /// The URL the app's own Share actions hand to ShareLink/UIActivityViewController

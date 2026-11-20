@@ -29,13 +29,15 @@ tracks unfinished work, debt, missing verification, and decisions.
 
 ## Completed
 
+- [PLAN-0054: Resume follows YouTube's full completion](completed/remote-completion-resume.md) — a video YouTube reports as 100 % watched starts from the beginning and the older position saved on the device is dropped (OQ-0025); store tests, package checks, SwiftLint and iOS/tvOS/macOS builds passed.
+
 - [PLAN-0052: Personalized Shorts feed](completed/shorts-personal-feed.md) — signed in, the full-screen Shorts feed continues after the shelf with the account's `reel_watch_sequence` for the selected Brand Account, titles looked up in core, continuations bound to the sign-in and channel, search fallback without cookies; package checks, all builds, Codex review and Fable audit passed; device check in OQ-0026.
 
 - [PLAN-0053: History follows the account order](completed/history-account-order.md) — account history leads, unsynced on-device watches placed around it, History refreshes on return; package checks, iOS/tvOS builds and a signed-in iPad check passed.
 
 - [PLAN-0051: Buffered range on the player timeline](completed/timeline-buffered-range.md) — buffered part of the current item on iOS, macOS and tvOS from `loadedTimeRanges` and the item length; package checks, all builds, Codex review and Fable audit passed; only the dark iOS simulator was seen (OQ-0019).
 
-- [PLAN-0050: Small fixes from upstream, forks and Android](completed/upstream-small-fixes.md) — Home opens on the first visible section, YouTube's full completion beats an older local position on cards and Offline rows, six landscape grid columns on iPad and Mac with width-aware Playlist and Channel grids; package checks, all builds, Codex review and Fable audit passed; resume in OQ-0025.
+- [PLAN-0050: Small fixes from upstream, forks and Android](completed/upstream-small-fixes.md) — Home opens on the first visible section, YouTube's full completion beats an older local position on cards and Offline rows, six landscape grid columns on iPad and Mac with width-aware Playlist and Channel grids; package checks, all builds, Codex review and Fable audit passed; resume closed by PLAN-0054.
 
 - [PLAN-0049: Candidates from upstream and its forks](completed/upstream-fork-candidates.md) — channel Videos-tab pagination, SponsorBlock end tolerance and watchable skipped segments, Brand Account switching, local search ordering and AndroidVR removal; subscriptions needed no change; package checks, all builds and an iPad playback check passed; Brand Account and Apple TV checks in OQ-0023.
 
